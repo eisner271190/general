@@ -1,0 +1,24 @@
+﻿package com.{{ Company }}.{{ Name }}.infrastructure.controllers;
+
+import com.{{ Company }}.{{ Name }}.infrastructure.configuration.cloud.aws.SnsEventPublisher;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/sns")
+public class SNSController {
+
+    private final SnsEventPublisher snsEventPublisher;
+
+    public SNSController(SnsEventPublisher snsEventPublisher) {
+        this.snsEventPublisher = snsEventPublisher;
+    }
+
+    @PostMapping("/publish")
+    public ResponseEntity<String> publish(@RequestParam("message") String message) {
+        snsEventPublisher.publishEvent("product.created", message);
+        return ResponseEntity.ok("Mensaje enviado a SNS.");
+    }
+}

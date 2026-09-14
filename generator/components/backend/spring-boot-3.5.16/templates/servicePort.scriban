@@ -1,0 +1,9 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.domain.servicePorts;
+
+import com.{{ Company }}.{{ MicroserviceName }}.domain.model.{{ EntityCapital }};
+
+import reactor.core.publisher.Mono;
+
+public interface {{ EntityCapital }}ServicePort {
+    Mono<{{ EntityCapital }}> get{{ EntityCapital }}Id(Long id);
+}

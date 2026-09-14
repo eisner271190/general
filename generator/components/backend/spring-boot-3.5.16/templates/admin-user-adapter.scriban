@@ -1,0 +1,33 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.infrastructure.adapters;
+
+import com.{{ Company }}.{{ Name }}.domain.ports.AdminUserPort;
+import com.{{ Company }}.{{ Name }}.infrastructure.configuration.cloud.aws.CognitoClient;
+
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+
+@Component
+public class AdminUserAdapter implements AdminUserPort {
+
+    private final CognitoClient cognitoClient;
+
+    public AdminUserAdapter(CognitoClient cognitoClient) {
+        this.cognitoClient = cognitoClient;
+    }
+
+    @Override
+    public Mono<Void> deleteUser(String username) {
+        return cognitoClient.deleteUser(username);
+    }
+
+    @Override
+    public Mono<Void> activateUser(String username) {
+        return cognitoClient.updateUserStatus(username, true);
+    }
+
+    @Override
+    public Mono<Void> deactivateUser(String username) {
+        return cognitoClient.updateUserStatus(username, false);
+    }
+}
+{{ end }}

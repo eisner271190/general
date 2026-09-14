@@ -1,0 +1,12 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.mappers.entities;
+
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.entities.{{ EntityCapital }}Entity;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.models.{{ EntityCapital }}PersistenceModel;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.providers.dynamodb.IMapperEntity;
+import org.mapstruct.Mapper;
+
+@Mapper(componentModel = "spring")
+public interface {{ EntityCapital }}MapperEntity extends IMapperEntity<{{ EntityCapital }}PersistenceModel, {{ EntityCapital }}Entity>{
+    {{ EntityCapital }}Entity toEntity({{ EntityCapital }}PersistenceModel persistenceModel);
+    {{ EntityCapital }}PersistenceModel toPersistenceModel({{ EntityCapital }}Entity entity);
+}

@@ -1,0 +1,9 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.application.services;
+
+import reactor.core.publisher.Mono;
+
+import com.{{ Company }}.{{ MicroserviceName }}.application.dto.{{ EntityCapital }}DTO;
+
+public interface I{{ EntityCapital }}Service {
+    public Mono<{{ EntityCapital }}DTO> get{{ EntityCapital }}(Long id);
+}

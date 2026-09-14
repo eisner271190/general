@@ -1,0 +1,29 @@
+﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.application.services;
+
+import com.{{ Company }}.{{ Name }}.application.dto.*;
+
+import reactor.core.publisher.Mono;
+
+public interface IUserService {
+
+    Mono<TokenResponseDTO> generateToken(TokenRequestDTO request);
+
+    Mono<Void> registerUserByAdmin(RegisterUserRequestDTO request);
+
+    Mono<Void> registerUser(RegisterUserRequestDTO request);
+    
+    Mono<Void> confirmUser(ConfirmUserRequestDTO request);
+
+    Mono<Void> forcePasswordReset(ForcePasswordResetRequestDTO request);
+
+    Mono<Void> changePassword(ChangePasswordRequestDTO request);
+
+    Mono<Void> recoverPassword(RecoverPasswordRequestDTO request);
+
+    Mono<Void> deleteUser(String username);
+
+    Mono<Void> activateUser(String username);
+
+    Mono<Void> deactivateUser(String username);
+}
+{{ end }}

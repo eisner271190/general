@@ -1,0 +1,12 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.domain.ports;
+
+import com.{{ Company }}.{{ Name }}.domain.model.*;
+
+import reactor.core.publisher.Mono;
+
+public interface RegistrationPort {
+    Mono<Void> registerUserByAdmin(RegisterUser request);
+    Mono<Void> registerUser(RegisterUser request);
+    Mono<Void> confirmUser(ConfirmUser request);
+}
+{{ end }}

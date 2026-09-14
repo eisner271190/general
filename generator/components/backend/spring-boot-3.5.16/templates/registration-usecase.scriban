@@ -1,0 +1,34 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.domain.usecase;
+
+import com.{{ Company }}.{{ Name }}.domain.servicePorts.RegistrationServicePort;
+import com.{{ Company }}.{{ Name }}.domain.ports.RegistrationPort;
+import com.{{ Company }}.{{ Name }}.domain.model.*;
+
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+@Service
+public class RegistrationUseCase implements RegistrationServicePort {
+
+    private final RegistrationPort registrationPort;
+
+    public RegistrationUseCase(RegistrationPort registrationPort) {
+        this.registrationPort = registrationPort;
+    }
+
+    @Override
+    public Mono<Void> registerUserByAdmin(RegisterUser request) {
+        return registrationPort.registerUserByAdmin(request);
+    }
+
+    @Override
+    public Mono<Void> registerUser(RegisterUser request) {
+        return registrationPort.registerUser(request);
+    }
+
+    @Override
+    public Mono<Void> confirmUser(ConfirmUser request) {
+        return registrationPort.confirmUser(request);
+    }
+}
+{{ end }}

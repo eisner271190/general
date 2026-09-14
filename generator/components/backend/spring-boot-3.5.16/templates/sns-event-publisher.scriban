@@ -1,0 +1,38 @@
+﻿package com.{{ Company }}.{{ Name }}.infrastructure.configuration.cloud.aws;
+
+import com.google.gson.Gson;
+import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.sns.SnsClient;
+import software.amazon.awssdk.services.sns.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sns.model.PublishRequest;
+import org.springframework.beans.factory.annotation.Value;
+
+import java.util.Map;
+
+@Service
+public class SnsEventPublisher {
+
+    private final SnsClient snsClient;
+
+    @Value("${aws.sns.arn}")
+    private String topicArn;
+
+    public SnsEventPublisher(SnsClient snsClient) {
+        this.snsClient = snsClient;
+    }
+
+    public void publishEvent(String eventType, Object payload) {
+        PublishRequest request = PublishRequest.builder()
+            .topicArn(topicArn)
+            .message(new Gson().toJson(payload))
+            .messageAttributes(Map.of(
+                "eventType", MessageAttributeValue.builder()
+                    .dataType("String")
+                    .stringValue(eventType)
+                    .build()
+            ))
+            .build();
+
+        snsClient.publish(request);
+    }
+}

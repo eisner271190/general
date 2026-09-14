@@ -1,0 +1,10 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.domain.servicePorts;
+
+import reactor.core.publisher.Mono;
+
+public interface AdminUserServicePort {
+    Mono<Void> deleteUser(String username);
+    Mono<Void> activateUser(String username);
+    Mono<Void> deactivateUser(String username);
+}
+{{ end }}

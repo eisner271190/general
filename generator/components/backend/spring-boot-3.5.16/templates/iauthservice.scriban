@@ -1,0 +1,10 @@
+﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.infrastructure.configuration.authentication;
+
+import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ApiResponse;
+import com.{{ Company }}.{{ Name }}.application.dto.AuthRequestDTO;
+import reactor.core.publisher.Mono;
+
+public interface IAuthService {
+    Mono<ApiResponse> authenticate(AuthRequestDTO authRequestDTO);
+}
+{{ end }}

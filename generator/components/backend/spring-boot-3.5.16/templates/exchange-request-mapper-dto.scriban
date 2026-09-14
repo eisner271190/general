@@ -1,0 +1,15 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.application.mappers;
+
+import com.{{ Company }}.{{ Name }}.application.dto.ExchangeRequestDTO;
+import com.{{ Company }}.{{ Name }}.domain.model.ExchangeRequest;
+import org.mapstruct.Mapper;
+import org.mapstruct.factory.Mappers;
+
+@Mapper
+public interface ExchangeRequestMapperDto {
+    ExchangeRequestMapperDto INSTANCE = Mappers.getMapper(ExchangeRequestMapperDto.class);
+
+    ExchangeRequestDTO toDTO(ExchangeRequest model);
+    ExchangeRequest toModel(ExchangeRequestDTO dto);
+}
+{{ end }}

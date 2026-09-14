@@ -1,0 +1,41 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.domain.model;
+
+public class ExchangeRequest {
+    private String code;
+    private String codeVerifier;
+    private String redirectUri;
+    
+    public ExchangeRequest() {
+    }
+
+    public ExchangeRequest(String code, String codeVerifier, String redirectUri) {
+        this.code = code;
+        this.codeVerifier = codeVerifier;
+        this.redirectUri = redirectUri;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getCodeVerifier() {
+        return codeVerifier;
+    }
+
+    public void setCodeVerifier(String codeVerifier) {
+        this.codeVerifier = codeVerifier;
+    }
+
+    public String getRedirectUri() {
+        return redirectUri;
+    }
+
+    public void setRedirectUri(String redirectUri) {
+        this.redirectUri = redirectUri;
+    }
+}
+{{ end }}

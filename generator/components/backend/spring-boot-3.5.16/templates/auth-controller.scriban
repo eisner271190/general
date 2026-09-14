@@ -1,0 +1,60 @@
+﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.infrastructure.controllers;
+
+import com.{{ Company }}.{{ Name }}.application.services.IAuthService;
+import com.{{ Company }}.{{ Name }}.application.dto.*;
+import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ApiResponse;
+import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ErrorApiResponse;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequestMapping("/api/v1/auth")
+public class AuthController {
+
+    private final IAuthService authService;
+
+    public AuthController(IAuthService authService) {
+        this.authService = authService;
+    }
+
+    @PostMapping("/token")
+    public Mono<ResponseEntity<ApiResponse>> generateToken(@Valid @RequestBody TokenRequestDTO request) {
+        return authService.generateToken(request)
+                .map(token -> {
+                    ApiResponse response = new ApiResponse(token, "Token generado exitosamente", HttpStatus.OK.value());
+                    return ResponseEntity.ok().body(response);
+                })
+                .onErrorResume(e -> {
+                    ErrorApiResponse errorResponse = ErrorApiResponse.createErrorResponse(
+                            null,
+                            "Error al generar el token",
+                            HttpStatus.UNAUTHORIZED.value(),
+                            e.getMessage()
+                    );
+                    return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse));
+                });
+    }
+
+    @PostMapping("/exchange")
+    public Mono<ResponseEntity<ApiResponse>> exchangeCodeForTokens(@Valid @RequestBody ExchangeRequestDTO request) {
+        return authService.exchangeCodeForTokens(request)
+                .map(tokens -> {
+                    ApiResponse response = new ApiResponse(tokens, "Código intercambiado exitosamente", HttpStatus.OK.value());
+                    return ResponseEntity.ok().body(response);
+                })
+                .onErrorResume(e -> {
+                    ErrorApiResponse errorResponse = ErrorApiResponse.createErrorResponse(
+                            null,
+                            "Error al intercambiar el código",
+                            HttpStatus.BAD_REQUEST.value(),
+                            e.getMessage()
+                    );
+                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
+                });
+    }
+}
+{{ end }}

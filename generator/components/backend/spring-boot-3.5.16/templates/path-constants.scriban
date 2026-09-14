@@ -1,0 +1,15 @@
+﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.infrastructure.configuration.authentication.jwt;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+public class PathConstants {
+    public static final Set<String> COMMON_PATHS = new HashSet<>(Arrays.asList("/", "/actuator/health", "/error"));
+    //public static final String AUTH_PATH = "/api/v1/auth/**";
+    //public static final String AUTH = "auth";
+
+    public static final String AUTH_PATH = "/api/v1/users/**";
+    public static final String AUTH = "users";
+}
+{{ end }}

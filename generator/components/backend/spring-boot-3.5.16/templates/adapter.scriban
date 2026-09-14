@@ -1,0 +1,27 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.adapters;
+
+import com.{{ Company }}.{{ MicroserviceName }}.domain.model.{{ EntityCapital }};
+import com.{{ Company }}.{{ MicroserviceName }}.domain.ports.{{ EntityCapital }}Port;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.mappers.models.{{ EntityCapital }}MapperPersistenceModel;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.models.{{ EntityCapital }}PersistenceModel;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.providers.IProviderPersistence;
+
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+@Service
+public class {{ EntityCapital }}Adapter implements {{ EntityCapital }}Port {
+
+    private final IProviderPersistence<{{ EntityCapital }}PersistenceModel> {{ Entity }}Repository;
+
+    public {{ EntityCapital }}Adapter(IProviderPersistence<{{ EntityCapital }}PersistenceModel> {{ Entity }}Repository)
+    {
+        this.{{ Entity }}Repository = {{ Entity }}Repository;
+    }
+
+    public Mono<{{ EntityCapital }}> get{{ EntityCapital }}Id(Long id) {
+        return {{ Entity }}Repository.findById(id)
+                .map({{ EntityCapital }}MapperPersistenceModel.INSTANCE::toModel)
+                .switchIfEmpty(Mono.error(new RuntimeException("{{ EntityCapital }} not found")));
+    }
+}

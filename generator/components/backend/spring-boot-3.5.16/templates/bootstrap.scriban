@@ -1,0 +1,4 @@
+﻿#!/bin/sh
+set -euo pipefail
+echo "Starting native Lambda executable..."
+exec /var/task/{{ Name }}

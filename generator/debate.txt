@@ -1,0 +1,232 @@
+Dame un ejemplo de:
+1. json inicial (epc.json)
+	- applicationName: es el nombre de la app
+	- applicationId: es el id de la app (Ej: com.quizsmart.app)
+	- environments: es un array que contiene las variables de entorno por cada ambiente
+	- microservices: es un array que contiene la información de los microservicios que se van a crear
+		-> language
+		-> version
+		-> deploy
+		-> entities
+		-> endpoints
+		-> port
+	
+2. json backend (backend.json)
+	- directories: es un array con los relative paths de las carpetas que se deben crear
+	- files: Es un array
+		-> key: Es el relative path de los archivos que se deben crear
+		-> value: Es el path del template del archivo correspondiente. Este si tiene placeholders
+	- defaultFiles: Es un array con los path de los archivos predeterminados
+		
+3. json ambiente develop
+	Es un array con objetos key value con las variables de entorno
+	
+4. generation plan
+	- directories: es un array con los relative paths de las carpetas que se deben crear
+	- files: Es un array
+		-> key: Es el relative path de los archivos que se deben crear
+		-> value: Es el contenido del archivo. Aqui no hay placeholders
+	- defaultFiles: Es un array con los path de los archivos predeterminados
+
+
+1. Yo espero un json con las variables de entorno y sus respectivos valores. 
+Un json por cada ambiente. 
+Así como me lo muestras está bien. 
+
+output/
+├── backend/
+├── frontend/
+├── cloud/
+│
+├── environments/
+│   ├── develop/
+│   ├── staging/
+│   └── production/
+
+2. En los json por cada ambiente
+
+3. Son globales aplican para todos los componentes
+
+{
+  "name": "develop",
+  "variables": {
+    "DATABASE_HOST": "...",
+    "DATABASE_NAME": "...",
+    "API_URL": "...",
+    "AWS_REGION": "..."
+  }
+}
+
+4. Si, los valores deben estar en el json
+{
+  "name": "develop",
+  "variables": {
+    "DATABASE_HOST": "localhost",
+    "DATABASE_NAME": "myapp_dev"
+  }
+}
+
+5. Archivos predeterminados son los que siempre son iguales independiente del ambiente. Los que su contenido siempre es iguales
+	Por ejemplo gradle, maven. Funcionan con copia directa, sin placeholder
+	
+6. Si, el contenido debe ser exactamente el que se va a escribir en el archivo.
+
+7. generator/
+├── Generator.csproj
+└── ...
+
+8. GenerationPlan
+│
+├── Project
+│
+├── Components
+│   ├── backend
+│   │   ├── directories
+│   │   ├── files
+│   │   └── defaultFiles
+│   │
+│   ├── frontend
+│   │   ├── directories
+│   │   ├── files
+│   │   └── defaultFiles
+│   │
+│   └── cloud
+│       ├── directories
+│       ├── files
+│       └── defaultFiles
+│
+└── Environments
+    ├── develop
+    │   └── environment variables
+    ├── staging
+    │   └── environment variables
+    └── production
+        └── environment variables
+		
+		
+		
+1. Alcance inicial
+
+El primer entregable será únicamente una CLI .NET que:
+	Lee epc.json
+	contruye generation-plan.json
+	ejecuta el plan
+	genera el código
+	
+Debe generar todos los componentes que existan en la carpeta components
+
+2. {
+  "backend": "dotnet9.json",
+  "deploy": "docker" //docker o aws
+}
+
+
+3. Confirmado
+components/
+├── backend/
+│   └── dotnet9.json
+├── frontend/
+│   └── flutter.json
+└── cloud/
+    └── docker.json
+	
+templates/
+├── backend/
+├── frontend/
+└── cloud/
+
+Alcance del generator
+
+¿El generator debe producir únicamente generation-plan.json o también ejecutar el plan y crear los archivos físicamente?
+crear los archivos físicamente
+
+¿Debe generar toda la aplicación de una vez o recibir parámetros como microservice y environment para generar solo una combinación?
+El propósito es crear una app, la estructura de las carpetas y archivos basado en los datos proporcionados en el json inicial
+La idea es crear el backend, frontend, cloud, etc los componentes configurados inicialmente
+
+
+Si hay varios microservicios, ¿el resultado debe ser un único generation-plan.json combinado o un plan separado por microservicio?
+el resultado debe ser un único generation-plan.json
+
+
+Componentes
+
+En epc.json, backend apunta a components/backend, pero deploy contiene "docker". ¿deploy debe resolver componentes desde components/cloud/docker.json?
+No, el campo deploy recibe un string, que tiene dos posibles valores DOCKER o AWS, no tiene relación con components/cloud
+
+¿Cómo se seleccionan los componentes frontend? Actualmente existe components/frontend, pero epc.json no tiene ninguna propiedad para referenciarlo.
+PENDIENTE
+
+¿Un microservicio puede tener más de un componente del mismo tipo, por ejemplo varios componentes de despliegue?
+No, el backend estará conformado por uno o multiples microservicios y solo corresponden al backend
+
+¿Los archivos de un componente son plantillas genéricas o deben recibir datos de entidades, campos y endpoints para generar código dinámico?
+deben recibir datos de entidades, campos y endpoints para generar código dinámico. Estos datos se proporcionan en el json inicial
+
+Ambientes y variables
+
+¿Debe ser obligatorio seleccionar un ambiente? ¿Qué debe ocurrir si no se proporciona o si el nombre no existe?
+Debe haber minimo un ambiente
+
+¿Qué debe pasar con un placeholder sin variable correspondiente: error, conservar {{PLACEHOLDER}} o reemplazarlo por una cadena vacía?
+Debe lanzar un error
+
+¿Se permiten placeholders con valores complejos, por ejemplo JSON, arrays u objetos, o todos los valores serán strings?
+Siempre será un string
+
+¿Las variables de ambientes deben heredarse o combinarse entre ambientes, o cada ambiente es completamente independiente?
+La variables de entorno aplican para todos los componentes
+
+¿Los valores de variables pueden contener otros placeholders, como BASE_URL usado dentro de API_URL?
+por el momento solo valores fijos string
+
+Entidades y endpoints
+
+En la descripción se dice que una entidad “no necesita datatype porque todas representan objetos”, pero los campos sí requieren datatype. ¿La frase se refiere a las entidades o falta una propiedad específica?
+La frase se refiere a las entidades
+
+¿Las relaciones deben validarse en ambos sentidos? Por ejemplo, si Quiz tiene relación one-to-many con Question, ¿debe ser obligatorio declarar también la relación inversa?
+si, las relaciones deben validarse en ambos sentidos
+
+¿Qué tipos de datos estarán permitidos además de Guid, string y boolean?
+Todos los tipos de dato de java
+
+¿Los endpoints deben seguir siendo strings como "GET /quizzes" o conviene modelarlos como objetos con método, ruta, parámetros y respuesta?
+conviene modelarlos como objetos con método, ruta, parámetros y respuesta
+
+¿El generator debe validar que las entidades referenciadas por las relaciones existan dentro del mismo microservicio?
+PENDIENTE
+
+Paths y conflictos
+
+En defaultFiles, el ejemplo contiene "defaults/backend/.gitignore". ¿Ese archivo debe copiarse al mismo path (defaults/backend/.gitignore) o el prefijo defaults/ solo identifica su ubicación de origen?
+el prefijo defaults/ solo identifica su ubicación de origen
+
+¿Todos los paths de directories, files[].key y defaultFiles deben permanecer dentro del directorio de salida? ¿Se deben rechazar rutas absolutas y segmentos ..?
+PENDIENTE
+
+Si dos microservicios generan el mismo path, ¿debe fallar la generación o debe permitirse sobrescribir?
+debe fallar la generación
+
+Si un componente declara dos veces el mismo archivo o directorio, ¿debe ser error o se deben deduplicar automáticamente?
+Cada componente tiene si propia carpeta
+
+¿Los paths deben usar siempre /, incluso cuando el generator se ejecute en Windows?
+por el momento, esto solo debe funcionar en windows
+
+Configuración y errores
+
+¿applicationName y applicationId deben aparecer en generation-plan.json o solo applicationName como muestra el ejemplo?
+applicationName y applicationId se usarán para el frontend. Pero eso será mas adelante
+
+¿El plan debe incluir metadatos del microservicio, como su nombre, puerto, backend y estrategia de despliegue?
+Ya deben ser usados estos valores en el contenido de los archivos
+
+¿Qué validaciones consideras obligatorias antes de generar: JSON Schema, nombres duplicados, puertos repetidos, relaciones inválidas, placeholders, paths inseguros?
+puertos repetidos
+
+¿Quieres que los errores detengan toda la generación o que el generator acumule y reporte todos los errores encontrados?
+los errores deben detener toda la generación
+
+¿Dónde deben ubicarse components y templates: relativos al proyecto actual, relativos al archivo epc.json o definidos mediante una opción de línea de comandos?
+relativos al proyecto actual

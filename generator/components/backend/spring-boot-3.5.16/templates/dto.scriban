@@ -1,0 +1,6 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.application.dto;
+
+import lombok.Builder;
+
+@Builder
+public record {{ EntityCapital }}DTO (Long id){}

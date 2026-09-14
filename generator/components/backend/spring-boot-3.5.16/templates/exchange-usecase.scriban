@@ -1,0 +1,24 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.domain.usecase;
+
+import com.{{ Company }}.{{ Name }}.domain.servicePorts.ExchangeServicePort;
+import com.{{ Company }}.{{ Name }}.domain.ports.ExchangePort;
+import com.{{ Company }}.{{ Name }}.domain.model.*;
+
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+@Service
+public class ExchangeUseCase implements ExchangeServicePort {
+
+    private final ExchangePort exchangePort;
+
+    public ExchangeUseCase(ExchangePort exchangePort) {
+        this.exchangePort = exchangePort;
+    }
+
+    @Override
+    public Mono<ExchangeResponse> exchangeCodeForTokens(ExchangeRequest request) {
+        return exchangePort.exchangeCodeForTokens(request);
+    }
+}
+{{ end }}

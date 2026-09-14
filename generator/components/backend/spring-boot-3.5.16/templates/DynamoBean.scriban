@@ -1,0 +1,53 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.beans;
+
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.configuration.MapperInfo;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.dynamos.tableschema.{{ EntityCapital }}Schema;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.models.{{ EntityCapital }}PersistenceModel;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.providers.IProviderPersistence;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.providers.dynamodb.DynamoDbGenericPersistence;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.configuration.MapperClass;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.dynamos.{{ EntityCapital }}Dynamo;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.mappers.dynamos.{{ EntityCapital }}MapperDynamo;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.mappers.entities.{{ EntityCapital }}MapperEntity;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+
+@Configuration
+public class DynamoBean{{ EntityCapital }} {
+    private final MapperClass mapperClass;
+    private final {{ EntityCapital }}MapperDynamo mapperDynamo;
+    private final {{ EntityCapital }}MapperEntity mapperEntity;
+
+    public DynamoBean{{ EntityCapital }}
+    (
+        MapperClass mapperClass,
+        {{ EntityCapital }}MapperDynamo mapperDynamo,
+        {{ EntityCapital }}MapperEntity mapperEntity
+    )
+    { 
+        this.mapperClass = mapperClass;
+        this.mapperDynamo = mapperDynamo;
+        this.mapperEntity = mapperEntity;
+    }
+
+    @Bean
+    public IProviderPersistence<{{ EntityCapital }}PersistenceModel> {{ Entity }}PersistenceModel(DynamoDbEnhancedClient client) {
+        MapperInfo mapperInfo = new MapperInfo();
+        mapperInfo.setDynamoModelClass({{ EntityCapital }}Dynamo.class);
+        mapperInfo.setPersistenceModelClass({{ EntityCapital }}PersistenceModel.class);
+        mapperInfo.setMapperDynamo(mapperDynamo);
+        mapperInfo.setMapperEntity(mapperEntity);
+        mapperInfo.setTableName("{{ Entity }}");
+
+        mapperClass.register(mapperInfo);
+
+        return new DynamoDbGenericPersistence<>
+        (
+            client, 
+            {{ EntityCapital }}PersistenceModel.class, 
+            mapperClass, 
+            {{ EntityCapital }}Schema.TABLE_SCHEMA
+        );
+    }
+}

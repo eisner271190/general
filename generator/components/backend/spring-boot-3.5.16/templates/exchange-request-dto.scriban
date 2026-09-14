@@ -1,0 +1,52 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.application.dto;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+
+public class ExchangeRequestDTO {
+    @NotBlank(message = "El código de autorización es requerido")
+    @JsonProperty("code")
+    private String code;
+    
+    @NotBlank(message = "El code verifier es requerido")
+    @JsonProperty("code_verifier")
+    private String codeVerifier;
+    
+    @NotBlank(message = "La URI de redirección es requerida")
+    @JsonProperty("redirect_uri")
+    private String redirectUri;
+    
+    public ExchangeRequestDTO() {
+    }
+
+    public ExchangeRequestDTO(String code, String codeVerifier, String redirectUri) {
+        this.code = code;
+        this.codeVerifier = codeVerifier;
+        this.redirectUri = redirectUri;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getCodeVerifier() {
+        return codeVerifier;
+    }
+
+    public void setCodeVerifier(String codeVerifier) {
+        this.codeVerifier = codeVerifier;
+    }
+
+    public String getRedirectUri() {
+        return redirectUri;
+    }
+
+    public void setRedirectUri(String redirectUri) {
+        this.redirectUri = redirectUri;
+    }
+}
+{{ end }}

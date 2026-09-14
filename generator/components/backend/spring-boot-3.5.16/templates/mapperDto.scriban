@@ -1,0 +1,14 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.application.mappers;
+
+import com.{{ Company }}.{{ MicroserviceName }}.application.dto.{{ EntityCapital }}DTO;
+import com.{{ Company }}.{{ MicroserviceName }}.domain.model.{{ EntityCapital }};
+import org.mapstruct.Mapper;
+import org.mapstruct.factory.Mappers;
+
+@Mapper
+public interface {{ EntityCapital }}MapperDto {
+    {{ EntityCapital }}MapperDto INSTANCE = Mappers.getMapper({{ EntityCapital }}MapperDto.class);
+
+    {{ EntityCapital }}DTO toDTO({{ EntityCapital }} model);
+    {{ EntityCapital }} toModel({{ EntityCapital }}DTO dto);
+}

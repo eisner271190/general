@@ -1,0 +1,44 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.handlers;
+
+import com.{{ Company }}.{{ MicroserviceName }}.application.services.I{{ EntityCapital }}Service;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.rest.response.ApiResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
+import java.util.Map;
+
+@Component
+public class {{ EntityCapital }}Handler {
+
+    private final I{{ EntityCapital }}Service {{ Entity }}Service;
+
+    public {{ EntityCapital }}Handler(I{{ EntityCapital }}Service {{ Entity }}Service) {
+        this.{{ Entity }}Service = {{ Entity }}Service;
+    }
+
+    public Mono<ServerResponse> holaMundo(ServerRequest request) {
+        return Mono.just(Map.of("datos", "datos"))
+            .map(data -> new ApiResponse(data, "Hola Mundo", HttpStatus.OK.value()))
+            .flatMap(response ->
+                    ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(response)
+            );
+    }
+
+    public Mono<ServerResponse> get{{ EntityCapital }}(ServerRequest request) {
+        Long id = Long.valueOf(request.pathVariable("id"));
+        return {{ Entity }}Service.get{{ EntityCapital }}(id)
+                .flatMap({{ Entity }}DTO -> ServerResponse.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(new ApiResponse({{ Entity }}DTO,"{{ EntityCapital }} retrieved successfully",HttpStatus.OK.value()))
+                .switchIfEmpty(ServerResponse.status(HttpStatus.NOT_FOUND)
+                    .bodyValue(new ApiResponse(null, "{{ EntityCapital }} not found", HttpStatus.NOT_FOUND.value()))));
+    }
+}

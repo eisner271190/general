@@ -1,0 +1,24 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.domain.usecase;
+
+import com.{{ Company }}.{{ Name }}.domain.servicePorts.AuthServicePort;
+import com.{{ Company }}.{{ Name }}.domain.ports.AuthPort;
+import com.{{ Company }}.{{ Name }}.domain.model.*;
+
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+@Service
+public class AuthUseCase implements AuthServicePort {
+
+    private final AuthPort authPort;
+
+    public AuthUseCase(AuthPort authPort) {
+        this.authPort = authPort;
+    }
+
+    @Override
+    public Mono<TokenResponse> generateToken(TokenRequest request) {
+        return authPort.generateToken(request);
+    }
+}
+{{ end }}

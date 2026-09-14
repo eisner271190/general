@@ -1,0 +1,362 @@
+﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.infrastructure.configuration.cloud.aws;
+
+import com.{{ Company }}.{{ Name }}.domain.model.*;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.*;
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderAsyncClient;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+
+@Slf4j
+@Component
+public class CognitoClient {
+
+    private final CognitoIdentityProviderAsyncClient cognitoClient;
+    private final WebClient webClient;
+
+    private static final String HMACSHA256 = "HmacSHA256";
+
+    private static final String USER_POOL_ID = System.getenv("AWS_COGNITO_USER_POOL_ID");
+    private static final String CLIENT_ID = System.getenv("AWS_COGNITO_USER_POOL_CLIENT_ID");
+    private static final String TEMPORARY_PASSWORD = System.getenv("AWS_COGNITO_TEMPORARY_PASSWORD");
+    private static final String CLIENT_SECRET = null;
+    private static final String COGNITO_DOMAIN = System.getenv("AWS_COGNITO_DOMAIN");
+
+    public CognitoClient() {
+        this.cognitoClient = CognitoIdentityProviderAsyncClient.create();
+        this.webClient = WebClient.builder().build();
+    }
+
+    public Mono<TokenResponse> generateToken(String username, String password) {
+        Map<String, String> authParams = prepareAuthParams(username, password);
+
+        InitiateAuthRequest authRequest = buildAuthRequest(authParams);
+
+        return authenticate(authRequest)
+                .map(accessToken -> new TokenResponse(accessToken))
+                .onErrorResume(e -> handleAuthenticationError(e));
+    }
+
+    private InitiateAuthRequest buildAuthRequest(Map<String, String> authParams) {
+        return InitiateAuthRequest.builder()
+                .clientId(CLIENT_ID)
+                .authFlow(AuthFlowType.USER_PASSWORD_AUTH)
+                .authParameters(authParams)
+                .build();
+    }
+
+    private Mono<String> authenticate(InitiateAuthRequest authRequest) {
+        return Mono.fromFuture(() -> cognitoClient.initiateAuth(authRequest))
+                .map(InitiateAuthResponse::authenticationResult)
+                .map(AuthenticationResultType::accessToken);
+    }
+
+    private Mono<TokenResponse> handleAuthenticationError(Throwable e) {
+        return Mono.error(new RuntimeException("Error en la autenticación: " + e.getMessage(), e));
+    }
+
+    private Map<String, String> prepareAuthParams(String username, String password) {
+        Map<String, String> authParams = new HashMap<>();
+        authParams.put("USERNAME", username);
+        authParams.put("PASSWORD", password);
+
+        if (CLIENT_SECRET != null) {
+            authParams.put("SECRET_HASH", calculateSecretHash(username, CLIENT_ID, CLIENT_SECRET));
+        }
+
+        return authParams;
+    }
+
+    private String calculateSecretHash(String username, String clientId, String clientSecret) {
+        try {
+            String message = username + clientId;
+            Mac mac = Mac.getInstance(HMACSHA256);
+            mac.init(new SecretKeySpec(clientSecret.getBytes(StandardCharsets.UTF_8), HMACSHA256));
+            byte[] rawHmac = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(rawHmac);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al calcular el secret hash", e);
+        }
+    }
+
+    public Mono<Void> createUser(RegisterUser request) {
+        AdminCreateUserRequest createUserRequest = AdminCreateUserRequest.builder()
+                .userPoolId(USER_POOL_ID)
+                .username(request.getEmail())
+                .userAttributes(
+                        AttributeType.builder().name("email").value(request.getEmail()).build(),
+                        AttributeType.builder().name("name").value(request.getName()).build()
+                )
+                .temporaryPassword(TEMPORARY_PASSWORD)
+                .build();
+
+        return Mono.fromFuture(() -> cognitoClient.adminCreateUser(createUserRequest)).then();
+    }
+
+    public Mono<Void> signUpUser(RegisterUser request) {
+        SignUpRequest signUpRequest = SignUpRequest.builder()
+                .clientId(CLIENT_ID)
+                .username(request.getEmail())
+                .password(request.getPassword())
+                .userAttributes(
+                        AttributeType.builder().name("email").value(request.getEmail()).build(),
+                        AttributeType.builder().name("name").value(request.getName()).build()
+                )
+                .build();
+
+        return Mono.fromFuture(() -> cognitoClient.signUp(signUpRequest)).then();
+    }
+
+    public Mono<Void> confirmUser(String username, String confirmationCode) {
+        ConfirmSignUpRequest confirmSignUpRequest = ConfirmSignUpRequest.builder()
+                .clientId(CLIENT_ID)
+                .username(username)
+                .confirmationCode(confirmationCode)
+                .build();
+
+        return Mono.fromFuture(() -> cognitoClient.confirmSignUp(confirmSignUpRequest))
+        .doOnTerminate(() -> System.out.println("Usuario confirmado: " + username))
+        .onErrorResume(e -> {
+            System.out.println("Error al confirmar el usuario: " + e.getMessage());
+            return Mono.error(new RuntimeException("Error al confirmar el usuario", e));
+        }).then();
+    }
+
+    public Mono<Void> forcePasswordReset(String username) {
+        AdminSetUserPasswordRequest passwordRequest = AdminSetUserPasswordRequest.builder()
+                .userPoolId(USER_POOL_ID)
+                .username(username)
+                .password(TEMPORARY_PASSWORD)
+                .permanent(false)
+                .build();
+
+        return Mono.fromFuture(() -> cognitoClient.adminSetUserPassword(passwordRequest)).then();
+    }
+
+    public Mono<Void> changePassword(String accessToken, String oldPassword, String newPassword) {
+        ChangePasswordRequest changePasswordRequest = ChangePasswordRequest.builder()
+                .accessToken(accessToken)
+                .previousPassword(oldPassword)
+                .proposedPassword(newPassword)
+                .build();
+
+        return Mono.fromFuture(() -> cognitoClient.changePassword(changePasswordRequest)).then();
+    }
+
+    public Mono<Void> initiatePasswordRecovery(String email) {
+        ForgotPasswordRequest forgotPasswordRequest = ForgotPasswordRequest.builder()
+                .clientId(CLIENT_ID)
+                .username(email)
+                .build();
+
+        return Mono.fromFuture(() -> cognitoClient.forgotPassword(forgotPasswordRequest)).then();
+    }
+
+    public Mono<Void> deleteUser(String username) {
+        AdminDeleteUserRequest deleteUserRequest = AdminDeleteUserRequest.builder()
+                .userPoolId(USER_POOL_ID)
+                .username(username)
+                .build();
+
+        return Mono.fromFuture(() -> cognitoClient.adminDeleteUser(deleteUserRequest)).then();
+    }
+
+    public Mono<Void> updateUserStatus(String username, boolean active) {
+        AdminDisableUserRequest disableUserRequest = AdminDisableUserRequest.builder()
+                .userPoolId(USER_POOL_ID)
+                .username(username)
+                .build();
+
+        AdminEnableUserRequest enableUserRequest = AdminEnableUserRequest.builder()
+                .userPoolId(USER_POOL_ID)
+                .username(username)
+                .build();
+
+        return Mono.fromFuture(() -> {
+            if (active) {
+                return cognitoClient.adminEnableUser(enableUserRequest);
+            } else {
+                return cognitoClient.adminDisableUser(disableUserRequest);
+            }
+        }).then();
+    }
+
+    public Mono<ExchangeResponse> exchangeCodeForTokens(String code, String codeVerifier, String redirectUri) {
+        String tokenEndpoint = String.format("%s/oauth2/token", COGNITO_DOMAIN);
+
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("grant_type", "authorization_code");
+        formData.add("client_id", CLIENT_ID);
+        formData.add("code", code);
+        formData.add("code_verifier", codeVerifier);
+        formData.add("redirect_uri", redirectUri);
+
+        return webClient.post()
+                .uri(tokenEndpoint)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .bodyValue(formData)
+                .retrieve()
+//                .bodyToMono(String.class)
+//                .doOnNext(responseEndpoint -> log.info("Response Endpoint: {}", responseEndpoint))
+//                .then(Mono.just(ExchangeResponse.builder().build()))
+//                ;
+                .onStatus(status -> status.isError(), response ->
+                        response.bodyToMono(ErrorResponse.class).flatMap(err -> {
+                            String codeErr = err.getError();
+                            String desc = err.getError_description();
+                            String message = buildErrorMessage(response.statusCode().value(), codeErr, desc);
+                            log.error("Error al intercambiar el código: status={} error={} desc={}", response.statusCode().value(), codeErr, desc);
+                            return Mono.<Throwable>error(new RuntimeException(message));
+                        })
+                )
+                .bodyToMono(CognitoTokenResponse.class)
+                .doOnSuccess(cognito -> log.info("CognitoTokenResponse: {}", cognito))
+                .map(tokenResp -> new ExchangeResponse(
+                        tokenResp.getAccessToken(),
+                        tokenResp.getIdToken(),
+                        tokenResp.getRefreshToken(),
+                        tokenResp.getExpiresIn(),
+                        tokenResp.getTokenType()
+                ))
+                .doOnSuccess(resp -> log.info("ExchangeResponse: {}", resp));
+
+    }
+
+    private String buildErrorMessage(int status, String error, String description) {
+        // Si existe description y no hay un código específico, devolverla directamente
+        if (description != null && (error == null || error.isEmpty())) {
+            return description;
+        }
+
+        // Para invalid_client preferimos devolver la descripción si viene, sino un mensaje por defecto
+        if (status == 401 || "invalid_client".equals(error)) {
+            return (description != null && !description.isEmpty()) ? description : "Client authentication failed";
+        }
+
+        if ("invalid_grant".equals(error)) {
+            if (description != null) {
+                String d = description.toLowerCase();
+                if (d.contains("expired")) return "Authorization code expired";
+                if (d.contains("consumed") || d.contains("already used") || d.contains("has been consumed")) return "Authorization code has been consumed";
+                if (d.contains("redirect")) return "Redirect URI mismatch";
+                if (d.contains("code verifier") || d.contains("code_verifier") || d.contains("invalid code verifier")) return "Invalid code verifier";
+            }
+            // Si no reconocemos el description, devolvemos un mensaje genérico que coincide con el ejemplo
+            return (description != null && !description.isEmpty()) ? description : "Invalid authorization code";
+        }
+
+        if ("unsupported_grant_type".equals(error)) {
+            return (description != null && !description.isEmpty()) ? description : "Grant type not supported";
+        }
+
+        if ("invalid_request".equals(error)) {
+            // Devolver la descripción (ej: "Missing required parameter: code") si está presente
+            return (description != null && !description.isEmpty()) ? description : "Invalid request";
+        }
+
+        // Fallback
+        return (description != null && !description.isEmpty()) ? description : (error != null ? error : "Unknown error");
+    }
+
+    private static class CognitoTokenResponse {
+        @JsonProperty("access_token")
+        private String access_token;
+        @JsonProperty("id_token")
+        private String id_token;
+        @JsonProperty("refresh_token")
+        private String refresh_token;
+        @JsonProperty("expires_in")
+        private Integer expires_in;
+        @JsonProperty("token_type")
+        private String token_type;
+
+        public String getAccessToken() {
+            return access_token;
+        }
+
+        public void setAccessToken(String access_token) {
+            this.access_token = access_token;
+        }
+
+        public String getIdToken() {
+            return id_token;
+        }
+
+        public void setIdToken(String id_token) {
+            this.id_token = id_token;
+        }
+
+        public String getRefreshToken() {
+            return refresh_token;
+        }
+
+        public void setRefreshToken(String refresh_token) {
+            this.refresh_token = refresh_token;
+        }
+
+        public Integer getExpiresIn() {
+            return expires_in;
+        }
+
+        public void setExpiresIn(Integer expires_in) {
+            this.expires_in = expires_in;
+        }
+
+        public String getTokenType() {
+            return token_type;
+        }
+
+        public void setTokenType(String token_type) {
+            this.token_type = token_type;
+        }
+
+        @Override
+        public String toString() {
+            try {
+                return new com.fasterxml.jackson.databind.ObjectMapper()
+                        .writerWithDefaultPrettyPrinter()
+                        .writeValueAsString(this);
+            } catch (Exception e) {
+                return "CognitoTokenResponse{errorSerializing=true}";
+            }
+        }
+    }
+
+    private static class ErrorResponse {
+        private String error;
+        private String error_description;
+
+        public String getError() {
+            return error;
+        }
+
+        public void setError(String error) {
+            this.error = error;
+        }
+
+        public String getError_description() {
+            return error_description;
+        }
+
+        public void setError_description(String error_description) {
+            this.error_description = error_description;
+        }
+
+        // convenience getters normalized
+        public String getError_description_normalized() { return error_description; }
+    }
+}
+{{ end }}

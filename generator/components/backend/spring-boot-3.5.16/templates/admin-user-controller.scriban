@@ -1,0 +1,76 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.infrastructure.controllers;
+
+import com.{{ Company }}.{{ Name }}.application.services.IAdminUserService;
+import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ApiResponse;
+import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ErrorApiResponse;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequestMapping("/api/v1/admin/users")
+public class AdminUserController {
+
+    private final IAdminUserService adminUserService;
+
+    public AdminUserController(IAdminUserService adminUserService) {
+        this.adminUserService = adminUserService;
+    }
+
+    @DeleteMapping("/{username}")
+    public Mono<ResponseEntity<ApiResponse>> deleteUser(@PathVariable String username) {
+        return adminUserService.deleteUser(username)
+                .then(Mono.fromCallable(() -> {
+                    ApiResponse response = new ApiResponse(null, "Usuario eliminado exitosamente", HttpStatus.OK.value());
+                    return ResponseEntity.ok().body(response);
+                }))
+                .onErrorResume(e -> {
+                    ErrorApiResponse errorResponse = ErrorApiResponse.createErrorResponse(
+                            null,
+                            "Error al eliminar el usuario",
+                            HttpStatus.BAD_REQUEST.value(),
+                            e.getMessage()
+                    );
+                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
+                });
+    }
+
+    @PutMapping("/{username}/activate")
+    public Mono<ResponseEntity<ApiResponse>> activateUser(@PathVariable String username) {
+        return adminUserService.activateUser(username)
+                .then(Mono.fromCallable(() -> {
+                    ApiResponse response = new ApiResponse(null, "Usuario activado exitosamente", HttpStatus.OK.value());
+                    return ResponseEntity.ok().body(response);
+                }))
+                .onErrorResume(e -> {
+                    ErrorApiResponse errorResponse = ErrorApiResponse.createErrorResponse(
+                            null,
+                            "Error al activar el usuario",
+                            HttpStatus.BAD_REQUEST.value(),
+                            e.getMessage()
+                    );
+                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
+                });
+    }
+
+    @PutMapping("/{username}/deactivate")
+    public Mono<ResponseEntity<ApiResponse>> deactivateUser(@PathVariable String username) {
+        return adminUserService.deactivateUser(username)
+                .then(Mono.fromCallable(() -> {
+                    ApiResponse response = new ApiResponse(null, "Usuario desactivado exitosamente", HttpStatus.OK.value());
+                    return ResponseEntity.ok().body(response);
+                }))
+                .onErrorResume(e -> {
+                    ErrorApiResponse errorResponse = ErrorApiResponse.createErrorResponse(
+                            null,
+                            "Error al desactivar el usuario",
+                            HttpStatus.BAD_REQUEST.value(),
+                            e.getMessage()
+                    );
+                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
+                });
+    }
+}
+{{ end }}

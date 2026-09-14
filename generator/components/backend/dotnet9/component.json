@@ -1,0 +1,17 @@
+{
+  "name": "dotnet9",
+  "type": "backend",
+  "directories": [
+    "backend",
+    "backend/generated"
+  ],
+  "files": [
+    {
+      "key": "backend/generated/generator-manifest.txt",
+      "value": "templates/generator-manifest.txt"
+    }
+  ],
+  "defaultFiles": [
+    "defaults/.gitignore"
+  ]
+}

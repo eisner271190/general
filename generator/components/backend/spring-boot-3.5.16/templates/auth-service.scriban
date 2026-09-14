@@ -1,0 +1,36 @@
+﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.application.services;
+
+import com.{{ Company }}.{{ Name }}.domain.servicePorts.AuthServicePort;
+import com.{{ Company }}.{{ Name }}.domain.servicePorts.ExchangeServicePort;
+import com.{{ Company }}.{{ Name }}.application.dto.*;
+import com.{{ Company }}.{{ Name }}.application.mappers.*;
+
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+@Service
+public class AuthService implements IAuthService {
+
+    private final AuthServicePort authServicePort;
+    private final ExchangeServicePort exchangeServicePort;
+
+    public AuthService(AuthServicePort authServicePort, ExchangeServicePort exchangeServicePort) {
+        this.authServicePort = authServicePort;
+        this.exchangeServicePort = exchangeServicePort;
+    }
+
+    @Override
+    public Mono<TokenResponseDTO> generateToken(TokenRequestDTO request) {
+        var model = TokenRequestMapperDto.INSTANCE.toModel(request);
+        return authServicePort.generateToken(model)
+                .map(modelResponse -> TokenResponseMapperDto.INSTANCE.toDTO(modelResponse));
+    }
+
+    @Override
+    public Mono<ExchangeResponseDTO> exchangeCodeForTokens(ExchangeRequestDTO request) {
+        var model = ExchangeRequestMapperDto.INSTANCE.toModel(request);
+        return exchangeServicePort.exchangeCodeForTokens(model)
+                .map(modelResponse -> ExchangeResponseMapperDto.INSTANCE.toDTO(modelResponse));
+    }
+}
+{{ end }}

@@ -1,0 +1,61 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.domain.usecase;
+
+import com.{{ Company }}.{{ MicroserviceName }}.domain.model.{{ EntityCapital }};
+import com.{{ Company }}.{{ MicroserviceName }}.domain.ports.{{ EntityCapital }}Port;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import static org.mockito.Mockito.*;
+
+class {{ EntityCapital }}UseCaseTest {
+
+    @Mock
+    private {{ EntityCapital }}Port {{ Entity }}Port;
+
+    @InjectMocks
+    private {{ EntityCapital }}UseCase {{ Entity }}UseCase;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void get{{ EntityCapital }}Id_ShouldReturn{{ EntityCapital }}_WhenIdExists() {
+        // Datos de prueba
+        Long {{ Entity }}Id = 1L;
+        {{ EntityCapital }} expected{{ EntityCapital }} = new {{ EntityCapital }}({{ Entity }}Id);
+
+        // Configuración del mock
+        when({{ Entity }}Port.get{{ EntityCapital }}Id({{ Entity }}Id)).thenReturn(Mono.just(expected{{ EntityCapital }}));
+
+        // Verificación del comportamiento
+        StepVerifier.create({{ Entity }}UseCase.get{{ EntityCapital }}Id({{ Entity }}Id))
+                .expectNext(expected{{ EntityCapital }})
+                .verifyComplete();
+
+        // Verificar interacción con el mock
+        verify({{ Entity }}Port, times(1)).get{{ EntityCapital }}Id({{ Entity }}Id);
+    }
+
+    @Test
+    void get{{ EntityCapital }}Id_ShouldReturnEmpty_When{{ EntityCapital }}NotFound() {
+        // Datos de prueba
+        Long {{ Entity }}Id = 2L;
+
+        // Configuración del mock
+        when({{ Entity }}Port.get{{ EntityCapital }}Id({{ Entity }}Id)).thenReturn(Mono.empty());
+
+        // Verificación del comportamiento
+        StepVerifier.create({{ Entity }}UseCase.get{{ EntityCapital }}Id({{ Entity }}Id))
+                .verifyComplete();
+
+        // Verificar interacción con el mock
+        verify({{ Entity }}Port, times(1)).get{{ EntityCapital }}Id({{ Entity }}Id);
+    }
+}

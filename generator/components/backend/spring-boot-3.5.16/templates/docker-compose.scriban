@@ -1,0 +1,112 @@
+﻿version: "3.9"
+
+services:
+#  sonarqube:
+#    image: sonarqube:community
+#    container_name: sonarqube
+#    ports:
+#      - "9000:9000"
+#    networks:
+#      - monitoring
+#    environment:
+#      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+#      SONAR_WEB_JAVA_OPTS: "-Xmx512m -Xms128m"
+#      sonar.forceAuthentication: "false"
+#      sonar.project.creation.auto: "true"
+#      sonar.auth.anonymous: "true"
+#
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    user: root
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    networks:
+      - monitoring
+#
+#  grafana:
+#    image: grafana/grafana
+#    container_name: grafana
+#    environment:
+#      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+#      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+#    ports:
+#      - "3000:3000"
+#    volumes:
+#      - grafana_data:/var/lib/grafana
+#      - ./grafana/provisioning:/etc/grafana/provisioning
+#      - ./grafana/dashboards:/var/lib/grafana/dashboards
+#    depends_on:
+#      - prometheus
+#    networks:
+#      - monitoring
+#
+#  dependency-check:
+#    image: owasp/dependency-check
+#    container_name: dependency-check
+#    environment:
+#      - AUTO_UPDATE=true
+#    volumes:
+#      - dependency-check-db:/root/.dependency-check
+#      - ./dependency-check-reports:/src/reports
+#{{ for m in microservices }}
+#      - ./microservices/{{ m.Name }}:/src/{{ m.Name }}
+#{{ end }}
+#    command: >
+#      {{ for m in microservices }}--scan /src/{{ m.Name }} {{ end }} --out /src/reports --format "ALL" --nvdApiKey ${NVDAPIKEY}
+#    ports:
+#      - "8080:8080"
+#    networks:
+#      - monitoring
+#
+#{{ for m in microservices }}
+#  sonarscanner_{{ m.Name }}:
+#    image: sonarsource/sonar-scanner-cli
+#    container_name: sonarscanner_{{ m.Name }}
+#    networks:
+#      - monitoring
+#    depends_on:
+#      - sonarqube
+#    environment:
+#      - SONAR_SCANNER_OPTS=-Dsonar.projectKey={{ m.Name }}
+#    volumes:
+#      - "./sonar-scanner.properties:/opt/sonar-scanner/conf/sonar-scanner.properties"
+#      - "./microservices/{{ m.Name }}:/usr/src"
+#    entrypoint: ["tail", "-f", "/dev/null"]
+#{{ end }}
+
+{{ for m in microservices }}
+  {{ m.Name }}:
+    build: ./microservices/{{ m.Name }}
+    container_name: {{ m.Name }}
+    ports:
+      - "{{ m.Port }}:{{ m.Port }}"
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+    environment:
+      AWS_REGION: ${AWS_REGION}
+      AWS_PROFILE: ${AWS_PROFILE}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_SNS_TOPIC_ARN: ${AWS_SNS_TOPIC_ARN} {{if m.ConsumedEvents.size > 0}}
+      AWS_SQS_URL: ${AWS_SQS_URL_{{ m.Name }}}
+{{end}}
+    labels:
+      - "prometheus.scrape=true"
+{{ end }}
+
+networks:
+  monitoring:
+    driver: bridge
+#
+#volumes:
+#  prometheus_data:
+#  grafana_data:
+#  dependency-check-db:

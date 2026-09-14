@@ -1,0 +1,37 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.application.services;
+
+import com.{{ Company }}.{{ Name }}.domain.servicePorts.RegistrationServicePort;
+import com.{{ Company }}.{{ Name }}.application.dto.*;
+import com.{{ Company }}.{{ Name }}.application.mappers.*;
+
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+@Service
+public class RegistrationService implements IRegistrationService {
+
+    private final RegistrationServicePort registrationServicePort;
+
+    public RegistrationService(RegistrationServicePort registrationServicePort) {
+        this.registrationServicePort = registrationServicePort;
+    }
+
+    @Override
+    public Mono<Void> registerUserByAdmin(RegisterUserRequestDTO request) {
+        var model = RegisterUserMapperDto.INSTANCE.toModel(request);
+        return registrationServicePort.registerUserByAdmin(model);
+    }
+
+    @Override
+    public Mono<Void> registerUser(RegisterUserRequestDTO request) {
+        var model = RegisterUserMapperDto.INSTANCE.toModel(request);
+        return registrationServicePort.registerUser(model);
+    }
+
+    @Override
+    public Mono<Void> confirmUser(ConfirmUserRequestDTO request) {
+        var model = ConfirmUserMapperDto.INSTANCE.toModel(request);
+        return registrationServicePort.confirmUser(model);
+    }
+}
+{{ end }}

@@ -1,0 +1,13 @@
+Application: {{APPLICATION_NAME}}
+ApplicationId: {{APPLICATION_ID}}
+Environment: {{ENVIRONMENT}}
+Microservice: {{MICROSERVICE_NAME}}
+Port: {{MICROSERVICE_PORT}}
+Deploy: {{MICROSERVICE_DEPLOY}}
+Backend: {{BACKEND}}
+Entities: {{ENTITIES_JSON}}
+Endpoints: {{ENDPOINTS_JSON}}
+DatabaseHost: {{DATABASE_HOST}}
+DatabaseName: {{DATABASE_NAME}}
+ApiUrl: {{API_URL}}
+Debug: {{DEBUG}}

@@ -1,0 +1,15 @@
+﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.application.mappers;
+
+import com.{{ Company }}.{{ Name }}.application.dto.TokenResponseDTO;
+import com.{{ Company }}.{{ Name }}.domain.model.TokenResponse;
+import org.mapstruct.Mapper;
+import org.mapstruct.factory.Mappers;
+
+@Mapper
+public interface TokenResponseMapperDto {
+    TokenResponseMapperDto INSTANCE = Mappers.getMapper(TokenResponseMapperDto.class);
+
+    TokenResponseDTO toDTO(TokenResponse model);
+    TokenResponse toModel(TokenResponseDTO dto);
+}
+{{ end }}

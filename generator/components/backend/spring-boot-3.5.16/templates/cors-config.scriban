@@ -1,0 +1,50 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.infrastructure.configuration;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.reactive.config.CorsRegistry;
+import org.springframework.web.reactive.config.WebFluxConfigurer;
+
+import java.util.Arrays;
+
+@Slf4j
+@Configuration
+public class CorsConfig implements WebFluxConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        log.info("Configuring CORS mappings via WebFluxConfigurer.addCorsMappings");
+        registry.addMapping("/**")
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "http://127.0.0.1:3000"
+                )
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
+    }
+
+    // Además, proveemos un CorsWebFilter que se aplica en tiempo de petición.
+    // Esto es útil cuando usas RouterFunctions (endpoints funcionales) o quieres
+    // un punto claro donde poner breakpoints por petición.
+    @Bean
+    public CorsWebFilter corsWebFilter() {
+        log.info("Creating CorsWebFilter bean");
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://127.0.0.1:3000"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.addAllowedHeader("*");
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return new CorsWebFilter(source);
+    }
+}
+{{ end }}

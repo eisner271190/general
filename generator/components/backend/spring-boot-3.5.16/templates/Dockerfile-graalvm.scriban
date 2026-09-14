@@ -1,0 +1,39 @@
+﻿{{ if(Graalvm) }}# ======================
+# Etapa 1: Build nativo con GraalVM
+# ======================
+FROM ghcr.io/graalvm/native-image:ol8-java17 AS builder
+WORKDIR /app
+
+# Instalar gzip y locales para Maven
+RUN microdnf install -y gzip tar glibc-langpack-en && microdnf clean all
+
+# Configurar locale
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# Copiar wrapper y pom.xml primero (cache de dependencias)
+COPY pom.xml mvnw bootstrap ./
+COPY .mvn .mvn
+RUN chmod +x mvnw
+RUN ./mvnw dependency:go-offline
+
+# Copiar el resto del código
+COPY src src
+
+# Compilar binario nativo
+RUN ./mvnw -Pnative native:compile -DskipTests
+
+# ======================
+# Etapa 2: Runtime Lambda
+# ======================
+FROM public.ecr.aws/lambda/provided:al2023
+WORKDIR /var/task
+
+# Copiar binario y bootstrap desde build context
+COPY --from=builder /app/target/product ./product
+COPY bootstrap ./bootstrap
+
+RUN chmod +x ./product ./bootstrap
+
+ENTRYPOINT ["./bootstrap"]
+{{ end }}

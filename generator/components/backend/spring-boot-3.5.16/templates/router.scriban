@@ -1,0 +1,18 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.routers;
+
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.handlers.{{ EntityCapital }}Handler;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.server.*;
+
+@Configuration
+public class {{ EntityCapital }}Router {
+    @Bean
+    public RouterFunction<ServerResponse> route{{ EntityCapital }}({{ EntityCapital }}Handler handler){
+        return RouterFunctions.nest(RequestPredicates.path("/{{ MicroserviceName }}"),
+            RouterFunctions
+            .route(RequestPredicates.GET("/"), handler::holaMundo)
+            .andRoute(RequestPredicates.GET("/api/v1/{{ Entity }}s/{id}"), handler::get{{ EntityCapital }}));
+    }
+}

@@ -1,0 +1,23 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.application.services;
+
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+import com.{{ Company }}.{{ MicroserviceName }}.application.dto.{{ EntityCapital }}DTO;
+import com.{{ Company }}.{{ MicroserviceName }}.domain.servicePorts.{{ EntityCapital }}ServicePort;
+import com.{{ Company }}.{{ MicroserviceName }}.application.mappers.{{ EntityCapital }}MapperDto;
+
+@Service
+public class {{ EntityCapital }}Service implements I{{ EntityCapital }}Service {
+
+    private final {{ EntityCapital }}ServicePort {{ Entity }}ServicePort;
+
+    public {{ EntityCapital }}Service({{ EntityCapital }}ServicePort {{ Entity }}ServicePort) {
+        this.{{ Entity }}ServicePort = {{ Entity }}ServicePort;
+    }
+
+    public Mono<{{ EntityCapital }}DTO> get{{ EntityCapital }}(Long id) {
+        return {{ Entity }}ServicePort.get{{ EntityCapital }}Id(id)
+                .map({{ EntityCapital }}MapperDto.INSTANCE::toDTO);
+    }
+}

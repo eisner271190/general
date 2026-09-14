@@ -1,0 +1,78 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.infrastructure.controllers;
+
+import com.{{ Company }}.{{ Name }}.application.services.IRegistrationService;
+import com.{{ Company }}.{{ Name }}.application.dto.*;
+import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ApiResponse;
+import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ErrorApiResponse;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequestMapping("/api/v1/registration")
+public class RegistrationController {
+
+    private final IRegistrationService registrationService;
+
+    public RegistrationController(IRegistrationService registrationService) {
+        this.registrationService = registrationService;
+    }
+
+    @PostMapping("/admin/users")
+    public Mono<ResponseEntity<ApiResponse>> registerUserByAdmin(@Valid @RequestBody RegisterUserRequestDTO request) {
+        return registrationService.registerUserByAdmin(request)
+                .then(Mono.fromCallable(() -> {
+                    ApiResponse response = new ApiResponse(null, "Usuario creado exitosamente por administrador", HttpStatus.CREATED.value());
+                    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+                }))
+                .onErrorResume(e -> {
+                    ErrorApiResponse errorResponse = ErrorApiResponse.createErrorResponse(
+                            null,
+                            "Error al crear el usuario",
+                            HttpStatus.BAD_REQUEST.value(),
+                            e.getMessage()
+                    );
+                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
+                });
+    }
+
+    @PostMapping("/signup")
+    public Mono<ResponseEntity<ApiResponse>> signUpUser(@Valid @RequestBody RegisterUserRequestDTO request) {
+        return registrationService.registerUser(request)
+                .then(Mono.fromCallable(() -> {
+                    ApiResponse response = new ApiResponse(null, "Usuario registrado exitosamente. Verifica tu correo para confirmar la cuenta.", HttpStatus.CREATED.value());
+                    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+                }))
+                .onErrorResume(e -> {
+                    ErrorApiResponse errorResponse = ErrorApiResponse.createErrorResponse(
+                            null,
+                            "Error al registrar el usuario",
+                            HttpStatus.BAD_REQUEST.value(),
+                            e.getMessage()
+                    );
+                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
+                });
+    }
+
+    @PostMapping("/confirm")
+    public Mono<ResponseEntity<ApiResponse>> confirmUser(@Valid @RequestBody ConfirmUserRequestDTO request) {
+        return registrationService.confirmUser(request)
+                .then(Mono.fromCallable(() -> {
+                    ApiResponse response = new ApiResponse(null, "Usuario confirmado exitosamente", HttpStatus.OK.value());
+                    return ResponseEntity.ok().body(response);
+                }))
+                .onErrorResume(e -> {
+                    ErrorApiResponse errorResponse = ErrorApiResponse.createErrorResponse(
+                            null,
+                            "Error al confirmar el usuario",
+                            HttpStatus.BAD_REQUEST.value(),
+                            e.getMessage()
+                    );
+                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
+                });
+    }
+}
+{{ end }}

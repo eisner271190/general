@@ -1,0 +1,20 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.models;
+
+public class {{ EntityCapital }}PersistenceModel {
+    private Long id;
+
+    public {{ EntityCapital }}PersistenceModel() {
+    }
+
+    public {{ EntityCapital }}PersistenceModel(Long id) {
+        this.id = id;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+}

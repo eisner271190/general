@@ -1,0 +1,6 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.domain.model;
+
+import lombok.Builder;
+
+@Builder
+public record {{ EntityCapital }} (Long id){}

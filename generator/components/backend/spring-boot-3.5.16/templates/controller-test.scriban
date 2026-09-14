@@ -1,0 +1,70 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.controllers;
+
+import com.{{ Company }}.{{ MicroserviceName }}.application.dto.{{ EntityCapital }}DTO;
+import com.{{ Company }}.{{ MicroserviceName }}.application.services.I{{ EntityCapital }}Service;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.rest.response.ApiResponse;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
+import org.mockito.MockitoAnnotations;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import static org.mockito.Mockito.when;
+
+public class {{ EntityCapital }}ControllerTest {
+
+    private WebTestClient webTestClient;
+
+    @Mock
+    private I{{ EntityCapital }}Service {{ Entity }}Service;
+
+    @InjectMocks
+    private {{ EntityCapital }}Controller {{ Entity }}Controller;
+
+    private final Long {{ Entity }}Id = 1L;
+    private final {{ EntityCapital }}DTO {{ Entity }}DTO = new {{ EntityCapital }}DTO({{ Entity }}Id);
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+        webTestClient = WebTestClient.bindToController({{ Entity }}Controller).build();
+    }
+
+    @Test
+    public void testGet{{ EntityCapital }}_Success() {
+        when({{ Entity }}Service.get{{ EntityCapital }}({{ Entity }}Id)).thenReturn(Mono.just({{ Entity }}DTO));
+
+        webTestClient.get()
+                .uri("/api/v1/{{ Entity }}s/{id}", {{ Entity }}Id)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ApiResponse.class)
+                .value(apiResponse -> {
+                    assertNotNull(apiResponse);
+                    assertEquals("{{ EntityCapital }} retrieved successfully", apiResponse.getMessage());
+                    assertEquals(200, apiResponse.getStatus());
+                    assertNotNull(apiResponse.getData());
+                });
+    }
+
+    @Test
+    public void testGet{{ EntityCapital }}_NotFound() {
+        when({{ Entity }}Service.get{{ EntityCapital }}({{ Entity }}Id)).thenReturn(Mono.error(new RuntimeException("{{ EntityCapital }} not found")));
+
+        webTestClient.get()
+                .uri("/api/v1/{{ Entity }}s/{id}", {{ Entity }}Id)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(ApiResponse.class)
+                .value(errorResponse -> {
+                    assertNotNull(errorResponse);
+                    assertEquals("{{ EntityCapital }} not found", errorResponse.getMessage());
+                    assertEquals(404, errorResponse.getStatus());
+                });
+    }
+}

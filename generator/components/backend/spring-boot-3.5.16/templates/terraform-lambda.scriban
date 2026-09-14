@@ -1,0 +1,60 @@
+﻿resource "aws_iam_role" "{{ Name }}" {
+  name = "{{ Name }}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "{{ Name }}" {
+  name = "{{ Name }}"
+  role = aws_iam_role.{{ Name }}.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Scan",
+          "dynamodb:Query"
+        ],
+        Resource = [
+{{- for entity in Entities }}
+                    aws_dynamodb_table.{{ entity }}.arn{{ if for.last == false }},{{ end }}
+{{- end }}
+                    ]
+      }
+    ]
+  })
+}
+
+resource "aws_lambda_function" "{{ Name }}" {
+  function_name = "{{ Name }}"
+  role          = aws_iam_role.{{ Name }}.arn
+  package_type  = "Image"
+  memory_size   = 512
+  timeout       = 60
+  image_uri     = replace(var.image_uri_ecr, "{SERVICENAME}", "{{ Name }}")
+  environment {
+    variables = var.environment_variables
+  }
+}

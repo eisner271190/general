@@ -1,0 +1,5 @@
+﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.domain.ports;
+
+public interface IUserPort extends AuthPort, RegistrationPort, PasswordPort, AdminUserPort {
+}
+{{ end }}

@@ -1,0 +1,23 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.dynamos;
+
+import lombok.Data;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+
+@Data
+@Builder
+@DynamoDbBean
+@AllArgsConstructor
+@NoArgsConstructor
+public class {{ EntityCapital }}Dynamo {
+    private Long id;
+
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("id")
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+}

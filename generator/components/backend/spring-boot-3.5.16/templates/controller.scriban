@@ -1,0 +1,33 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.controllers;
+
+import com.{{ Company }}.{{ MicroserviceName }}.application.services.I{{ EntityCapital }}Service;
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.rest.response.ApiResponse;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@RestController
+@RequestMapping("/api/v1/{{ Entity }}s")
+public class {{ EntityCapital }}Controller {
+
+    private final I{{ EntityCapital }}Service {{ Entity }}Service;
+
+    public {{ EntityCapital }}Controller(I{{ EntityCapital }}Service {{ Entity }}Service)
+    {
+        this.{{ Entity }}Service = {{ Entity }}Service;
+    }
+
+    @GetMapping("/{id}")
+    public Mono<ResponseEntity<ApiResponse>> get{{ EntityCapital }}(@PathVariable("id") Long id) {
+        return {{ Entity }}Service.get{{ EntityCapital }}(id)
+                .map({{ Entity }}DTO -> ResponseEntity.ok(
+                        new ApiResponse({{ Entity }}DTO,"{{ EntityCapital }} retrieved successfully",200)
+                ))
+                .onErrorResume(e -> Mono.just(ResponseEntity.status(404).body(
+                        new ApiResponse(null, "{{ EntityCapital }} not found", 404)
+                )));
+    }
+}

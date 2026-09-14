@@ -1,0 +1,9 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.domain.servicePorts;
+
+import com.{{ Company }}.{{ Name }}.domain.model.*;
+import reactor.core.publisher.Mono;
+
+public interface AuthServicePort {
+    Mono<TokenResponse> generateToken(TokenRequest request);
+}
+{{ end }}

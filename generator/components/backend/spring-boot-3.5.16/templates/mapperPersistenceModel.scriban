@@ -1,0 +1,14 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.mappers.models;
+
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.models.{{ EntityCapital }}PersistenceModel;
+import com.{{ Company }}.{{ MicroserviceName }}.domain.model.{{ EntityCapital }};
+import org.mapstruct.Mapper;
+import org.mapstruct.factory.Mappers;
+
+@Mapper
+public interface {{ EntityCapital }}MapperPersistenceModel {
+    {{ EntityCapital }}MapperPersistenceModel INSTANCE = Mappers.getMapper({{ EntityCapital }}MapperPersistenceModel.class);
+
+    {{ EntityCapital }}PersistenceModel toPersistenceModel({{ EntityCapital }} model);
+    {{ EntityCapital }} toModel({{ EntityCapital }}PersistenceModel persistenceModel);
+}

@@ -1,0 +1,43 @@
+﻿spring.application.name={{ Name }}
+server.port={{ Port }}
+
+management.endpoint.health.show-details=always
+management.endpoints.web.exposure.include=*
+management.endpoint.prometheus.enabled=true
+management.metrics.export.prometheus.enabled=true
+management.endpoint.metrics.content-type=application/json
+management.server.port={{ Port }}
+metrics.tags.application={{ Name }}
+
+spring.aot.enabled=true
+spring.aot.processing.enabled=false
+spring.aot.exclude=org.springframework.validation.beanvalidation.BeanValidationBeanRegistrationAotProcessor
+
+spring.r2dbc.url=r2dbc:h2:mem:///testdb
+spring.r2dbc.username=sa
+spring.r2dbc.password=
+spring.sql.init.mode=always
+spring.sql.init.platform=h2
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+
+# Crear la base de datos automaticamente
+spring.r2dbc.pool.initial-size=5
+spring.r2dbc.pool.max-size=20
+
+jwt.secret=${JWT_SECRET}
+jwt.expiration=${JWT_EXPIRATION}
+
+spring.main.web-application-type=reactive
+logging.level.software.amazon.awssdk=DEBUG
+
+{{- if ConsumedEvents.size > 0 }}
+aws.sqs.url=${AWS_SQS_URL_{{ Name }}}
+{{- end }}
+
+aws.region=${AWS_REGION}
+aws.profile=${AWS_PROFILE}
+aws.sns.arn=${AWS_SNS_TOPIC_ARN:}
+
+cloud.aws.credentials.access-key=${AWS_ACCESS_KEY_ID}
+cloud.aws.credentials.secret-key=${AWS_SECRET_ACCESS_KEY}

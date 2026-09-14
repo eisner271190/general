@@ -1,0 +1,25 @@
+﻿package com.{{ Company }}.{{ Name }}.infrastructure.rest.response;
+
+import java.util.Map;
+
+public class ErrorApiResponse extends ApiResponse {
+
+    private String stackTrace;
+
+    public ErrorApiResponse(Map<String, Object> data, String message, int status, String stackTrace) {
+        super(data, message, status);
+        this.stackTrace = stackTrace;
+    }
+
+    public String getStackTrace() {
+        return stackTrace;
+    }
+
+    public void setStackTrace(String stackTrace) {
+        this.stackTrace = stackTrace;
+    }
+
+    public static ErrorApiResponse createErrorResponse(Map<String, Object> data, String message, int status, String stackTrace) {
+        return new ErrorApiResponse(data, message, status, stackTrace);
+    }
+}

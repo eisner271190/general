@@ -1,0 +1,53 @@
+﻿{{- if ConsumedEvents.size > 0 }}package com.{{ Company }}.{{ Name }}.infrastructure.configuration.cloud.aws;
+
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.*;
+
+import java.util.List;
+
+@Service
+public class SqsReceiver {
+
+    private final SqsClient sqsClient;
+
+    @Value("${aws.sqs.url}")
+    private String queueUrl;
+
+    public SqsReceiver(SqsClient sqsClient) {
+        this.sqsClient = sqsClient;
+    }
+
+    public void sendMessage(String messageBody) {
+        SendMessageRequest sendRequest = SendMessageRequest.builder()
+                .queueUrl(queueUrl)
+                .messageBody(messageBody)
+                .build();
+        sqsClient.sendMessage(sendRequest);
+    }
+
+    public List<String> receiveMessages() {
+        ReceiveMessageRequest request = ReceiveMessageRequest.builder()
+                .queueUrl(queueUrl)
+                .maxNumberOfMessages(10)
+                .waitTimeSeconds(10)
+                .build();
+
+        List<Message> messages = sqsClient.receiveMessage(request).messages();
+
+        for (Message message : messages) {
+            deleteMessage(message.receiptHandle());
+        }
+
+        return messages.stream().map(Message::body).toList();
+    }
+
+    private void deleteMessage(String receiptHandle) {
+        DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
+                .queueUrl(queueUrl)
+                .receiptHandle(receiptHandle)
+                .build();
+        sqsClient.deleteMessage(deleteRequest);
+    }
+}{{ end }}

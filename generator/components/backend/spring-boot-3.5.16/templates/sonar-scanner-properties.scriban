@@ -1,0 +1,17 @@
+﻿sonar.host.url=http://sonarqube:9000
+sonar.java.binaries=/usr/src/target/classes
+sonar.java.libraries=/usr/src/target/dependency/*.jar
+sonar.language=java
+sonar.sources=/usr/src/src/main/java
+sonar.tests=/usr/src/src/test/java
+sonar.exclusions=**/build/**, **/generated/**, **/dto/**, **/entities/**, **/model/**, **/config/**, **/mappers/**, **/infrastructure/configuration/**, **/infrastructure/rest/**, **/docs/**, **/docker/**, **/Application.java
+sonar.test.inclusions=**/test/**
+sonar.java.coveragePlugin=jacoco
+sonar.coverage.jacoco.xmlReportPaths=/usr/src/target/site/jacoco/jacoco.xml
+sonar.junit.reportPaths=/usr/src/target/test-classes
+sonar.login=admin
+sonar.password=admin
+sonar.project.creation.auto=true
+sonar.auth.anonymous=true
+sonar.forceAuthentication=false
+sonar.scm.disabled=true

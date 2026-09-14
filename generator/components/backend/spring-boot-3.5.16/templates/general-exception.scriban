@@ -1,0 +1,21 @@
+﻿package com.{{ Company }}.{{ Name }}.infrastructure.configuration;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class GeneralException extends Exception {
+    private final Map<String, Object> data;
+
+    public GeneralException(String message) {
+        super(message);
+        this.data = new HashMap<>();
+    }
+
+    public void addData(String key, Object value) {
+        this.data.put(key, value);
+    }
+
+    public Map<String, Object> getData() {
+        return data;
+    }
+}

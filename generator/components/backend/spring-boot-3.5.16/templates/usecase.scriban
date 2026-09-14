@@ -1,0 +1,23 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.domain.usecase;
+
+import com.{{ Company }}.{{ MicroserviceName }}.domain.model.{{ EntityCapital }};
+import com.{{ Company }}.{{ MicroserviceName }}.domain.ports.{{ EntityCapital }}Port;
+import com.{{ Company }}.{{ MicroserviceName }}.domain.servicePorts.{{ EntityCapital }}ServicePort;
+
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+@Service //Buscar otra solución
+public class {{ EntityCapital }}UseCase implements {{ EntityCapital }}ServicePort {
+
+    private final {{ EntityCapital }}Port {{ Entity }}Port;
+
+    public {{ EntityCapital }}UseCase({{ EntityCapital }}Port {{ Entity }}Port) {
+        this.{{ Entity }}Port = {{ Entity }}Port;
+    }
+
+    @Override
+    public Mono<{{ EntityCapital }}> get{{ EntityCapital }}Id(Long id) {
+        return {{ Entity }}Port.get{{ EntityCapital }}Id(id);
+    }
+}

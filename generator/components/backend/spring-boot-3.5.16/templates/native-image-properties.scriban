@@ -1,0 +1,23 @@
+﻿# META-INF/native-image/native-image.properties
+
+# Hacer seguimiento de inicialización de clases problemáticas
+-H:TraceClassInitialization=org.apache.logging.log4j.LogManager
+-H:TraceClassInitialization=org.apache.logging.log4j.status.StatusLogger
+-H:TraceClassInitialization=org.apache.logging.log4j.util.OsgiServiceLocator
+-H:TraceClassInitialization=org.apache.logging.log4j.spi.ExtendedLoggerWrapper
+-H:TraceClassInitialization=org.apache.logging.log4j.util.PropertiesUtil
+-H:TraceClassInitialization=org.slf4j.helpers.Reporter
+-H:TraceClassInitialization=org.apache.commons.logging.LogFactory
+-H:TraceClassInitialization=org.apache.logging.log4j.util.StackLocator
+-H:TraceClassInitialization=org.apache.logging.log4j.util.StackLocatorUtil
+-H:TraceClassInitialization=org.apache.logging.log4j.spi.StandardLevel
+-H:TraceClassInitialization=org.apache.logging.log4j.spi.Provider
+-H:TraceClassInitialization=org.apache.logging.log4j.Level
+-H:TraceClassInitialization=org.apache.logging.log4j.util.PropertyFilePropertySource
+-H:TraceClassInitialization=org.apache.logging.log4j.util.LoaderUtil
+
+# Inicializar algunas clases en tiempo de ejecución
+-H:ClassInitialization=org.apache.logging.log4j.LogManager:run_time
+-H:ClassInitialization=org.apache.logging.log4j.status.StatusLogger:run_time
+-H:ClassInitialization=org.slf4j.helpers.Reporter:run_time
+-H:ClassInitialization=org.apache.commons.logging.LogFactory:run_time

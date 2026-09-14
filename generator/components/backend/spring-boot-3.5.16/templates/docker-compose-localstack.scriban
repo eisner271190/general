@@ -1,0 +1,13 @@
+﻿version: "3.9"
+
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack-local
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=lambda,sqs,sns,apigatewayv2,iam,dynamodb
+      - DEBUG=1
+    volumes:
+      - ./terraform:/terraform

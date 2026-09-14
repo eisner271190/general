@@ -1,0 +1,44 @@
+﻿package com.{{ Company }}.{{ Name }}.infrastructure.controllers;
+
+import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ApiResponse;
+import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ErrorApiResponse;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.http.HttpStatus;
+import org.mockito.MockitoAnnotations;
+
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class HolaMundoControllerTest {
+
+    private WebTestClient webTestClient;
+
+    @InjectMocks
+    private HolaMundoController holaMundoController;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+        webTestClient = WebTestClient.bindToController(holaMundoController).build();
+    }
+
+    @Test
+    public void testHolaMundo_Success() {
+        webTestClient.get()
+                .uri("/{{ Name }}/hello")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ApiResponse.class)
+                .value(response -> {
+                    assertEquals("Hola Mundo", response.getMessage());
+                    assertEquals(HttpStatus.OK.value(), response.getStatus());
+
+                    Map<String, Object> data = response.getData();
+                    assertEquals("datos", data.get("datos"));
+                });
+    }
+}

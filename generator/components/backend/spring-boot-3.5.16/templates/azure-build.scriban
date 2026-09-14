@@ -1,0 +1,112 @@
+﻿trigger:
+  branches:
+    include:
+      - master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  mavenVersion: '3.9.9'
+  dockerImageName: '{{ Name }}'
+  dockerBuildCommand: 'sudo docker build -t $(dockerImageName) .'
+  mavenCachePath: '$(HOME)/.m2/repository'
+  mavenCacheKey: 'maven | $(Build.SourcesDirectory)/pom.xml'
+  testOptions: '-Dtest="com/{{ Company }}/{{ Name }}/**"'
+  NVD_API_KEY: 'dbe68886-2f78-4a7c-9946-69e6f722827f'
+
+jobs:
+- job: Build
+  displayName: 'Build Job'
+  steps:
+    - checkout: self
+      displayName: 'Obtener código'
+
+    - task: Cache@2
+      displayName: 'Restaurar Caché Maven'
+      inputs:
+        key: '$(mavenCacheKey)'
+        path: '$(mavenCachePath)'
+
+    - task: Maven@4
+      displayName: 'Compilar'
+      inputs:
+        mavenPomFile: 'pom.xml'
+        mavenOptions: '-Xmx3072m'
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: '1.17'
+        jdkArchitectureOption: 'x64'
+        goals: 'clean package verify'
+        options: '-DskipTests=true'
+
+    - task: Cache@2
+      displayName: 'Guardar Caché Maven'
+      inputs:
+        key: '$(mavenCacheKey)'
+        path: '$(mavenCachePath)'
+      condition: succeededOrFailed()
+
+    - script: |
+        $(dockerBuildCommand)
+        sudo docker images
+      displayName: 'Construir Imagen Docker'
+
+- job: Static_Testing
+  displayName: 'Static Testing Job'
+  dependsOn: Build
+  steps:
+    - checkout: self
+      displayName: 'Obtener código'
+
+    - task: Cache@2
+      displayName: 'Restaurar Caché Maven'
+      inputs:
+        key: '$(mavenCacheKey)'
+        path: '$(mavenCachePath)'
+
+    - task: Maven@4
+      displayName: 'Pruebas unitarias'
+      inputs:
+        mavenPomFile: 'pom.xml'
+        mavenOptions: '-Xmx3072m'
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: '1.17'
+        jdkArchitectureOption: 'x64'
+        publishJUnitResults: true
+        goals: 'test'
+        options: '$(testOptions)'
+
+    - task: Cache@2
+      displayName: 'Restaurar Caché Maven'
+      inputs:
+        key: '$(mavenCacheKey)'
+        path: '$(mavenCachePath)'
+
+    - task: Maven@4
+      displayName: 'Pruebas de mutacion'
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'pitest:mutationCoverage'
+        options: '$(testOptions)'
+
+    - task: PublishTestResults@2
+      displayName: 'Publicar resultados de pruebas'
+      inputs:
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        mergeTestResults: true
+
+- job: Security
+  displayName: 'Security Job'
+  steps:
+    - checkout: self
+      displayName: 'Obtener código'
+
+    - script: |
+        $(dockerBuildCommand)
+        sudo docker images
+        sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image $(dockerImageName):latest
+      displayName: 'Trivy - Escaneo imagen'
+
+    - script: |
+        sudo docker run --rm -u root -v $(Build.SourcesDirectory)/src:/src owasp/dependency-check:latest --project "$(dockerImageName)" --scan /src --format "ALL" --nvdApiKey $(NVD_API_KEY)
+      displayName: 'OWASP Dependency Check - Escaneo de dependencias'

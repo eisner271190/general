@@ -1,0 +1,44 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.application.services;
+
+import com.{{ Company }}.{{ MicroserviceName }}.application.dto.{{ EntityCapital }}DTO;
+import com.{{ Company }}.{{ MicroserviceName }}.domain.model.{{ EntityCapital }};
+import com.{{ Company }}.{{ MicroserviceName }}.domain.servicePorts.{{ EntityCapital }}ServicePort;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import static org.mockito.Mockito.*;
+
+class {{ EntityCapital }}ServiceTest {
+
+    private {{ EntityCapital }}Service {{ Entity }}Service;
+    private {{ EntityCapital }}ServicePort {{ Entity }}ServicePort;
+
+    private Long {{ Entity }}Id = 123L;
+    private {{ EntityCapital }} {{ Entity }};
+    private {{ EntityCapital }}DTO {{ Entity }}DTO;
+
+    @BeforeEach
+    void setUp() {
+        {{ Entity }}ServicePort = mock({{ EntityCapital }}ServicePort.class);
+        {{ Entity }}Service = new {{ EntityCapital }}Service({{ Entity }}ServicePort);
+
+        {{ Entity }} = {{ EntityCapital }}.builder().id({{ Entity }}Id).build();
+        {{ Entity }}DTO = {{ EntityCapital }}DTO.builder().id({{ Entity }}Id).build();
+    }
+
+    @Test
+    void testGet{{ EntityCapital }}Success() {
+        when({{ Entity }}ServicePort.get{{ EntityCapital }}Id({{ Entity }}Id)).thenReturn(Mono.just({{ Entity }}));
+
+        Mono<{{ EntityCapital }}DTO> result = {{ Entity }}Service.get{{ EntityCapital }}({{ Entity }}Id);
+
+        StepVerifier.create(result)
+                .expectNextMatches(actual{{ EntityCapital }}DTO ->
+                        actual{{ EntityCapital }}DTO.id().equals({{ Entity }}DTO.id()))
+                .verifyComplete();
+
+        verify({{ Entity }}ServicePort, times(1)).get{{ EntityCapital }}Id({{ Entity }}Id);
+    }
+}

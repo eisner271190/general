@@ -1,0 +1,17 @@
+﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.dynamos.tableschema;
+
+import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.dynamos.{{ EntityCapital }}Dynamo;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.StaticAttributeTags;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.StaticTableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+
+public class {{ EntityCapital }}Schema {
+    public static final TableSchema<{{ EntityCapital }}Dynamo> TABLE_SCHEMA =
+        StaticTableSchema.builder({{ EntityCapital }}Dynamo.class)
+            .newItemSupplier({{ EntityCapital }}Dynamo::new)
+            .addAttribute(Long.class, a -> a.name("id")
+                .getter({{ EntityCapital }}Dynamo::getId)
+                .setter({{ EntityCapital }}Dynamo::setId)
+                .tags(StaticAttributeTags.primaryPartitionKey()))
+            .build();
+}

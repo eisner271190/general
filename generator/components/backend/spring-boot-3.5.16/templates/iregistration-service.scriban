@@ -1,0 +1,11 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.application.services;
+
+import com.{{ Company }}.{{ Name }}.application.dto.*;
+import reactor.core.publisher.Mono;
+
+public interface IRegistrationService {
+    Mono<Void> registerUserByAdmin(RegisterUserRequestDTO request);
+    Mono<Void> registerUser(RegisterUserRequestDTO request);
+    Mono<Void> confirmUser(ConfirmUserRequestDTO request);
+}
+{{ end }}

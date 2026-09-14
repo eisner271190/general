@@ -1,0 +1,10 @@
+{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.application.services;
+
+import com.{{ Company }}.{{ Name }}.application.dto.*;
+import reactor.core.publisher.Mono;
+
+public interface IAuthService {
+    Mono<TokenResponseDTO> generateToken(TokenRequestDTO request);
+    Mono<ExchangeResponseDTO> exchangeCodeForTokens(ExchangeRequestDTO request);
+}
+{{ end }}
