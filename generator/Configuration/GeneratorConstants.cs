@@ -4,12 +4,15 @@ internal static class GeneratorConstants
 {
     public const string ComponentsDirectory = "components";
     public const string BackendComponentType = "backend";
+    public const string TargetDirectoryName = "target";
+    public const string OutputDirectoryName = "output";
     public const string GenerationPlanFileName = "generation-plan.json";
     public const string DefaultsDirectory = "defaults";
     public const string DefaultErrorCode = "GEN000";
 
     public const string ApplicationNameVariable = "APPLICATION_NAME";
     public const string ApplicationIdVariable = "APPLICATION_ID";
+    public const string ApplicationPackageVariable = "APPLICATION_PACKAGE";
     public const string EnvironmentVariable = "ENVIRONMENT";
     public const string MicroserviceNameVariable = "MICROSERVICE_NAME";
     public const string MicroservicePortVariable = "MICROSERVICE_PORT";

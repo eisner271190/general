@@ -31,7 +31,7 @@ internal sealed class PlanExecutor(string outputDirectory, string workingDirecto
             var source = Path.GetFullPath(defaultFile.Value, workingDirectory);
             var target = OutputPath(defaultFile.Key);
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-            File.Copy(source, target);
+            File.Copy(source, target, overwrite: true);
         }
 
         File.WriteAllText(OutputPath(GeneratorConstants.GenerationPlanFileName), jsonReader.Serialize(plan));
@@ -52,9 +52,6 @@ internal sealed class PlanExecutor(string outputDirectory, string workingDirecto
         if (duplicatePath is not null)
             throw new GeneratorException(ErrorCodes.DuplicateOutput, GeneratorMessages.DuplicateOutput("archivo de salida", duplicatePath.Key));
 
-        var existingPath = outputPaths.FirstOrDefault(File.Exists);
-        if (existingPath is not null)
-            throw new GeneratorException(ErrorCodes.ExistingOutput, GeneratorMessages.ExistingOutput(existingPath));
     }
 
     private string OutputPath(string relativePath) => Path.GetFullPath(paths.NormalizeRelative(relativePath), outputDirectory);

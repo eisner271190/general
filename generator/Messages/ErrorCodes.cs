@@ -15,4 +15,5 @@ internal static class ErrorCodes
     public const string UnresolvedPlaceholder = "GEN011";
     public const string MissingSourceFile = "GEN012";
     public const string EmptyJson = "GEN013";
+    public const string NoInputConfigurations = "GEN014";
 }

@@ -25,6 +25,7 @@ internal sealed class GenerationPlanBuilder(
         {
             [GeneratorConstants.ApplicationNameVariable] = configuration.ApplicationName,
             [GeneratorConstants.ApplicationIdVariable] = configuration.ApplicationId,
+            [GeneratorConstants.ApplicationPackageVariable] = configuration.ApplicationId.Replace('.', Path.DirectorySeparatorChar),
             [GeneratorConstants.EnvironmentVariable] = environment.Name
         };
         var directories = new List<string>();
@@ -40,6 +41,7 @@ internal sealed class GenerationPlanBuilder(
                 microservice.Backend,
                 "component.json"));
             var component = jsonReader.Read<BackendComponent>(componentPath);
+            GeneratorLogger.Info($"Backend seleccionado para '{microservice.Name}': {microservice.Backend}");
             var componentDirectory = Path.GetDirectoryName(componentPath)!;
             var componentVariables = new Dictionary<string, string>(variables, StringComparer.OrdinalIgnoreCase)
             {
@@ -52,10 +54,13 @@ internal sealed class GenerationPlanBuilder(
             };
 
             foreach (var directory in component.Directories)
-                AddUnique(directories, paths, directory, "directorio");
+            {
+                var target = RenderPath(directory, componentVariables);
+                AddUnique(directories, paths, target, "directorio");
+            }
             foreach (var file in component.Files)
             {
-                var target = pathValidator.NormalizeRelative(file.Key);
+                var target = RenderPath(file.Key, componentVariables);
                 AddUnique(files.Select(item => item.Key).ToList(), paths, target, "archivo");
                 var templatePath = ResolveComponentSource(componentDirectory, file.Value);
                 var content = File.ReadAllText(templatePath);
@@ -87,6 +92,12 @@ internal sealed class GenerationPlanBuilder(
         if (!File.Exists(path))
             throw new FileNotFoundException(GeneratorMessages.MissingComponentFile(relativePath), path);
         return path;
+    }
+
+    private string RenderPath(string path, IReadOnlyDictionary<string, string> variables)
+    {
+        var renderedPath = templateRenderer.Render(path, variables, path);
+        return pathValidator.NormalizeRelative(renderedPath);
     }
 
     private static void AddUnique(ICollection<string> collection, HashSet<string> allPaths, string path, string kind)

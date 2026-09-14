@@ -2,12 +2,17 @@
   "name": "dotnet9",
   "type": "backend",
   "directories": [
-    "backend",
-    "backend/generated"
+    "service",
+    "service/src",
+    "service/src/generated",
+    "service/tests",
+    "service/tests/unit",
+    "service/tests/integration",
+    "service/deploy"
   ],
   "files": [
     {
-      "key": "backend/generated/generator-manifest.txt",
+      "key": "service/src/generated/generator-manifest.txt",
       "value": "templates/generator-manifest.txt"
     }
   ],
