@@ -24,6 +24,13 @@ Act as a senior software engineer for the `agent-ai` workspace. Implement reques
 
 ## Implementation Workflow
 
+### 0. Build and Log Policy
+
+- Always capture build output to a timestamped file under `logs/` with format `yyyyMMddHHmmss.txt`.
+- Always search build logs with `findstr`.
+- Always search only for `message` or `caused by` to minimize token consumption.
+- Do not print full build output unless the focused search yields no result.
+
 ### 1. Understand
 
 - Identify the owning module and the nearest code path that controls the requested behavior.
