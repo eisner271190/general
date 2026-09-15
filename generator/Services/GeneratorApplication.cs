@@ -43,13 +43,15 @@ internal sealed class GeneratorApplication(
         GeneratorLogger.Debug($"Workspace: {workingDirectory}");
         GeneratorLogger.Debug($"ConfigPath: {targetDirectory}");
 
-        return Directory.Exists(targetDirectory)
-            ? Directory.EnumerateFiles(targetDirectory, "*.json", SearchOption.AllDirectories)
-                .Where(path => !path.StartsWith(outputRootDirectory + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                .Where(path => !Path.GetFileName(path).Equals(GeneratorConstants.GenerationPlanFileName, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-                .ToList()
-            : [];
+        if (!Directory.Exists(targetDirectory))
+            return [];
+
+        return Directory.EnumerateDirectories(targetDirectory, "*", SearchOption.TopDirectoryOnly)
+            .SelectMany(appDirectory => Directory.EnumerateFiles(appDirectory, "*.json", SearchOption.TopDirectoryOnly))
+            .Where(path => !path.StartsWith(outputRootDirectory + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            .Where(path => !Path.GetFileName(path).Equals(GeneratorConstants.GenerationPlanFileName, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private void Generate(string inputPath, int index, int total)

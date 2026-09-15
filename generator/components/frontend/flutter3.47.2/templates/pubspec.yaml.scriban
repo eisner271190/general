@@ -54,6 +54,9 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+{{ if HAS_APP_ICON }}
+  flutter_launcher_icons: "^0.14.3"
+{{ end }}
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -80,6 +83,20 @@ flutter:
   assets:
     - assets/.env.mock
     - assets/.env.dev
+{{ if HAS_APP_ICON }}
+    - assets/icon/app_icon.png
+{{ end }}
+
+{{ if HAS_APP_ICON }}
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  android_12:
+    enable: true
+    image_path: "assets/icon/app_icon.png"
+    background_color: "#121212"
+{{ end }}
 
   # To add assets to your application, add an assets section, like this:
   # assets:

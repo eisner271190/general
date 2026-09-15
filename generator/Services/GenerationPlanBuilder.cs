@@ -92,13 +92,16 @@ internal sealed class GenerationPlanBuilder(
             var component = jsonReader.Read<ComponentDefinition>(componentPath);
             GeneratorLogger.Info($"Frontend seleccionado: '{configuration.Frontend.Framework}' ({configuration.Frontend.Name})");
             var componentDirectory = Path.GetDirectoryName(componentPath)!;
+            var appIconPath = Path.Combine(Path.GetDirectoryName(inputPath) ?? workingDirectory, "app_icon.png");
+            var hasAppIcon = File.Exists(appIconPath);
             var frontendVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
             {
                 [GeneratorConstants.TemplateNameVariable] = configuration.Frontend.Name,
                 [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(configuration.ApplicationId),
                 ["FRONTEND_NAME"] = configuration.Frontend.Name,
                 ["FRONTEND_FRAMEWORK"] = configuration.Frontend.Framework,
-                ["FRONTEND_VERSION"] = configuration.Frontend.Version ?? "1.0.0+1"
+                ["FRONTEND_VERSION"] = configuration.Frontend.Version ?? "1.0.0+1",
+                ["HAS_APP_ICON"] = hasAppIcon
             };
 
             foreach (var directory in component.Directories)
@@ -120,6 +123,13 @@ internal sealed class GenerationPlanBuilder(
                 var target = Path.Combine("frontend", frontendVariables["FRONTEND_NAME"]?.ToString() ?? string.Empty, pathValidator.DefaultOutputPath(defaultFile));
                 AddUnique(defaultFiles.Select(item => item.Key).ToList(), paths, target, "archivo predeterminado");
                 defaultFiles.Add(new PlanDefaultFile(target, Path.GetRelativePath(workingDirectory, source)));
+            }
+
+            if (hasAppIcon)
+            {
+                var appIconTarget = Path.Combine("frontend", frontendVariables["FRONTEND_NAME"]?.ToString() ?? string.Empty, "assets", "icon", "app_icon.png");
+                AddUnique(defaultFiles.Select(item => item.Key).ToList(), paths, appIconTarget, "archivo predeterminado");
+                defaultFiles.Add(new PlanDefaultFile(appIconTarget, appIconPath));
             }
         }
 
