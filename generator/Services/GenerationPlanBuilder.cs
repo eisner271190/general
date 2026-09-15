@@ -21,7 +21,8 @@ internal sealed class GenerationPlanBuilder(
             : configuration.Environments.FirstOrDefault(item => item.Name.Equals(requestedEnvironment, StringComparison.OrdinalIgnoreCase))
                 ?? throw new GeneratorException(ErrorCodes.EnvironmentNotFound, GeneratorMessages.EnvironmentNotFound(requestedEnvironment));
 
-        var variables = new Dictionary<string, string>(environment.Variables, StringComparer.OrdinalIgnoreCase)
+        var variables = environment.Variables.ToDictionary(item => item.Key, item => (object?)item.Value, StringComparer.OrdinalIgnoreCase);
+        variables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
         {
             [GeneratorConstants.ApplicationNameVariable] = configuration.ApplicationName,
             [GeneratorConstants.ApplicationIdVariable] = configuration.ApplicationId,
@@ -43,14 +44,20 @@ internal sealed class GenerationPlanBuilder(
             var component = jsonReader.Read<BackendComponent>(componentPath);
             GeneratorLogger.Info($"Backend seleccionado para '{microservice.Name}': {microservice.Backend}");
             var componentDirectory = Path.GetDirectoryName(componentPath)!;
-            var componentVariables = new Dictionary<string, string>(variables, StringComparer.OrdinalIgnoreCase)
+            var componentVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
             {
+                [GeneratorConstants.TemplateNameVariable] = microservice.Name,
+                [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(configuration.ApplicationId),
+                [GeneratorConstants.TemplateMicroserviceNameVariable] = microservice.Name,
+                [GeneratorConstants.TemplatePortVariable] = microservice.Port.ToString(),
+                [GeneratorConstants.TemplateGraalvmVariable] = "false",
                 [GeneratorConstants.MicroserviceNameVariable] = microservice.Name,
                 [GeneratorConstants.MicroservicePortVariable] = microservice.Port.ToString(),
                 [GeneratorConstants.MicroserviceDeployVariable] = microservice.Deploy,
                 [GeneratorConstants.BackendVariable] = microservice.Backend,
                 [GeneratorConstants.EntitiesVariable] = jsonReader.Serialize(microservice.Entities),
-                [GeneratorConstants.EndpointsVariable] = jsonReader.Serialize(microservice.Endpoints)
+                [GeneratorConstants.EndpointsVariable] = jsonReader.Serialize(microservice.Endpoints),
+                ["ConsumedEvents"] = microservice.ConsumedEvents
             };
 
             foreach (var directory in component.Directories)
@@ -94,10 +101,16 @@ internal sealed class GenerationPlanBuilder(
         return path;
     }
 
-    private string RenderPath(string path, IReadOnlyDictionary<string, string> variables)
+    private string RenderPath(string path, IReadOnlyDictionary<string, object?> variables)
     {
         var renderedPath = templateRenderer.Render(path, variables, path);
         return pathValidator.NormalizeRelative(renderedPath);
+    }
+
+    private static string GetCompanyName(string applicationId)
+    {
+        var segments = applicationId.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        return segments.Length >= 2 ? segments[^2] : applicationId;
     }
 
     private static void AddUnique(ICollection<string> collection, HashSet<string> allPaths, string path, string kind)

@@ -14,7 +14,7 @@
   ],
   "microservices": [
     {
-      "name": "quiz-api",
+      "name": "quizapi",
       "backend": "spring-boot-3.5.16",
       "deploy": "DOCKER",
       "entities": [
@@ -106,6 +106,7 @@
           "response": "Quiz"
         }
       ],
+      "consumedEvents": [],
       "port": 5000
     }
   ]

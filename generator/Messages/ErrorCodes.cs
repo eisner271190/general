@@ -16,4 +16,5 @@ internal static class ErrorCodes
     public const string MissingSourceFile = "GEN012";
     public const string EmptyJson = "GEN013";
     public const string NoInputConfigurations = "GEN014";
+    public const string InvalidTemplate = "GEN015";
 }
