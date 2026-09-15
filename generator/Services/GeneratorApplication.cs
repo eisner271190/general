@@ -13,15 +13,15 @@ internal sealed class GeneratorApplication(
     public void Run()
     {
         var targetDirectory = Path.Combine(workingDirectory, GeneratorConstants.TargetDirectoryName);
-        var outputRootDirectory = Path.Combine(targetDirectory, GeneratorConstants.OutputDirectoryName);
-        var inputPaths = DiscoverConfigurations(targetDirectory, outputRootDirectory);
+        var legacyOutputDirectory = Path.Combine(targetDirectory, GeneratorConstants.OutputDirectoryName);
+        var inputPaths = DiscoverConfigurations(targetDirectory, legacyOutputDirectory);
 
         if (inputPaths.Count == 0)
             throw new GeneratorException(ErrorCodes.NoInputConfigurations, GeneratorMessages.NoInputConfigurations(targetDirectory));
 
         GeneratorLogger.Info($"Configuraciones encontradas: {inputPaths.Count}");
         foreach (var inputPath in inputPaths)
-            Generate(inputPath, outputRootDirectory);
+            Generate(inputPath);
     }
 
     private List<string> DiscoverConfigurations(string targetDirectory, string outputRootDirectory)
@@ -38,14 +38,16 @@ internal sealed class GeneratorApplication(
             : [];
     }
 
-    private void Generate(string inputPath, string outputRootDirectory)
+    private void Generate(string inputPath)
     {
-        var outputDirectory = Path.Combine(outputRootDirectory, Path.GetFileNameWithoutExtension(inputPath));
         GeneratorLogger.Info($"Procesando: {inputPath}");
+        var plan = planBuilder.Build(inputPath, requestedEnvironment: null);
+        var workspaceDirectory = Directory.GetParent(workingDirectory)?.FullName
+            ?? throw new DirectoryNotFoundException($"No se encontro la carpeta contenedora de '{workingDirectory}'.");
+        var outputDirectory = Path.Combine(workspaceDirectory, GeneratorConstants.ProjectsDirectoryName, plan.ApplicationId);
         GeneratorLogger.Debug($"Directorio de salida: {outputDirectory}");
 
         var planExecutor = new PlanExecutor(outputDirectory, workingDirectory, jsonReader, pathValidator);
-        var plan = planBuilder.Build(inputPath, requestedEnvironment: null);
         planExecutor.Execute(plan);
         GeneratorLogger.Info($"Generacion completada: {Path.Combine(outputDirectory, GeneratorConstants.GenerationPlanFileName)}");
     }
