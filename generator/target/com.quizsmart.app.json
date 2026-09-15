@@ -1,0 +1,126 @@
+{
+  "applicationName": "Quiz Smart",
+  "applicationId": "com.quizsmart.app",
+  "frontend": {
+    "name": "quizsmart",
+    "framework": "flutter3.47.2",
+    "platforms": [
+      "android",
+      "ios",
+      "web",
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "version": "1.0.0+1"
+  },
+  "environments": [
+    {
+      "name": "develop",
+      "variables": {
+        "DATABASE_HOST": "localhost",
+        "DATABASE_NAME": "quizsmart_dev",
+        "API_URL": "http://localhost:5000",
+        "DEBUG": "true"
+      }
+    }
+  ],
+  "microservices": [
+    {
+      "name": "quizapi",
+      "backend": "spring-boot-3.5.16",
+      "deploy": "DOCKER",
+      "entities": [
+        {
+          "name": "Quiz",
+          "fields": [
+            {
+              "name": "id",
+              "datatype": "long"
+            },
+            {
+              "name": "title",
+              "datatype": "String"
+            }
+          ],
+          "relations": [
+            {
+              "entity": "Question",
+              "type": "one-to-many"
+            }
+          ]
+        },
+        {
+          "name": "Question",
+          "fields": [
+            {
+              "name": "id",
+              "datatype": "long"
+            },
+            {
+              "name": "text",
+              "datatype": "String"
+            },
+            {
+              "name": "quizId",
+              "datatype": "long"
+            }
+          ],
+          "relations": [
+            {
+              "entity": "Quiz",
+              "type": "many-to-one"
+            },
+            {
+              "entity": "Answer",
+              "type": "one-to-many"
+            }
+          ]
+        },
+        {
+          "name": "Answer",
+          "fields": [
+            {
+              "name": "id",
+              "datatype": "long"
+            },
+            {
+              "name": "text",
+              "datatype": "String"
+            },
+            {
+              "name": "questionId",
+              "datatype": "long"
+            },
+            {
+              "name": "isCorrect",
+              "datatype": "boolean"
+            }
+          ],
+          "relations": [
+            {
+              "entity": "Question",
+              "type": "many-to-one"
+            }
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/quizzes",
+          "parameters": {},
+          "response": "Quiz[]"
+        },
+        {
+          "method": "POST",
+          "path": "/quizzes",
+          "parameters": {},
+          "response": "Quiz"
+        }
+      ],
+      "consumedEvents": [],
+      "port": 5000
+    }
+  ]
+}
