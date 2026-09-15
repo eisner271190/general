@@ -8,8 +8,11 @@ internal static class GeneratorLogger
 
     public static void Error(string message) => Write("ERROR", message, Console.Error);
 
+    public static void Stage(string message) => Write("INFO", message, Console.Out);
+
     private static void Write(string level, string message, TextWriter output)
     {
-        output.WriteLine($"[{level}] {message}");
+        var timestamp = DateTime.Now.ToString("HH:mm:ss");
+        output.WriteLine($"[{timestamp}] [{level,-5}] {message}");
     }
 }

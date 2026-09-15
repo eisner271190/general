@@ -95,6 +95,11 @@
                         "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/domain",
                         "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/presentation",
                         "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/presentation/widgets",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/monetization",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/monetization/domain",
+                        "frontend/{{ FRONTEND_NAME }}/lib/providers/ads",
+                        "frontend/{{ FRONTEND_NAME }}/lib/providers/revenuecat",
+                        "frontend/{{ FRONTEND_NAME }}/lib/ui",
                         "frontend/{{ FRONTEND_NAME }}/lib/shared/constants",
                         "frontend/{{ FRONTEND_NAME }}/lib/shared/consume",
                         "frontend/{{ FRONTEND_NAME }}/lib/shared/env",
@@ -178,6 +183,70 @@
                   {
                       "key":  "frontend/{{ FRONTEND_NAME }}/.vscode/settings.json",
                       "value":  "templates/.vscode/settings.json.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/monetization/domain/models.dart",
+                      "value":  "templates/lib/features/monetization/domain/models.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/providers/revenuecat/revenuecat_provider.dart",
+                      "value":  "templates/lib/providers/revenuecat/revenuecat_provider.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/providers/ads/admob_provider.dart",
+                      "value":  "templates/lib/providers/ads/admob_provider.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/ui/paywall_widget.dart",
+                      "value":  "templates/lib/ui/paywall_widget.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/ui/admob_banner_widget.dart",
+                      "value":  "templates/lib/ui/admob_banner_widget.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/monetization_module.dart",
+                      "value":  "templates/lib/monetization_module.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/app_bootstrapper.dart",
+                      "value":  "templates/lib/core/app_bootstrapper.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/app_initialization_orchestrator.dart",
+                      "value":  "templates/lib/core/app_initialization_orchestrator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/app_initializer.dart",
+                      "value":  "templates/lib/core/app_initializer.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/app_initializers_impl.dart",
+                      "value":  "templates/lib/core/app_initializers_impl.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/errors/monetization_exception.dart",
+                      "value":  "templates/lib/core/errors/monetization_exception.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/interfaces/ads_provider.dart",
+                      "value":  "templates/lib/core/interfaces/ads_provider.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/interfaces/monetization_provider.dart",
+                      "value":  "templates/lib/core/interfaces/monetization_provider.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/models/subscription_plan.dart",
+                      "value":  "templates/lib/core/models/subscription_plan.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/models/user_entitlement.dart",
+                      "value":  "templates/lib/core/models/user_entitlement.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/ui/my_app.dart",
+                      "value":  "templates/lib/ui/my_app.dart.scriban"
                   },
                   {
                       "key":  "frontend/{{ FRONTEND_NAME }}/android/.gitignore",

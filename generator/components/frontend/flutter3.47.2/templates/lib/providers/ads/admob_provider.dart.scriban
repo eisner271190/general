@@ -1,0 +1,103 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../../core/interfaces/ads_provider.dart';
+import '../../core/config/monetization_env.dart';
+
+class AdmobProvider implements AdsProvider {
+  String _elapsed(Stopwatch sw) => '[${sw.elapsedMilliseconds}ms]';
+  BannerAd? _bannerAd;
+
+  @override
+  Future<void> initialize() async {
+    final sw = Stopwatch()..start();
+    debugPrint('[AdmobProvider] Inicializando AdMob... ${_elapsed(sw)}');
+    if (kIsWeb) {
+      debugPrint(
+        '[AdmobProvider] Web detectado, no se inicializa AdMob. ${_elapsed(sw)}',
+      );
+      return;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    debugPrint('[AdmobProvider] SharedPreferences obtenido. ${_elapsed(sw)}');
+    final alreadyInitialized = prefs.getBool('admob_initialized') ?? false;
+    if (alreadyInitialized) {
+      debugPrint(
+        '[AdmobProvider] AdMob ya inicializado (caché) ${_elapsed(sw)}',
+      );
+      return;
+    }
+    try {
+      await MobileAds.instance.initialize();
+      debugPrint('[AdmobProvider] MobileAds inicializado. ${_elapsed(sw)}');
+      await prefs.setBool('admob_initialized', true);
+      debugPrint(
+        '[AdmobProvider] AdMob inicializado y guardado en caché ${_elapsed(sw)}',
+      );
+    } catch (e) {
+      debugPrint(
+        '[AdmobProvider] Error al inicializar AdMob: $e ${_elapsed(sw)}',
+      );
+      rethrow;
+    }
+  }
+
+  @override
+  void showBanner() {
+    final sw = Stopwatch()..start();
+    debugPrint('[AdmobProvider] Mostrando banner... ${_elapsed(sw)}');
+    if (kIsWeb) {
+      debugPrint(
+        '[AdmobProvider] Web detectado, no se muestra banner. ${_elapsed(sw)}',
+      );
+      return;
+    }
+    final adUnitId = MonetizationEnv.admobBannerId;
+    try {
+      _bannerAd = BannerAd(
+        adUnitId: adUnitId,
+        size: AdSize.banner,
+        request: AdRequest(),
+        listener: BannerAdListener(
+          onAdLoaded: (ad) => debugPrint(
+            '[AdmobProvider] Banner cargado correctamente. ${_elapsed(sw)}',
+          ),
+          onAdFailedToLoad: (ad, error) {
+            debugPrint(
+              '[AdmobProvider] Error al cargar banner: $error ${_elapsed(sw)}',
+            );
+            ad.dispose();
+          },
+        ),
+      )..load();
+      debugPrint(
+        '[AdmobProvider] BannerAd creado y load() llamado. ${_elapsed(sw)}',
+      );
+      // Integrar con la UI para mostrar el banner
+    } catch (e) {
+      debugPrint('[AdmobProvider] Error al mostrar banner: $e ${_elapsed(sw)}');
+    }
+  }
+
+  @override
+  void hideBanner() {
+    final sw = Stopwatch()..start();
+    debugPrint('[AdmobProvider] Ocultando banner... ${_elapsed(sw)}');
+    if (kIsWeb) {
+      debugPrint(
+        '[AdmobProvider] Web detectado, no hay banner que ocultar. ${_elapsed(sw)}',
+      );
+      return;
+    }
+    try {
+      _bannerAd?.dispose();
+      _bannerAd = null;
+      debugPrint(
+        '[AdmobProvider] Banner oculto y recursos liberados. ${_elapsed(sw)}',
+      );
+    } catch (e) {
+      debugPrint('[AdmobProvider] Error al ocultar banner: $e ${_elapsed(sw)}');
+    }
+  }
+}
+

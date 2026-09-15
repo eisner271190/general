@@ -6,6 +6,7 @@
 # Generated generator output
 generator/target/output/
 generator/target/generation-plan.json
+/projects/
 
 # IDE and local tooling
 .vscode/

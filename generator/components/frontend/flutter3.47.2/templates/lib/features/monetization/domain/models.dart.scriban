@@ -1,0 +1,10 @@
+class Offerings {
+  final List<String> ids;
+  Offerings(this.ids);
+}
+
+class PurchaseResult {
+  final bool success;
+  final String? message;
+  PurchaseResult(this.success, [this.message]);
+}

@@ -1,0 +1,30 @@
+import 'package:flutter/widgets.dart';
+import 'app_initializer.dart';
+
+class AppInitializationOrchestrator {
+  final List<AppInitializer> initializers;
+
+  AppInitializationOrchestrator(this.initializers);
+
+  Future<void> runPreUi() async {
+    debugPrint('[AppInitializationOrchestrator] runPreUi() called');
+    for (final initializer in initializers) {
+      debugPrint(
+        '[AppInitializationOrchestrator] running preUi for ${initializer.runtimeType}',
+      );
+      await initializer.preUi();
+    }
+    debugPrint('[AppInitializationOrchestrator] runPreUi() finished');
+  }
+
+  Future<void> runPostUi(BuildContext context) async {
+    debugPrint('[AppInitializationOrchestrator] runPostUi() called');
+    for (final initializer in initializers) {
+      debugPrint(
+        '[AppInitializationOrchestrator] running postUi for ${initializer.runtimeType}',
+      );
+      await initializer.postUi(context);
+    }
+    debugPrint('[AppInitializationOrchestrator] runPostUi() finished');
+  }
+}

@@ -6,6 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Scriban" Version="5.10.0" />
+    <PackageReference Include="Scriban" Version="7.4.0" />
   </ItemGroup>
 </Project>
