@@ -1,0 +1,43 @@
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:{{ FRONTEND_NAME }}/features/history/application/history_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+
+class HistoryScreen extends StatelessWidget {
+  const HistoryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.historyTitle)),
+      body: Consumer<HistoryProvider>(
+        builder: (context, hist, child) {
+          if (hist.topics.isEmpty) {
+            return Center(child: Text(AppLocalizations.of(context)!.noTopics));
+          }
+          return ListView.builder(
+            itemCount: hist.topics.length,
+            itemBuilder: (context, i) {
+              final topic = hist.topics[i];
+              return ListTile(
+                title: Text(topic.name),
+                subtitle: Text(topic.lastUsed.toLocal().toString()),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () => hist.removeTopic(topic.name),
+                ),
+                onTap: () {
+                  // perhaps select topic, but for now just show
+                },
+              );
+            },
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Icon(Icons.arrow_back),
+      ),
+    );
+  }
+}

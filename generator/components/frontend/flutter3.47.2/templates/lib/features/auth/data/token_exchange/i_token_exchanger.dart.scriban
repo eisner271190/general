@@ -1,0 +1,9 @@
+﻿import '../../domain/auth_tokens.dart';
+
+/// Interface para el intercambio de cÃ³digo por tokens con el backend
+abstract class ITokenExchanger {
+  Future<AuthTokens> exchangeCodeForTokens({
+    required String code,
+    required String codeVerifier,
+  });
+}

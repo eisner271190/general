@@ -1,0 +1,31 @@
+﻿import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../domain/auth_user.dart';
+import 'i_user_manager.dart';
+
+class UserManager implements IUserManager {
+  final FlutterSecureStorage _storage;
+  static const _keyUserInfo = 'user_info';
+
+  UserManager({FlutterSecureStorage? storage})
+    : _storage = storage ?? const FlutterSecureStorage();
+
+  @override
+  Future<void> saveUserInfo(AuthUser user) async {
+    await _storage.write(key: _keyUserInfo, value: jsonEncode(user.toJson()));
+  }
+
+  @override
+  Future<AuthUser?> loadUserInfo() async {
+    final userInfoJson = await _storage.read(key: _keyUserInfo);
+    if (userInfoJson == null) return null;
+
+    final data = jsonDecode(userInfoJson) as Map<String, dynamic>;
+    return AuthUser.fromJson(data);
+  }
+
+  @override
+  Future<void> clearUserInfo() async {
+    await _storage.delete(key: _keyUserInfo);
+  }
+}

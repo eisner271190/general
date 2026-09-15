@@ -1,0 +1,62 @@
+﻿import 'package:flutter/material.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/constants/app_spacing.dart';
+import '../widgets/error_message_box.dart';
+import '../widgets/google_login_button.dart';
+import '../widgets/login_form_mock.dart';
+import '../widgets/login_header.dart';
+import '../widgets/login_content.dart';
+
+/// Constructor de UI de la pÃ¡gina de login
+/// Responsabilidad: Construir el layout de la pantalla de login
+class LoginPageBuilder {
+  static Widget build({
+    required BuildContext context,
+    required bool isLoading,
+    required bool isMockMode,
+    required String? error,
+    required TextEditingController emailController,
+    required TextEditingController passwordController,
+    required GlobalKey<FormState> formKey,
+    required VoidCallback onSubmitCredentials,
+    required VoidCallback onSignInGoogle,
+  }) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.xxlarge),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 450),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const LoginHeader(),
+                  const SizedBox(height: AppSpacing.xxxlarge),
+                  LoginContent(
+                    isLoading: isLoading,
+                    isMockMode: isMockMode,
+                    mockForm: LoginFormMock(
+                      emailController: emailController,
+                      passwordController: passwordController,
+                      formKey: formKey,
+                      onSubmit: onSubmitCredentials,
+                    ),
+                    googleButton: GoogleLoginButton(onPressed: onSignInGoogle),
+                  ),
+                  const SizedBox(height: AppSpacing.large),
+                  if (error != null) ErrorMessageBox(message: error),
+                  const SizedBox(height: AppSpacing.xxlarge),
+                  Text(
+                    'Al continuar, aceptas nuestros tÃ©rminos y condiciones',
+                    style: Theme.of(context).textTheme.bodySmall,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

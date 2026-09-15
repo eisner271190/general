@@ -1,0 +1,20 @@
+﻿import '../domain/i_auth_service.dart';
+import 'auth_service.dart';
+import 'mock_auth_service.dart';
+import '../../../core/app_config.dart';
+
+/// Factory para crear instancias de IAuthService segÃºn el perfil configurado.
+/// Sigue el principio de Factory Pattern y Dependency Inversion (SOLID).
+class AuthServiceFactory {
+  /// Crea una instancia de IAuthService segÃºn el valor de PROFILE en .env
+  ///
+  /// MOCK mode -> MockAuthService (Ãºtil para desarrollo sin Cognito)
+  /// DEV mode -> AuthService (implementaciÃ³n real)
+  static IAuthService create() {
+    if (AppConfig.isMockMode) {
+      return MockAuthService();
+    } else {
+      return AuthService();
+    }
+  }
+}

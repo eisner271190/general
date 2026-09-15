@@ -1,0 +1,37 @@
+﻿import 'package:flutter/material.dart';
+import 'theme_strategy.dart';
+import 'theme_strategy_registry.dart';
+import 'chatgpt_theme_strategy.dart';
+import '../shared/env/env_config.dart';
+import '../shared/log/logger.dart';
+
+class AppTheme {
+  static final ThemeStrategyRegistry _registry = _initializeRegistry();
+  static final ThemeStrategy _strategy = _createStrategy();
+
+  static ThemeStrategyRegistry _initializeRegistry() {
+    final registry = ThemeStrategyRegistry.instance;
+    return registry;
+  }
+
+  static ThemeStrategy _createStrategy() {
+    final themeStyle = EnvConfig.themeStyle;
+    Logger.info('[THEME] Loading theme strategy: $themeStyle');
+
+    final strategy = _registry.get(themeStyle);
+    if (strategy != null) {
+      return strategy;
+    }
+
+    Logger.warning(
+      '[THEME] Unknown theme style: $themeStyle, using default ChatGPT',
+    );
+    return ChatGptThemeStrategy();
+  }
+
+  static ThemeData get lightTheme => _strategy.lightTheme;
+
+  static ThemeData get darkTheme => _strategy.darkTheme;
+
+  static String getThemeStyle() => _strategy.themeStyle;
+}

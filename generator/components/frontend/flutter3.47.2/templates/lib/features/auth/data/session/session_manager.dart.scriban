@@ -1,0 +1,93 @@
+﻿import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import '../../domain/auth_user.dart';
+import '../storage/i_token_storage.dart';
+import '../user/i_user_manager.dart';
+import '../jwt/i_jwt_decoder.dart';
+import 'i_session_manager.dart';
+
+class SessionManager implements ISessionManager {
+  final ITokenStorage _tokenStorage;
+  final IUserManager _userManager;
+  final IJWTDecoder _jwtDecoder;
+
+  SessionManager({
+    required ITokenStorage tokenStorage,
+    required IUserManager userManager,
+    required IJWTDecoder jwtDecoder,
+  }) : _tokenStorage = tokenStorage,
+       _userManager = userManager,
+       _jwtDecoder = jwtDecoder;
+
+  @override
+  Future<AuthUser> createSessionFromToken(String idToken) async {
+    try {
+      final user = _jwtDecoder.decodeAndCreateUser(idToken);
+      await _userManager.saveUserInfo(user);
+      _logUserLoaded(user.email ?? 'unknown');
+      return user;
+    } catch (e, stackTrace) {
+      _logErrorLoadingUser(e, stackTrace);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<AuthUser?> restoreSession() async {
+    try {
+      _logRestoringSession();
+      final user = await _userManager.loadUserInfo();
+      if (user != null) {
+        _logSessionRestored(user.email ?? 'unknown');
+      } else {
+        _logNoPreviousSession();
+      }
+      return user;
+    } catch (e, stackTrace) {
+      _logErrorRestoringSession(e, stackTrace);
+      return null;
+    }
+  }
+
+  @override
+  Future<void> clearSession() async {
+    await _tokenStorage.clearTokens();
+    await _userManager.clearUserInfo();
+    _logSessionCleared();
+  }
+
+  void _logUserLoaded(String email) {
+    Logger.info('[AUTH] User loaded', data: {'email': email});
+  }
+
+  void _logErrorLoadingUser(Object error, StackTrace stackTrace) {
+    Logger.error(
+      '[AUTH] Error loading user',
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+
+  void _logRestoringSession() {
+    Logger.info('[AUTH] Restoring session');
+  }
+
+  void _logSessionRestored(String email) {
+    Logger.info('[AUTH] Session restored', data: {'email': email});
+  }
+
+  void _logNoPreviousSession() {
+    Logger.info('[AUTH] No previous session');
+  }
+
+  void _logErrorRestoringSession(Object error, StackTrace stackTrace) {
+    Logger.error(
+      '[AUTH] Error restoring session',
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+
+  void _logSessionCleared() {
+    Logger.info('[AUTH] Session cleared');
+  }
+}

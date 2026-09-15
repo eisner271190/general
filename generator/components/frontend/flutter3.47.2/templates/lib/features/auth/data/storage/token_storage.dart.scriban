@@ -1,0 +1,39 @@
+﻿import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../domain/auth_tokens.dart';
+import 'i_token_storage.dart';
+
+class TokenStorage implements ITokenStorage {
+  final FlutterSecureStorage _storage;
+
+  static const _keyIdToken = 'id_token';
+  static const _keyAccessToken = 'access_token';
+  static const _keyRefreshToken = 'refresh_token';
+
+  TokenStorage({FlutterSecureStorage? storage})
+    : _storage = storage ?? const FlutterSecureStorage();
+
+  @override
+  Future<void> saveTokens(AuthTokens tokens) async {
+    await _storage.write(key: _keyIdToken, value: tokens.idToken);
+    await _storage.write(key: _keyAccessToken, value: tokens.accessToken);
+    if (tokens.refreshToken != null) {
+      await _storage.write(key: _keyRefreshToken, value: tokens.refreshToken);
+    }
+  }
+
+  @override
+  Future<String?> getIdToken() => _storage.read(key: _keyIdToken);
+
+  @override
+  Future<String?> getAccessToken() => _storage.read(key: _keyAccessToken);
+
+  @override
+  Future<String?> getRefreshToken() => _storage.read(key: _keyRefreshToken);
+
+  @override
+  Future<void> clearTokens() async {
+    await _storage.delete(key: _keyIdToken);
+    await _storage.delete(key: _keyAccessToken);
+    await _storage.delete(key: _keyRefreshToken);
+  }
+}

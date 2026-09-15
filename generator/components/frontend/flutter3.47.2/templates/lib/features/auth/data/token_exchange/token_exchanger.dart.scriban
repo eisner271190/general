@@ -1,0 +1,119 @@
+﻿import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../../../shared/log/logger.dart';
+import '../../domain/auth_tokens.dart';
+import '../../config/auth_config.dart';
+import '../auth_constants.dart';
+import 'i_token_exchanger.dart';
+import 'token_response_validator.dart';
+import 'token_error_extractor.dart';
+
+/// Intercambiador de cÃ³digo de autorizaciÃ³n por tokens
+/// Responsabilidad: ComunicaciÃ³n con backend para obtener tokens
+class TokenExchanger implements ITokenExchanger {
+  final http.Client _httpClient;
+  final String backendUrl;
+
+  TokenExchanger({http.Client? httpClient, required this.backendUrl})
+    : _httpClient = httpClient ?? http.Client();
+
+  @override
+  Future<AuthTokens> exchangeCodeForTokens({
+    required String code,
+    required String codeVerifier,
+  }) async {
+    final url = Uri.parse(AuthConfig.tokenExchangeUrl);
+    _logCallingEndpoint(url);
+
+    try {
+      final response = await _makeRequest(url, code, codeVerifier);
+      _logBackendResponse(response.statusCode);
+
+      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200) {
+        return _buildAuthTokens(responseData);
+      } else {
+        throw Exception(
+          TokenErrorExtractor.extractErrorMessage(
+            responseData,
+            response.statusCode,
+          ),
+        );
+      }
+    } on TimeoutException catch (e) {
+      _logTimeoutError(e);
+      rethrow;
+    } catch (e) {
+      _logExchangeError(e);
+      rethrow;
+    }
+  }
+
+  Future<http.Response> _makeRequest(
+    Uri url,
+    String code,
+    String codeVerifier,
+  ) {
+    return _httpClient
+        .post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'code': code,
+            'code_verifier': codeVerifier,
+            'redirect_uri': AuthConfig.redirectUri,
+          }),
+        )
+        .timeout(
+          Duration(seconds: AuthConstants.tokenExchangeTimeoutSeconds),
+          onTimeout: () {
+            throw TimeoutException(
+              'Token exchange timed out after ${AuthConstants.tokenExchangeTimeoutSeconds} seconds',
+            );
+          },
+        );
+  }
+
+  AuthTokens _buildAuthTokens(Map<String, dynamic> responseData) {
+    final tokens = _extractTokensFromResponse(responseData);
+    return AuthTokens(
+      idToken: tokens['idToken']!,
+      accessToken: tokens['accessToken']!,
+      refreshToken: tokens['refreshToken'],
+    );
+  }
+
+  Map<String, String?> _extractTokensFromResponse(Map<String, dynamic> data) {
+    final tokenData = TokenResponseValidator.extractAndValidate(data);
+    final idToken = tokenData['idToken'] as String?;
+    final accessToken = tokenData['accessToken'] as String?;
+    final refreshToken = tokenData['refreshToken'] as String?;
+
+    TokenResponseValidator.validateIdToken(idToken, data);
+    TokenResponseValidator.validateAccessToken(accessToken, data);
+
+    return {
+      'idToken': idToken,
+      'accessToken': accessToken,
+      'refreshToken': refreshToken,
+    };
+  }
+
+  void _logCallingEndpoint(Uri url) {
+    Logger.info('Calling endpoint: $url');
+  }
+
+  void _logBackendResponse(int statusCode) {
+    Logger.info('Backend response: $statusCode');
+  }
+
+  void _logTimeoutError(TimeoutException error) {
+    Logger.error('Timeout in token exchange', error: error);
+  }
+
+  void _logExchangeError(Object error) {
+    Logger.error('Error in exchangeCodeForTokens', error: error);
+  }
+}

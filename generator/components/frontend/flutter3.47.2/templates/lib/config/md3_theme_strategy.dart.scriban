@@ -1,0 +1,15 @@
+﻿import 'package:flutter/material.dart';
+import 'theme_strategy.dart';
+import 'md3_light_theme.dart';
+import 'md3_dark_theme.dart';
+
+class Md3ThemeStrategy implements ThemeStrategy {
+  @override
+  ThemeData get lightTheme => Md3LightTheme.theme;
+
+  @override
+  ThemeData get darkTheme => Md3DarkTheme.theme;
+
+  @override
+  String get themeStyle => 'md3';
+}

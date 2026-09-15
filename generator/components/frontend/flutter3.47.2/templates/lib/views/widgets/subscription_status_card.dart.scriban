@@ -1,0 +1,33 @@
+﻿import 'package:flutter/material.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/constants/app_spacing.dart';
+
+/// Widget que muestra el estado de suscripciÃ³n y quizzes restantes
+/// Responsabilidad: UI de informaciÃ³n de uso de quizzes
+class SubscriptionStatusCard extends StatelessWidget {
+  const SubscriptionStatusCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.large),
+      color: Colors.purple.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.large),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: const [
+            Text(
+              'Premium: quizzes ilimitados',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.purple,
+              ),
+            ),
+            Icon(Icons.workspace_premium, color: Colors.purple),
+          ],
+        ),
+      ),
+    );
+  }
+}

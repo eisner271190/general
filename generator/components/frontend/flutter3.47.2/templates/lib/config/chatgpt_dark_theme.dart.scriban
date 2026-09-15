@@ -1,0 +1,39 @@
+﻿import 'package:flutter/material.dart';
+
+/// Tema oscuro estilo ChatGPT
+class ChatGptDarkTheme {
+  static const Color primary = Color(0xFF10a37f);
+  static const Color background = Color(0xFF343541);
+  static const Color cardColor = Color(0xFF40414f);
+
+  static ThemeData get theme => ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    primaryColor: primary,
+    scaffoldBackgroundColor: background,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: background,
+      foregroundColor: Colors.white,
+      elevation: 0,
+    ),
+    drawerTheme: const DrawerThemeData(backgroundColor: background),
+    cardTheme: CardThemeData(
+      elevation: 2,
+      color: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      filled: true,
+      fillColor: cardColor,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primary,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    ),
+  );
+}

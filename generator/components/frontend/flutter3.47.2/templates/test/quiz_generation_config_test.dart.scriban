@@ -1,0 +1,20 @@
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/domain/quiz_generation_config.dart';
+
+void main() {
+  test('creates quiz generation configuration', () {
+    const config = QuizGenerationConfig(
+      topic: 'Flutter',
+      language: 'es',
+      numQuestions: 5,
+      optionsCount: 4,
+      timePerQuestionSeconds: 30,
+    );
+
+    expect(config.topic, 'Flutter');
+    expect(config.language, 'es');
+    expect(config.numQuestions, 5);
+    expect(config.optionsCount, 4);
+    expect(config.timePerQuestionSeconds, 30);
+  });
+}

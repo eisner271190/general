@@ -1,0 +1,51 @@
+﻿import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../log/logger.dart';
+
+abstract final class EnvLogger {
+  EnvLogger._();
+
+  static void logEnvironmentVariables(List<String> keys, [String? envFile]) {
+    _logEnvironmentVariablesHeader(envFile);
+
+    for (final key in keys) {
+      final value = dotenv.env[key];
+      final displayValue = value != null && value.isNotEmpty
+          ? _maskSensitiveValue(key, value)
+          : '<not configured>';
+      _logEnvironmentVariable(key, displayValue);
+    }
+  }
+
+  static String _maskSensitiveValue(String key, String value) {
+    final sensitiveKeys = [
+      'client_id',
+      'client_secret',
+      'api_key',
+      'token',
+      'password',
+      'secret',
+    ];
+
+    final keyLower = key.toLowerCase();
+    final isSensitive = sensitiveKeys.any((s) => keyLower.contains(s));
+
+    if (!isSensitive) {
+      return value;
+    }
+
+    if (value.length <= 8) {
+      return '***';
+    }
+
+    return '${value.substring(0, 4)}...${value.substring(value.length - 4)}';
+  }
+
+  static void _logEnvironmentVariablesHeader(String? envFile) {
+    final fileInfo = envFile != null ? ' ($envFile)' : '';
+    Logger.info('[ENV] Environment variables$fileInfo:');
+  }
+
+  static void _logEnvironmentVariable(String key, String displayValue) {
+    Logger.info('[ENV]   $key: $displayValue');
+  }
+}

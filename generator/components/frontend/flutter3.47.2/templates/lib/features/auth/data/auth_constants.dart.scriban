@@ -1,0 +1,17 @@
+﻿abstract final class AuthConstants {
+  AuthConstants._();
+
+  static const int stateLength = 32;
+  static const int codeVerifierLength = 128;
+  static const int tokenExchangeTimeoutSeconds = 30;
+  static const int logoutTimeoutSeconds = 10;
+
+  static const String localStorageKeyState = 'auth_state';
+  static const String localStorageKeyCodeVerifier = 'auth_code_verifier';
+
+  static const String webOnlyWindowName = '_self';
+
+  /// Caracteres permitidos para PKCE segÃºn RFC 7636
+  static const String allowedChars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+}

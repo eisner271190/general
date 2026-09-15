@@ -1,0 +1,17 @@
+﻿import 'package:{{ FRONTEND_NAME }}/features/quiz/domain/question.dart';
+
+/// Calculador de resultados del quiz
+/// Responsabilidad: Calcular estadÃ­sticas del quiz
+class QuizResultCalculator {
+  static Map<String, dynamic> calculate(List<Question> questions) {
+    if (questions.isEmpty) {
+      return {'correct': 0, 'incorrect': 0, 'percent': 0.0};
+    }
+
+    final correct = questions.where((q) => q.isCorrect).length;
+    final incorrect = questions.length - correct;
+    final percent = (correct / questions.length) * 100;
+
+    return {'correct': correct, 'incorrect': incorrect, 'percent': percent};
+  }
+}

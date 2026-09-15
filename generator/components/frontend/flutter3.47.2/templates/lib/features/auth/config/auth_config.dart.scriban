@@ -1,0 +1,114 @@
+﻿import '../../../shared/helper/env_helper.dart';
+import '../../../shared/log/logger.dart';
+import '../../../shared/env/env_logger.dart';
+import 'auth_env.dart';
+
+/// ConfiguraciÃ³n de autenticaciÃ³n con Cognito.
+/// Los valores se leen de assets/.env
+abstract final class AuthConfig {
+  AuthConfig._();
+
+  /// Valida que todas las variables crÃ­ticas estÃ©n configuradas
+  static void validate() {
+    EnvHelper.validate(AuthEnv.requiredKeys);
+  }
+
+  /// Imprime las variables de entorno de autenticaciÃ³n
+  static void logEnvironmentVariables([String? envFile]) {
+    EnvLogger.logEnvironmentVariables(AuthEnv.allKeys, envFile);
+  }
+
+  /// Host del backend
+  static String get backendHost => EnvHelper.getEnv(AuthEnv.keyBackendHost);
+
+  /// Path para intercambio de cÃ³digo por tokens
+  static String get tokenExchangePath =>
+      EnvHelper.getEnv(AuthEnv.keyTokenExchangePath);
+
+  /// Path para logout
+  static String get logoutPath => EnvHelper.getEnv(AuthEnv.keyLogoutPath);
+
+  /// Domain de Cognito Hosted UI
+  static String get cognitoDomain => EnvHelper.getEnv(AuthEnv.keyCognitoDomain);
+
+  /// Client ID de tu app en Cognito
+  static String get clientId => EnvHelper.getEnv(AuthEnv.keyClientId);
+
+  /// Redirect URI
+  static String get redirectUri => EnvHelper.getEnv(AuthEnv.keyRedirectUri);
+
+  /// Scopes solicitados
+  static String get scopes => EnvHelper.getEnv(AuthEnv.keyScopes);
+
+  /// Identity Provider (Google por defecto)
+  static String get identityProvider =>
+      EnvHelper.getEnv(AuthEnv.keyIdentityProvider);
+
+  /// URL completa para intercambio de tokens
+  static String get tokenExchangeUrl {
+    return '$backendHost$tokenExchangePath';
+  }
+
+  /// URL completa para logout
+  static String get logoutUrl {
+    return '$backendHost$logoutPath';
+  }
+
+  /// URL de autorizaciÃ³n de Cognito (forzando Google)
+  static String getAuthorizeUrl({
+    required String codeChallenge,
+    required String state,
+  }) {
+    Logger.log(
+      'Building authorize URL | codeChallenge: ${codeChallenge.substring(0, 10)}..., state: $state',
+    );
+
+    final params = _buildAuthorizeParams(codeChallenge, state);
+    final query = _buildQueryString(params);
+    final url = '$cognitoDomain/oauth2/authorize?$query';
+
+    Logger.log('Authorize URL built successfully');
+    return url;
+  }
+
+  static Map<String, String> _buildAuthorizeParams(
+    String codeChallenge,
+    String state,
+  ) {
+    return {
+      'response_type': 'code',
+      'client_id': clientId,
+      'redirect_uri': redirectUri,
+      'scope': scopes,
+      'identity_provider': identityProvider,
+      'code_challenge': codeChallenge,
+      'code_challenge_method': 'S256',
+      'state': state,
+    };
+  }
+
+  /// URL de logout de Cognito
+  static String getCognitoLogoutUrl() {
+    Logger.log('Building Cognito logout URL');
+
+    final params = _buildLogoutParams();
+    final query = _buildQueryString(params);
+    final url = '$cognitoDomain/logout?$query';
+
+    Logger.log('Logout URL built: $url');
+    return url;
+  }
+
+  static Map<String, String> _buildLogoutParams() {
+    return {'client_id': clientId, 'logout_uri': redirectUri};
+  }
+
+  static String _buildQueryString(Map<String, String> params) {
+    return params.entries
+        .map(
+          (e) =>
+              '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}',
+        )
+        .join('&');
+  }
+}

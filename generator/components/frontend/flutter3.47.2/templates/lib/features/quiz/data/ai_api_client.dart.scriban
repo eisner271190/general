@@ -1,0 +1,133 @@
+﻿import 'dart:async';
+import 'dart:convert';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/consume/i_http_client.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/consume/http_client_impl.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/helper/env_helper.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/helper/validator.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/config/ai_env.dart';
+import 'i_api_client.dart';
+
+/// Cliente para interactuar con OpenAI API
+/// Responsabilidad: Ejecutar llamadas HTTP a OpenAI y parsear respuestas
+class OpenAiApiClient implements IApiClient {
+  final IHttpClient _httpClient = HttpClientImpl();
+  final Validator _validator = Validator();
+
+  static const double _defaultTemperature = 0.7;
+  static const int _defaultMaxTokens = 1000;
+  static const int _apiTimeoutSeconds = 30;
+  static const String _defaultModel = 'gpt-4o-mini';
+
+  static String get _apiKey => EnvHelper.getEnv('API_KEY');
+
+  static String get _apiUrl {
+    try {
+      return EnvHelper.getEnv('API_URL');
+    } catch (e) {
+      return AiEnv.defaultApiUrl;
+    }
+  }
+
+  static String get _model {
+    try {
+      return EnvHelper.getEnv('MODEL');
+    } catch (e) {
+      return _defaultModel;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> callApi(String prompt) async {
+    _validatePrompt(prompt);
+
+    _logCallingOpenAI(_model, prompt.length);
+
+    final payload = _buildPayload(prompt);
+    final response = await _executeRequest(payload);
+
+    return _parseResponse(response);
+  }
+
+  void _validatePrompt(String prompt) {
+    _validator.notEmptyAndNotNull(prompt, 'Prompt cannot be empty');
+  }
+
+  Map<String, dynamic> _buildPayload(String prompt) {
+    return {
+      'model': _model,
+      'messages': [
+        {'role': 'user', 'content': prompt},
+      ],
+      'temperature': _defaultTemperature,
+      'max_tokens': _defaultMaxTokens,
+    };
+  }
+
+  Future<dynamic> _executeRequest(Map<String, dynamic> payload) async {
+    try {
+      return await _httpClient
+          .post(
+            _apiUrl,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $_apiKey',
+            },
+            body: payload,
+          )
+          .timeout(
+            Duration(seconds: _apiTimeoutSeconds),
+            onTimeout: () {
+              throw TimeoutException(
+                'API request timed out after $_apiTimeoutSeconds seconds',
+              );
+            },
+          );
+    } on TimeoutException catch (e) {
+      _logTimeoutError(e);
+      rethrow;
+    } catch (e) {
+      _logUnexpectedError(e);
+      rethrow;
+    }
+  }
+
+  Map<String, dynamic> _parseResponse(dynamic response) {
+    if (response.statusCode == 200) {
+      _logSuccessfulResponse(response.statusCode);
+      return json.decode(response.body) as Map<String, dynamic>;
+    }
+
+    _logApiError(response.statusCode, response.body);
+    throw Exception('Error en la API: ${response.statusCode}');
+  }
+
+  void _logCallingOpenAI(String model, int promptLength) {
+    Logger.info(
+      '[API] Calling OpenAI',
+      data: {'model': model, 'promptLength': promptLength},
+    );
+  }
+
+  void _logTimeoutError(TimeoutException error) {
+    Logger.error('[API] Timeout calling OpenAI', error: error);
+  }
+
+  void _logUnexpectedError(Object error) {
+    Logger.error('[API] Unexpected error calling OpenAI', error: error);
+  }
+
+  void _logSuccessfulResponse(int statusCode) {
+    Logger.info(
+      '[API] Successful OpenAI response',
+      data: {'statusCode': statusCode},
+    );
+  }
+
+  void _logApiError(int statusCode, String body) {
+    Logger.error(
+      '[API] Error en llamada a OpenAI',
+      data: {'statusCode': statusCode, 'body': body},
+    );
+  }
+}

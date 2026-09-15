@@ -1,0 +1,10 @@
+﻿abstract class IRedirectHandler {
+  Future<RedirectParams> validateAndExtractParams(Uri redirectUri);
+}
+
+class RedirectParams {
+  final String code;
+  final String codeVerifier;
+
+  RedirectParams({required this.code, required this.codeVerifier});
+}

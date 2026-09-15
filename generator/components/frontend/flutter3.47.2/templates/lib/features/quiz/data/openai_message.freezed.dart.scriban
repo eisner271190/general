@@ -1,0 +1,288 @@
+﻿// GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'openai_message.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
+T _$identity<T>(T value) => value;
+
+/// @nodoc
+mixin _$OpenAiMessage {
+
+ String get role; String get content;
+/// Create a copy of OpenAiMessage
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$OpenAiMessageCopyWith<OpenAiMessage> get copyWith => _$OpenAiMessageCopyWithImpl<OpenAiMessage>(this as OpenAiMessage, _$identity);
+
+  /// Serializes this OpenAiMessage to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as OpenAiMessage;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OpenAiMessage&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.content, _this.content) || other.content == _this.content));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as OpenAiMessage;
+  return Object.hash(runtimeType,_this.role,_this.content);
+}
+
+@override
+String toString() {
+  final _this = this as OpenAiMessage;
+  return 'OpenAiMessage(role: ${_this.role}, content: ${_this.content})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $OpenAiMessageCopyWith<$Res>  {
+  factory $OpenAiMessageCopyWith(OpenAiMessage value, $Res Function(OpenAiMessage) _then) = _$OpenAiMessageCopyWithImpl;
+@useResult
+$Res call({
+ String role, String content
+});
+
+
+
+
+}
+/// @nodoc
+class _$OpenAiMessageCopyWithImpl<$Res>
+    implements $OpenAiMessageCopyWith<$Res> {
+  _$OpenAiMessageCopyWithImpl(this._self, this._then);
+
+  final OpenAiMessage _self;
+  final $Res Function(OpenAiMessage) _then;
+
+/// Create a copy of OpenAiMessage
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? role = null,Object? content = null,}) {
+  return _then(OpenAiMessage(
+role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as String,content: null == content ? _self.content : content // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [OpenAiMessage].
+extension OpenAiMessagePatterns on OpenAiMessage {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _OpenAiMessage value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _OpenAiMessage() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _OpenAiMessage value)  $default,){
+final _that = this;
+switch (_that) {
+case _OpenAiMessage():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _OpenAiMessage value)?  $default,){
+final _that = this;
+switch (_that) {
+case _OpenAiMessage() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String role,  String content)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _OpenAiMessage() when $default != null:
+return $default(_that.role,_that.content);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String role,  String content)  $default,) {final _that = this;
+switch (_that) {
+case _OpenAiMessage():
+return $default(_that.role,_that.content);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String role,  String content)?  $default,) {final _that = this;
+switch (_that) {
+case _OpenAiMessage() when $default != null:
+return $default(_that.role,_that.content);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _OpenAiMessage implements OpenAiMessage {
+  const _OpenAiMessage({required this.role, required this.content});
+  factory _OpenAiMessage.fromJson(Map<String, dynamic> json) => _$OpenAiMessageFromJson(json);
+
+@override final  String role;
+@override final  String content;
+
+/// Create a copy of OpenAiMessage
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$OpenAiMessageCopyWith<_OpenAiMessage> get copyWith => __$OpenAiMessageCopyWithImpl<_OpenAiMessage>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$OpenAiMessageToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OpenAiMessage&&(identical(other.role, role) || other.role == role)&&(identical(other.content, content) || other.content == content));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,role,content);
+}
+
+@override
+String toString() {
+    return 'OpenAiMessage(role: $role, content: $content)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$OpenAiMessageCopyWith<$Res> implements $OpenAiMessageCopyWith<$Res> {
+  factory _$OpenAiMessageCopyWith(_OpenAiMessage value, $Res Function(_OpenAiMessage) _then) = __$OpenAiMessageCopyWithImpl;
+@override @useResult
+$Res call({
+ String role, String content
+});
+
+
+
+
+}
+/// @nodoc
+class __$OpenAiMessageCopyWithImpl<$Res>
+    implements _$OpenAiMessageCopyWith<$Res> {
+  __$OpenAiMessageCopyWithImpl(this._self, this._then);
+
+  final _OpenAiMessage _self;
+  final $Res Function(_OpenAiMessage) _then;
+
+/// Create a copy of OpenAiMessage
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? role = null,Object? content = null,}) {
+  return _then(_OpenAiMessage(
+role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as String,content: null == content ? _self.content : content // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+// dart format on

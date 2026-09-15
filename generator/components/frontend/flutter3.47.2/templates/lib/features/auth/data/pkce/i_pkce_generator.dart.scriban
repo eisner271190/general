@@ -1,0 +1,5 @@
+﻿/// Interface para la generaciÃ³n de PKCE (Proof Key for Code Exchange)
+abstract class IPKCEGenerator {
+  String generateCodeVerifier();
+  String generateCodeChallenge(String verifier);
+}

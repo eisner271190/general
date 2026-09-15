@@ -1,0 +1,33 @@
+﻿import 'package:flutter/foundation.dart' show kIsWeb;
+import '../log/logger.dart';
+
+abstract class ILocalStorage {
+  void setItem(String key, String value);
+  String? getItem(String key);
+  void removeItem(String key);
+}
+
+class WebLocalStorage implements ILocalStorage {
+  @override
+  void setItem(String key, String value) {
+    if (!kIsWeb) return;
+    //html.window.localStorage[key] = value;
+    Logger.log('LocalStorage setItem: $key');
+  }
+
+  @override
+  String? getItem(String key) {
+    if (!kIsWeb) return null;
+    //final value = html.window.localStorage[key];
+    final value = null;
+    Logger.log('LocalStorage getItem: $key = ${value ?? "null"}');
+    return value;
+  }
+
+  @override
+  void removeItem(String key) {
+    if (!kIsWeb) return;
+    //html.window.localStorage.remove(key);
+    Logger.log('LocalStorage removeItem: $key');
+  }
+}

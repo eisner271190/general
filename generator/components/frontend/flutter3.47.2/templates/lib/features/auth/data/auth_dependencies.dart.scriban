@@ -1,0 +1,73 @@
+﻿import 'package:{{ FRONTEND_NAME }}/shared/consume/http_client_impl.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/helper/validator.dart';
+import 'storage/token_storage.dart';
+import 'user/user_manager.dart';
+import 'pkce/pkce_generator.dart';
+import 'jwt/jwt_decoder.dart';
+import 'token_exchange/token_exchanger.dart';
+import 'browser/browser_launcher.dart';
+import 'oauth/oauth_state_manager.dart';
+import 'hosted_ui/hosted_ui_initiator.dart';
+import 'redirect/redirect_handler.dart';
+import 'redirect/i_redirect_handler.dart';
+import 'session/session_manager.dart';
+import 'session/i_session_manager.dart';
+import 'logout/logout_executor.dart';
+import 'logout/i_logout_executor.dart';
+import 'token_exchange/token_exchange_coordinator.dart';
+
+class AuthDependencies {
+  final HostedUIInitiator hostedUIInitiator;
+  final IRedirectHandler redirectHandler;
+  final ISessionManager sessionManager;
+  final ILogoutExecutor logoutExecutor;
+  final TokenExchangeCoordinator tokenExchangeCoordinator;
+
+  AuthDependencies._({
+    required this.hostedUIInitiator,
+    required this.redirectHandler,
+    required this.sessionManager,
+    required this.logoutExecutor,
+    required this.tokenExchangeCoordinator,
+  });
+
+  factory AuthDependencies.create() {
+    final tokenStorage = TokenStorage();
+    final userManager = UserManager();
+    final pkceGenerator = PKCEGenerator();
+    final jwtDecoder = JWTDecoder();
+    final tokenExchanger = TokenExchanger(backendUrl: '');
+    final browserLauncher = BrowserLauncher();
+    final oauthStateManager = OAuthStateManager();
+    final validator = Validator();
+    final httpClient = HttpClientImpl();
+    final hostedUIInitiator = HostedUIInitiator(
+      pkceGenerator: pkceGenerator,
+      oauthStateManager: oauthStateManager,
+      browserLauncher: browserLauncher,
+    );
+    final redirectHandler = RedirectHandler(
+      validator: validator,
+      oauthStateManager: oauthStateManager,
+    );
+    final sessionManager = SessionManager(
+      tokenStorage: tokenStorage,
+      userManager: userManager,
+      jwtDecoder: jwtDecoder,
+    );
+    final logoutExecutor = LogoutExecutor(httpClient: httpClient);
+    final tokenExchangeCoordinator = TokenExchangeCoordinator(
+      tokenStorage: tokenStorage,
+      tokenExchanger: tokenExchanger,
+      sessionManager: sessionManager,
+    );
+
+    return AuthDependencies._(
+      hostedUIInitiator: hostedUIInitiator,
+      redirectHandler: redirectHandler,
+      sessionManager: sessionManager,
+      logoutExecutor: logoutExecutor,
+      tokenExchangeCoordinator: tokenExchangeCoordinator,
+    );
+  }
+}

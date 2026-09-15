@@ -1,0 +1,119 @@
+﻿import 'dart:convert';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/domain/question.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/domain/ai_strategy.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/domain/quiz_generation_config.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/data/i_api_client.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+
+class RealAIStrategy implements AIStrategy {
+  final IApiClient _apiClient;
+  final String _promptTemplate;
+
+  RealAIStrategy(this._apiClient, this._promptTemplate);
+
+  @override
+  Future<List<Question>> generateQuestions(QuizGenerationConfig config) async {
+    _logGeneratingQuestions();
+    final prompt = _buildPrompt(config);
+    _logPrompt(prompt);
+    final responseBody = await _apiClient.callApi(prompt);
+    _logApiResponseSuccessful();
+    _logResponse(responseBody);
+    return _parseResponse(responseBody);
+  }
+
+  /// Construye el prompt reemplazando variables en el template
+  String _buildPrompt(QuizGenerationConfig config) {
+    return _promptTemplate
+        .replaceAll('{numQuestions}', config.numQuestions.toString())
+        .replaceAll('{topic}', config.topic)
+        .replaceAll('{language}', config.language)
+        .replaceAll('{optionsCount}', config.optionsCount.toString());
+  }
+
+  /// Parsea la respuesta del API extrayendo las preguntas
+  List<Question> _parseResponse(Map<String, dynamic> body) {
+    final choices = _extractChoices(body);
+    if (choices.isEmpty) {
+      throw Exception('No se recibieron opciones de respuesta de la IA');
+    }
+
+    final content = _extractContent(choices);
+    return _parseQuestionsFromContent(content);
+  }
+
+  /// Extrae el array de choices del body
+  List<dynamic> _extractChoices(Map<String, dynamic> body) {
+    return body['choices'] as List<dynamic>;
+  }
+
+  /// Extrae el contenido del primer choice
+  String _extractContent(List<dynamic> choices) {
+    return choices[0]['message']['content'] as String;
+  }
+
+  /// Intenta parsear las preguntas desde el contenido
+  List<Question> _parseQuestionsFromContent(String content) {
+    // Intento 1: parsear como JSON directo
+    final directParse = _tryParseDirectJson(content);
+    if (directParse != null) return directParse;
+
+    // Intento 2: extraer substring JSON
+    final subParse = _tryParseJsonSubstring(content);
+    if (subParse != null) return subParse;
+
+    throw Exception('Respuesta de IA no contiene preguntas vÃ¡lidas');
+  }
+
+  /// Intenta parsear el contenido como JSON directo
+  List<Question>? _tryParseDirectJson(String content) {
+    try {
+      final parsed = json.decode(content);
+      return _extractQuestionsFromParsed(parsed);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Intenta extraer y parsear un substring JSON
+  List<Question>? _tryParseJsonSubstring(String content) {
+    final start = content.indexOf('{');
+    final end = content.lastIndexOf('}');
+
+    if (start == -1 || end == -1 || end <= start) return null;
+
+    final sub = content.substring(start, end + 1);
+    try {
+      final parsed = json.decode(sub);
+      return _extractQuestionsFromParsed(parsed);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Extrae las preguntas desde un objeto parseado
+  List<Question>? _extractQuestionsFromParsed(dynamic parsed) {
+    if (parsed is! Map || parsed['questions'] is! List) return null;
+
+    final list = parsed['questions'] as List;
+    return list
+        .map((e) => Question.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  void _logGeneratingQuestions() {
+    Logger.info('[AI] Generating questions via API');
+  }
+
+  void _logPrompt(String prompt) {
+    Logger.logKeyValue('prompt', prompt);
+  }
+
+  void _logApiResponseSuccessful() {
+    Logger.info('[AI] API response successful');
+  }
+
+  void _logResponse(Map<String, dynamic> response) {
+    Logger.logKeyValue('response', response.toString());
+  }
+}

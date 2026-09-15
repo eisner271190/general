@@ -1,6 +1,19 @@
 {
   "applicationName": "Quiz Smart",
   "applicationId": "com.quizsmart.app",
+  "frontend": {
+    "name": "quizsmart",
+    "framework": "flutter3.47.2",
+    "platforms": [
+      "android",
+      "ios",
+      "web",
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "version": "1.0.0+1"
+  },
   "environments": [
     {
       "name": "develop",

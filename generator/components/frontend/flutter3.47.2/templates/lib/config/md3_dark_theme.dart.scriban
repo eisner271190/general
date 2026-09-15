@@ -1,0 +1,92 @@
+﻿import 'package:flutter/material.dart';
+
+/// Tema oscuro Material Design 3
+/// Implementado segÃºn las guÃ­as oficiales de Material Design 3
+class Md3DarkTheme {
+  static const Color seedColor = Color(0xFF6750A4);
+
+  static ThemeData get theme {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: seedColor,
+      brightness: Brightness.dark,
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      // No sobreescribir brightness, primaryColor ni scaffoldBackground
+      // MD3 maneja esto automÃ¡ticamente desde colorScheme
+
+      // AppBar con colores de colorScheme
+      appBarTheme: AppBarTheme(
+        centerTitle: false,
+        elevation: 0,
+        scrolledUnderElevation: 3,
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
+      ),
+
+      // Card con elevaciÃ³n MD3 estÃ¡ndar
+      cardTheme: CardThemeData(
+        elevation: 1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        // No hardcodear color - usa colorScheme.surfaceContainer
+      ),
+
+      // Input fields con estilo MD3
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: colorScheme.surfaceContainerHighest,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colorScheme.outline),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colorScheme.error),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+      ),
+
+      // Elevated buttons con estilo MD3
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          elevation: 1,
+          shadowColor: Colors.transparent,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+          minimumSize: const Size(64, 40),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+
+      // FAB con estilo MD3
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+
+      // Navigation bar
+      navigationBarTheme: NavigationBarThemeData(
+        height: 80,
+        elevation: 0,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      ),
+
+      // Drawer
+      drawerTheme: DrawerThemeData(backgroundColor: colorScheme.surface),
+    );
+  }
+}

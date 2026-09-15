@@ -1,0 +1,70 @@
+﻿import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/application/quiz_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/features/history/application/history_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+import 'package:{{ FRONTEND_NAME }}/core/routes.dart';
+
+/// Widget del botÃ³n para iniciar el quiz
+/// Responsabilidad: UI y validaciÃ³n para iniciar quiz
+class StartQuizButton extends StatelessWidget {
+  final TextEditingController topicController;
+  final bool unlimitedTime;
+  final int timeSeconds;
+
+  const StartQuizButton({
+    super.key,
+    required this.topicController,
+    required this.unlimitedTime,
+    required this.timeSeconds,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () => _handleStartQuiz(context),
+        child: Text(AppLocalizations.of(context)!.startButton),
+      ),
+    );
+  }
+
+  Future<void> _handleStartQuiz(BuildContext context) async {
+    final topicText = topicController.text.trim();
+
+    if (!_validateTopic(context, topicText)) {
+      return;
+    }
+
+    await _startQuiz(context, topicText);
+  }
+
+  bool _validateTopic(BuildContext context, String topicText) {
+    if (topicText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.enterTopicMessage),
+        ),
+      );
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _startQuiz(BuildContext context, String topicText) async {
+    final quiz = Provider.of<QuizProvider>(context, listen: false);
+    final history = Provider.of<HistoryProvider>(context, listen: false);
+
+    quiz.topic = topicText;
+    quiz.timePerQuestionSeconds = unlimitedTime ? null : timeSeconds;
+
+    await history.addTopic(topicText);
+    await quiz.startQuiz();
+
+    if (context.mounted) {
+      unawaited(Navigator.of(context).pushNamed(AppRoutes.quiz));
+    }
+  }
+}

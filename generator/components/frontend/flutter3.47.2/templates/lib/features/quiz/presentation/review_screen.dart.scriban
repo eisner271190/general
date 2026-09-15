@@ -1,0 +1,18 @@
+﻿import 'package:flutter/material.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+
+class ReviewScreen extends StatelessWidget {
+  const ReviewScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.reviewQuizTitle),
+      ),
+      body: Center(
+        child: Text(AppLocalizations.of(context)!.reviewPlaceholder),
+      ),
+    );
+  }
+}

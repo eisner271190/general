@@ -1,0 +1,111 @@
+﻿import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/application/quiz_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/application/start_quiz_use_case.dart';
+import 'package:{{ FRONTEND_NAME }}/features/history/application/history_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import 'package:{{ FRONTEND_NAME }}/core/routes.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/constants/app_spacing.dart';
+import 'upgrade_dialog.dart';
+
+/// SecciÃ³n de creaciÃ³n de quiz
+/// Responsabilidad: Input y botÃ³n para iniciar quiz
+class QuizCreationSection extends StatelessWidget {
+  final TextEditingController topicController;
+
+  const QuizCreationSection({super.key, required this.topicController});
+
+  Future<void> _startQuiz(BuildContext context) async {
+    final topic = topicController.text.trim();
+
+    if (!_validateTopic(context, topic)) return;
+
+    final useCase = _createUseCase(context);
+
+    if (!useCase.canStart()) {
+      UpgradeDialog.show(context);
+      return;
+    }
+
+    await _executeQuizCreation(context, useCase, topic);
+  }
+
+  bool _validateTopic(BuildContext context, String topic) {
+    if (topic.isEmpty) {
+      _logTopicEmpty();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.enterTopicMessage),
+        ),
+      );
+      return false;
+    }
+    return true;
+  }
+
+  StartQuizUseCase _createUseCase(BuildContext context) {
+    return StartQuizUseCase(
+      quizProvider: Provider.of<QuizProvider>(context, listen: false),
+      historyProvider: Provider.of<HistoryProvider>(context, listen: false),
+    );
+  }
+
+  Future<void> _executeQuizCreation(
+    BuildContext context,
+    StartQuizUseCase useCase,
+    String topic,
+  ) async {
+    try {
+      await useCase.execute(topic);
+      unawaited(Navigator.of(context).pushNamed(AppRoutes.quiz));
+      _logNavigatedToQuizScreen();
+    } catch (e) {
+      _logErrorStartingQuiz(e);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${AppLocalizations.of(context)!.errorPrefix}${e.toString()}',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  void _logTopicEmpty() {
+    Logger.info('[UI] Topic is empty');
+  }
+
+  void _logNavigatedToQuizScreen() {
+    Logger.info('[UI] Navigated to quiz screen');
+  }
+
+  void _logErrorStartingQuiz(Object error) {
+    Logger.error('[UI] Error starting quiz', error: error);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        TextField(
+          controller: topicController,
+          decoration: InputDecoration(
+            labelText: AppLocalizations.of(context)!.topicLabel,
+            hintText: AppLocalizations.of(context)!.pressEnterHint,
+          ),
+          textInputAction: TextInputAction.go,
+          onSubmitted: (_) => _startQuiz(context),
+        ),
+        const SizedBox(height: AppSpacing.xxxlarge),
+        ElevatedButton(
+          onPressed: () => _startQuiz(context),
+          child: Text(AppLocalizations.of(context)!.startButton),
+        ),
+      ],
+    );
+  }
+}

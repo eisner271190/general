@@ -1,0 +1,11 @@
+﻿/// Interface for OAuth state and CSRF protection management
+abstract class IOAuthStateManager {
+  Future<void> saveState(String state, String codeVerifier);
+  Future<bool> validateAndClearState(String state);
+  String generateState();
+
+  /// Retrieves the stored code verifier.
+  ///
+  /// Returns null if no code verifier is available.
+  Future<String?> getCodeVerifier();
+}

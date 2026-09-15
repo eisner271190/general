@@ -1,0 +1,70 @@
+﻿import 'package:flutter/material.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/application/quiz_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+import 'package:{{ FRONTEND_NAME }}/widgets/labeled_slider.dart';
+
+/// SecciÃ³n de configuraciÃ³n de tiempo
+/// Responsabilidad: Control de tiempo lÃ­mite por pregunta
+class TimerConfigSection extends StatefulWidget {
+  final QuizProvider quiz;
+  final VoidCallback onChanged;
+
+  const TimerConfigSection({
+    super.key,
+    required this.quiz,
+    required this.onChanged,
+  });
+
+  @override
+  State<TimerConfigSection> createState() => _TimerConfigSectionState();
+}
+
+class _TimerConfigSectionState extends State<TimerConfigSection> {
+  bool _unlimitedTime = true;
+  int _timeSeconds = 30;
+
+  @override
+  void initState() {
+    super.initState();
+    _unlimitedTime = widget.quiz.timePerQuestionSeconds == null;
+    _timeSeconds = widget.quiz.timePerQuestionSeconds ?? 30;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CheckboxListTile(
+          title: Text(AppLocalizations.of(context)!.unlimitedTime),
+          value: _unlimitedTime,
+          onChanged: (v) {
+            setState(() {
+              _unlimitedTime = v ?? true;
+              widget.quiz.timePerQuestionSeconds = _unlimitedTime
+                  ? null
+                  : _timeSeconds;
+            });
+            widget.onChanged();
+          },
+        ),
+        if (!_unlimitedTime)
+          LabeledSlider(
+            config: SliderConfig(
+              label: AppLocalizations.of(context)!.timeLabel,
+              value: _timeSeconds.toDouble(),
+              min: 10,
+              max: 500,
+            ),
+            onChanged: (v) {
+              setState(() {
+                _timeSeconds = v.toInt();
+                widget.quiz.timePerQuestionSeconds = _timeSeconds;
+              });
+              widget.onChanged();
+            },
+          ),
+      ],
+    );
+  }
+}

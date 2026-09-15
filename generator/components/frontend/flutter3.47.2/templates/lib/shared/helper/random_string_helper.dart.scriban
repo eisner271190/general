@@ -1,0 +1,19 @@
+﻿import 'dart:math';
+
+/// Helper para generaciÃ³n de strings aleatorios seguros
+abstract final class RandomStringHelper {
+  RandomStringHelper._();
+
+  /// Caracteres permitidos para strings aleatorios
+  static const String allowedChars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+
+  /// Genera un string aleatorio seguro de la longitud especificada
+  static String generate(int length) {
+    final random = Random.secure();
+    return List.generate(
+      length,
+      (_) => allowedChars[random.nextInt(allowedChars.length)],
+    ).join();
+  }
+}

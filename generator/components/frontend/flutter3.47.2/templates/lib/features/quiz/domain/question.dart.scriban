@@ -1,0 +1,35 @@
+﻿import 'dart:convert';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'question.freezed.dart';
+part 'question.g.dart';
+
+@freezed
+abstract class Question with _$Question {
+  const Question._();
+
+  const factory Question({
+    required String id,
+    required String text,
+    required List<String> options,
+    required int correctIndex,
+    required String explanation,
+    int? selectedIndex,
+  }) = _Question;
+
+  bool get isCorrect => selectedIndex != null && selectedIndex == correctIndex;
+
+  factory Question.fromJson(Map<String, dynamic> json) =>
+      _$QuestionFromJson(json);
+
+  static List<Question> listFromJson(String jsonStr) {
+    final list = json.decode(jsonStr) as List;
+    return list
+        .map((e) => Question.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  static String listToJson(List<Question> questions) {
+    return json.encode(questions.map((q) => q.toJson()).toList());
+  }
+}

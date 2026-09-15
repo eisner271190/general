@@ -1,0 +1,27 @@
+﻿import '../log/logger.dart';
+import 'package:http/http.dart' as http;
+
+/// Helper para logging de peticiones HTTP
+/// Responsabilidad: Registrar detalles de requests y responses
+class HttpLogger {
+  static void logRequest(String method, String url) {
+    Logger.log('HTTP $method: $url');
+  }
+
+  static void logHeaders(Map<String, String>? headers) {
+    if (headers != null && headers.isNotEmpty) {
+      Logger.log('Headers: $headers');
+    }
+  }
+
+  static void logBody(dynamic body) {
+    if (body != null) {
+      Logger.log('Body: $body');
+    }
+  }
+
+  static void logResponse(http.Response response) {
+    Logger.log('Status: ${response.statusCode}');
+    Logger.log('Response: ${response.body}');
+  }
+}

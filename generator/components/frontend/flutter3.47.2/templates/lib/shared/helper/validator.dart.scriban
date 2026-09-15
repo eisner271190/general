@@ -1,0 +1,49 @@
+﻿import 'i_validator.dart';
+import '../log/logger.dart';
+
+class Validator implements IValidator {
+  @override
+  void validate(bool condition, String message) {
+    if (!condition) {
+      _logValidationFailed(message);
+      throw Exception(message);
+    }
+  }
+
+  @override
+  void notNull<T>(T? value, String message) {
+    if (value == null) {
+      _logNullValue(message);
+      throw Exception(message);
+    }
+  }
+
+  @override
+  void notEmpty(String? value, String message) {
+    if (value == null || value.isEmpty) {
+      _logEmptyValue(message);
+      throw Exception(message);
+    }
+  }
+
+  @override
+  void notEmptyAndNotNull<T>(T? value, String message) {
+    notNull(value, message);
+    if (value is String && value.isEmpty) {
+      _logEmptyValue(message);
+      throw Exception(message);
+    }
+  }
+
+  void _logValidationFailed(String message) {
+    Logger.error('[VALIDATOR] Validation failed: $message');
+  }
+
+  void _logNullValue(String message) {
+    Logger.error('[VALIDATOR] Null value: $message');
+  }
+
+  void _logEmptyValue(String message) {
+    Logger.error('[VALIDATOR] Empty value: $message');
+  }
+}

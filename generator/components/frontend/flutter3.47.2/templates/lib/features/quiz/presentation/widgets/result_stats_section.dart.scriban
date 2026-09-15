@@ -1,0 +1,26 @@
+﻿import 'package:flutter/material.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+
+/// Widget para mostrar estadÃ­sticas del quiz
+/// Responsabilidad: Renderizar correctas, incorrectas y porcentaje
+class ResultStatsSection extends StatelessWidget {
+  final Map<String, dynamic> results;
+
+  const ResultStatsSection({super.key, required this.results});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('${l10n.correctLabel} ${results['correct']}'),
+        Text('${l10n.incorrectLabel} ${results['incorrect']}'),
+        Text(
+          '${l10n.percentageLabel} ${results['percent'].toStringAsFixed(1)}%',
+        ),
+      ],
+    );
+  }
+}

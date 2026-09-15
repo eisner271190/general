@@ -1,0 +1,5 @@
+﻿/// Constantes de configuraciÃ³n para la aplicaciÃ³n.
+class ConfigConstants {
+  static const String mockProfile = 'MOCK';
+  static const String usingStrategyMessage = 'Using ';
+}

@@ -1,0 +1,18 @@
+﻿import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'quiz_generation_config.freezed.dart';
+part 'quiz_generation_config.g.dart';
+
+@freezed
+abstract class QuizGenerationConfig with _$QuizGenerationConfig {
+  const factory QuizGenerationConfig({
+    required String topic,
+    required String language,
+    required int numQuestions,
+    required int optionsCount,
+    int? timePerQuestionSeconds,
+  }) = _QuizGenerationConfig;
+
+  factory QuizGenerationConfig.fromJson(Map<String, dynamic> json) =>
+      _$QuizGenerationConfigFromJson(json);
+}

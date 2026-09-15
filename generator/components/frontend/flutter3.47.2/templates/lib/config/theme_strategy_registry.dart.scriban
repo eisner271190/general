@@ -1,0 +1,16 @@
+﻿import 'theme_strategy.dart';
+
+class ThemeStrategyRegistry {
+  static final ThemeStrategyRegistry instance = ThemeStrategyRegistry._();
+  ThemeStrategyRegistry._();
+
+  final Map<String, ThemeStrategy> _strategies = {};
+
+  void register(String key, ThemeStrategy strategy) {
+    _strategies[key.toLowerCase()] = strategy;
+  }
+
+  ThemeStrategy? get(String key) {
+    return _strategies[key.toLowerCase()];
+  }
+}

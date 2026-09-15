@@ -1,0 +1,50 @@
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:{{ FRONTEND_NAME }}/providers/theme_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/providers/locale_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/features/auth/data/auth_service_factory.dart';
+import 'package:{{ FRONTEND_NAME }}/views/widgets/premium_badge.dart';
+import 'package:{{ FRONTEND_NAME }}/core/routes.dart';
+
+/// Widget con las acciones del AppBar
+/// Responsabilidad: UI de botones de acciÃ³n en el AppBar
+class InitialScreenActions extends StatelessWidget {
+  const InitialScreenActions({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const PremiumBadge(),
+        IconButton(
+          icon: const Icon(Icons.language),
+          onPressed: () {
+            Provider.of<LocaleProvider>(
+              context,
+              listen: false,
+            ).toggleLanguage();
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.settings),
+          onPressed: () => Navigator.of(context).pushNamed(AppRoutes.settings),
+        ),
+        IconButton(
+          icon: const Icon(Icons.brightness_6),
+          onPressed: () {
+            Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.logout),
+          onPressed: () => _handleLogout(context),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    await AuthServiceFactory.create().signOut();
+  }
+}

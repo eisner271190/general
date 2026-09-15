@@ -1,0 +1,101 @@
+﻿import 'package:http/http.dart' as http;
+import 'i_http_client.dart';
+import 'http_logger.dart';
+import 'http_body_encoder.dart';
+
+/// ImplementaciÃ³n de cliente HTTP usando package:http
+/// Responsabilidad: Ejecutar peticiones HTTP y mapear responses
+class HttpClientImpl implements IHttpClient {
+  @override
+  Future<HttpResponse> get(String url, {Map<String, String>? headers}) async {
+    HttpLogger.logRequest('GET', url);
+    HttpLogger.logHeaders(headers);
+
+    final response = await http.get(Uri.parse(url), headers: headers);
+
+    HttpLogger.logResponse(response);
+    return _mapResponse(response);
+  }
+
+  @override
+  Future<HttpResponse> post(
+    String url, {
+    Map<String, String>? headers,
+    dynamic body,
+  }) async {
+    HttpLogger.logRequest('POST', url);
+    HttpLogger.logHeaders(headers);
+    HttpLogger.logBody(body);
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: headers,
+      body: HttpBodyEncoder.encode(body, headers),
+    );
+
+    HttpLogger.logResponse(response);
+    return _mapResponse(response);
+  }
+
+  @override
+  Future<HttpResponse> put(
+    String url, {
+    Map<String, String>? headers,
+    dynamic body,
+  }) async {
+    HttpLogger.logRequest('PUT', url);
+    HttpLogger.logHeaders(headers);
+    HttpLogger.logBody(body);
+
+    final response = await http.put(
+      Uri.parse(url),
+      headers: headers,
+      body: HttpBodyEncoder.encode(body, headers),
+    );
+
+    HttpLogger.logResponse(response);
+    return _mapResponse(response);
+  }
+
+  @override
+  Future<HttpResponse> delete(
+    String url, {
+    Map<String, String>? headers,
+  }) async {
+    HttpLogger.logRequest('DELETE', url);
+    HttpLogger.logHeaders(headers);
+
+    final response = await http.delete(Uri.parse(url), headers: headers);
+
+    HttpLogger.logResponse(response);
+    return _mapResponse(response);
+  }
+
+  @override
+  Future<HttpResponse> patch(
+    String url, {
+    Map<String, String>? headers,
+    dynamic body,
+  }) async {
+    HttpLogger.logRequest('PATCH', url);
+    HttpLogger.logHeaders(headers);
+    HttpLogger.logBody(body);
+
+    final response = await http.patch(
+      Uri.parse(url),
+      headers: headers,
+      body: HttpBodyEncoder.encode(body, headers),
+    );
+
+    HttpLogger.logResponse(response);
+    return _mapResponse(response);
+  }
+
+  HttpResponse _mapResponse(http.Response response) {
+    return HttpResponse(
+      statusCode: response.statusCode,
+      body: response.body,
+      headers: response.headers,
+    );
+  }
+}

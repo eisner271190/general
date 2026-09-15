@@ -1,0 +1,51 @@
+﻿import 'package:flutter/material.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/constants/app_spacing.dart';
+
+/// Widget para configurar el tiempo por pregunta
+/// Responsabilidad: UI para selector de tiempo (ilimitado o especÃ­fico)
+class TimeConfigSection extends StatelessWidget {
+  final bool unlimitedTime;
+  final int timeSeconds;
+  final ValueChanged<bool> onUnlimitedChanged;
+  final ValueChanged<int> onTimeChanged;
+
+  const TimeConfigSection({
+    super.key,
+    required this.unlimitedTime,
+    required this.timeSeconds,
+    required this.onUnlimitedChanged,
+    required this.onTimeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(AppLocalizations.of(context)!.timePerQuestionLabel),
+            const SizedBox(width: AppSpacing.small),
+            Switch(value: unlimitedTime, onChanged: onUnlimitedChanged),
+            const SizedBox(width: AppSpacing.small),
+            Text(
+              unlimitedTime
+                  ? AppLocalizations.of(context)!.unlimitedTime
+                  : '$timeSeconds s',
+            ),
+          ],
+        ),
+        if (!unlimitedTime)
+          Slider(
+            value: timeSeconds.toDouble(),
+            min: 10,
+            max: 500,
+            divisions: 490,
+            label: '$timeSeconds',
+            onChanged: (v) => onTimeChanged(v.round()),
+          ),
+      ],
+    );
+  }
+}

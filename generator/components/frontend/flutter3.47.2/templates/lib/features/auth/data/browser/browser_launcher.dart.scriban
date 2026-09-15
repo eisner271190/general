@@ -1,0 +1,27 @@
+﻿import 'package:url_launcher/url_launcher.dart';
+import '../../../../shared/log/logger.dart';
+import 'i_browser_launcher.dart';
+
+class BrowserLauncher implements IBrowserLauncher {
+  @override
+  Future<bool> launchAuthUrl(String url) async {
+    final uri = Uri.parse(url);
+    Logger.info('Lanzando navegador con URL: $url');
+
+    try {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
+        Logger.warning('No se pudo lanzar el navegador para la URL: $url');
+      }
+
+      return launched;
+    } catch (e) {
+      Logger.error('Error al lanzar navegador', error: e);
+      return false;
+    }
+  }
+}

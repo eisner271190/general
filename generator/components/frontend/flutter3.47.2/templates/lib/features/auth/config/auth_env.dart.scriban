@@ -1,0 +1,40 @@
+﻿abstract final class AuthEnv {
+  AuthEnv._();
+
+  static const String keyBackendHost = 'AUTH_BACKEND_HOST';
+  static const String keyTokenExchangePath = 'AUTH_TOKEN_EXCHANGE_PATH';
+  static const String keyLogoutPath = 'AUTH_LOGOUT_PATH';
+  static const String keyCognitoDomain = 'AUTH_COGNITO_DOMAIN';
+  static const String keyClientId = 'AUTH_CLIENT_ID';
+  static const String keyRedirectUri = 'AUTH_REDIRECT_URI';
+  static const String keyRedirectUriWeb = 'AUTH_REDIRECT_URI_WEB';
+  static const String keyScopes = 'AUTH_SCOPES';
+  static const String keyIdentityProvider = 'AUTH_IDENTITY_PROVIDER';
+
+  static const String defaultTokenExchangePath =
+      'AUTH_TOKEN_EXCHANGE_PATH_NOT_SET';
+  static const String defaultLogoutPath = 'AUTH_LOGOUT_PATH_NOT_SET';
+  static const String defaultRedirectUriMobile = 'AUTH_REDIRECT_URI_NOT_SET';
+  static const String defaultScopes = 'openid email profile';
+  static const String defaultIdentityProvider = 'Google';
+  static const String defaultRedirectUriWebFallback =
+      'http://localhost:3000/callback';
+
+  static const List<String> requiredKeys = [
+    keyBackendHost,
+    keyCognitoDomain,
+    keyClientId,
+  ];
+
+  static const List<String> allKeys = [
+    keyBackendHost,
+    keyTokenExchangePath,
+    keyLogoutPath,
+    keyCognitoDomain,
+    keyClientId,
+    keyRedirectUri,
+    keyRedirectUriWeb,
+    keyScopes,
+    keyIdentityProvider,
+  ];
+}

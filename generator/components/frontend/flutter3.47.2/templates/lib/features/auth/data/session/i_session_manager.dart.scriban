@@ -1,0 +1,7 @@
+﻿import '../../domain/auth_user.dart';
+
+abstract class ISessionManager {
+  Future<AuthUser> createSessionFromToken(String idToken);
+  Future<AuthUser?> restoreSession();
+  Future<void> clearSession();
+}

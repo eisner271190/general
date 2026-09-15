@@ -1,0 +1,19 @@
+﻿import 'dart:convert';
+import 'package:crypto/crypto.dart';
+import '../../../../shared/helper/random_string_helper.dart';
+import '../auth_constants.dart';
+import 'i_pkce_generator.dart';
+
+class PKCEGenerator implements IPKCEGenerator {
+  @override
+  String generateCodeVerifier() {
+    return RandomStringHelper.generate(AuthConstants.codeVerifierLength);
+  }
+
+  @override
+  String generateCodeChallenge(String verifier) {
+    final bytes = utf8.encode(verifier);
+    final digest = sha256.convert(bytes);
+    return base64Url.encode(digest.bytes).replaceAll('=', '');
+  }
+}

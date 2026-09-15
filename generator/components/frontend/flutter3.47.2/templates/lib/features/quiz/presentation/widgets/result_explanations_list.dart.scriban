@@ -1,0 +1,23 @@
+﻿import 'package:flutter/material.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/domain/question.dart';
+
+/// Widget para listar explicaciones de respuestas incorrectas
+/// Responsabilidad: Renderizar lista de explicaciones
+class ResultExplanationsList extends StatelessWidget {
+  final List<Question> questions;
+
+  const ResultExplanationsList({super.key, required this.questions});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: questions.length,
+      itemBuilder: (context, i) {
+        final q = questions[i];
+        if (q.isCorrect) return const SizedBox.shrink();
+
+        return ListTile(title: Text(q.text), subtitle: Text(q.explanation));
+      },
+    );
+  }
+}

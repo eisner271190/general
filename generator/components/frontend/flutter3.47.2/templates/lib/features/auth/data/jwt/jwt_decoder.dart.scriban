@@ -1,0 +1,25 @@
+﻿import 'dart:convert';
+import '../../domain/auth_user.dart';
+import 'i_jwt_decoder.dart';
+
+class JWTDecoder implements IJWTDecoder {
+  @override
+  AuthUser decodeAndCreateUser(String idToken) {
+    final parts = idToken.split('.');
+    if (parts.length != 3) {
+      throw Exception('Token JWT invÃ¡lido');
+    }
+
+    final payload = parts[1];
+    final normalized = base64Url.normalize(payload);
+    final decoded = utf8.decode(base64Url.decode(normalized));
+    final data = jsonDecode(decoded) as Map<String, dynamic>;
+
+    return AuthUser(
+      id: data['sub'] as String,
+      email: data['email'] as String?,
+      name: data['name'] as String?,
+      picture: data['picture'] as String?,
+    );
+  }
+}

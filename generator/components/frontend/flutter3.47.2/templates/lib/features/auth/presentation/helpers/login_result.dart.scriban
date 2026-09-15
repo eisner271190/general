@@ -1,0 +1,8 @@
+﻿/// Resultado de intento de login
+/// Responsabilidad: Encapsular resultado de autenticaciÃ³n
+class LoginResult {
+  final bool success;
+  final String? error;
+
+  LoginResult({required this.success, this.error});
+}

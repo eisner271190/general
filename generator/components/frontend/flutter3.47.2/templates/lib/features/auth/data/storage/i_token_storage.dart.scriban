@@ -1,0 +1,10 @@
+﻿import '../../domain/auth_tokens.dart';
+
+/// Interface para el almacenamiento seguro de tokens
+abstract class ITokenStorage {
+  Future<void> saveTokens(AuthTokens tokens);
+  Future<String?> getIdToken();
+  Future<String?> getAccessToken();
+  Future<String?> getRefreshToken();
+  Future<void> clearTokens();
+}

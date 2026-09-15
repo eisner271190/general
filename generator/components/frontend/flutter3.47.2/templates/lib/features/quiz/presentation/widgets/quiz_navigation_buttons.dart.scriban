@@ -1,0 +1,37 @@
+﻿import 'package:flutter/material.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+
+/// Widget de navegaciÃ³n del quiz
+/// Responsabilidad: Botones de navegaciÃ³n anterior/finalizar
+class QuizNavigationButtons extends StatelessWidget {
+  final int currentIndex;
+  final VoidCallback onPrevious;
+  final VoidCallback onFinish;
+
+  const QuizNavigationButtons({
+    super.key,
+    required this.currentIndex,
+    required this.onPrevious,
+    required this.onFinish,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          ElevatedButton(
+            onPressed: currentIndex > 0 ? onPrevious : null,
+            child: Text(AppLocalizations.of(context)!.previousButton),
+          ),
+          ElevatedButton(
+            onPressed: onFinish,
+            child: Text(AppLocalizations.of(context)!.finishButton),
+          ),
+        ],
+      ),
+    );
+  }
+}

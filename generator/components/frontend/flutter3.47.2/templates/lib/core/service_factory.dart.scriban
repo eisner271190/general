@@ -1,0 +1,59 @@
+﻿import 'package:{{ FRONTEND_NAME }}/core/service_mode.dart';
+import 'package:{{ FRONTEND_NAME }}/core/service_env.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/helper/env_helper.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import 'package:{{ FRONTEND_NAME }}/features/auth/domain/i_auth_service.dart';
+import 'package:{{ FRONTEND_NAME }}/features/auth/data/auth_service.dart';
+import 'package:{{ FRONTEND_NAME }}/features/auth/data/mock_auth_service.dart';
+
+class ServiceFactory {
+  ServiceFactory._();
+
+  static ServiceMode _getGlobalMode() {
+    final value = EnvHelper.getEnv(ServiceEnv.keyGlobalMode);
+    final mode = ServiceMode.fromString(value);
+    Logger.info('[SERVICE_FACTORY] Global mode', data: {'mode': mode.name});
+    return mode;
+  }
+
+  static ServiceMode _getIndividualMode(String key) {
+    final value = EnvHelper.getEnv(key);
+    final mode = ServiceMode.fromString(value);
+    return mode;
+  }
+
+  static ServiceMode _resolveMode(String individualKey) {
+    final globalMode = _getGlobalMode();
+
+    if (globalMode == ServiceMode.none) {
+      final individualMode = _getIndividualMode(individualKey);
+      Logger.info(
+        '[SERVICE_FACTORY] Using individual mode',
+        data: {'key': individualKey, 'mode': individualMode.name},
+      );
+      return individualMode;
+    }
+
+    Logger.info(
+      '[SERVICE_FACTORY] Using global mode',
+      data: {'key': individualKey, 'mode': globalMode.name},
+    );
+    return globalMode;
+  }
+
+  static IAuthService createAuthService() {
+    final mode = _resolveMode(ServiceEnv.keyAuthMode);
+
+    switch (mode) {
+      case ServiceMode.mock:
+        Logger.info('[SERVICE_FACTORY] Creating Mock AuthService');
+        return MockAuthService();
+      case ServiceMode.real:
+        Logger.info('[SERVICE_FACTORY] Creating Real AuthService');
+        return AuthService();
+      case ServiceMode.none:
+        Logger.info('[SERVICE_FACTORY] Creating Real AuthService (default)');
+        return AuthService();
+    }
+  }
+}

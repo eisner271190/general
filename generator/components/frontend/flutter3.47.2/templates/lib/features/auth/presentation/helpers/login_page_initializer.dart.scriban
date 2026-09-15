@@ -1,0 +1,42 @@
+﻿import '../../domain/i_auth_service.dart';
+import '../../data/auth_service_factory.dart';
+import '../../application/credentials_auth_handler.dart';
+import '../../application/google_auth_handler.dart';
+import 'deep_link_handler.dart';
+
+/// Inicializador de servicios de autenticaciÃ³n
+/// Responsabilidad: Crear e inicializar servicios de auth
+class LoginPageInitializer {
+  final bool isMockMode;
+
+  IAuthService? _authService;
+  CredentialsAuthHandler? _credentialsHandler;
+  GoogleAuthHandler? _googleHandler;
+  AuthCallbackListener? _authCallbackListener;
+
+  LoginPageInitializer({required this.isMockMode});
+
+  void initialize(Function(bool, String?) onStateChange) {
+    _authService = AuthServiceFactory.create();
+    _credentialsHandler = CredentialsAuthHandler(_authService!);
+    _googleHandler = GoogleAuthHandler(_authService!);
+
+    if (!isMockMode) {
+      _authCallbackListener = AuthCallbackListener(
+        authService: _authService!,
+        onStateChange: onStateChange,
+      );
+      _authCallbackListener!.initialize();
+    }
+  }
+
+  void dispose() {
+    if (!isMockMode) {
+      _authCallbackListener?.dispose();
+    }
+  }
+
+  IAuthService get authService => _authService!;
+  CredentialsAuthHandler get credentialsHandler => _credentialsHandler!;
+  GoogleAuthHandler get googleHandler => _googleHandler!;
+}

@@ -1,0 +1,10 @@
+﻿import '../../../shared/env/env_validator.dart';
+import '../../../shared/helper/env_helper.dart';
+import 'auth_env.dart';
+
+class AuthEnvValidator implements EnvValidator {
+  @override
+  void validate() {
+    EnvHelper.validate(AuthEnv.requiredKeys);
+  }
+}

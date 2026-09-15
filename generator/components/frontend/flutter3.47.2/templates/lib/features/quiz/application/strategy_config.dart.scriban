@@ -1,0 +1,15 @@
+﻿import 'package:{{ FRONTEND_NAME }}/shared/helper/env_helper.dart';
+
+class StrategyConfig {
+  final String? apiKey;
+  final String promptTemplate;
+
+  StrategyConfig({this.apiKey, required this.promptTemplate});
+
+  factory StrategyConfig.load({required String promptTemplate}) {
+    return StrategyConfig(
+      apiKey: EnvHelper.getEnv('API_KEY'),
+      promptTemplate: promptTemplate,
+    );
+  }
+}

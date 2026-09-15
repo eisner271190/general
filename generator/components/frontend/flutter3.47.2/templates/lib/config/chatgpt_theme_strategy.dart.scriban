@@ -1,0 +1,15 @@
+﻿import 'package:flutter/material.dart';
+import 'theme_strategy.dart';
+import 'chatgpt_light_theme.dart';
+import 'chatgpt_dark_theme.dart';
+
+class ChatGptThemeStrategy implements ThemeStrategy {
+  @override
+  ThemeData get lightTheme => ChatGptLightTheme.theme;
+
+  @override
+  ThemeData get darkTheme => ChatGptDarkTheme.theme;
+
+  @override
+  String get themeStyle => 'chatgpt';
+}

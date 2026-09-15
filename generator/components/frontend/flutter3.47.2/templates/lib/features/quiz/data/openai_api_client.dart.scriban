@@ -1,0 +1,108 @@
+﻿import 'dart:async';
+import 'dart:convert';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/consume/i_http_client.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/consume/http_client_impl.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/env/env_config.dart';
+import 'i_api_client.dart';
+import 'openai_payload.dart';
+import 'openai_message.dart';
+
+class OpenAiApiClient implements IApiClient {
+  final IHttpClient _httpClient = HttpClientImpl();
+
+  static const double _defaultTemperature = 0.7;
+  static const int _defaultMaxTokens = 1000;
+  static const int _apiTimeoutSeconds = 30;
+
+  @override
+  Future<Map<String, dynamic>> callApi(String prompt) async {
+    final apiKey = _getApiKey();
+    final payload = _buildPayload(prompt);
+
+    try {
+      final response = await _makeApiCall(payload, apiKey);
+      return _parseSuccessResponse(response);
+    } on TimeoutException catch (e) {
+      _logTimeoutError(e);
+      rethrow;
+    } catch (e) {
+      _logUnexpectedError(e);
+      rethrow;
+    }
+  }
+
+  String _getApiKey() {
+    final apiKey = EnvConfig.apiKey;
+    if (apiKey == null || apiKey.isEmpty) {
+      throw Exception('API_KEY no estÃ¡ configurada en .env');
+    }
+    return apiKey;
+  }
+
+  OpenAiPayload _buildPayload(String prompt) {
+    return OpenAiPayload(
+      model: EnvConfig.model,
+      messages: [OpenAiMessage(role: 'user', content: prompt)],
+      temperature: _defaultTemperature,
+      maxTokens: _defaultMaxTokens,
+    );
+  }
+
+  Future<HttpResponse> _makeApiCall(
+    OpenAiPayload payload,
+    String apiKey,
+  ) async {
+    return await _httpClient
+        .post(
+          EnvConfig.apiUrl,
+          headers: _buildHeaders(apiKey),
+          body: payload.toJson(),
+        )
+        .timeout(
+          Duration(seconds: _apiTimeoutSeconds),
+          onTimeout: _handleTimeout,
+        );
+  }
+
+  Map<String, String> _buildHeaders(String apiKey) {
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $apiKey',
+    };
+  }
+
+  Never _handleTimeout() {
+    throw TimeoutException(
+      'API request timed out after $_apiTimeoutSeconds seconds',
+    );
+  }
+
+  Map<String, dynamic> _parseSuccessResponse(HttpResponse response) {
+    if (response.statusCode == 200) {
+      return json.decode(response.body) as Map<String, dynamic>;
+    } else {
+      _handleErrorResponse(response);
+    }
+  }
+
+  Never _handleErrorResponse(HttpResponse response) {
+    _logApiError(response.statusCode, response.body);
+    throw Exception('Error en la API: ${response.statusCode}');
+  }
+
+  void _logTimeoutError(TimeoutException error) {
+    Logger.error('[API] Timeout calling OpenAI', error: error);
+  }
+
+  void _logUnexpectedError(Object error) {
+    Logger.error('[API] Unexpected error calling OpenAI', error: error);
+  }
+
+  void _logApiError(int statusCode, String body) {
+    Logger.error(
+      '[API] Error en llamada a OpenAI',
+      data: {'statusCode': statusCode, 'body': body},
+    );
+  }
+}

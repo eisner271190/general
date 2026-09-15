@@ -1,0 +1,19 @@
+﻿import 'package:flutter/material.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+
+class ThemeProvider extends ChangeNotifier {
+  bool _isDarkMode = false;
+
+  bool get isDarkMode => _isDarkMode;
+  ThemeMode get themeMode => _isDarkMode ? ThemeMode.dark : ThemeMode.light;
+
+  void toggleTheme() {
+    _isDarkMode = !_isDarkMode;
+    _logThemeToggled(_isDarkMode);
+    notifyListeners();
+  }
+
+  void _logThemeToggled(bool isDark) {
+    Logger.info('[PROVIDER] Theme toggled', data: {'isDark': isDark});
+  }
+}

@@ -1,0 +1,6 @@
+﻿abstract class IValidator {
+  void validate(bool condition, String message);
+  void notNull<T>(T? value, String message);
+  void notEmpty(String? value, String message);
+  void notEmptyAndNotNull<T>(T? value, String message);
+}

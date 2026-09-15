@@ -1,0 +1,69 @@
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/application/quiz_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+import 'package:{{ FRONTEND_NAME }}/core/routes.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/constants/app_spacing.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import 'widgets/result_stats_section.dart';
+import 'widgets/result_explanations_list.dart';
+import 'widgets/result_actions_section.dart';
+
+/// Pantalla de resultados del quiz
+/// Responsabilidad: Mostrar resultados y opciones post-quiz
+class ResultScreen extends StatelessWidget {
+  const ResultScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final quiz = Provider.of<QuizProvider>(context);
+    final results = quiz.results();
+
+    _logShowingResults(results);
+
+    return Scaffold(
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.resultsTitle)),
+      body: Padding(
+        padding: const EdgeInsets.all(AppSpacing.medium),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ResultStatsSection(results: results),
+            const SizedBox(height: AppSpacing.medium),
+            Text(AppLocalizations.of(context)!.explanationsLabel),
+            Expanded(child: ResultExplanationsList(questions: quiz.questions)),
+            const SizedBox(height: AppSpacing.medium),
+            ResultActionsSection(
+              onRepeat: () => _handleRepeatQuiz(context, quiz),
+              onBackToStart: () => _handleBackToStart(context, quiz),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleRepeatQuiz(BuildContext context, QuizProvider quiz) {
+    _logRepeatQuizRequested();
+    quiz.startQuiz();
+    Navigator.of(context).pushReplacementNamed(AppRoutes.quiz);
+  }
+
+  void _handleBackToStart(BuildContext context, QuizProvider quiz) {
+    _logBackToStartRequested();
+    quiz.clear();
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  void _logShowingResults(Map<String, dynamic> results) {
+    Logger.info('[UI] Showing results', data: results);
+  }
+
+  void _logRepeatQuizRequested() {
+    Logger.info('[UI] Repeat quiz requested');
+  }
+
+  void _logBackToStartRequested() {
+    Logger.info('[UI] Back to start requested');
+  }
+}

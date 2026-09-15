@@ -1,0 +1,21 @@
+﻿abstract final class AiEnv {
+  AiEnv._();
+
+  static const String keyPrompt = 'PROMPT';
+  static const String keyApiKey = 'API_KEY';
+  static const String keyApiUrl = 'API_URL';
+  static const String keyModel = 'MODEL';
+
+  static const String defaultApiUrl =
+      'https://api.openai.com/v1/chat/completions';
+  static const String defaultModel = 'gpt-4o-mini';
+
+  static const List<String> requiredKeys = [keyPrompt];
+
+  static const List<String> allKeys = [
+    keyPrompt,
+    keyApiKey,
+    keyApiUrl,
+    keyModel,
+  ];
+}

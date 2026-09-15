@@ -1,0 +1,18 @@
+﻿import 'package:freezed_annotation/freezed_annotation.dart';
+import 'openai_message.dart';
+
+part 'openai_payload.freezed.dart';
+part 'openai_payload.g.dart';
+
+@freezed
+abstract class OpenAiPayload with _$OpenAiPayload {
+  const factory OpenAiPayload({
+    required String model,
+    required List<OpenAiMessage> messages,
+    required double temperature,
+    required int maxTokens,
+  }) = _OpenAiPayload;
+
+  factory OpenAiPayload.fromJson(Map<String, dynamic> json) =>
+      _$OpenAiPayloadFromJson(json);
+}

@@ -1,0 +1,43 @@
+﻿import '../../../../shared/helper/local_storage.dart';
+import '../../../../shared/helper/random_string_helper.dart';
+import '../auth_constants.dart';
+import 'i_oauth_state_manager.dart';
+
+class OAuthStateManager implements IOAuthStateManager {
+  final ILocalStorage _localStorage;
+
+  static const _keyState = 'oauth_state';
+  static const _keyCodeVerifier = 'code_verifier';
+
+  OAuthStateManager({ILocalStorage? localStorage})
+    : _localStorage = localStorage ?? WebLocalStorage();
+
+  @override
+  Future<void> saveState(String state, String codeVerifier) async {
+    _localStorage.setItem(_keyState, state);
+    _localStorage.setItem(_keyCodeVerifier, codeVerifier);
+  }
+
+  @override
+  Future<bool> validateAndClearState(String state) async {
+    final savedState = _localStorage.getItem(_keyState);
+
+    if (savedState == null || savedState != state) {
+      return false;
+    }
+
+    _localStorage.removeItem(_keyState);
+    return true;
+  }
+
+  @override
+  String generateState() {
+    return RandomStringHelper.generate(AuthConstants.stateLength);
+  }
+
+  Future<String?> getCodeVerifier() async {
+    final codeVerifier = _localStorage.getItem(_keyCodeVerifier);
+    _localStorage.removeItem(_keyCodeVerifier);
+    return codeVerifier;
+  }
+}

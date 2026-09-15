@@ -1,0 +1,52 @@
+﻿import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'log_entry.freezed.dart';
+part 'log_entry.g.dart';
+
+/// Modelo para representar una entrada de log estructurada
+@freezed
+abstract class LogEntry with _$LogEntry {
+  const factory LogEntry({
+    required String prefix,
+    required DateTime timestamp,
+    int? line,
+    required String message,
+    Map<String, dynamic>? data,
+  }) = _LogEntry;
+
+  factory LogEntry.fromJson(Map<String, dynamic> json) =>
+      _$LogEntryFromJson(json);
+}
+
+/// ExtensiÃ³n para convertir LogEntry a string formateado
+extension LogEntryFormatter on LogEntry {
+  /// Convierte el log a formato: `[PREFIJO] YYYY-MM-DD HH:mm:ss | line:<nÃºmero> | <mensaje> | data:<json>`
+  String toFormattedString() {
+    final buffer = StringBuffer();
+
+    // [PREFIJO] YYYY-MM-DD HH:mm:ss
+    buffer.write('[$prefix] ${_formatTimestamp(timestamp)}');
+
+    // | line:<nÃºmero>
+    if (line != null) {
+      buffer.write(' | line:$line');
+    }
+
+    // | <mensaje>
+    buffer.write(' | $message');
+
+    // | data:<json>
+    if (data != null && data!.isNotEmpty) {
+      buffer.write(' | data:$data');
+    }
+
+    return buffer.toString();
+  }
+
+  String _formatTimestamp(DateTime dt) {
+    return '${dt.year}-${_twoDigits(dt.month)}-${_twoDigits(dt.day)} '
+        '${_twoDigits(dt.hour)}:${_twoDigits(dt.minute)}:${_twoDigits(dt.second)}';
+  }
+
+  String _twoDigits(int n) => n.toString().padLeft(2, '0');
+}

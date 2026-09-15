@@ -1,0 +1,309 @@
+﻿// GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'history_item.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
+T _$identity<T>(T value) => value;
+
+/// @nodoc
+mixin _$QuizHistory {
+
+ String get id; String get topic; String get language; int get numQuestions; double get score; DateTime get date; List<Question> get questions;
+/// Create a copy of QuizHistory
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$QuizHistoryCopyWith<QuizHistory> get copyWith => _$QuizHistoryCopyWithImpl<QuizHistory>(this as QuizHistory, _$identity);
+
+  /// Serializes this QuizHistory to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as QuizHistory;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuizHistory&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.topic, _this.topic) || other.topic == _this.topic)&&(identical(other.language, _this.language) || other.language == _this.language)&&(identical(other.numQuestions, _this.numQuestions) || other.numQuestions == _this.numQuestions)&&(identical(other.score, _this.score) || other.score == _this.score)&&(identical(other.date, _this.date) || other.date == _this.date)&&const DeepCollectionEquality().equals(other.questions, _this.questions));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as QuizHistory;
+  return Object.hash(runtimeType,_this.id,_this.topic,_this.language,_this.numQuestions,_this.score,_this.date,const DeepCollectionEquality().hash(_this.questions));
+}
+
+@override
+String toString() {
+  final _this = this as QuizHistory;
+  return 'QuizHistory(id: ${_this.id}, topic: ${_this.topic}, language: ${_this.language}, numQuestions: ${_this.numQuestions}, score: ${_this.score}, date: ${_this.date}, questions: ${_this.questions})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $QuizHistoryCopyWith<$Res>  {
+  factory $QuizHistoryCopyWith(QuizHistory value, $Res Function(QuizHistory) _then) = _$QuizHistoryCopyWithImpl;
+@useResult
+$Res call({
+ String id, String topic, String language, int numQuestions, double score, DateTime date, List<Question> questions
+});
+
+
+
+
+}
+/// @nodoc
+class _$QuizHistoryCopyWithImpl<$Res>
+    implements $QuizHistoryCopyWith<$Res> {
+  _$QuizHistoryCopyWithImpl(this._self, this._then);
+
+  final QuizHistory _self;
+  final $Res Function(QuizHistory) _then;
+
+/// Create a copy of QuizHistory
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? topic = null,Object? language = null,Object? numQuestions = null,Object? score = null,Object? date = null,Object? questions = null,}) {
+  return _then(QuizHistory(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,topic: null == topic ? _self.topic : topic // ignore: cast_nullable_to_non_nullable
+as String,language: null == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
+as String,numQuestions: null == numQuestions ? _self.numQuestions : numQuestions // ignore: cast_nullable_to_non_nullable
+as int,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
+as double,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
+as DateTime,questions: null == questions ? _self.questions : questions // ignore: cast_nullable_to_non_nullable
+as List<Question>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [QuizHistory].
+extension QuizHistoryPatterns on QuizHistory {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _QuizHistory value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _QuizHistory() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _QuizHistory value)  $default,){
+final _that = this;
+switch (_that) {
+case _QuizHistory():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _QuizHistory value)?  $default,){
+final _that = this;
+switch (_that) {
+case _QuizHistory() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String topic,  String language,  int numQuestions,  double score,  DateTime date,  List<Question> questions)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _QuizHistory() when $default != null:
+return $default(_that.id,_that.topic,_that.language,_that.numQuestions,_that.score,_that.date,_that.questions);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String topic,  String language,  int numQuestions,  double score,  DateTime date,  List<Question> questions)  $default,) {final _that = this;
+switch (_that) {
+case _QuizHistory():
+return $default(_that.id,_that.topic,_that.language,_that.numQuestions,_that.score,_that.date,_that.questions);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String topic,  String language,  int numQuestions,  double score,  DateTime date,  List<Question> questions)?  $default,) {final _that = this;
+switch (_that) {
+case _QuizHistory() when $default != null:
+return $default(_that.id,_that.topic,_that.language,_that.numQuestions,_that.score,_that.date,_that.questions);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _QuizHistory extends QuizHistory {
+  const _QuizHistory({required this.id, required this.topic, required this.language, required this.numQuestions, required this.score, required this.date, required  List<Question> questions}): _questions = questions,super._();
+  factory _QuizHistory.fromJson(Map<String, dynamic> json) => _$QuizHistoryFromJson(json);
+
+@override final  String id;
+@override final  String topic;
+@override final  String language;
+@override final  int numQuestions;
+@override final  double score;
+@override final  DateTime date;
+ final  List<Question> _questions;
+@override List<Question> get questions {
+  if (_questions is EqualUnmodifiableListView) return _questions;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_questions);
+}
+
+
+/// Create a copy of QuizHistory
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$QuizHistoryCopyWith<_QuizHistory> get copyWith => __$QuizHistoryCopyWithImpl<_QuizHistory>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$QuizHistoryToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuizHistory&&(identical(other.id, id) || other.id == id)&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.language, language) || other.language == language)&&(identical(other.numQuestions, numQuestions) || other.numQuestions == numQuestions)&&(identical(other.score, score) || other.score == score)&&(identical(other.date, date) || other.date == date)&&const DeepCollectionEquality().equals(other.questions, _questions));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,topic,language,numQuestions,score,date,const DeepCollectionEquality().hash(_questions));
+}
+
+@override
+String toString() {
+    return 'QuizHistory(id: $id, topic: $topic, language: $language, numQuestions: $numQuestions, score: $score, date: $date, questions: $questions)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$QuizHistoryCopyWith<$Res> implements $QuizHistoryCopyWith<$Res> {
+  factory _$QuizHistoryCopyWith(_QuizHistory value, $Res Function(_QuizHistory) _then) = __$QuizHistoryCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String topic, String language, int numQuestions, double score, DateTime date, List<Question> questions
+});
+
+
+
+
+}
+/// @nodoc
+class __$QuizHistoryCopyWithImpl<$Res>
+    implements _$QuizHistoryCopyWith<$Res> {
+  __$QuizHistoryCopyWithImpl(this._self, this._then);
+
+  final _QuizHistory _self;
+  final $Res Function(_QuizHistory) _then;
+
+/// Create a copy of QuizHistory
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? topic = null,Object? language = null,Object? numQuestions = null,Object? score = null,Object? date = null,Object? questions = null,}) {
+  return _then(_QuizHistory(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,topic: null == topic ? _self.topic : topic // ignore: cast_nullable_to_non_nullable
+as String,language: null == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
+as String,numQuestions: null == numQuestions ? _self.numQuestions : numQuestions // ignore: cast_nullable_to_non_nullable
+as int,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
+as double,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
+as DateTime,questions: null == questions ? _self._questions : questions // ignore: cast_nullable_to_non_nullable
+as List<Question>,
+  ));
+}
+
+
+}
+
+// dart format on

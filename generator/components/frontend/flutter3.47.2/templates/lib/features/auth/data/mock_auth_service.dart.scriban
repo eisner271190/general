@@ -1,0 +1,98 @@
+﻿import 'dart:async';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import '../domain/auth_user.dart';
+import '../domain/i_auth_service.dart';
+
+/// ImplementaciÃ³n mock del servicio de autenticaciÃ³n.
+/// Ãštil para desarrollo y testing sin configurar Cognito.
+class MockAuthService implements IAuthService {
+  static final MockAuthService _instance = MockAuthService._internal();
+  factory MockAuthService() => _instance;
+  MockAuthService._internal() {
+    // Emitir evento inicial para que el StreamBuilder no se quede en waiting
+    _authStateController.add(null);
+  }
+
+  final _authStateController = StreamController<AuthUser?>.broadcast();
+  AuthUser? _currentUser;
+
+  // URL para imagen de placeholder
+  static const String _placeholderImageUrl = 'https://via.placeholder.com/150';
+
+  // Usuario mock por defecto
+  static final AuthUser _mockUser = AuthUser(
+    id: 'mock-user-123',
+    email: 'mock@example.com',
+    name: 'Mock User',
+    picture: _placeholderImageUrl,
+  );
+
+  @override
+  Stream<AuthUser?> get authStateChanges => _authStateController.stream;
+
+  @override
+  AuthUser? get currentUser => _currentUser;
+
+  @override
+  Future<bool> signInWithHostedUI() async {
+    Logger.info('[MOCK] signInWithHostedUI no disponible en modo MOCK');
+    return false;
+  }
+
+  @override
+  Future<bool> signInWithCredentials(String email, String password) async {
+    Logger.info('[MOCK] Intentando login con credenciales');
+
+    // Simular delay de red
+    await Future.delayed(const Duration(seconds: 1));
+
+    // Validar credenciales
+    if (email.toLowerCase() == 'epc' && password == 'epc') {
+      _currentUser = _mockUser;
+      _authStateController.add(_currentUser);
+      Logger.info('[MOCK] Login exitoso', data: {'email': _currentUser!.email});
+      return true;
+    } else {
+      Logger.info('[MOCK] Invalid credentials');
+      return false;
+    }
+  }
+
+  @override
+  Future<void> handleRedirect(Uri uri) async {
+    Logger.info('[MOCK] Manejando redirect (no hace nada en modo mock)');
+    // En mock no necesitamos manejar redirects
+  }
+
+  @override
+  Future<void> restoreSession() async {
+    Logger.info('[MOCK] Verifying session');
+
+    // Simular delay
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // En modo MOCK no restauramos sesiÃ³n automÃ¡ticamente
+    // El usuario debe hacer login cada vez
+    _authStateController.add(null);
+
+    Logger.info('[MOCK] No previous session (development mode)');
+  }
+
+  @override
+  Future<void> signOut() async {
+    Logger.info('[MOCK] Signing out');
+
+    // Simular delay
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    _currentUser = null;
+    _authStateController.add(null);
+
+    Logger.info('[MOCK] Session signed out');
+  }
+
+  @override
+  void dispose() {
+    _authStateController.close();
+  }
+}

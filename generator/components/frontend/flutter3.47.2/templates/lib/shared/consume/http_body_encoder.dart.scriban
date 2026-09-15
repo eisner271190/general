@@ -1,0 +1,16 @@
+﻿import 'dart:convert';
+
+/// Codificador de body HTTP
+/// Responsabilidad: Encodear body segÃºn Content-Type
+class HttpBodyEncoder {
+  static dynamic encode(dynamic body, Map<String, String>? headers) {
+    if (body == null) return null;
+
+    final contentType = headers?['Content-Type']?.toLowerCase();
+    if (contentType?.contains('application/json') == true) {
+      return json.encode(body);
+    }
+
+    return body;
+  }
+}

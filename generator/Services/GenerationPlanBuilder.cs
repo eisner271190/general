@@ -62,12 +62,12 @@ internal sealed class GenerationPlanBuilder(
 
             foreach (var directory in component.Directories)
             {
-                var target = RenderPath(directory, componentVariables);
+                var target = RenderPath(Path.Combine("backend", directory), componentVariables);
                 AddUnique(directories, paths, target, "directorio");
             }
             foreach (var file in component.Files)
             {
-                var target = RenderPath(file.Key, componentVariables);
+                var target = RenderPath(Path.Combine("backend", file.Key), componentVariables);
                 AddUnique(files.Select(item => item.Key).ToList(), paths, target, "archivo");
                 var templatePath = ResolveComponentSource(componentDirectory, file.Value);
                 var content = File.ReadAllText(templatePath);
@@ -76,7 +76,48 @@ internal sealed class GenerationPlanBuilder(
             foreach (var defaultFile in component.DefaultFiles)
             {
                 var source = ResolveComponentSource(componentDirectory, defaultFile);
-                var target = pathValidator.DefaultOutputPath(defaultFile);
+                var target = Path.Combine("backend", pathValidator.DefaultOutputPath(defaultFile));
+                AddUnique(defaultFiles.Select(item => item.Key).ToList(), paths, target, "archivo predeterminado");
+                defaultFiles.Add(new PlanDefaultFile(target, Path.GetRelativePath(workingDirectory, source)));
+            }
+        }
+
+        if (configuration.Frontend is not null)
+        {
+            var componentPath = ResolveSource(Path.Combine(
+                GeneratorConstants.ComponentsDirectory,
+                GeneratorConstants.FrontendComponentType,
+                configuration.Frontend.Framework,
+                "component.json"));
+            var component = jsonReader.Read<ComponentDefinition>(componentPath);
+            GeneratorLogger.Info($"Frontend seleccionado: '{configuration.Frontend.Framework}' ({configuration.Frontend.Name})");
+            var componentDirectory = Path.GetDirectoryName(componentPath)!;
+            var frontendVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
+            {
+                [GeneratorConstants.TemplateNameVariable] = configuration.Frontend.Name,
+                [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(configuration.ApplicationId),
+                ["FRONTEND_NAME"] = configuration.Frontend.Name,
+                ["FRONTEND_FRAMEWORK"] = configuration.Frontend.Framework,
+                ["FRONTEND_VERSION"] = configuration.Frontend.Version ?? "1.0.0+1"
+            };
+
+            foreach (var directory in component.Directories)
+            {
+                var target = RenderPath(directory, frontendVariables);
+                AddUnique(directories, paths, target, "directorio");
+            }
+            foreach (var file in component.Files)
+            {
+                var target = RenderPath(file.Key, frontendVariables);
+                AddUnique(files.Select(item => item.Key).ToList(), paths, target, "archivo");
+                var templatePath = ResolveComponentSource(componentDirectory, file.Value);
+                var content = File.ReadAllText(templatePath);
+                files.Add(new PlanFile(target, templateRenderer.Render(content, frontendVariables, templatePath)));
+            }
+            foreach (var defaultFile in component.DefaultFiles)
+            {
+                var source = ResolveComponentSource(componentDirectory, defaultFile);
+                var target = Path.Combine("frontend", frontendVariables["FRONTEND_NAME"]?.ToString() ?? string.Empty, pathValidator.DefaultOutputPath(defaultFile));
                 AddUnique(defaultFiles.Select(item => item.Key).ToList(), paths, target, "archivo predeterminado");
                 defaultFiles.Add(new PlanDefaultFile(target, Path.GetRelativePath(workingDirectory, source)));
             }

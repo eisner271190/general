@@ -1,0 +1,116 @@
+﻿import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:app_links/app_links.dart';
+import '../../domain/i_auth_service.dart';
+import '../../../../shared/log/logger.dart';
+
+class AuthCallbackListener {
+  final IAuthService authService;
+  final Function(bool, String?) onStateChange;
+
+  StreamSubscription? _linkSubscription;
+  late final AppLinks _appLinks;
+
+  AuthCallbackListener({
+    required this.authService,
+    required this.onStateChange,
+  }) {
+    _appLinks = AppLinks();
+  }
+
+  void initialize() {
+    _logInitializing();
+    if (kIsWeb) {
+      _checkWebCallback();
+    } else {
+      _initDeepLinkListener();
+    }
+  }
+
+  void dispose() {
+    _linkSubscription?.cancel();
+  }
+
+  void _checkWebCallback() {
+    final uri = Uri.base;
+    _logCurrentWebUrl(uri.toString());
+
+    if (uri.path.contains('/callback') &&
+        uri.queryParameters.containsKey('code')) {
+      _logCallbackDetectedInWeb();
+      _handleDeepLink(uri);
+    }
+  }
+
+  void _initDeepLinkListener() {
+    _appLinks.getInitialLink().then((uri) {
+      if (uri != null) {
+        _handleDeepLink(uri);
+      }
+    });
+
+    _linkSubscription = _appLinks.uriLinkStream.listen(
+      (Uri uri) {
+        _handleDeepLink(uri);
+      },
+      onError: (err) {
+        _logListenerError(err);
+        onStateChange(false, 'Error al procesar el enlace: $err');
+      },
+    );
+  }
+
+  bool _isValidCallback(Uri uri) {
+    if (kIsWeb) {
+      return uri.path.contains('/callback') &&
+          uri.queryParameters.containsKey('code');
+    }
+    return uri.scheme == 'myapp' &&
+        uri.host == 'auth' &&
+        uri.path == '/callback';
+  }
+
+  Future<void> _handleDeepLink(Uri uri) async {
+    _logCallbackReceived(uri.toString());
+
+    if (_isValidCallback(uri)) {
+      onStateChange(true, null);
+
+      try {
+        await authService.handleRedirect(uri);
+        _logRedirectHandledSuccessfully();
+      } catch (e) {
+        _logErrorHandlingRedirect(e);
+        onStateChange(false, e.toString());
+      }
+    }
+  }
+
+  void _logInitializing() {
+    Logger.info('[DEEPLINK] Initializing deep link handler');
+  }
+
+  void _logCurrentWebUrl(String uri) {
+    Logger.info('[DEEPLINK] Current web URL', data: {'uri': uri});
+  }
+
+  void _logCallbackDetectedInWeb() {
+    Logger.info('[DEEPLINK] Callback detected in web URL');
+  }
+
+  void _logListenerError(Object error) {
+    Logger.error('[DEEPLINK] Error in listener', error: error);
+  }
+
+  void _logCallbackReceived(String uri) {
+    Logger.info('[DEEPLINK] Callback received', data: {'uri': uri});
+  }
+
+  void _logRedirectHandledSuccessfully() {
+    Logger.info('[DEEPLINK] Redirect handled successfully');
+  }
+
+  void _logErrorHandlingRedirect(Object error) {
+    Logger.error('[DEEPLINK] Error handling redirect', error: error);
+  }
+}

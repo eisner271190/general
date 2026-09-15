@@ -1,0 +1,98 @@
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/application/quiz_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/widgets/question_card.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+import 'widgets/quiz_progress_bar.dart';
+import 'widgets/quiz_navigation_buttons.dart';
+
+/// Pantalla de visualizaciÃ³n y respuesta de quiz
+/// Responsabilidad: Coordinar UI del quiz en curso
+class QuizScreen extends StatefulWidget {
+  const QuizScreen({super.key});
+
+  @override
+  State<QuizScreen> createState() => _QuizScreenState();
+}
+
+class _QuizScreenState extends State<QuizScreen> {
+  late QuizProvider _quiz;
+
+  @override
+  void initState() {
+    super.initState();
+    _quiz = Provider.of<QuizProvider>(context, listen: false);
+    _quiz.timer.reset();
+  }
+
+  @override
+  void dispose() {
+    _quiz.timer.stop();
+    super.dispose();
+  }
+
+  void _handleAnswerSelected(int index) {
+    _quiz.selectAnswer(index);
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+
+      if (_quiz.currentIndex < _quiz.questions.length - 1) {
+        _quiz.nextQuestion();
+      } else {
+        Navigator.of(context).pushReplacementNamed('/result');
+      }
+    });
+  }
+
+  void _navigateToResults() {
+    Navigator.of(context).pushReplacementNamed('/result');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.quizTitle)),
+      body: Consumer<QuizProvider>(
+        builder: (context, quiz, child) {
+          if (quiz.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (quiz.questions.isEmpty) {
+            return Center(
+              child: Text(AppLocalizations.of(context)!.noQuestions),
+            );
+          }
+
+          final q = quiz.questions[quiz.currentIndex];
+
+          return Column(
+            children: [
+              QuizProgressBar(
+                currentIndex: quiz.currentIndex,
+                totalQuestions: quiz.questions.length,
+                remainingSeconds: quiz.remainingSeconds,
+                timeLimit: quiz.timePerQuestionSeconds,
+              ),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: QuestionCard(
+                    key: ValueKey(q.id),
+                    question: q,
+                    onSelected: _handleAnswerSelected,
+                  ),
+                ),
+              ),
+              QuizNavigationButtons(
+                currentIndex: quiz.currentIndex,
+                onPrevious: quiz.previousQuestion,
+                onFinish: _navigateToResults,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}

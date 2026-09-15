@@ -1,0 +1,53 @@
+﻿import '../helper/shared_env.dart';
+import '../helper/env_helper.dart';
+import '../env/env_logger.dart';
+import '../../features/auth/config/auth_env.dart';
+import '../../features/quiz/config/ai_env.dart';
+
+abstract final class EnvConfig {
+  EnvConfig._();
+
+  static void logAuthEnvironmentVariables([String? envFile]) {
+    EnvLogger.logEnvironmentVariables(AuthEnv.allKeys, envFile);
+  }
+
+  static void logAiEnvironmentVariables([String? envFile]) {
+    EnvLogger.logEnvironmentVariables(AiEnv.allKeys, envFile);
+  }
+
+  static String get promptTemplate {
+    return EnvHelper.getEnv(AiEnv.keyPrompt);
+  }
+
+  static String? get apiKey {
+    try {
+      return EnvHelper.getEnv(AiEnv.keyApiKey);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static String get apiUrl {
+    try {
+      return EnvHelper.getEnv(AiEnv.keyApiUrl);
+    } catch (e) {
+      return AiEnv.defaultApiUrl;
+    }
+  }
+
+  static String get model {
+    try {
+      return EnvHelper.getEnv(AiEnv.keyModel);
+    } catch (e) {
+      return AiEnv.defaultModel;
+    }
+  }
+
+  static String get themeStyle {
+    try {
+      return EnvHelper.getEnv(SharedEnv.keyThemeStyle);
+    } catch (e) {
+      return SharedEnv.defaultThemeStyle;
+    }
+  }
+}

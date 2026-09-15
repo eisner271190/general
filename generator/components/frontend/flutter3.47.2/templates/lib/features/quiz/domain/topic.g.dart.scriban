@@ -1,0 +1,17 @@
+﻿// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'topic.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+_Topic _$TopicFromJson(Map<String, dynamic> json) => _Topic(
+  name: json['name'] as String,
+  lastUsed: DateTime.parse(json['lastUsed'] as String),
+);
+
+Map<String, dynamic> _$TopicToJson(_Topic instance) => <String, dynamic>{
+  'name': instance.name,
+  'lastUsed': instance.lastUsed.toIso8601String(),
+};

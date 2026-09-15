@@ -1,0 +1,22 @@
+﻿import '../domain/i_auth_service.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+
+/// Gestor de autenticaciÃ³n con Google OAuth
+/// Responsabilidad: Ejecutar login con Hosted UI
+class GoogleAuthHandler {
+  final IAuthService _authService;
+
+  GoogleAuthHandler(this._authService);
+
+  Future<void> signIn() async {
+    Logger.info('[LOGIN] Iniciando login con Google');
+
+    try {
+      await _authService.signInWithHostedUI();
+      Logger.info('[LOGIN] Navegador abierto para login');
+    } catch (e) {
+      Logger.error('[LOGIN] Error al abrir navegador', error: e);
+      rethrow;
+    }
+  }
+}

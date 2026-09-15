@@ -1,0 +1,300 @@
+﻿// GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'openai_payload.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
+T _$identity<T>(T value) => value;
+
+/// @nodoc
+mixin _$OpenAiPayload {
+
+ String get model; List<OpenAiMessage> get messages; double get temperature; int get maxTokens;
+/// Create a copy of OpenAiPayload
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$OpenAiPayloadCopyWith<OpenAiPayload> get copyWith => _$OpenAiPayloadCopyWithImpl<OpenAiPayload>(this as OpenAiPayload, _$identity);
+
+  /// Serializes this OpenAiPayload to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as OpenAiPayload;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OpenAiPayload&&(identical(other.model, _this.model) || other.model == _this.model)&&const DeepCollectionEquality().equals(other.messages, _this.messages)&&(identical(other.temperature, _this.temperature) || other.temperature == _this.temperature)&&(identical(other.maxTokens, _this.maxTokens) || other.maxTokens == _this.maxTokens));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as OpenAiPayload;
+  return Object.hash(runtimeType,_this.model,const DeepCollectionEquality().hash(_this.messages),_this.temperature,_this.maxTokens);
+}
+
+@override
+String toString() {
+  final _this = this as OpenAiPayload;
+  return 'OpenAiPayload(model: ${_this.model}, messages: ${_this.messages}, temperature: ${_this.temperature}, maxTokens: ${_this.maxTokens})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $OpenAiPayloadCopyWith<$Res>  {
+  factory $OpenAiPayloadCopyWith(OpenAiPayload value, $Res Function(OpenAiPayload) _then) = _$OpenAiPayloadCopyWithImpl;
+@useResult
+$Res call({
+ String model, List<OpenAiMessage> messages, double temperature, int maxTokens
+});
+
+
+
+
+}
+/// @nodoc
+class _$OpenAiPayloadCopyWithImpl<$Res>
+    implements $OpenAiPayloadCopyWith<$Res> {
+  _$OpenAiPayloadCopyWithImpl(this._self, this._then);
+
+  final OpenAiPayload _self;
+  final $Res Function(OpenAiPayload) _then;
+
+/// Create a copy of OpenAiPayload
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? model = null,Object? messages = null,Object? temperature = null,Object? maxTokens = null,}) {
+  return _then(OpenAiPayload(
+model: null == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
+as String,messages: null == messages ? _self.messages : messages // ignore: cast_nullable_to_non_nullable
+as List<OpenAiMessage>,temperature: null == temperature ? _self.temperature : temperature // ignore: cast_nullable_to_non_nullable
+as double,maxTokens: null == maxTokens ? _self.maxTokens : maxTokens // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [OpenAiPayload].
+extension OpenAiPayloadPatterns on OpenAiPayload {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _OpenAiPayload value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _OpenAiPayload() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _OpenAiPayload value)  $default,){
+final _that = this;
+switch (_that) {
+case _OpenAiPayload():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _OpenAiPayload value)?  $default,){
+final _that = this;
+switch (_that) {
+case _OpenAiPayload() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String model,  List<OpenAiMessage> messages,  double temperature,  int maxTokens)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _OpenAiPayload() when $default != null:
+return $default(_that.model,_that.messages,_that.temperature,_that.maxTokens);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String model,  List<OpenAiMessage> messages,  double temperature,  int maxTokens)  $default,) {final _that = this;
+switch (_that) {
+case _OpenAiPayload():
+return $default(_that.model,_that.messages,_that.temperature,_that.maxTokens);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String model,  List<OpenAiMessage> messages,  double temperature,  int maxTokens)?  $default,) {final _that = this;
+switch (_that) {
+case _OpenAiPayload() when $default != null:
+return $default(_that.model,_that.messages,_that.temperature,_that.maxTokens);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _OpenAiPayload implements OpenAiPayload {
+  const _OpenAiPayload({required this.model, required  List<OpenAiMessage> messages, required this.temperature, required this.maxTokens}): _messages = messages;
+  factory _OpenAiPayload.fromJson(Map<String, dynamic> json) => _$OpenAiPayloadFromJson(json);
+
+@override final  String model;
+ final  List<OpenAiMessage> _messages;
+@override List<OpenAiMessage> get messages {
+  if (_messages is EqualUnmodifiableListView) return _messages;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_messages);
+}
+
+@override final  double temperature;
+@override final  int maxTokens;
+
+/// Create a copy of OpenAiPayload
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$OpenAiPayloadCopyWith<_OpenAiPayload> get copyWith => __$OpenAiPayloadCopyWithImpl<_OpenAiPayload>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$OpenAiPayloadToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OpenAiPayload&&(identical(other.model, model) || other.model == model)&&const DeepCollectionEquality().equals(other.messages, _messages)&&(identical(other.temperature, temperature) || other.temperature == temperature)&&(identical(other.maxTokens, maxTokens) || other.maxTokens == maxTokens));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,model,const DeepCollectionEquality().hash(_messages),temperature,maxTokens);
+}
+
+@override
+String toString() {
+    return 'OpenAiPayload(model: $model, messages: $messages, temperature: $temperature, maxTokens: $maxTokens)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$OpenAiPayloadCopyWith<$Res> implements $OpenAiPayloadCopyWith<$Res> {
+  factory _$OpenAiPayloadCopyWith(_OpenAiPayload value, $Res Function(_OpenAiPayload) _then) = __$OpenAiPayloadCopyWithImpl;
+@override @useResult
+$Res call({
+ String model, List<OpenAiMessage> messages, double temperature, int maxTokens
+});
+
+
+
+
+}
+/// @nodoc
+class __$OpenAiPayloadCopyWithImpl<$Res>
+    implements _$OpenAiPayloadCopyWith<$Res> {
+  __$OpenAiPayloadCopyWithImpl(this._self, this._then);
+
+  final _OpenAiPayload _self;
+  final $Res Function(_OpenAiPayload) _then;
+
+/// Create a copy of OpenAiPayload
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? model = null,Object? messages = null,Object? temperature = null,Object? maxTokens = null,}) {
+  return _then(_OpenAiPayload(
+model: null == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
+as String,messages: null == messages ? _self._messages : messages // ignore: cast_nullable_to_non_nullable
+as List<OpenAiMessage>,temperature: null == temperature ? _self.temperature : temperature // ignore: cast_nullable_to_non_nullable
+as double,maxTokens: null == maxTokens ? _self.maxTokens : maxTokens // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
+// dart format on

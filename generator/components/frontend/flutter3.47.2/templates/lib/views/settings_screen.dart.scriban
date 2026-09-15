@@ -1,0 +1,78 @@
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/application/quiz_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+import 'package:{{ FRONTEND_NAME }}/providers/locale_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/constants/app_spacing.dart';
+import 'widgets/subscription_section.dart';
+import 'widgets/quiz_config_section.dart';
+import 'widgets/timer_config_section.dart';
+
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final quiz = Provider.of<QuizProvider>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
+
+    return Scaffold(
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.settingsTitle)),
+      body: Center(
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xxlarge),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SubscriptionSection(),
+                  const SizedBox(height: AppSpacing.xxlarge),
+                  QuizConfigSection(
+                    quiz: quiz,
+                    onChanged: () => setState(() {}),
+                  ),
+                  const SizedBox(height: AppSpacing.medium),
+                  TimerConfigSection(
+                    quiz: quiz,
+                    onChanged: () => setState(() {}),
+                  ),
+                  const SizedBox(height: AppSpacing.xxlarge),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        localeProvider.toggleLanguage();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              AppLocalizations.of(context)!.languageChanged,
+                            ),
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.language),
+                      label: Text(AppLocalizations.of(context)!.changeLanguage),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxxlarge),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(AppLocalizations.of(context)!.backButton),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -1,0 +1,43 @@
+﻿import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'labeled_slider.freezed.dart';
+
+@freezed
+abstract class SliderConfig with _$SliderConfig {
+  const factory SliderConfig({
+    required String label,
+    required double value,
+    required double min,
+    required double max,
+  }) = _SliderConfig;
+}
+
+class LabeledSlider extends StatelessWidget {
+  final SliderConfig config;
+  final ValueChanged<double> onChanged;
+
+  const LabeledSlider({
+    super.key,
+    required this.config,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('${config.label}: ${config.value.toInt()}'),
+        Slider(
+          value: config.value,
+          min: config.min,
+          max: config.max,
+          divisions: (config.max - config.min).toInt(),
+          label: '${config.value.toInt()}',
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+}

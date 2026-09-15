@@ -1,0 +1,82 @@
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/application/quiz_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/providers/theme_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+import 'package:{{ FRONTEND_NAME }}/core/routes.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/constants/app_spacing.dart';
+import 'widgets/topic_input_section.dart';
+import 'widgets/quiz_config_section.dart';
+import 'widgets/time_config_section.dart';
+import 'widgets/start_quiz_button.dart';
+
+/// Pantalla de configuraciÃ³n del quiz
+/// Responsabilidad: Orquestar los componentes de configuraciÃ³n
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _topicController = TextEditingController();
+  bool _unlimitedTime = true;
+  int _timeSeconds = 30;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.configTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () => Navigator.of(context).pushNamed(AppRoutes.history),
+          ),
+          IconButton(
+            icon: const Icon(Icons.brightness_6),
+            onPressed: () {
+              Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+            },
+          ),
+        ],
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xxlarge),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TopicInputSection(controller: _topicController),
+                  const SizedBox(height: AppSpacing.large),
+                  QuizConfigSection(
+                    quiz: Provider.of<QuizProvider>(context),
+                    onChanged: () => setState(() {}),
+                  ),
+                  const SizedBox(height: AppSpacing.medium),
+                  TimeConfigSection(
+                    unlimitedTime: _unlimitedTime,
+                    timeSeconds: _timeSeconds,
+                    onUnlimitedChanged: (v) =>
+                        setState(() => _unlimitedTime = v),
+                    onTimeChanged: (v) => setState(() => _timeSeconds = v),
+                  ),
+                  const SizedBox(height: AppSpacing.xlarge),
+                  StartQuizButton(
+                    topicController: _topicController,
+                    unlimitedTime: _unlimitedTime,
+                    timeSeconds: _timeSeconds,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

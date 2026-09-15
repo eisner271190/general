@@ -1,0 +1,107 @@
+﻿import 'dart:async';
+import 'package:flutter/material.dart';
+import '../../../core/app_config.dart';
+import 'helpers/login_page_initializer.dart';
+import 'helpers/login_credentials_manager.dart';
+import 'helpers/login_page_builder.dart';
+
+/// PÃ¡gina de autenticaciÃ³n del usuario
+/// Responsabilidad: Coordinar UI y handlers de autenticaciÃ³n
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  late final LoginPageInitializer _initializer;
+  late final LoginCredentialsManager _credentialsManager;
+
+  bool _isLoading = false;
+  String? _error;
+  bool _isMockMode = false;
+
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _isMockMode = AppConfig.isMockMode;
+    _initializer = LoginPageInitializer(isMockMode: _isMockMode);
+    _initializer.initialize(_handleAuthStateChange);
+
+    _credentialsManager = LoginCredentialsManager(
+      handler: _initializer.credentialsHandler,
+      formKey: _formKey,
+      emailController: _emailController,
+      passwordController: _passwordController,
+    );
+  }
+
+  void _handleAuthStateChange(bool isLoading, String? error) {
+    if (mounted) {
+      setState(() {
+        _isLoading = isLoading;
+        _error = error;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _initializer.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signInWithCredentials() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    final result = await _credentialsManager.signIn();
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        _error = result.error;
+      });
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      await _initializer.googleHandler.signIn();
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LoginPageBuilder.build(
+      context: context,
+      isLoading: _isLoading,
+      isMockMode: _isMockMode,
+      error: _error,
+      emailController: _emailController,
+      passwordController: _passwordController,
+      formKey: _formKey,
+      onSubmitCredentials: _signInWithCredentials,
+      onSignInGoogle: _signInWithGoogle,
+    );
+  }
+}

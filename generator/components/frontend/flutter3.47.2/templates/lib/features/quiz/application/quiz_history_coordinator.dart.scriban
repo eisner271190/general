@@ -1,0 +1,32 @@
+﻿import 'package:{{ FRONTEND_NAME }}/features/quiz/domain/question.dart';
+import 'package:{{ FRONTEND_NAME }}/features/history/application/history_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/features/history/domain/history_item.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/application/quiz_result_calculator.dart';
+import 'package:uuid/uuid.dart';
+
+/// Coordinador de historial de quiz
+/// Responsabilidad: Guardar quizzes completados en historial
+class QuizHistoryCoordinator {
+  final Uuid _uuid = Uuid();
+
+  Future<void> saveToHistory({
+    required HistoryProvider historyProvider,
+    required String topic,
+    required String language,
+    required List<Question> questions,
+  }) async {
+    final results = QuizResultCalculator.calculate(questions);
+
+    final item = QuizHistory(
+      id: _uuid.v4(),
+      topic: topic,
+      language: language,
+      numQuestions: questions.length,
+      score: results['percent'] as double,
+      date: DateTime.now(),
+      questions: questions,
+    );
+
+    await historyProvider.addHistory(item);
+  }
+}

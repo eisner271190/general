@@ -1,0 +1,11 @@
+﻿/// Constantes para configuraciÃ³n general de entorno
+/// que no pertenecen a una feature especÃ­fica
+abstract final class SharedEnv {
+  SharedEnv._();
+
+  /// Clave para el estilo de tema en .env
+  static const String keyThemeStyle = 'THEME_STYLE';
+
+  /// Valor por defecto para el tema
+  static const String defaultThemeStyle = 'md3_light';
+}

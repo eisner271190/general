@@ -1,0 +1,91 @@
+﻿import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import 'package:{{ FRONTEND_NAME }}/features/history/domain/history_item.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/domain/topic.dart';
+
+class HistoryProvider extends ChangeNotifier {
+  static const _historyKey = 'quiz_history';
+  static const _topicsKey = 'quiz_topics';
+
+  List<QuizHistory> _history = [];
+  List<Topic> _topics = [];
+
+  List<QuizHistory> get history => List.unmodifiable(_history);
+  List<Topic> get topics => List.unmodifiable(_topics);
+
+  HistoryProvider() {
+    _load();
+  }
+
+  Future<void> _load() async {
+    Logger.info('[HISTORY] Loading history and topics from SharedPreferences');
+    final prefs = await SharedPreferences.getInstance();
+    _loadHistory(prefs);
+    _loadTopics(prefs);
+    notifyListeners();
+  }
+
+  void _loadHistory(SharedPreferences prefs) {
+    final historyJson = prefs.getString(_historyKey);
+    if (historyJson != null) {
+      try {
+        _history = QuizHistory.listFromJson(historyJson);
+      } catch (_) {
+        _history = [];
+      }
+    }
+  }
+
+  void _loadTopics(SharedPreferences prefs) {
+    final topicsJson = prefs.getString(_topicsKey);
+    if (topicsJson != null) {
+      try {
+        final list = json.decode(topicsJson) as List;
+        _topics = list
+            .map((e) => Topic.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } catch (_) {
+        _topics = [];
+      }
+    }
+  }
+
+  Future<void> addHistory(QuizHistory item) async {
+    Logger.info('[HISTORY] Adding history item', data: {'topic': item.topic});
+    _history.insert(0, item);
+    await _saveHistory();
+    notifyListeners();
+  }
+
+  Future<void> _saveHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_historyKey, QuizHistory.listToJson(_history));
+  }
+
+  Future<void> addTopic(String name) async {
+    Logger.info('[HISTORY] Adding topic', data: {'name': name});
+    name = name.trim();
+    if (name.isEmpty) return;
+    final exists = _topics.any(
+      (t) => t.name.toLowerCase() == name.toLowerCase(),
+    );
+    if (exists) return;
+    _topics.insert(0, Topic(name: name, lastUsed: DateTime.now()));
+    await _saveTopics();
+    notifyListeners();
+  }
+
+  Future<void> removeTopic(String name) async {
+    _topics.removeWhere((t) => t.name.toLowerCase() == name.toLowerCase());
+    await _saveTopics();
+    notifyListeners();
+  }
+
+  Future<void> _saveTopics() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = json.encode(_topics.map((t) => t.toJson()).toList());
+    await prefs.setString(_topicsKey, jsonStr);
+  }
+}

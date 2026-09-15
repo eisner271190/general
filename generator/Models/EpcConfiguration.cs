@@ -1,6 +1,18 @@
 namespace Generator.Models;
 
-public sealed record EpcConfiguration(string ApplicationName, string ApplicationId, List<EnvironmentConfiguration> Environments, List<MicroserviceConfiguration> Microservices);
+public sealed record EpcConfiguration(
+    string ApplicationName,
+    string ApplicationId,
+    List<EnvironmentConfiguration> Environments,
+    List<MicroserviceConfiguration> Microservices,
+    FrontendConfiguration? Frontend = null);
+
+public sealed record FrontendConfiguration(
+    string Name,
+    string Framework,
+    List<string>? Platforms = null,
+    string? Version = null);
+
 public sealed record EnvironmentConfiguration(string Name, Dictionary<string, string> Variables);
 public sealed record MicroserviceConfiguration(string Name, string Backend, string Deploy, List<EntityConfiguration> Entities, List<EndpointConfiguration> Endpoints, int Port)
 {

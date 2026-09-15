@@ -1,0 +1,1267 @@
+﻿{
+    "name":  "flutter3.47.2",
+    "type":  "frontend",
+    "directories":  [
+                        "frontend/{{ FRONTEND_NAME }}",
+                        "frontend/{{ FRONTEND_NAME }}/.idea",
+                        "frontend/{{ FRONTEND_NAME }}/.vscode",
+                        "frontend/{{ FRONTEND_NAME }}/android",
+                        "frontend/{{ FRONTEND_NAME }}/assets",
+                        "frontend/{{ FRONTEND_NAME }}/ios",
+                        "frontend/{{ FRONTEND_NAME }}/lib",
+                        "frontend/{{ FRONTEND_NAME }}/linux",
+                        "frontend/{{ FRONTEND_NAME }}/macos",
+                        "frontend/{{ FRONTEND_NAME }}/test",
+                        "frontend/{{ FRONTEND_NAME }}/web",
+                        "frontend/{{ FRONTEND_NAME }}/windows",
+                        "frontend/{{ FRONTEND_NAME }}/.idea/libraries",
+                        "frontend/{{ FRONTEND_NAME }}/.idea/runConfigurations",
+                        "frontend/{{ FRONTEND_NAME }}/android/app",
+                        "frontend/{{ FRONTEND_NAME }}/android/gradle",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/debug",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/profile",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/java",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/kotlin",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/res",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/java/io",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/java/io/flutter",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/java/io/flutter/plugins",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/kotlin/com",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/kotlin/com/example",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/kotlin/com/quizsmart",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/kotlin/com/example/quizsmart",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/kotlin/{{ APPLICATION_PACKAGE }}",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/res/drawable",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/res/drawable-v21",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/res/mipmap-hdpi",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/res/mipmap-mdpi",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/res/mipmap-xhdpi",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/res/mipmap-xxhdpi",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/res/mipmap-xxxhdpi",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/res/values",
+                        "frontend/{{ FRONTEND_NAME }}/android/app/src/main/res/values-night",
+                        "frontend/{{ FRONTEND_NAME }}/android/gradle/wrapper",
+                        "frontend/{{ FRONTEND_NAME }}/ios/Flutter",
+                        "frontend/{{ FRONTEND_NAME }}/ios/Runner",
+                        "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcodeproj",
+                        "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcworkspace",
+                        "frontend/{{ FRONTEND_NAME }}/ios/RunnerTests",
+                        "frontend/{{ FRONTEND_NAME }}/ios/Runner/Assets.xcassets",
+                        "frontend/{{ FRONTEND_NAME }}/ios/Runner/Base.lproj",
+                        "frontend/{{ FRONTEND_NAME }}/ios/Runner/Assets.xcassets/AppIcon.appiconset",
+                        "frontend/{{ FRONTEND_NAME }}/ios/Runner/Assets.xcassets/LaunchImage.imageset",
+                        "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcodeproj/project.xcworkspace",
+                        "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcodeproj/xcshareddata",
+                        "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata",
+                        "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcodeproj/xcshareddata/xcschemes",
+                        "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcworkspace/xcshareddata",
+                        "frontend/{{ FRONTEND_NAME }}/lib/config",
+                        "frontend/{{ FRONTEND_NAME }}/lib/core",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features",
+                        "frontend/{{ FRONTEND_NAME }}/lib/l10n",
+                        "frontend/{{ FRONTEND_NAME }}/lib/providers",
+                        "frontend/{{ FRONTEND_NAME }}/lib/shared",
+                        "frontend/{{ FRONTEND_NAME }}/lib/views",
+                        "frontend/{{ FRONTEND_NAME }}/lib/widgets",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/history",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/quiz",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/application",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/config",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/domain",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/browser",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/hosted_ui",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/jwt",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/logout",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/oauth",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/pkce",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/redirect",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/session",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/storage",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/token_exchange",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/user",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/helpers",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/widgets",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/history/application",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/history/domain",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/history/presentation",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/application",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/config",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/domain",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/presentation",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/presentation/widgets",
+                        "frontend/{{ FRONTEND_NAME }}/lib/shared/constants",
+                        "frontend/{{ FRONTEND_NAME }}/lib/shared/consume",
+                        "frontend/{{ FRONTEND_NAME }}/lib/shared/env",
+                        "frontend/{{ FRONTEND_NAME }}/lib/shared/helper",
+                        "frontend/{{ FRONTEND_NAME }}/lib/shared/log",
+                        "frontend/{{ FRONTEND_NAME }}/lib/views/widgets",
+                        "frontend/{{ FRONTEND_NAME }}/linux/flutter",
+                        "frontend/{{ FRONTEND_NAME }}/linux/runner",
+                        "frontend/{{ FRONTEND_NAME }}/macos/Flutter",
+                        "frontend/{{ FRONTEND_NAME }}/macos/Runner",
+                        "frontend/{{ FRONTEND_NAME }}/macos/Runner.xcodeproj",
+                        "frontend/{{ FRONTEND_NAME }}/macos/Runner.xcworkspace",
+                        "frontend/{{ FRONTEND_NAME }}/macos/RunnerTests",
+                        "frontend/{{ FRONTEND_NAME }}/macos/Runner/Assets.xcassets",
+                        "frontend/{{ FRONTEND_NAME }}/macos/Runner/Base.lproj",
+                        "frontend/{{ FRONTEND_NAME }}/macos/Runner/Configs",
+                        "frontend/{{ FRONTEND_NAME }}/macos/Runner/Assets.xcassets/AppIcon.appiconset",
+                        "frontend/{{ FRONTEND_NAME }}/macos/Runner.xcodeproj/project.xcworkspace",
+                        "frontend/{{ FRONTEND_NAME }}/macos/Runner.xcodeproj/xcshareddata",
+                        "frontend/{{ FRONTEND_NAME }}/macos/Runner.xcodeproj/project.xcworkspace/xcshareddata",
+                        "frontend/{{ FRONTEND_NAME }}/macos/Runner.xcodeproj/xcshareddata/xcschemes",
+                        "frontend/{{ FRONTEND_NAME }}/macos/Runner.xcworkspace/xcshareddata",
+                        "frontend/{{ FRONTEND_NAME }}/web/icons",
+                        "frontend/{{ FRONTEND_NAME }}/windows/flutter",
+                        "frontend/{{ FRONTEND_NAME }}/windows/runner",
+                        "frontend/{{ FRONTEND_NAME }}/windows/runner/resources"
+                    ],
+    "files":  [
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/.flutter-plugins-dependencies",
+                      "value":  "templates/.flutter-plugins-dependencies.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/.gitignore",
+                      "value":  "templates/.gitignore.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/.metadata",
+                      "value":  "templates/.metadata.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/analysis_options.yaml",
+                      "value":  "templates/analysis_options.yaml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/pubspec.lock",
+                      "value":  "templates/pubspec.lock.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/pubspec.yaml",
+                      "value":  "templates/pubspec.yaml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/quizsmart.iml",
+                      "value":  "templates/quizsmart.iml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/README.md",
+                      "value":  "templates/README.md.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/.idea/modules.xml",
+                      "value":  "templates/.idea/modules.xml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/.idea/workspace.xml",
+                      "value":  "templates/.idea/workspace.xml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/.idea/libraries/Dart_SDK.xml",
+                      "value":  "templates/.idea/libraries/Dart_SDK.xml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/.idea/libraries/KotlinJavaRuntime.xml",
+                      "value":  "templates/.idea/libraries/KotlinJavaRuntime.xml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/.idea/runConfigurations/main_dart.xml",
+                      "value":  "templates/.idea/runConfigurations/main_dart.xml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/.vscode/settings.json",
+                      "value":  "templates/.vscode/settings.json.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/.gitignore",
+                      "value":  "templates/android/.gitignore.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/build.gradle.kts",
+                      "value":  "templates/android/build.gradle.kts.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/gradle.properties",
+                      "value":  "templates/android/gradle.properties.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/gradlew",
+                      "value":  "templates/android/gradlew.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/gradlew.bat",
+                      "value":  "templates/android/gradlew.bat.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/key.properties",
+                      "value":  "templates/android/key.properties.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/local.properties",
+                      "value":  "templates/android/local.properties.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/quizsmart_android.iml",
+                      "value":  "templates/android/quizsmart_android.iml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/settings.gradle.kts",
+                      "value":  "templates/android/settings.gradle.kts.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/app/build.gradle.kts",
+                      "value":  "templates/android/app/build.gradle.kts.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/app/src/debug/AndroidManifest.xml",
+                      "value":  "templates/android/app/src/debug/AndroidManifest.xml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/app/src/main/AndroidManifest.xml",
+                      "value":  "templates/android/app/src/main/AndroidManifest.xml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
+                      "value":  "templates/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/app/src/main/kotlin/{{ APPLICATION_PACKAGE }}/MainActivity.kt",
+                      "value":  "templates/android/app/src/main/kotlin/com/quizsmart/app/MainActivity.kt.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/app/src/main/res/drawable/launch_background.xml",
+                      "value":  "templates/android/app/src/main/res/drawable/launch_background.xml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/app/src/main/res/drawable-v21/launch_background.xml",
+                      "value":  "templates/android/app/src/main/res/drawable-v21/launch_background.xml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/app/src/main/res/values/styles.xml",
+                      "value":  "templates/android/app/src/main/res/values/styles.xml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/app/src/main/res/values-night/styles.xml",
+                      "value":  "templates/android/app/src/main/res/values-night/styles.xml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/app/src/profile/AndroidManifest.xml",
+                      "value":  "templates/android/app/src/profile/AndroidManifest.xml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/android/gradle/wrapper/gradle-wrapper.properties",
+                      "value":  "templates/android/gradle/wrapper/gradle-wrapper.properties.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/assets/.env.dev",
+                      "value":  "templates/assets/.env.dev.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/assets/.env.mock",
+                      "value":  "templates/assets/.env.mock.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/.gitignore",
+                      "value":  "templates/ios/.gitignore.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Flutter/AppFrameworkInfo.plist",
+                      "value":  "templates/ios/Flutter/AppFrameworkInfo.plist.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Flutter/Debug.xcconfig",
+                      "value":  "templates/ios/Flutter/Debug.xcconfig.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Flutter/flutter_export_environment.sh",
+                      "value":  "templates/ios/Flutter/flutter_export_environment.sh.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Flutter/Generated.xcconfig",
+                      "value":  "templates/ios/Flutter/Generated.xcconfig.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Flutter/Release.xcconfig",
+                      "value":  "templates/ios/Flutter/Release.xcconfig.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner/AppDelegate.swift",
+                      "value":  "templates/ios/Runner/AppDelegate.swift.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner/GeneratedPluginRegistrant.h",
+                      "value":  "templates/ios/Runner/GeneratedPluginRegistrant.h.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner/GeneratedPluginRegistrant.m",
+                      "value":  "templates/ios/Runner/GeneratedPluginRegistrant.m.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner/Info.plist",
+                      "value":  "templates/ios/Runner/Info.plist.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner/Runner-Bridging-Header.h",
+                      "value":  "templates/ios/Runner/Runner-Bridging-Header.h.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner/SceneDelegate.swift",
+                      "value":  "templates/ios/Runner/SceneDelegate.swift.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json",
+                      "value":  "templates/ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner/Assets.xcassets/LaunchImage.imageset/Contents.json",
+                      "value":  "templates/ios/Runner/Assets.xcassets/LaunchImage.imageset/Contents.json.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md",
+                      "value":  "templates/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner/Base.lproj/LaunchScreen.storyboard",
+                      "value":  "templates/ios/Runner/Base.lproj/LaunchScreen.storyboard.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner/Base.lproj/Main.storyboard",
+                      "value":  "templates/ios/Runner/Base.lproj/Main.storyboard.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcodeproj/project.pbxproj",
+                      "value":  "templates/ios/Runner.xcodeproj/project.pbxproj.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
+                      "value":  "templates/ios/Runner.xcodeproj/project.xcworkspace/contents.xcworkspacedata.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+                      "value":  "templates/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings",
+                      "value":  "templates/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme",
+                      "value":  "templates/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcworkspace/contents.xcworkspacedata",
+                      "value":  "templates/ios/Runner.xcworkspace/contents.xcworkspacedata.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+                      "value":  "templates/ios/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings",
+                      "value":  "templates/ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/ios/RunnerTests/RunnerTests.swift",
+                      "value":  "templates/ios/RunnerTests/RunnerTests.swift.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/app.dart",
+                      "value":  "templates/lib/app.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/main.dart",
+                      "value":  "templates/lib/main.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/config/app_theme.dart",
+                      "value":  "templates/lib/config/app_theme.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/config/chatgpt_dark_theme.dart",
+                      "value":  "templates/lib/config/chatgpt_dark_theme.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/config/chatgpt_light_theme.dart",
+                      "value":  "templates/lib/config/chatgpt_light_theme.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/config/chatgpt_theme_strategy.dart",
+                      "value":  "templates/lib/config/chatgpt_theme_strategy.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/config/md3_dark_theme.dart",
+                      "value":  "templates/lib/config/md3_dark_theme.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/config/md3_light_theme.dart",
+                      "value":  "templates/lib/config/md3_light_theme.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/config/md3_theme_strategy.dart",
+                      "value":  "templates/lib/config/md3_theme_strategy.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/config/theme_strategy.dart",
+                      "value":  "templates/lib/config/theme_strategy.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/config/theme_strategy_registry.dart",
+                      "value":  "templates/lib/config/theme_strategy_registry.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/app_config.dart",
+                      "value":  "templates/lib/core/app_config.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/config_constants.dart",
+                      "value":  "templates/lib/core/config_constants.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/routes.dart",
+                      "value":  "templates/lib/core/routes.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/service_env.dart",
+                      "value":  "templates/lib/core/service_env.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/service_factory.dart",
+                      "value":  "templates/lib/core/service_factory.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/service_mode.dart",
+                      "value":  "templates/lib/core/service_mode.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/strings.dart",
+                      "value":  "templates/lib/core/strings.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/application/credentials_auth_handler.dart",
+                      "value":  "templates/lib/features/auth/application/credentials_auth_handler.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/application/google_auth_handler.dart",
+                      "value":  "templates/lib/features/auth/application/google_auth_handler.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/config/auth_config.dart",
+                      "value":  "templates/lib/features/auth/config/auth_config.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/config/auth_env.dart",
+                      "value":  "templates/lib/features/auth/config/auth_env.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/config/auth_env_validator.dart",
+                      "value":  "templates/lib/features/auth/config/auth_env_validator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/auth_constants.dart",
+                      "value":  "templates/lib/features/auth/data/auth_constants.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/auth_dependencies.dart",
+                      "value":  "templates/lib/features/auth/data/auth_dependencies.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/auth_service.dart",
+                      "value":  "templates/lib/features/auth/data/auth_service.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/auth_service_factory.dart",
+                      "value":  "templates/lib/features/auth/data/auth_service_factory.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/mock_auth_service.dart",
+                      "value":  "templates/lib/features/auth/data/mock_auth_service.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/browser/browser_launcher.dart",
+                      "value":  "templates/lib/features/auth/data/browser/browser_launcher.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/browser/i_browser_launcher.dart",
+                      "value":  "templates/lib/features/auth/data/browser/i_browser_launcher.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/hosted_ui/hosted_ui_initiator.dart",
+                      "value":  "templates/lib/features/auth/data/hosted_ui/hosted_ui_initiator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/hosted_ui/i_hosted_ui_initiator.dart",
+                      "value":  "templates/lib/features/auth/data/hosted_ui/i_hosted_ui_initiator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/jwt/i_jwt_decoder.dart",
+                      "value":  "templates/lib/features/auth/data/jwt/i_jwt_decoder.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/jwt/jwt_decoder.dart",
+                      "value":  "templates/lib/features/auth/data/jwt/jwt_decoder.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/logout/i_logout_executor.dart",
+                      "value":  "templates/lib/features/auth/data/logout/i_logout_executor.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/logout/logout_executor.dart",
+                      "value":  "templates/lib/features/auth/data/logout/logout_executor.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/oauth/i_oauth_state_manager.dart",
+                      "value":  "templates/lib/features/auth/data/oauth/i_oauth_state_manager.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/oauth/oauth_state_manager.dart",
+                      "value":  "templates/lib/features/auth/data/oauth/oauth_state_manager.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/pkce/i_pkce_generator.dart",
+                      "value":  "templates/lib/features/auth/data/pkce/i_pkce_generator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/pkce/pkce_generator.dart",
+                      "value":  "templates/lib/features/auth/data/pkce/pkce_generator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/redirect/i_redirect_handler.dart",
+                      "value":  "templates/lib/features/auth/data/redirect/i_redirect_handler.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/redirect/redirect_handler.dart",
+                      "value":  "templates/lib/features/auth/data/redirect/redirect_handler.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/session/i_session_manager.dart",
+                      "value":  "templates/lib/features/auth/data/session/i_session_manager.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/session/session_manager.dart",
+                      "value":  "templates/lib/features/auth/data/session/session_manager.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/storage/i_token_storage.dart",
+                      "value":  "templates/lib/features/auth/data/storage/i_token_storage.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/storage/token_storage.dart",
+                      "value":  "templates/lib/features/auth/data/storage/token_storage.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/token_exchange/i_token_exchanger.dart",
+                      "value":  "templates/lib/features/auth/data/token_exchange/i_token_exchanger.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/token_exchange/token_error_extractor.dart",
+                      "value":  "templates/lib/features/auth/data/token_exchange/token_error_extractor.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/token_exchange/token_exchanger.dart",
+                      "value":  "templates/lib/features/auth/data/token_exchange/token_exchanger.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/token_exchange/token_exchange_coordinator.dart",
+                      "value":  "templates/lib/features/auth/data/token_exchange/token_exchange_coordinator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/token_exchange/token_response_validator.dart",
+                      "value":  "templates/lib/features/auth/data/token_exchange/token_response_validator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/user/i_user_manager.dart",
+                      "value":  "templates/lib/features/auth/data/user/i_user_manager.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/data/user/user_manager.dart",
+                      "value":  "templates/lib/features/auth/data/user/user_manager.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/domain/auth_tokens.dart",
+                      "value":  "templates/lib/features/auth/domain/auth_tokens.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/domain/auth_tokens.freezed.dart",
+                      "value":  "templates/lib/features/auth/domain/auth_tokens.freezed.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/domain/auth_tokens.g.dart",
+                      "value":  "templates/lib/features/auth/domain/auth_tokens.g.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/domain/auth_user.dart",
+                      "value":  "templates/lib/features/auth/domain/auth_user.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/domain/auth_user.freezed.dart",
+                      "value":  "templates/lib/features/auth/domain/auth_user.freezed.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/domain/auth_user.g.dart",
+                      "value":  "templates/lib/features/auth/domain/auth_user.g.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/domain/i_auth_service.dart",
+                      "value":  "templates/lib/features/auth/domain/i_auth_service.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/login_page.dart",
+                      "value":  "templates/lib/features/auth/presentation/login_page.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/helpers/deep_link_handler.dart",
+                      "value":  "templates/lib/features/auth/presentation/helpers/deep_link_handler.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/helpers/login_credentials_manager.dart",
+                      "value":  "templates/lib/features/auth/presentation/helpers/login_credentials_manager.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/helpers/login_page_builder.dart",
+                      "value":  "templates/lib/features/auth/presentation/helpers/login_page_builder.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/helpers/login_page_initializer.dart",
+                      "value":  "templates/lib/features/auth/presentation/helpers/login_page_initializer.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/helpers/login_result.dart",
+                      "value":  "templates/lib/features/auth/presentation/helpers/login_result.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/widgets/email_form_field.dart",
+                      "value":  "templates/lib/features/auth/presentation/widgets/email_form_field.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/widgets/error_message_box.dart",
+                      "value":  "templates/lib/features/auth/presentation/widgets/error_message_box.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/widgets/google_login_button.dart",
+                      "value":  "templates/lib/features/auth/presentation/widgets/google_login_button.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/widgets/login_content.dart",
+                      "value":  "templates/lib/features/auth/presentation/widgets/login_content.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/widgets/login_form_mock.dart",
+                      "value":  "templates/lib/features/auth/presentation/widgets/login_form_mock.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/widgets/login_header.dart",
+                      "value":  "templates/lib/features/auth/presentation/widgets/login_header.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/widgets/login_submit_button.dart",
+                      "value":  "templates/lib/features/auth/presentation/widgets/login_submit_button.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/widgets/mock_info_box.dart",
+                      "value":  "templates/lib/features/auth/presentation/widgets/mock_info_box.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/auth/presentation/widgets/password_form_field.dart",
+                      "value":  "templates/lib/features/auth/presentation/widgets/password_form_field.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/history/application/history_provider.dart",
+                      "value":  "templates/lib/features/history/application/history_provider.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/history/domain/history_item.dart",
+                      "value":  "templates/lib/features/history/domain/history_item.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/history/domain/history_item.freezed.dart",
+                      "value":  "templates/lib/features/history/domain/history_item.freezed.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/history/domain/history_item.g.dart",
+                      "value":  "templates/lib/features/history/domain/history_item.g.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/history/presentation/history_screen.dart",
+                      "value":  "templates/lib/features/history/presentation/history_screen.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/application/ai_service.dart",
+                      "value":  "templates/lib/features/quiz/application/ai_service.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/application/quiz_config.dart",
+                      "value":  "templates/lib/features/quiz/application/quiz_config.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/application/quiz_history_coordinator.dart",
+                      "value":  "templates/lib/features/quiz/application/quiz_history_coordinator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/application/quiz_provider.dart",
+                      "value":  "templates/lib/features/quiz/application/quiz_provider.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/application/quiz_result_calculator.dart",
+                      "value":  "templates/lib/features/quiz/application/quiz_result_calculator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/application/quiz_state_coordinator.dart",
+                      "value":  "templates/lib/features/quiz/application/quiz_state_coordinator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/application/quiz_timer.dart",
+                      "value":  "templates/lib/features/quiz/application/quiz_timer.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/application/start_quiz_use_case.dart",
+                      "value":  "templates/lib/features/quiz/application/start_quiz_use_case.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/application/strategy_config.dart",
+                      "value":  "templates/lib/features/quiz/application/strategy_config.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/application/strategy_factory.dart",
+                      "value":  "templates/lib/features/quiz/application/strategy_factory.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/config/ai_env.dart",
+                      "value":  "templates/lib/features/quiz/config/ai_env.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/config/ai_env_validator.dart",
+                      "value":  "templates/lib/features/quiz/config/ai_env_validator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/ai_api_client.dart",
+                      "value":  "templates/lib/features/quiz/data/ai_api_client.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/i_api_client.dart",
+                      "value":  "templates/lib/features/quiz/data/i_api_client.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/mock_ai_strategy.dart",
+                      "value":  "templates/lib/features/quiz/data/mock_ai_strategy.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/openai_api_client.dart",
+                      "value":  "templates/lib/features/quiz/data/openai_api_client.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/openai_message.dart",
+                      "value":  "templates/lib/features/quiz/data/openai_message.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/openai_message.freezed.dart",
+                      "value":  "templates/lib/features/quiz/data/openai_message.freezed.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/openai_message.g.dart",
+                      "value":  "templates/lib/features/quiz/data/openai_message.g.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/openai_payload.dart",
+                      "value":  "templates/lib/features/quiz/data/openai_payload.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/openai_payload.freezed.dart",
+                      "value":  "templates/lib/features/quiz/data/openai_payload.freezed.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/openai_payload.g.dart",
+                      "value":  "templates/lib/features/quiz/data/openai_payload.g.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/real_ai_strategy.dart",
+                      "value":  "templates/lib/features/quiz/data/real_ai_strategy.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/domain/ai_strategy.dart",
+                      "value":  "templates/lib/features/quiz/domain/ai_strategy.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/domain/question.dart",
+                      "value":  "templates/lib/features/quiz/domain/question.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/domain/question.freezed.dart",
+                      "value":  "templates/lib/features/quiz/domain/question.freezed.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/domain/question.g.dart",
+                      "value":  "templates/lib/features/quiz/domain/question.g.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/domain/quiz_generation_config.dart",
+                      "value":  "templates/lib/features/quiz/domain/quiz_generation_config.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/domain/quiz_generation_config.freezed.dart",
+                      "value":  "templates/lib/features/quiz/domain/quiz_generation_config.freezed.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/domain/quiz_generation_config.g.dart",
+                      "value":  "templates/lib/features/quiz/domain/quiz_generation_config.g.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/domain/topic.dart",
+                      "value":  "templates/lib/features/quiz/domain/topic.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/domain/topic.freezed.dart",
+                      "value":  "templates/lib/features/quiz/domain/topic.freezed.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/domain/topic.g.dart",
+                      "value":  "templates/lib/features/quiz/domain/topic.g.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/presentation/quiz_screen.dart",
+                      "value":  "templates/lib/features/quiz/presentation/quiz_screen.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/presentation/result_screen.dart",
+                      "value":  "templates/lib/features/quiz/presentation/result_screen.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/presentation/review_screen.dart",
+                      "value":  "templates/lib/features/quiz/presentation/review_screen.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/presentation/widgets/quiz_navigation_buttons.dart",
+                      "value":  "templates/lib/features/quiz/presentation/widgets/quiz_navigation_buttons.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/presentation/widgets/quiz_progress_bar.dart",
+                      "value":  "templates/lib/features/quiz/presentation/widgets/quiz_progress_bar.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/presentation/widgets/result_actions_section.dart",
+                      "value":  "templates/lib/features/quiz/presentation/widgets/result_actions_section.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/presentation/widgets/result_explanations_list.dart",
+                      "value":  "templates/lib/features/quiz/presentation/widgets/result_explanations_list.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/presentation/widgets/result_stats_section.dart",
+                      "value":  "templates/lib/features/quiz/presentation/widgets/result_stats_section.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/l10n/app_localizations.dart",
+                      "value":  "templates/lib/l10n/app_localizations.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/l10n/app_localizations_en.dart",
+                      "value":  "templates/lib/l10n/app_localizations_en.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/l10n/app_localizations_es.dart",
+                      "value":  "templates/lib/l10n/app_localizations_es.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/providers/locale_provider.dart",
+                      "value":  "templates/lib/providers/locale_provider.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/providers/theme_provider.dart",
+                      "value":  "templates/lib/providers/theme_provider.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/constants/app_spacing.dart",
+                      "value":  "templates/lib/shared/constants/app_spacing.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/consume/http_body_encoder.dart",
+                      "value":  "templates/lib/shared/consume/http_body_encoder.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/consume/http_client_impl.dart",
+                      "value":  "templates/lib/shared/consume/http_client_impl.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/consume/http_logger.dart",
+                      "value":  "templates/lib/shared/consume/http_logger.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/consume/i_http_client.dart",
+                      "value":  "templates/lib/shared/consume/i_http_client.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/env/env_config.dart",
+                      "value":  "templates/lib/shared/env/env_config.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/env/env_logger.dart",
+                      "value":  "templates/lib/shared/env/env_logger.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/env/env_validator.dart",
+                      "value":  "templates/lib/shared/env/env_validator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/helper/env_helper.dart",
+                      "value":  "templates/lib/shared/helper/env_helper.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/helper/i_validator.dart",
+                      "value":  "templates/lib/shared/helper/i_validator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/helper/local_storage.dart",
+                      "value":  "templates/lib/shared/helper/local_storage.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/helper/random_string_helper.dart",
+                      "value":  "templates/lib/shared/helper/random_string_helper.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/helper/shared_env.dart",
+                      "value":  "templates/lib/shared/helper/shared_env.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/helper/validator.dart",
+                      "value":  "templates/lib/shared/helper/validator.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/log/logger.dart",
+                      "value":  "templates/lib/shared/log/logger.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/log/log_entry.dart",
+                      "value":  "templates/lib/shared/log/log_entry.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/log/log_entry.freezed.dart",
+                      "value":  "templates/lib/shared/log/log_entry.freezed.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/shared/log/log_entry.g.dart",
+                      "value":  "templates/lib/shared/log/log_entry.g.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/home_screen.dart",
+                      "value":  "templates/lib/views/home_screen.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/initial_screen.dart",
+                      "value":  "templates/lib/views/initial_screen.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/settings_screen.dart",
+                      "value":  "templates/lib/views/settings_screen.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/widgets/history_drawer.dart",
+                      "value":  "templates/lib/views/widgets/history_drawer.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/widgets/initial_screen_actions.dart",
+                      "value":  "templates/lib/views/widgets/initial_screen_actions.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/widgets/premium_badge.dart",
+                      "value":  "templates/lib/views/widgets/premium_badge.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/widgets/quiz_config_section.dart",
+                      "value":  "templates/lib/views/widgets/quiz_config_section.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/widgets/quiz_creation_section.dart",
+                      "value":  "templates/lib/views/widgets/quiz_creation_section.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/widgets/start_quiz_button.dart",
+                      "value":  "templates/lib/views/widgets/start_quiz_button.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/widgets/subscription_section.dart",
+                      "value":  "templates/lib/views/widgets/subscription_section.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/widgets/subscription_status_card.dart",
+                      "value":  "templates/lib/views/widgets/subscription_status_card.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/widgets/timer_config_section.dart",
+                      "value":  "templates/lib/views/widgets/timer_config_section.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/widgets/time_config_section.dart",
+                      "value":  "templates/lib/views/widgets/time_config_section.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/widgets/topic_input_section.dart",
+                      "value":  "templates/lib/views/widgets/topic_input_section.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/views/widgets/upgrade_dialog.dart",
+                      "value":  "templates/lib/views/widgets/upgrade_dialog.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/widgets/labeled_slider.dart",
+                      "value":  "templates/lib/widgets/labeled_slider.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/widgets/labeled_slider.freezed.dart",
+                      "value":  "templates/lib/widgets/labeled_slider.freezed.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/widgets/question_card.dart",
+                      "value":  "templates/lib/widgets/question_card.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/linux/.gitignore",
+                      "value":  "templates/linux/.gitignore.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/linux/CMakeLists.txt",
+                      "value":  "templates/linux/CMakeLists.txt.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/linux/flutter/CMakeLists.txt",
+                      "value":  "templates/linux/flutter/CMakeLists.txt.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/linux/flutter/generated_plugins.cmake",
+                      "value":  "templates/linux/flutter/generated_plugins.cmake.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/linux/flutter/generated_plugin_registrant.cc",
+                      "value":  "templates/linux/flutter/generated_plugin_registrant.cc.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/linux/flutter/generated_plugin_registrant.h",
+                      "value":  "templates/linux/flutter/generated_plugin_registrant.h.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/linux/runner/CMakeLists.txt",
+                      "value":  "templates/linux/runner/CMakeLists.txt.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/linux/runner/main.cc",
+                      "value":  "templates/linux/runner/main.cc.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/linux/runner/my_application.cc",
+                      "value":  "templates/linux/runner/my_application.cc.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/linux/runner/my_application.h",
+                      "value":  "templates/linux/runner/my_application.h.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/.gitignore",
+                      "value":  "templates/macos/.gitignore.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Flutter/Flutter-Debug.xcconfig",
+                      "value":  "templates/macos/Flutter/Flutter-Debug.xcconfig.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Flutter/Flutter-Release.xcconfig",
+                      "value":  "templates/macos/Flutter/Flutter-Release.xcconfig.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Flutter/GeneratedPluginRegistrant.swift",
+                      "value":  "templates/macos/Flutter/GeneratedPluginRegistrant.swift.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner/AppDelegate.swift",
+                      "value":  "templates/macos/Runner/AppDelegate.swift.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner/DebugProfile.entitlements",
+                      "value":  "templates/macos/Runner/DebugProfile.entitlements.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner/Info.plist",
+                      "value":  "templates/macos/Runner/Info.plist.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner/MainFlutterWindow.swift",
+                      "value":  "templates/macos/Runner/MainFlutterWindow.swift.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner/Release.entitlements",
+                      "value":  "templates/macos/Runner/Release.entitlements.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json",
+                      "value":  "templates/macos/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner/Base.lproj/MainMenu.xib",
+                      "value":  "templates/macos/Runner/Base.lproj/MainMenu.xib.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner/Configs/AppInfo.xcconfig",
+                      "value":  "templates/macos/Runner/Configs/AppInfo.xcconfig.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner/Configs/Debug.xcconfig",
+                      "value":  "templates/macos/Runner/Configs/Debug.xcconfig.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner/Configs/Release.xcconfig",
+                      "value":  "templates/macos/Runner/Configs/Release.xcconfig.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner/Configs/Warnings.xcconfig",
+                      "value":  "templates/macos/Runner/Configs/Warnings.xcconfig.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner.xcodeproj/project.pbxproj",
+                      "value":  "templates/macos/Runner.xcodeproj/project.pbxproj.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+                      "value":  "templates/macos/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme",
+                      "value":  "templates/macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner.xcworkspace/contents.xcworkspacedata",
+                      "value":  "templates/macos/Runner.xcworkspace/contents.xcworkspacedata.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+                      "value":  "templates/macos/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/macos/RunnerTests/RunnerTests.swift",
+                      "value":  "templates/macos/RunnerTests/RunnerTests.swift.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/test/quiz_generation_config_test.dart",
+                      "value":  "templates/test/quiz_generation_config_test.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/web/index.html",
+                      "value":  "templates/web/index.html.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/web/manifest.json",
+                      "value":  "templates/web/manifest.json.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/.gitignore",
+                      "value":  "templates/windows/.gitignore.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/CMakeLists.txt",
+                      "value":  "templates/windows/CMakeLists.txt.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/flutter/CMakeLists.txt",
+                      "value":  "templates/windows/flutter/CMakeLists.txt.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/flutter/generated_plugins.cmake",
+                      "value":  "templates/windows/flutter/generated_plugins.cmake.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/flutter/generated_plugin_registrant.cc",
+                      "value":  "templates/windows/flutter/generated_plugin_registrant.cc.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/flutter/generated_plugin_registrant.h",
+                      "value":  "templates/windows/flutter/generated_plugin_registrant.h.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/runner/CMakeLists.txt",
+                      "value":  "templates/windows/runner/CMakeLists.txt.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/runner/flutter_window.cpp",
+                      "value":  "templates/windows/runner/flutter_window.cpp.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/runner/flutter_window.h",
+                      "value":  "templates/windows/runner/flutter_window.h.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/runner/main.cpp",
+                      "value":  "templates/windows/runner/main.cpp.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/runner/resource.h",
+                      "value":  "templates/windows/runner/resource.h.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/runner/runner.exe.manifest",
+                      "value":  "templates/windows/runner/runner.exe.manifest.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/runner/Runner.rc",
+                      "value":  "templates/windows/runner/Runner.rc.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/runner/utils.cpp",
+                      "value":  "templates/windows/runner/utils.cpp.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/runner/utils.h",
+                      "value":  "templates/windows/runner/utils.h.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/runner/win32_window.cpp",
+                      "value":  "templates/windows/runner/win32_window.cpp.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/windows/runner/win32_window.h",
+                      "value":  "templates/windows/runner/win32_window.h.scriban"
+                  }
+              ],
+    "defaultFiles":  [
+                         "defaults/android/upload-keystore.jks",
+                         "defaults/android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+                         "defaults/android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+                         "defaults/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+                         "defaults/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+                         "defaults/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+                         "defaults/android/gradle/wrapper/gradle-wrapper.jar",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png",
+                         "defaults/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png",
+                         "defaults/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png",
+                         "defaults/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png",
+                         "defaults/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png",
+                         "defaults/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png",
+                         "defaults/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png",
+                         "defaults/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png",
+                         "defaults/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_256.png",
+                         "defaults/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_32.png",
+                         "defaults/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_512.png",
+                         "defaults/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_64.png",
+                         "defaults/web/favicon.png",
+                         "defaults/web/icons/Icon-192.png",
+                         "defaults/web/icons/Icon-512.png",
+                         "defaults/web/icons/Icon-maskable-192.png",
+                         "defaults/web/icons/Icon-maskable-512.png",
+                         "defaults/windows/runner/resources/app_icon.ico"
+                     ]
+}

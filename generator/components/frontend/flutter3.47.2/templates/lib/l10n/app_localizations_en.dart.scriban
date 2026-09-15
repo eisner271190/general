@@ -1,0 +1,240 @@
+﻿// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class AppLocalizationsEn extends AppLocalizations {
+  AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get appTitle => 'Quiz';
+
+  @override
+  String get configTitle => 'Quiz Configuration';
+
+  @override
+  String get startButton => 'Start';
+
+  @override
+  String get settingsButton => 'Settings';
+
+  @override
+  String get historyButton => 'History';
+
+  @override
+  String get topicLabel => 'Topic';
+
+  @override
+  String get previousTopicsLabel => 'Previous Topics';
+
+  @override
+  String get numQuestionsLabel => 'Number of questions';
+
+  @override
+  String get optionsCountLabel => 'Options per question';
+
+  @override
+  String get languageLabel => 'Language';
+
+  @override
+  String get timePerQuestionLabel => 'Time per question: ';
+
+  @override
+  String get timeLabel => 'Time per question (seconds)';
+
+  @override
+  String get unlimitedTime => 'Unlimited';
+
+  @override
+  String get enterTopicMessage => 'Enter a topic';
+
+  @override
+  String get quizTitle => 'Quiz';
+
+  @override
+  String get questionLabel => 'Question';
+
+  @override
+  String get ofPreposition => 'of';
+
+  @override
+  String get timeRemaining => 'Time remaining:';
+
+  @override
+  String get previousButton => 'Previous';
+
+  @override
+  String get finishButton => 'Finish';
+
+  @override
+  String get resultsTitle => 'Results';
+
+  @override
+  String get correctLabel => 'Correct:';
+
+  @override
+  String get incorrectLabel => 'Incorrect:';
+
+  @override
+  String get percentageLabel => 'Percentage:';
+
+  @override
+  String get explanationsLabel => 'Explanations of incorrect answers:';
+
+  @override
+  String get saveHistoryButton => 'Save to history';
+
+  @override
+  String get repeatQuizButton => 'Repeat quiz';
+
+  @override
+  String get backToStartButton => 'Back to start';
+
+  @override
+  String get historyTitle => 'Topic History';
+
+  @override
+  String get noTopics => 'No topics saved';
+
+  @override
+  String get deleteTopic => 'Delete';
+
+  @override
+  String get backButton => 'Back';
+
+  @override
+  String get recentTopics => 'Recent topics';
+
+  @override
+  String get viewAllTopics => 'View all topics';
+
+  @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get themeToggle => 'Toggle theme';
+
+  @override
+  String get drawerHeader => 'Your topics';
+
+  @override
+  String get errorPrefix => 'Error: ';
+
+  @override
+  String get spanish => 'EspaÃ±ol';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get reviewQuizTitle => 'Review Quiz';
+
+  @override
+  String get reviewPlaceholder => 'Implemented in History/Result screens';
+
+  @override
+  String get savedToHistory => 'Saved to history';
+
+  @override
+  String get noQuestions => 'No questions available';
+
+  @override
+  String get mockExplanationPrefix =>
+      'Explanation: The correct answer is option ';
+
+  @override
+  String mockQuestionTemplate(String topic, String idx) {
+    return '$topic - Question $idx: Briefly describe a key concept related to $topic.';
+  }
+
+  @override
+  String mockOptionTemplate(String optIdx, String qIdx) {
+    return 'Option $optIdx for question $qIdx';
+  }
+
+  @override
+  String get processingAuth => 'Processing authentication...';
+
+  @override
+  String get pressEnterHint => 'Press Enter to start';
+
+  @override
+  String get userLabel => 'User';
+
+  @override
+  String get userHint => 'Enter epc';
+
+  @override
+  String get passwordLabel => 'Password';
+
+  @override
+  String get passwordHint => 'Enter epc';
+
+  @override
+  String get pleaseEnterUser => 'Please enter a user';
+
+  @override
+  String get pleaseEnterPassword => 'Please enter a password';
+
+  @override
+  String get cancelButton => 'Cancel';
+
+  @override
+  String get viewPlansButton => 'View Plans';
+
+  @override
+  String get getPremiumLabel => 'Get Premium';
+
+  @override
+  String get restorePurchasesButton => 'Restore purchases';
+
+  @override
+  String get plansSubscriptionTitle => 'Plans & Subscription';
+
+  @override
+  String get confirmPurchaseTitle => 'Confirm purchase';
+
+  @override
+  String get buyButton => 'Buy';
+
+  @override
+  String get premiumPlusComingSoon => 'Premium Plus coming soon';
+
+  @override
+  String get mockEmailInfo => 'Email: test@example.com';
+
+  @override
+  String get mockPasswordInfo => 'Password: any non-empty value';
+
+  @override
+  String get loginButton => 'Login';
+
+  @override
+  String get welcomeToPremium => 'Welcome to Premium! ðŸŽ‰';
+
+  @override
+  String get changeLanguage => 'Change language';
+
+  @override
+  String get languageChanged => 'Language changed';
+
+  @override
+  String get limitReached => 'Limit Reached!';
+
+  @override
+  String get limitReachedMessage =>
+      'You\'ve used all your free quizzes this month.\n\nUpgrade to Premium for unlimited quizzes without ads.';
+
+  @override
+  String get getPremium => 'Get Premium';
+
+  @override
+  String get confirmPurchaseMonthly =>
+      'Subscribe to Premium Monthly for \$4.99?';
+
+  @override
+  String get confirmPurchaseAnnual =>
+      'Subscribe to Premium Annual for \$39.99?';
+}

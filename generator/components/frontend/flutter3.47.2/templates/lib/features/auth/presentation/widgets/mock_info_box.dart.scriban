@@ -1,0 +1,40 @@
+﻿import 'package:flutter/material.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/constants/app_spacing.dart';
+
+/// Widget de informaciÃ³n de mock credentials
+/// Responsabilidad: Mostrar info de credenciales mock
+class MockInfoBox extends StatelessWidget {
+  const MockInfoBox({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.large),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.info, color: Colors.blue),
+              SizedBox(width: AppSpacing.small),
+              Text(
+                'Mock Credentials',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.small),
+          Text(l10n.mockEmailInfo),
+          Text(l10n.mockPasswordInfo),
+        ],
+      ),
+    );
+  }
+}

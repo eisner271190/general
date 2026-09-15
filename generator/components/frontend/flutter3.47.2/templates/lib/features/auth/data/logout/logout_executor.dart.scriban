@@ -1,0 +1,46 @@
+﻿import 'package:url_launcher/url_launcher.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/consume/i_http_client.dart';
+import 'package:{{ FRONTEND_NAME }}/features/auth/config/auth_config.dart';
+import '../auth_constants.dart';
+import 'i_logout_executor.dart';
+
+class LogoutExecutor implements ILogoutExecutor {
+  final IHttpClient _httpClient;
+
+  LogoutExecutor({required IHttpClient httpClient}) : _httpClient = httpClient;
+
+  @override
+  Future<void> executeLogout() async {
+    try {
+      Logger.info('[AUTH] Signing out');
+      await _notifyBackendLogout();
+      await _launchCognitoLogout();
+      Logger.info('[AUTH] Session signed out successfully');
+    } catch (e, stackTrace) {
+      Logger.error(
+        '[AUTH] Error al cerrar sesiÃ³n',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
+  }
+
+  Future<void> _notifyBackendLogout() async {
+    try {
+      await _httpClient
+          .post(AuthConfig.logoutUrl)
+          .timeout(Duration(seconds: AuthConstants.logoutTimeoutSeconds));
+    } catch (e) {
+      Logger.error('[AUTH] No se pudo notificar logout', error: e);
+    }
+  }
+
+  Future<void> _launchCognitoLogout() async {
+    final logoutUrl = Uri.parse(AuthConfig.getCognitoLogoutUrl());
+    if (await canLaunchUrl(logoutUrl)) {
+      await launchUrl(logoutUrl, mode: LaunchMode.externalApplication);
+    }
+  }
+}

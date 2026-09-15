@@ -1,0 +1,7 @@
+﻿import 'package:flutter/material.dart';
+
+abstract class ThemeStrategy {
+  ThemeData get lightTheme;
+  ThemeData get darkTheme;
+  String get themeStyle;
+}

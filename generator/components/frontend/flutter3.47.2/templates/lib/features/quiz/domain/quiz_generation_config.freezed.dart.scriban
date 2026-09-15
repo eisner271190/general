@@ -1,0 +1,297 @@
+﻿// GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'quiz_generation_config.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
+T _$identity<T>(T value) => value;
+
+/// @nodoc
+mixin _$QuizGenerationConfig {
+
+ String get topic; String get language; int get numQuestions; int get optionsCount; int? get timePerQuestionSeconds;
+/// Create a copy of QuizGenerationConfig
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$QuizGenerationConfigCopyWith<QuizGenerationConfig> get copyWith => _$QuizGenerationConfigCopyWithImpl<QuizGenerationConfig>(this as QuizGenerationConfig, _$identity);
+
+  /// Serializes this QuizGenerationConfig to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as QuizGenerationConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuizGenerationConfig&&(identical(other.topic, _this.topic) || other.topic == _this.topic)&&(identical(other.language, _this.language) || other.language == _this.language)&&(identical(other.numQuestions, _this.numQuestions) || other.numQuestions == _this.numQuestions)&&(identical(other.optionsCount, _this.optionsCount) || other.optionsCount == _this.optionsCount)&&(identical(other.timePerQuestionSeconds, _this.timePerQuestionSeconds) || other.timePerQuestionSeconds == _this.timePerQuestionSeconds));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as QuizGenerationConfig;
+  return Object.hash(runtimeType,_this.topic,_this.language,_this.numQuestions,_this.optionsCount,_this.timePerQuestionSeconds);
+}
+
+@override
+String toString() {
+  final _this = this as QuizGenerationConfig;
+  return 'QuizGenerationConfig(topic: ${_this.topic}, language: ${_this.language}, numQuestions: ${_this.numQuestions}, optionsCount: ${_this.optionsCount}, timePerQuestionSeconds: ${_this.timePerQuestionSeconds})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $QuizGenerationConfigCopyWith<$Res>  {
+  factory $QuizGenerationConfigCopyWith(QuizGenerationConfig value, $Res Function(QuizGenerationConfig) _then) = _$QuizGenerationConfigCopyWithImpl;
+@useResult
+$Res call({
+ String topic, String language, int numQuestions, int optionsCount, int? timePerQuestionSeconds
+});
+
+
+
+
+}
+/// @nodoc
+class _$QuizGenerationConfigCopyWithImpl<$Res>
+    implements $QuizGenerationConfigCopyWith<$Res> {
+  _$QuizGenerationConfigCopyWithImpl(this._self, this._then);
+
+  final QuizGenerationConfig _self;
+  final $Res Function(QuizGenerationConfig) _then;
+
+/// Create a copy of QuizGenerationConfig
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? topic = null,Object? language = null,Object? numQuestions = null,Object? optionsCount = null,Object? timePerQuestionSeconds = freezed,}) {
+  return _then(QuizGenerationConfig(
+topic: null == topic ? _self.topic : topic // ignore: cast_nullable_to_non_nullable
+as String,language: null == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
+as String,numQuestions: null == numQuestions ? _self.numQuestions : numQuestions // ignore: cast_nullable_to_non_nullable
+as int,optionsCount: null == optionsCount ? _self.optionsCount : optionsCount // ignore: cast_nullable_to_non_nullable
+as int,timePerQuestionSeconds: freezed == timePerQuestionSeconds ? _self.timePerQuestionSeconds : timePerQuestionSeconds // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [QuizGenerationConfig].
+extension QuizGenerationConfigPatterns on QuizGenerationConfig {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _QuizGenerationConfig value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _QuizGenerationConfig() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _QuizGenerationConfig value)  $default,){
+final _that = this;
+switch (_that) {
+case _QuizGenerationConfig():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _QuizGenerationConfig value)?  $default,){
+final _that = this;
+switch (_that) {
+case _QuizGenerationConfig() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String topic,  String language,  int numQuestions,  int optionsCount,  int? timePerQuestionSeconds)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _QuizGenerationConfig() when $default != null:
+return $default(_that.topic,_that.language,_that.numQuestions,_that.optionsCount,_that.timePerQuestionSeconds);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String topic,  String language,  int numQuestions,  int optionsCount,  int? timePerQuestionSeconds)  $default,) {final _that = this;
+switch (_that) {
+case _QuizGenerationConfig():
+return $default(_that.topic,_that.language,_that.numQuestions,_that.optionsCount,_that.timePerQuestionSeconds);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String topic,  String language,  int numQuestions,  int optionsCount,  int? timePerQuestionSeconds)?  $default,) {final _that = this;
+switch (_that) {
+case _QuizGenerationConfig() when $default != null:
+return $default(_that.topic,_that.language,_that.numQuestions,_that.optionsCount,_that.timePerQuestionSeconds);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _QuizGenerationConfig implements QuizGenerationConfig {
+  const _QuizGenerationConfig({required this.topic, required this.language, required this.numQuestions, required this.optionsCount, this.timePerQuestionSeconds});
+  factory _QuizGenerationConfig.fromJson(Map<String, dynamic> json) => _$QuizGenerationConfigFromJson(json);
+
+@override final  String topic;
+@override final  String language;
+@override final  int numQuestions;
+@override final  int optionsCount;
+@override final  int? timePerQuestionSeconds;
+
+/// Create a copy of QuizGenerationConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$QuizGenerationConfigCopyWith<_QuizGenerationConfig> get copyWith => __$QuizGenerationConfigCopyWithImpl<_QuizGenerationConfig>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$QuizGenerationConfigToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuizGenerationConfig&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.language, language) || other.language == language)&&(identical(other.numQuestions, numQuestions) || other.numQuestions == numQuestions)&&(identical(other.optionsCount, optionsCount) || other.optionsCount == optionsCount)&&(identical(other.timePerQuestionSeconds, timePerQuestionSeconds) || other.timePerQuestionSeconds == timePerQuestionSeconds));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,topic,language,numQuestions,optionsCount,timePerQuestionSeconds);
+}
+
+@override
+String toString() {
+    return 'QuizGenerationConfig(topic: $topic, language: $language, numQuestions: $numQuestions, optionsCount: $optionsCount, timePerQuestionSeconds: $timePerQuestionSeconds)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$QuizGenerationConfigCopyWith<$Res> implements $QuizGenerationConfigCopyWith<$Res> {
+  factory _$QuizGenerationConfigCopyWith(_QuizGenerationConfig value, $Res Function(_QuizGenerationConfig) _then) = __$QuizGenerationConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String topic, String language, int numQuestions, int optionsCount, int? timePerQuestionSeconds
+});
+
+
+
+
+}
+/// @nodoc
+class __$QuizGenerationConfigCopyWithImpl<$Res>
+    implements _$QuizGenerationConfigCopyWith<$Res> {
+  __$QuizGenerationConfigCopyWithImpl(this._self, this._then);
+
+  final _QuizGenerationConfig _self;
+  final $Res Function(_QuizGenerationConfig) _then;
+
+/// Create a copy of QuizGenerationConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? topic = null,Object? language = null,Object? numQuestions = null,Object? optionsCount = null,Object? timePerQuestionSeconds = freezed,}) {
+  return _then(_QuizGenerationConfig(
+topic: null == topic ? _self.topic : topic // ignore: cast_nullable_to_non_nullable
+as String,language: null == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
+as String,numQuestions: null == numQuestions ? _self.numQuestions : numQuestions // ignore: cast_nullable_to_non_nullable
+as int,optionsCount: null == optionsCount ? _self.optionsCount : optionsCount // ignore: cast_nullable_to_non_nullable
+as int,timePerQuestionSeconds: freezed == timePerQuestionSeconds ? _self.timePerQuestionSeconds : timePerQuestionSeconds // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+
+}
+
+// dart format on

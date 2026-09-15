@@ -1,0 +1,27 @@
+﻿// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'quiz_generation_config.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+_QuizGenerationConfig _$QuizGenerationConfigFromJson(
+  Map<String, dynamic> json,
+) => _QuizGenerationConfig(
+  topic: json['topic'] as String,
+  language: json['language'] as String,
+  numQuestions: (json['numQuestions'] as num).toInt(),
+  optionsCount: (json['optionsCount'] as num).toInt(),
+  timePerQuestionSeconds: (json['timePerQuestionSeconds'] as num?)?.toInt(),
+);
+
+Map<String, dynamic> _$QuizGenerationConfigToJson(
+  _QuizGenerationConfig instance,
+) => <String, dynamic>{
+  'topic': instance.topic,
+  'language': instance.language,
+  'numQuestions': instance.numQuestions,
+  'optionsCount': instance.optionsCount,
+  'timePerQuestionSeconds': instance.timePerQuestionSeconds,
+};

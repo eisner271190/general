@@ -1,0 +1,117 @@
+﻿import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/helper/i_validator.dart';
+import '../oauth/i_oauth_state_manager.dart';
+import 'i_redirect_handler.dart';
+
+class RedirectHandler implements IRedirectHandler {
+  static const String _errorMissingCode = 'Authorization code not received';
+  static const String _errorInvalidState =
+      'State mismatch - CSRF attack prevented';
+  static const String _errorMissingVerifier = 'Code verifier not available';
+  static const String _errorAuthFailed = 'Authentication error';
+
+  final IValidator _validator;
+  final IOAuthStateManager _oauthStateManager;
+
+  RedirectHandler({
+    required IValidator validator,
+    required IOAuthStateManager oauthStateManager,
+  }) : _validator = validator,
+       _oauthStateManager = oauthStateManager {
+    _logInitialized();
+  }
+
+  @override
+  Future<RedirectParams> validateAndExtractParams(Uri redirectUri) async {
+    try {
+      _logProcessingRedirect(redirectUri);
+
+      final code = redirectUri.queryParameters['code'];
+      final state = redirectUri.queryParameters['state'];
+      final error = redirectUri.queryParameters['error'];
+
+      _logValidatingParameters(code, state, error);
+
+      _validateRedirectError(error, redirectUri);
+      _validator.notEmptyAndNotNull(code, _errorMissingCode);
+      await _validateState(state);
+      final codeVerifier = await _getCodeVerifier();
+
+      _logValidationSuccessful();
+      return RedirectParams(code: code!, codeVerifier: codeVerifier);
+    } catch (e, stackTrace) {
+      _logValidationFailed(e, stackTrace);
+      rethrow;
+    }
+  }
+
+  void _validateRedirectError(String? error, Uri redirectUri) {
+    if (error != null) {
+      final desc = redirectUri.queryParameters['error_description'] ?? '';
+      _logOAuthError(error, desc);
+      throw Exception('$_errorAuthFailed: $error - $desc');
+    }
+  }
+
+  Future<void> _validateState(String? state) async {
+    _logValidatingState();
+    final stateValid = await _oauthStateManager.validateAndClearState(state!);
+    _validator.validate(stateValid, _errorInvalidState);
+  }
+
+  Future<String> _getCodeVerifier() async {
+    _logRetrievingCodeVerifier();
+    final codeVerifier = await _oauthStateManager.getCodeVerifier();
+    _validator.validate(codeVerifier != null, _errorMissingVerifier);
+    return codeVerifier!;
+  }
+
+  void _logInitialized() {
+    Logger.info('[AUTH] RedirectHandler initialized');
+  }
+
+  void _logProcessingRedirect(Uri redirectUri) {
+    Logger.info(
+      '[AUTH] Processing redirect',
+      data: {'uri': redirectUri.toString()},
+    );
+  }
+
+  void _logValidatingParameters(String? code, String? state, String? error) {
+    Logger.info(
+      '[AUTH] Validating redirect parameters',
+      data: {
+        'hasCode': code != null,
+        'hasState': state != null,
+        'hasError': error != null,
+      },
+    );
+  }
+
+  void _logValidationSuccessful() {
+    Logger.info('[AUTH] Redirect parameters validated successfully');
+  }
+
+  void _logValidationFailed(Object error, StackTrace stackTrace) {
+    Logger.error(
+      '[AUTH] Redirect validation failed',
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+
+  void _logOAuthError(String error, String description) {
+    Logger.error(
+      '[AUTH] OAuth redirect error',
+      data: {'error': error, 'description': description},
+    );
+  }
+
+  void _logValidatingState() {
+    Logger.info('[AUTH] Validating OAuth state');
+  }
+
+  void _logRetrievingCodeVerifier() {
+    Logger.info('[AUTH] Retrieving code verifier');
+  }
+}

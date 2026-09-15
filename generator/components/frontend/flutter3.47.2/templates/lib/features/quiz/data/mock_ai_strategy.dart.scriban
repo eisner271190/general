@@ -1,0 +1,91 @@
+﻿import 'dart:math';
+import 'package:uuid/uuid.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/domain/question.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/domain/quiz_generation_config.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/domain/ai_strategy.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+
+/// Estrategia mock para generar preguntas sin llamadas a API
+/// Responsabilidad: Generar preguntas de prueba para desarrollo y testing
+class MockAIStrategy implements AIStrategy {
+  static final _rnd = Random();
+  static final _uuid = Uuid();
+
+  // Templates para modo mock - hardcoded porque no dependen del idioma del usuario
+  static const _mockExplanationPrefix =
+      'Explanation: The correct answer is option ';
+  static const _mockQuestionTemplate =
+      '{topic} - Question {idx}: Briefly describe a key concept related to {topic}.';
+  static const _mockOptionTemplate = 'Option {optIdx} for question {qIdx}';
+
+  @override
+  Future<List<Question>> generateQuestions(QuizGenerationConfig config) async {
+    _validateConfig(config);
+
+    _logGeneratingMockQuestions(config.topic, config.numQuestions);
+
+    await Future.delayed(const Duration(milliseconds: 300));
+    final questions = <Question>[];
+
+    for (int i = 0; i < config.numQuestions; i++) {
+      questions.add(_createQuestion(config.topic, i + 1, config.optionsCount));
+    }
+
+    _logMockQuestionsGenerated();
+    return questions;
+  }
+
+  void _validateConfig(QuizGenerationConfig config) {
+    if (config.numQuestions <= 0) {
+      throw ArgumentError('Number of questions must be positive');
+    }
+    if (config.optionsCount < 2) {
+      throw ArgumentError('Options count must be at least 2');
+    }
+    if (config.topic.trim().isEmpty) {
+      throw ArgumentError('Topic cannot be empty');
+    }
+  }
+
+  Question _createQuestion(String topic, int index, int optionsCount) {
+    final id = _uuid.v4();
+    final qText = _mockQuestionText(topic, index);
+    final correctIndex = _rnd.nextInt(optionsCount);
+    final options = List.generate(
+      optionsCount,
+      (j) => _mockOptionText(index, j + 1),
+    );
+    final explanation = '$_mockExplanationPrefix${correctIndex + 1}.';
+
+    return Question(
+      id: id,
+      text: qText,
+      options: options,
+      correctIndex: correctIndex,
+      explanation: explanation,
+    );
+  }
+
+  String _mockQuestionText(String topic, int idx) {
+    return _mockQuestionTemplate
+        .replaceAll('{topic}', topic)
+        .replaceAll('{idx}', '$idx');
+  }
+
+  String _mockOptionText(int qIdx, int optIdx) {
+    return _mockOptionTemplate
+        .replaceAll('{optIdx}', '$optIdx')
+        .replaceAll('{qIdx}', '$qIdx');
+  }
+
+  void _logGeneratingMockQuestions(String topic, int count) {
+    Logger.info(
+      '[AI] Generating mock questions',
+      data: {'topic': topic, 'count': count},
+    );
+  }
+
+  void _logMockQuestionsGenerated() {
+    Logger.info('[AI] Mock questions generated');
+  }
+}

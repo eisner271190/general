@@ -1,0 +1,29 @@
+﻿import '../../../../shared/log/logger.dart';
+
+/// Extractor de detalles de error del backend
+/// Responsabilidad: Extraer y formatear errores de respuesta
+class TokenErrorExtractor {
+  /// Extrae informaciÃ³n de error desde respuesta del backend
+  static String extractErrorMessage(
+    Map<String, dynamic> responseData,
+    int statusCode,
+  ) {
+    final message = responseData['message'] as String? ?? 'Error desconocido';
+    final status = responseData['status'] as int? ?? statusCode;
+    final stackTrace = responseData['stackTrace'] as String? ?? '';
+    final timestamp = responseData['timestamp'] as String? ?? '';
+
+    Logger.error(
+      'Error del backend',
+      data: {
+        'status': status,
+        'message': message,
+        'timestamp': timestamp,
+        'stackTrace': stackTrace,
+      },
+    );
+
+    final errorDetail = stackTrace.isNotEmpty ? stackTrace : message;
+    return 'Error de autenticaciÃ³n ($status): $errorDetail';
+  }
+}

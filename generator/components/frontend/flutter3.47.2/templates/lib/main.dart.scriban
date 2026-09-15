@@ -1,0 +1,37 @@
+﻿import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'app.dart';
+import 'core/service_factory.dart';
+import 'shared/env/env_config.dart';
+import 'shared/log/logger.dart';
+
+void main(List<String> args) async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  String envFile = "assets/.env.mock";
+
+  if (args.isNotEmpty) {
+    final env = args[0];
+    envFile = "assets/.env.$env";
+    _logLoadingEnvironment(envFile);
+  }
+
+  await dotenv.load(fileName: envFile);
+
+  EnvConfig.logAuthEnvironmentVariables(envFile);
+
+  final authService = ServiceFactory.createAuthService();
+
+  await authService.restoreSession();
+
+  _logAppStarting();
+  runApp(QuizGeneratorApp());
+}
+
+void _logLoadingEnvironment(String file) {
+  Logger.info('[APP] Loading environment', data: {'file': file});
+}
+
+void _logAppStarting() {
+  Logger.info('[APP] App starting');
+}

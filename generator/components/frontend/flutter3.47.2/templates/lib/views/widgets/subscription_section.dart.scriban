@@ -1,0 +1,28 @@
+﻿import 'package:flutter/material.dart';
+
+/// SecciÃ³n de estado de suscripciÃ³n en configuraciÃ³n
+/// Responsabilidad: Mostrar info de suscripciÃ³n y enlace a planes
+class SubscriptionSection extends StatelessWidget {
+  const SubscriptionSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      child: ListTile(
+        leading: const Icon(
+          Icons.workspace_premium,
+          color: Colors.purple,
+          size: 32,
+        ),
+        title: const Text(
+          'Premium',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: const Text('Quizzes ilimitados sin publicidad'),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: () {}, // AcciÃ³n deshabilitada o personalizada
+      ),
+    );
+  }
+}

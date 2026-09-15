@@ -1,0 +1,4 @@
+﻿/// Interface para lanzar el navegador con la URL de autenticaciÃ³n
+abstract class IBrowserLauncher {
+  Future<bool> launchAuthUrl(String url);
+}

@@ -1,0 +1,44 @@
+﻿import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import 'package:{{ FRONTEND_NAME }}/features/auth/config/auth_config.dart';
+import '../pkce/i_pkce_generator.dart';
+import '../oauth/i_oauth_state_manager.dart';
+import '../browser/i_browser_launcher.dart';
+
+class HostedUIInitiator {
+  final IPKCEGenerator _pkceGenerator;
+  final IOAuthStateManager _oauthStateManager;
+  final IBrowserLauncher _browserLauncher;
+
+  HostedUIInitiator({
+    required IPKCEGenerator pkceGenerator,
+    required IOAuthStateManager oauthStateManager,
+    required IBrowserLauncher browserLauncher,
+  }) : _pkceGenerator = pkceGenerator,
+       _oauthStateManager = oauthStateManager,
+       _browserLauncher = browserLauncher;
+
+  Future<bool> initiateLogin() async {
+    try {
+      Logger.info('[AUTH] Iniciando login con Google via Hosted UI');
+      final codeVerifier = _pkceGenerator.generateCodeVerifier();
+      final codeChallenge = _pkceGenerator.generateCodeChallenge(codeVerifier);
+      final state = _oauthStateManager.generateState();
+      await _oauthStateManager.saveState(state, codeVerifier);
+      final authorizeUrl = _buildAuthorizeUrl(codeChallenge, state);
+      await _browserLauncher.launchAuthUrl(authorizeUrl);
+      return true;
+    } catch (e) {
+      Logger.error('[AUTH] Error en signInWithHostedUI', error: e);
+      return false;
+    }
+  }
+
+  String _buildAuthorizeUrl(String codeChallenge, String state) {
+    final url = AuthConfig.getAuthorizeUrl(
+      codeChallenge: codeChallenge,
+      state: state,
+    );
+    Logger.info('[AUTH] Authorization URL', data: {'url': url});
+    return url;
+  }
+}

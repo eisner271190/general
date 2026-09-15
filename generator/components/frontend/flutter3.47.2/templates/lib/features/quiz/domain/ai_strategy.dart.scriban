@@ -1,0 +1,6 @@
+﻿import 'question.dart';
+import 'quiz_generation_config.dart';
+
+abstract class AIStrategy {
+  Future<List<Question>> generateQuestions(QuizGenerationConfig config);
+}

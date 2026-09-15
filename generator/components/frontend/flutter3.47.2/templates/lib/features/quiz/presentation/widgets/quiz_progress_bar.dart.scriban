@@ -1,0 +1,39 @@
+﻿import 'package:flutter/material.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/constants/app_spacing.dart';
+
+/// Widget de barra de progreso del quiz
+/// Responsabilidad: Mostrar progreso y tiempo restante
+class QuizProgressBar extends StatelessWidget {
+  final int currentIndex;
+  final int totalQuestions;
+  final int? remainingSeconds;
+  final int? timeLimit;
+
+  const QuizProgressBar({
+    super.key,
+    required this.currentIndex,
+    required this.totalQuestions,
+    this.remainingSeconds,
+    this.timeLimit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.small),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '${AppLocalizations.of(context)!.questionLabel} ${currentIndex + 1} ${AppLocalizations.of(context)!.ofPreposition} $totalQuestions',
+          ),
+          if (timeLimit != null && remainingSeconds != null)
+            Text(
+              '${AppLocalizations.of(context)!.timeRemaining} ${remainingSeconds}s',
+            ),
+        ],
+      ),
+    );
+  }
+}

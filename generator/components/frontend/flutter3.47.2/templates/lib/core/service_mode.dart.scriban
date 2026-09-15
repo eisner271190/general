@@ -1,0 +1,18 @@
+﻿enum ServiceMode {
+  none,
+  mock,
+  real;
+
+  static ServiceMode fromString(String? value) {
+    switch (value?.toUpperCase()) {
+      case 'MOCK':
+        return ServiceMode.mock;
+      case 'REAL':
+        return ServiceMode.real;
+      case 'NONE':
+        return ServiceMode.none;
+      default:
+        return ServiceMode.none;
+    }
+  }
+}

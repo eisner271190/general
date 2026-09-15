@@ -1,0 +1,34 @@
+﻿import 'package:{{ FRONTEND_NAME }}/features/quiz/application/quiz_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/features/history/application/history_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+
+/// Caso de uso para iniciar un quiz
+/// Responsabilidad: Orquestar el proceso de creaciÃ³n de un quiz
+class StartQuizUseCase {
+  final QuizProvider quizProvider;
+  final HistoryProvider historyProvider;
+
+  StartQuizUseCase({required this.quizProvider, required this.historyProvider});
+
+  /// Valida si se puede crear un quiz
+  bool canStart() {
+    Logger.info('[USE_CASE] Checking if quiz can be started');
+    return true;
+    //return subscriptionService.canCreateQuiz();
+  }
+
+  /// Inicia el quiz con el tema especificado
+  Future<void> execute(String topic) async {
+    Logger.info('[USE_CASE] Starting quiz', data: {'topic': topic});
+
+    quizProvider.topic = topic;
+    historyProvider.addTopic(topic);
+
+    await quizProvider.startQuiz();
+
+    Logger.info(
+      '[USE_CASE] Quiz started successfully',
+      data: {'questionCount': quizProvider.questions.length},
+    );
+  }
+}

@@ -1,0 +1,49 @@
+﻿import 'dart:async';
+import 'package:flutter/material.dart';
+
+/// Gestor de temporizador para preguntas
+/// Responsabilidad: Gestionar countdown por pregunta
+class QuizTimer extends ChangeNotifier {
+  Timer? _timer;
+  int _remainingSeconds = 0;
+  int? _timeLimit;
+  VoidCallback? _onTimeout;
+
+  int get remainingSeconds => _remainingSeconds;
+  bool get isActive => _timer?.isActive ?? false;
+
+  void start(int? timeLimit, VoidCallback onTimeout) {
+    _timeLimit = timeLimit;
+    _onTimeout = onTimeout;
+    reset();
+  }
+
+  void reset() {
+    _timer?.cancel();
+
+    if (_timeLimit == null) return;
+
+    _remainingSeconds = _timeLimit!;
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      _remainingSeconds--;
+
+      if (_remainingSeconds <= 0) {
+        t.cancel();
+        _onTimeout?.call();
+      }
+
+      notifyListeners();
+    });
+  }
+
+  void stop() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  @override
+  void dispose() {
+    stop();
+    super.dispose();
+  }
+}

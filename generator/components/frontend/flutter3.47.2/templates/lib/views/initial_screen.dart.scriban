@@ -1,0 +1,48 @@
+﻿import 'package:flutter/material.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/constants/app_spacing.dart';
+import 'widgets/subscription_status_card.dart';
+import 'widgets/history_drawer.dart';
+import 'widgets/initial_screen_actions.dart';
+import 'widgets/quiz_creation_section.dart';
+
+/// Pantalla inicial para crear un quiz
+/// Responsabilidad: UI de configuraciÃ³n inicial del quiz
+class InitialScreen extends StatefulWidget {
+  const InitialScreen({super.key});
+
+  @override
+  State<InitialScreen> createState() => _InitialScreenState();
+}
+
+class _InitialScreenState extends State<InitialScreen> {
+  final _topicController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.appTitle),
+        actions: const [InitialScreenActions()],
+      ),
+      drawer: HistoryDrawer(topicController: _topicController),
+      body: Center(
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xxlarge),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SubscriptionStatusCard(),
+                  QuizCreationSection(topicController: _topicController),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

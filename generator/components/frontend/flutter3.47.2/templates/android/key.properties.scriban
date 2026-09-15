@@ -1,0 +1,4 @@
+﻿storePassword=Epc1527();
+keyPassword=Epc1527();
+keyAlias=upload
+storeFile=upload-keystore.jks

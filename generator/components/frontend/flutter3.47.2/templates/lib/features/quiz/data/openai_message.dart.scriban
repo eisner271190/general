@@ -1,0 +1,13 @@
+﻿import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'openai_message.freezed.dart';
+part 'openai_message.g.dart';
+
+@freezed
+abstract class OpenAiMessage with _$OpenAiMessage {
+  const factory OpenAiMessage({required String role, required String content}) =
+      _OpenAiMessage;
+
+  factory OpenAiMessage.fromJson(Map<String, dynamic> json) =>
+      _$OpenAiMessageFromJson(json);
+}

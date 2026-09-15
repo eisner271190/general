@@ -1,0 +1,52 @@
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:{{ FRONTEND_NAME }}/features/history/application/history_provider.dart';
+import 'package:{{ FRONTEND_NAME }}/l10n/app_localizations.dart';
+
+/// Widget del drawer con historial de temas
+/// Responsabilidad: UI del menÃº lateral con historial
+class HistoryDrawer extends StatelessWidget {
+  final TextEditingController topicController;
+
+  const HistoryDrawer({super.key, required this.topicController});
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: Column(
+        children: [
+          DrawerHeader(
+            child: Text(
+              AppLocalizations.of(context)!.drawerHeader,
+              style: const TextStyle(fontSize: 24),
+            ),
+          ),
+          Expanded(
+            child: Consumer<HistoryProvider>(
+              builder: (context, history, child) {
+                return ListView.builder(
+                  itemCount: history.topics.length,
+                  itemBuilder: (context, index) {
+                    final topic = history.topics[index];
+                    return ListTile(
+                      title: Text(topic.name),
+                      subtitle: Text(topic.lastUsed.toLocal().toString()),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () => history.removeTopic(topic.name),
+                      ),
+                      onTap: () {
+                        topicController.text = topic.name;
+                        Navigator.of(context).pop();
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

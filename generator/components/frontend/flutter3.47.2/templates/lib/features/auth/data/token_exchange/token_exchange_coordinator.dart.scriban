@@ -1,0 +1,54 @@
+﻿import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import 'i_token_exchanger.dart';
+import '../storage/i_token_storage.dart';
+import '../session/i_session_manager.dart';
+import '../../domain/auth_user.dart';
+
+class TokenExchangeCoordinator {
+  final ITokenStorage _tokenStorage;
+  final ITokenExchanger _tokenExchanger;
+  final ISessionManager _sessionManager;
+
+  TokenExchangeCoordinator({
+    required ITokenStorage tokenStorage,
+    required ITokenExchanger tokenExchanger,
+    required ISessionManager sessionManager,
+  }) : _tokenStorage = tokenStorage,
+       _tokenExchanger = tokenExchanger,
+       _sessionManager = sessionManager;
+
+  Future<AuthUser> execute(String code, String codeVerifier) async {
+    try {
+      _logExchangingCodeForTokens();
+      final authTokens = await _tokenExchanger.exchangeCodeForTokens(
+        code: code,
+        codeVerifier: codeVerifier,
+      );
+      await _tokenStorage.saveTokens(authTokens);
+      final user = await _sessionManager.createSessionFromToken(
+        authTokens.idToken,
+      );
+      _logTokensSavedAndUserAuthenticated();
+      return user;
+    } catch (e, stackTrace) {
+      _logExchangeError(e, stackTrace);
+      rethrow;
+    }
+  }
+
+  void _logExchangingCodeForTokens() {
+    Logger.info('[AUTH] Exchanging code for tokens');
+  }
+
+  void _logTokensSavedAndUserAuthenticated() {
+    Logger.info('[AUTH] Tokens saved and user authenticated');
+  }
+
+  void _logExchangeError(Object error, StackTrace stackTrace) {
+    Logger.error(
+      '[AUTH] Error in exchange',
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+}

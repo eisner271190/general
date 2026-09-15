@@ -1,0 +1,62 @@
+﻿import 'package:flutter/material.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/constants/app_spacing.dart';
+import 'email_form_field.dart';
+import 'password_form_field.dart';
+import 'login_submit_button.dart';
+import 'mock_info_box.dart';
+
+/// Formulario de login mock para desarrollo
+/// Responsabilidad: ComposiciÃ³n de form con campos extraÃ­dos
+class LoginFormMock extends StatefulWidget {
+  final TextEditingController emailController;
+  final TextEditingController passwordController;
+  final GlobalKey<FormState> formKey;
+  final VoidCallback onSubmit;
+
+  const LoginFormMock({
+    super.key,
+    required this.emailController,
+    required this.passwordController,
+    required this.formKey,
+    required this.onSubmit,
+  });
+
+  @override
+  State<LoginFormMock> createState() => _LoginFormMockState();
+}
+
+class _LoginFormMockState extends State<LoginFormMock> {
+  bool _isLoading = false;
+
+  void _handleSubmit() {
+    setState(() => _isLoading = true);
+    widget.onSubmit();
+    setState(() => _isLoading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xxlarge),
+        child: Form(
+          key: widget.formKey,
+          child: Column(
+            children: [
+              EmailFormField(controller: widget.emailController),
+              const SizedBox(height: AppSpacing.large),
+              PasswordFormField(controller: widget.passwordController),
+              const SizedBox(height: AppSpacing.xxlarge),
+              LoginSubmitButton(
+                onPressed: _handleSubmit,
+                isLoading: _isLoading,
+              ),
+              const SizedBox(height: AppSpacing.large),
+              const MockInfoBox(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

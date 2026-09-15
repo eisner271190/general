@@ -1,0 +1,96 @@
+﻿import 'dart:async';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import '../domain/auth_user.dart';
+import '../domain/i_auth_service.dart';
+import 'auth_dependencies.dart';
+import 'hosted_ui/hosted_ui_initiator.dart';
+import 'redirect/i_redirect_handler.dart';
+import 'session/i_session_manager.dart';
+import 'logout/i_logout_executor.dart';
+import 'token_exchange/token_exchange_coordinator.dart';
+
+class AuthService implements IAuthService {
+  static final AuthService _instance = AuthService._internal();
+  factory AuthService() => _instance;
+
+  AuthService._internal() {
+    final deps = AuthDependencies.create();
+    _hostedUIInitiator = deps.hostedUIInitiator;
+    _redirectHandler = deps.redirectHandler;
+    _sessionManager = deps.sessionManager;
+    _logoutExecutor = deps.logoutExecutor;
+    _tokenExchangeCoordinator = deps.tokenExchangeCoordinator;
+  }
+
+  final _authStateController = StreamController<AuthUser?>.broadcast();
+
+  late final HostedUIInitiator _hostedUIInitiator;
+  late final IRedirectHandler _redirectHandler;
+  late final ISessionManager _sessionManager;
+  late final ILogoutExecutor _logoutExecutor;
+  late final TokenExchangeCoordinator _tokenExchangeCoordinator;
+
+  AuthUser? _currentUser;
+
+  @override
+  Stream<AuthUser?> get authStateChanges => _authStateController.stream;
+
+  @override
+  AuthUser? get currentUser => _currentUser;
+
+  @override
+  Future<bool> signInWithCredentials(String email, String password) async {
+    throw UnsupportedError('Solo en modo MOCK');
+  }
+
+  @override
+  Future<bool> signInWithHostedUI() async {
+    return await _hostedUIInitiator.initiateLogin();
+  }
+
+  @override
+  Future<void> handleRedirect(Uri redirectUri) async {
+    try {
+      final params = await _redirectHandler.validateAndExtractParams(
+        redirectUri,
+      );
+      final user = await _tokenExchangeCoordinator.execute(
+        params.code,
+        params.codeVerifier,
+      );
+      _notifyAuthStateChange(user);
+    } catch (e, stackTrace) {
+      Logger.error(
+        '[AUTH] Error en redirect',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
+  }
+
+  void _notifyAuthStateChange(AuthUser? user) {
+    _currentUser = user;
+    _authStateController.add(user);
+  }
+
+  @override
+  Future<void> signOut() async {
+    await _logoutExecutor.executeLogout();
+    await _sessionManager.clearSession();
+    _notifyAuthStateChange(null);
+  }
+
+  @override
+  Future<void> restoreSession() async {
+    final user = await _sessionManager.restoreSession();
+    if (user != null) {
+      _notifyAuthStateChange(user);
+    }
+  }
+
+  @override
+  void dispose() {
+    _authStateController.close();
+  }
+}
