@@ -2,11 +2,11 @@
 
 ## Objetivo
 
-Producir localmente un Android App Bundle (`.aab`) de `quizsmart`, firmado con una clave de carga privada y apto para publicar en Google Play.
+Producir localmente un Android App Bundle (`.aab`) de la aplicación Flutter configurada, firmado con una clave de carga privada y apto para publicar en Google Play.
 
 ## Estado actual
 
-- El frontend está en `projects/com.quizsmart.app/frontend/quizsmart` y usa Flutter.
+- El generador crea los frontends Flutter bajo `projects/{applicationId}/frontend/{frontendName}`.
 - La plantilla `generator/components/frontend/flutter3.47.2/templates/android/app/build.gradle.kts.scriban` ya carga `android/key.properties`, exige `storeFile` y asigna la firma `release`.
 - El `.gitignore` del frontend excluye artefactos Android, pero no excluye explícitamente `android/key.properties` ni archivos `.jks`.
 - No hay constancia de un `key.properties`, de un almacén de claves ni de una compilación firmada comprobada.
@@ -14,6 +14,7 @@ Producir localmente un Android App Bundle (`.aab`) de `quizsmart`, firmado con u
 - Play App Signing se usará en la primera publicación.
 - Los secretos de firma se crearán para todo frontend Flutter generado, pues Android es una plataforma principal de las aplicaciones.
 - Se aprueba el prefijo `/epc/{applicationId}/android-signing/` y el cifrado con la clave KMS administrada de Secrets Manager.
+- Cada aplicación se genera localmente como una aplicación nueva; su upload key se crea antes de la primera carga en Google Play.
 - El pipeline pertenece a la siguiente tarea prioritaria y queda fuera de este plan.
 
 ## Investigación
@@ -59,6 +60,7 @@ Referencia: https://docs.aws.amazon.com/secretsmanager/latest/userguide/create_s
 
 6. Preparar la entrega a Google Play.
    - Confirmar que `applicationId` es definitivo antes de la primera carga.
+   - Crear la aplicación en Google Play Console después de generar localmente el AAB firmado con su upload key nueva.
    - Subir el AAB al canal de pruebas interno con Play App Signing y registrar el resultado de la validación.
 
 ## Archivos a crear
@@ -112,4 +114,3 @@ Referencia: https://docs.aws.amazon.com/secretsmanager/latest/userguide/create_s
 
 ## Preguntas de implementación
 
-1. ¿El generador debe crear secretos al generar cualquier frontend Flutter, o solo cuando `platforms` incluya `android`?
