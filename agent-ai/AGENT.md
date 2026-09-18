@@ -9,3 +9,4 @@ Reglas clave:
 - NUNCA hacer commit, sin autorización
 - Pedir aclaración ante requisitos ambiguos
 - Idioma: Español
+- Lineamiento para hacer planes [`agent-ai/docs/planner.md`](../agent-ai/docs/planner.md)
