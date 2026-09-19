@@ -72,6 +72,7 @@ internal sealed class AndroidSigningKeyGenerator : IAndroidSigningKeyGenerator
         process.StandardInput.WriteLine(storePassword);
         process.StandardInput.WriteLine(storePassword);
         process.StandardInput.WriteLine(keyPassword);
+        process.StandardInput.WriteLine(keyPassword);
         process.StandardInput.Close();
         process.WaitForExit();
 
