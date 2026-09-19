@@ -18,3 +18,7 @@ generator/target/generation-plan.json
 # Temporary files
 *.tmp
 *.log
+
+# Android signing properties (may contain secrets)
+**/android/key.properties
+**/key.properties

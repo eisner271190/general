@@ -17,4 +17,8 @@ internal static class ErrorCodes
     public const string EmptyJson = "GEN013";
     public const string NoInputConfigurations = "GEN014";
     public const string InvalidTemplate = "GEN015";
+    public const string MissingAwsRegion = "GEN016";
+    public const string SigningKeyCreationFailed = "GEN017";
+    public const string SigningSecretTooLarge = "GEN018";
+    public const string SigningSecretPersistenceFailed = "GEN019";
 }

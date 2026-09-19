@@ -1,6 +1,8 @@
 using Generator.Configuration;
 using Generator.Messages;
+using Generator.Models;
 using Generator.Validation;
+using System.Linq;
 
 namespace Generator.Services;
 
@@ -8,9 +10,11 @@ internal sealed class GeneratorApplication(
     string workingDirectory,
     GenerationPlanBuilder planBuilder,
     IJsonFileReader jsonReader,
-    IPathValidator pathValidator)
+    IPathValidator pathValidator,
+    IAndroidSigningKeyGenerator signingKeyGenerator,
+    ISecretsManager? secretsManager)
 {
-    public void Run()
+    public async Task RunAsync()
     {
         var executionTimer = System.Diagnostics.Stopwatch.StartNew();
         var targetDirectory = Path.Combine(workingDirectory, GeneratorConstants.TargetDirectoryName);
@@ -29,7 +33,7 @@ internal sealed class GeneratorApplication(
         for (var i = 0; i < totalCount; i++)
         {
             var inputPath = inputPaths[i];
-            Generate(inputPath, i + 1, totalCount);
+            await GenerateAsync(inputPath, i + 1, totalCount);
             successCount++;
         }
 
@@ -54,10 +58,11 @@ internal sealed class GeneratorApplication(
             .ToList();
     }
 
-    private void Generate(string inputPath, int index, int total)
+    private async Task GenerateAsync(string inputPath, int index, int total)
     {
         GeneratorLogger.Info($"({index}/{total}) Procesando: {Path.GetFileName(inputPath)}");
         var plan = planBuilder.Build(inputPath, requestedEnvironment: null);
+        var configuration = jsonReader.Read<EpcConfiguration>(inputPath);
         var workspaceDirectory = Directory.GetParent(workingDirectory)?.FullName
             ?? throw new DirectoryNotFoundException($"No se encontro la carpeta contenedora de '{workingDirectory}'.");
         var outputDirectory = Path.Combine(workspaceDirectory, GeneratorConstants.ProjectsDirectoryName, plan.ApplicationId);
@@ -66,5 +71,132 @@ internal sealed class GeneratorApplication(
         var planExecutor = new PlanExecutor(outputDirectory, workingDirectory, jsonReader, pathValidator);
         planExecutor.Execute(plan);
         GeneratorLogger.Info($"Plan generado: {Path.Combine(outputDirectory, GeneratorConstants.GenerationPlanFileName)}");
+
+        if (configuration.Frontend?.Framework.StartsWith("flutter", StringComparison.OrdinalIgnoreCase) == true)
+            await CreateAndroidSigningSecretsAsync(plan.ApplicationId, outputDirectory);
+    }
+
+    private async Task CreateAndroidSigningSecretsAsync(string applicationId, string outputDirectory)
+    {
+        var region = Environment.GetEnvironmentVariable(GeneratorConstants.AwsRegionVariable);
+        if (string.IsNullOrWhiteSpace(region) || secretsManager is null)
+            throw new GeneratorException(ErrorCodes.MissingAwsRegion, GeneratorMessages.MissingAwsRegion(GeneratorConstants.AwsRegionVariable));
+
+        var prefix = $"{GeneratorConstants.AndroidSigningSecretPrefix}/{applicationId}/{GeneratorConstants.AndroidSigningSecretDirectory}";
+        var references = new AndroidSigningSecretReferences(
+            $"{prefix}/keystore",
+            $"{prefix}/store-password",
+            $"{prefix}/key-password",
+            $"{prefix}/key-alias");
+        
+
+        AndroidSigningSecrets? secrets = null;
+
+        try
+        {
+            GeneratorLogger.Info($"Intentando recuperar secretos existentes para '{applicationId}' en region {region}");
+            secrets = await secretsManager.GetAsync(references, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            var caused = ex.InnerException is not null ? $" Caused by: {ex.InnerException.Message}" : string.Empty;
+            GeneratorLogger.Error($"Error al recuperar secretos para '{applicationId}': {ex.Message}{caused}");
+            // proceed to generation flow
+        }
+
+        if (secrets is not null)
+        {
+            GeneratorLogger.Info($"Se encontraron secretos existentes para '{applicationId}', asignando variables de entorno");
+            Environment.SetEnvironmentVariable(GeneratorConstants.AndroidKeyAliasVariableFor(applicationId), secrets.KeyAlias, EnvironmentVariableTarget.User);
+            Environment.SetEnvironmentVariable(GeneratorConstants.AndroidStorePasswordVariableFor(applicationId), secrets.StorePassword, EnvironmentVariableTarget.User);
+            Environment.SetEnvironmentVariable(GeneratorConstants.AndroidKeyPasswordVariableFor(applicationId), secrets.KeyPassword, EnvironmentVariableTarget.User);
+
+            // Write keystore bytes to a temp file and expose its path via env var
+            var keystoreTemp = Path.Combine(Path.GetTempPath(), "epc-upload-keystore", applicationId.Replace('.', '-'));
+            Directory.CreateDirectory(keystoreTemp);
+            var keystorePath = Path.Combine(keystoreTemp, "upload-keystore.jks");
+            await File.WriteAllBytesAsync(keystorePath, secrets.KeystoreBytes);
+            Environment.SetEnvironmentVariable(GeneratorConstants.AndroidKeystoreFileVariableFor(applicationId), keystorePath, EnvironmentVariableTarget.User);
+            GeneratorLogger.Info($"Keystore escrito temporalmente en: {keystorePath}");
+            // Try to copy keystore and write key.properties into generated android project
+            try
+            {
+                var androidDir = Directory.EnumerateDirectories(outputDirectory, "android", SearchOption.AllDirectories).FirstOrDefault();
+                if (!string.IsNullOrEmpty(androidDir))
+                {
+                    var destKeystore = Path.Combine(androidDir, "upload-keystore.jks");
+                    File.Copy(keystorePath, destKeystore, overwrite: true);
+                    var keyProps = Path.Combine(androidDir, "key.properties");
+                    var content = $"storePassword={secrets.StorePassword}\nkeyPassword={secrets.KeyPassword}\nkeyAlias={secrets.KeyAlias}\nstoreFile=upload-keystore.jks";
+                    await File.WriteAllTextAsync(keyProps, content);
+                    GeneratorLogger.Info($"Wrote key.properties to {keyProps}");
+                }
+            }
+            catch (Exception ex)
+            {
+                GeneratorLogger.Error($"No se pudo escribir key.properties en output: {ex.Message}");
+            }
+            return;
+        }
+
+        // No existing secrets found -> generate new, set env vars and store
+        try
+        {
+            GeneratorLogger.Info($"No se encontraron secretos; generando nuevos para '{applicationId}'");
+            secrets = signingKeyGenerator.Generate(applicationId);
+            GeneratorLogger.Info($"Keystore temporal generado, tamaño={secrets.KeystoreBytes.Length} bytes");
+        }
+        catch (Exception ex)
+        {
+            var caused = ex.InnerException is not null ? $" Caused by: {ex.InnerException.Message}" : string.Empty;
+            GeneratorLogger.Error($"Error al generar upload keystore para '{applicationId}': {ex.Message}{caused}");
+            throw new GeneratorException(ErrorCodes.SigningKeyCreationFailed, GeneratorMessages.SigningKeyCreationFailed(applicationId));
+        }
+
+        if (secrets.KeystoreBytes.Length > GeneratorConstants.MaximumSecretSizeInBytes)
+            throw new GeneratorException(ErrorCodes.SigningSecretTooLarge, GeneratorMessages.SigningSecretTooLarge(GeneratorConstants.MaximumSecretSizeInBytes));
+
+        try
+        {
+            GeneratorLogger.Info($"Almacenando secretos de firma en Secrets Manager para '{applicationId}' (region={region})");
+            await secretsManager.StoreAsync(references, secrets, CancellationToken.None);
+            GeneratorLogger.Info($"Secretos almacenados con éxito para '{applicationId}'");
+        }
+        catch (Exception ex)
+        {
+            var caused = ex.InnerException is not null ? $" Caused by: {ex.InnerException.Message}" : string.Empty;
+            GeneratorLogger.Error($"Error al almacenar secretos para '{applicationId}': {ex.Message}{caused}");
+            throw new GeneratorException(ErrorCodes.SigningSecretPersistenceFailed, GeneratorMessages.SigningSecretPersistenceFailed(applicationId));
+        }
+
+        // Set env vars and write keystore file for the new secrets
+        Environment.SetEnvironmentVariable(GeneratorConstants.AndroidKeyAliasVariableFor(applicationId), secrets.KeyAlias, EnvironmentVariableTarget.User);
+        Environment.SetEnvironmentVariable(GeneratorConstants.AndroidStorePasswordVariableFor(applicationId), secrets.StorePassword, EnvironmentVariableTarget.User);
+        Environment.SetEnvironmentVariable(GeneratorConstants.AndroidKeyPasswordVariableFor(applicationId), secrets.KeyPassword, EnvironmentVariableTarget.User);
+        var tempDir = Path.Combine(Path.GetTempPath(), "epc-upload-keystore", applicationId.Replace('.', '-'));
+        Directory.CreateDirectory(tempDir);
+        var tempKeystorePath = Path.Combine(tempDir, "upload-keystore.jks");
+        await File.WriteAllBytesAsync(tempKeystorePath, secrets.KeystoreBytes);
+        Environment.SetEnvironmentVariable(GeneratorConstants.AndroidKeystoreFileVariableFor(applicationId), tempKeystorePath, EnvironmentVariableTarget.User);
+        GeneratorLogger.Info($"Keystore escrito temporalmente en: {tempKeystorePath}");
+
+        // Try to copy keystore and write key.properties into generated android project
+        try
+        {
+            var androidDir = Directory.EnumerateDirectories(outputDirectory, "android", SearchOption.AllDirectories).FirstOrDefault();
+            if (!string.IsNullOrEmpty(androidDir))
+            {
+                var destKeystore = Path.Combine(androidDir, "upload-keystore.jks");
+                File.Copy(tempKeystorePath, destKeystore, overwrite: true);
+                var keyProps = Path.Combine(androidDir, "key.properties");
+                var content = $"storePassword={secrets.StorePassword}\nkeyPassword={secrets.KeyPassword}\nkeyAlias={secrets.KeyAlias}\nstoreFile=upload-keystore.jks";
+                await File.WriteAllTextAsync(keyProps, content);
+                GeneratorLogger.Info($"Wrote key.properties to {keyProps}");
+            }
+        }
+        catch (Exception ex)
+        {
+            GeneratorLogger.Error($"No se pudo escribir key.properties en output: {ex.Message}");
+        }
     }
 }

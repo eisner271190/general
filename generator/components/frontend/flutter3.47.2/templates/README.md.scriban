@@ -1,4 +1,4 @@
-﻿# quizsmart
+﻿# {{ FRONTEND_NAME }}
 
 A new Flutter project.
 
@@ -15,3 +15,10 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## Android signing
+
+The generator stores the upload keystore and its credentials in AWS Secrets Manager.
+Before a local release build, retrieve them into temporary files, create
+`android/key.properties`, run `flutter build appbundle`, then delete the temporary files.
+The signed bundle is created at `build/app/outputs/bundle/release/app.aab`.

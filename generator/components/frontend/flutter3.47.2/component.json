@@ -269,10 +269,6 @@
                       "value":  "templates/android/gradlew.bat.scriban"
                   },
                   {
-                      "key":  "frontend/{{ FRONTEND_NAME }}/android/key.properties",
-                      "value":  "templates/android/key.properties.scriban"
-                  },
-                  {
                       "key":  "frontend/{{ FRONTEND_NAME }}/android/local.properties",
                       "value":  "templates/android/local.properties.scriban"
                   },

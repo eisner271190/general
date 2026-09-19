@@ -20,4 +20,8 @@ internal static class GeneratorMessages
     public static string MissingComponentFile(string path) => $"No existe el archivo fuente '{path}' dentro del componente.";
     public static string EmptyJson(string path) => $"El JSON '{path}' esta vacio.";
     public static string NoInputConfigurations(string path) => $"No se encontraron configuraciones JSON en '{path}'.";
+    public static string MissingAwsRegion(string variableName) => $"La variable de entorno '{variableName}' es obligatoria para crear secretos de firma.";
+    public static string SigningKeyCreationFailed(string applicationId) => $"No se pudo crear el upload keystore para '{applicationId}'.";
+    public static string SigningSecretTooLarge(int maximumSize) => $"El upload keystore supera el limite de {maximumSize} bytes de AWS Secrets Manager.";
+    public static string SigningSecretPersistenceFailed(string applicationId) => $"No se pudieron almacenar los secretos de firma para '{applicationId}'.";
 }
