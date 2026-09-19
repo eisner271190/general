@@ -1287,6 +1287,14 @@
                   {
                       "key":  "frontend/{{ FRONTEND_NAME }}/windows/runner/win32_window.h",
                       "value":  "templates/windows/runner/win32_window.h.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/buildspec.yml",
+                      "value":  "templates/buildspec.yml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/codepipeline.yml",
+                      "value":  "templates/codepipeline.yml.scriban"
                   }
               ],
     "defaultFiles":  [

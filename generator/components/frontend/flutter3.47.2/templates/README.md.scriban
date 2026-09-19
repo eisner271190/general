@@ -22,3 +22,47 @@ The generator stores the upload keystore and its credentials in AWS Secrets Mana
 Before a local release build, retrieve them into temporary files, create
 `android/key.properties`, run `flutter build appbundle`, then delete the temporary files.
 The signed bundle is created at `build/app/outputs/bundle/release/app.aab`.
+
+## CI/CD Pipeline (AWS CodePipeline)
+
+This project includes an automated pipeline to build the signed AAB on every push.
+
+### Pipeline components
+
+- **Source:** GitHub repository (webhook on push to main branch)
+- **Build:** AWS CodeBuild with Flutter SDK
+- **Artifact:** Signed AAB stored in S3
+
+### Required AWS permissions
+
+The CodeBuild IAM role needs access to:
+
+```
+secretsmanager:GetSecretValue
+Resource: arn:aws:secretsmanager:{region}:{account}:secret:/epc/{applicationId}/android-signing/*
+```
+
+### Required variables
+
+| Variable | Description |
+|----------|-------------|
+| `APPLICATION_ID` | Application identifier (e.g., `com.quizsmart.app`) |
+| `AWS_REGION` | AWS region for Secrets Manager |
+
+### Setup
+
+1. Deploy the CloudFormation template: `aws cloudformation deploy --template-file codepipeline.yml --stack-name {app}-pipeline --parameter-overrides GitHubOwner={owner} GitHubRepo={repo} GitHubToken={token}`
+2. The pipeline triggers automatically on push to the main branch.
+3. The signed AAB is available as a build artifact in the pipeline.
+
+### Local build
+
+```bash
+# Retrieve secrets from AWS Secrets Manager
+SECRET_PREFIX="/epc/{applicationId}/android-signing"
+aws secretsmanager get-secret-value --secret-id "$SECRET_PREFIX/keystore" --query SecretBinary --output text | base64 --decode > android/upload-keystore.jks
+# Create android/key.properties with storePassword, keyPassword, keyAlias, storeFile
+flutter build appbundle --release
+# Clean up
+rm -f android/key.properties android/upload-keystore.jks
+```

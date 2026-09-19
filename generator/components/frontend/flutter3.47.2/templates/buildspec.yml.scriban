@@ -1,0 +1,77 @@
+version: 0.2
+
+env:
+  variables:
+    APPLICATION_ID: "{{ APPLICATION_ID }}"
+    AWS_REGION: "{{ AWS_REGION }}"
+    FLUTTER_VERSION: "3.47.2"
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto17
+    commands:
+      - echo "Installing Flutter SDK"
+      - git clone https://github.com/flutter/flutter.git -b $FLUTTER_VERSION --depth 1 $CODEBUILD_SRC_DIR/flutter
+      - export PATH="$CODEBUILD_SRC_DIR/flutter/bin:$PATH"
+      - flutter --version
+      - flutter config --no-analytics
+      - flutter doctor
+
+  pre_build:
+    commands:
+      - echo "Retrieving signing secrets from AWS Secrets Manager"
+      - SECRET_PREFIX="/epc/$APPLICATION_ID/android-signing"
+      -
+      - KEYSTORE_B64=$(aws secretsmanager get-secret-value --secret-id "$SECRET_PREFIX/keystore" --query SecretBinary --output text)
+      - echo "$KEYSTORE_B64" | base64 --decode > android/upload-keystore.jks
+      -
+      - STORE_PASSWORD=$(aws secretsmanager get-secret-value --secret-id "$SECRET_PREFIX/store-password" --query SecretString --output text)
+      - KEY_PASSWORD=$(aws secretsmanager get-secret-value --secret-id "$SECRET_PREFIX/key-password" --query SecretString --output text)
+      - KEY_ALIAS=$(aws secretsmanager get-secret-value --secret-id "$SECRET_PREFIX/key-alias" --query SecretString --output text)
+      -
+      - cat > android/key.properties <<EOF
+      - storePassword=$STORE_PASSWORD
+      - keyPassword=$KEY_PASSWORD
+      - keyAlias=$KEY_ALIAS
+      - storeFile=upload-keystore.jks
+      - EOF
+      -
+      - echo "Signing configuration ready"
+
+  build:
+    commands:
+      - echo "Cleaning previous build"
+      - flutter clean
+      - echo "Fetching dependencies"
+      - flutter pub get
+      - echo "Building signed AAB"
+      - flutter build appbundle --release
+      - echo "Verifying AAB output"
+      - AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
+      - |
+        if [ ! -f "$AAB_PATH" ]; then
+          echo "ERROR: AAB not found at $AAB_PATH"
+          exit 1
+        fi
+      - AAB_SIZE=$(stat -f%z "$AAB_PATH" 2>/dev/null || stat -c%s "$AAB_PATH")
+      - echo "AAB size: $AAB_SIZE bytes"
+      - |
+        if [ "$AAB_SIZE" -eq 0 ]; then
+          echo "ERROR: AAB file is empty"
+          exit 1
+        fi
+      - echo "Build completed successfully"
+
+  post_build:
+    commands:
+      - echo "Cleaning up signing files"
+      - rm -f android/key.properties
+      - rm -f android/upload-keystore.jks
+      - echo "Cleanup completed"
+
+artifacts:
+  files:
+    - build/app/outputs/bundle/release/app-release.aab
+  discard-paths: no
+  name: $APPLICATION_ID-aab-$CODEBUILD_BUILD_ID
