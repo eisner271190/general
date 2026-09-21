@@ -21,4 +21,5 @@ internal static class ErrorCodes
     public const string SigningKeyCreationFailed = "GEN017";
     public const string SigningSecretTooLarge = "GEN018";
     public const string SigningSecretPersistenceFailed = "GEN019";
+    public const string PipelineDeploymentFailed = "GEN020";
 }

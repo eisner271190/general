@@ -12,7 +12,10 @@
       "macos",
       "linux"
     ],
-    "version": "1.0.0+1"
+    "version": "1.0.0+1",
+    "sourceProvider": "codecommit",
+    "gitHubRepo": "quizsmart",
+    "gitHubBranch": "main"
   },
   "environments": [
     {

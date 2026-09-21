@@ -25,7 +25,8 @@ try
     var signingKeyGenerator = new AndroidSigningKeyGenerator();
     var region = Environment.GetEnvironmentVariable(GeneratorConstants.AwsRegionVariable);
     var secretsManager = string.IsNullOrWhiteSpace(region) ? null : new AwsSecretsManager(region);
-    var application = new GeneratorApplication(workingDirectory, planBuilder, jsonReader, pathValidator, signingKeyGenerator, secretsManager);
+    
+    var application = new GeneratorApplication(workingDirectory, planBuilder, jsonReader, pathValidator, signingKeyGenerator, secretsManager, null, null, region);
     await application.RunAsync();
     return 0;
 }
@@ -35,4 +36,3 @@ catch (Exception exception)
     GeneratorLogger.Error($"{code}: {exception.Message}");
     return 1;
 }
-

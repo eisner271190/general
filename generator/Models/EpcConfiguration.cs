@@ -11,7 +11,11 @@ public sealed record FrontendConfiguration(
     string Name,
     string Framework,
     List<string>? Platforms = null,
-    string? Version = null);
+    string? Version = null,
+    string? SourceProvider = null,
+    string? GitHubOwner = null,
+    string? GitHubRepo = null,
+    string? GitHubBranch = null);
 
 public sealed record EnvironmentConfiguration(string Name, Dictionary<string, string> Variables);
 public sealed record MicroserviceConfiguration(string Name, string Backend, string Deploy, List<EntityConfiguration> Entities, List<EndpointConfiguration> Endpoints, int Port)

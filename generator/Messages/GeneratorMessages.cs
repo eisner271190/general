@@ -24,4 +24,5 @@ internal static class GeneratorMessages
     public static string SigningKeyCreationFailed(string applicationId) => $"No se pudo crear el upload keystore para '{applicationId}'.";
     public static string SigningSecretTooLarge(int maximumSize) => $"El upload keystore supera el limite de {maximumSize} bytes de AWS Secrets Manager.";
     public static string SigningSecretPersistenceFailed(string applicationId) => $"No se pudieron almacenar los secretos de firma para '{applicationId}'.";
+    public static string PipelineDeploymentFailed(string applicationId) => $"No se pudo desplegar el pipeline para '{applicationId}'.";
 }

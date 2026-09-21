@@ -3,75 +3,41 @@ version: 0.2
 env:
   variables:
     APPLICATION_ID: "{{ APPLICATION_ID }}"
-    AWS_REGION: "{{ AWS_REGION }}"
-    FLUTTER_VERSION: "3.47.2"
 
 phases:
-  install:
-    runtime-versions:
-      java: corretto17
-    commands:
-      - echo "Installing Flutter SDK"
-      - git clone https://github.com/flutter/flutter.git -b $FLUTTER_VERSION --depth 1 $CODEBUILD_SRC_DIR/flutter
-      - export PATH="$CODEBUILD_SRC_DIR/flutter/bin:$PATH"
-      - flutter --version
-      - flutter config --no-analytics
-      - flutter doctor
-
   pre_build:
     commands:
-      - echo "Retrieving signing secrets from AWS Secrets Manager"
-      - SECRET_PREFIX="/epc/$APPLICATION_ID/android-signing"
-      -
-      - KEYSTORE_B64=$(aws secretsmanager get-secret-value --secret-id "$SECRET_PREFIX/keystore" --query SecretBinary --output text)
-      - echo "$KEYSTORE_B64" | base64 --decode > android/upload-keystore.jks
-      -
-      - STORE_PASSWORD=$(aws secretsmanager get-secret-value --secret-id "$SECRET_PREFIX/store-password" --query SecretString --output text)
-      - KEY_PASSWORD=$(aws secretsmanager get-secret-value --secret-id "$SECRET_PREFIX/key-password" --query SecretString --output text)
-      - KEY_ALIAS=$(aws secretsmanager get-secret-value --secret-id "$SECRET_PREFIX/key-alias" --query SecretString --output text)
-      -
-      - cat > android/key.properties <<EOF
-      - storePassword=$STORE_PASSWORD
-      - keyPassword=$KEY_PASSWORD
-      - keyAlias=$KEY_ALIAS
-      - storeFile=upload-keystore.jks
-      - EOF
-      -
-      - echo "Signing configuration ready"
+      # Fix git dubious ownership for Flutter SDK
+      - git config --global --add safe.directory /home/flutter/sdks/flutter
+      # Verify environment
+      - flutter --version
+      - java -version 2>&1
+      - echo "ANDROID_HOME=$ANDROID_HOME"
+      - echo "JAVA_HOME=$JAVA_HOME"
+      # Install AWS CLI
+      - pip install awscli 2>/dev/null || pip3 install awscli 2>/dev/null || (curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip && cd /tmp && unzip -q awscliv2.zip && ./aws/install 2>/dev/null)
+      - aws --version
+      # local.properties
+      - 'ANDROID_SDK="$ANDROID_HOME" && FLUTTER_SDK=$(which flutter | sed "s|/bin/flutter||") && printf "sdk.dir=%s\nflutter.sdk=%s\nflutter.buildMode=release\nflutter.versionName=1.0.0\nflutter.versionCode=1\n" "$ANDROID_SDK" "$FLUTTER_SDK" | tee "$CODEBUILD_SRC_DIR/frontend/{{ FRONTEND_NAME }}/android/local.properties" && echo "local.properties OK"'
+      # Keystore
+      - 'SECRET_PREFIX="/epc/$APPLICATION_ID/android-signing" && aws secretsmanager get-secret-value --secret-id "$SECRET_PREFIX/keystore" --query SecretBinary --output text | base64 --decode > "$CODEBUILD_SRC_DIR/frontend/{{ FRONTEND_NAME }}/android/upload-keystore.jks" && echo "Keystore OK: $(wc -c < "$CODEBUILD_SRC_DIR/frontend/{{ FRONTEND_NAME }}/android/upload-keystore.jks") bytes"'
+      # key.properties
+      - 'SECRET_PREFIX="/epc/$APPLICATION_ID/android-signing" && STORE_PW=$(aws secretsmanager get-secret-value --secret-id "$SECRET_PREFIX/store-password" --query SecretString --output text) && KEY_PW=$(aws secretsmanager get-secret-value --secret-id "$SECRET_PREFIX/key-password" --query SecretString --output text) && KEY_ALIAS=$(aws secretsmanager get-secret-value --secret-id "$SECRET_PREFIX/key-alias" --query SecretString --output text) && printf "storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=upload-keystore.jks\n" "$STORE_PW" "$KEY_PW" "$KEY_ALIAS" | tee "$CODEBUILD_SRC_DIR/frontend/{{ FRONTEND_NAME }}/android/key.properties" && echo "key.properties OK"'
 
   build:
     commands:
-      - echo "Cleaning previous build"
-      - flutter clean
-      - echo "Fetching dependencies"
-      - flutter pub get
-      - echo "Building signed AAB"
-      - flutter build appbundle --release
-      - echo "Verifying AAB output"
-      - AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
-      - |
-        if [ ! -f "$AAB_PATH" ]; then
-          echo "ERROR: AAB not found at $AAB_PATH"
-          exit 1
-        fi
-      - AAB_SIZE=$(stat -f%z "$AAB_PATH" 2>/dev/null || stat -c%s "$AAB_PATH")
-      - echo "AAB size: $AAB_SIZE bytes"
-      - |
-        if [ "$AAB_SIZE" -eq 0 ]; then
-          echo "ERROR: AAB file is empty"
-          exit 1
-        fi
-      - echo "Build completed successfully"
+      # set -o pipefail propaga exit codes de pipes en sh
+      # exit $EXIT al final garatiza que CodeBuild vea el codigo real de Flutter
+      - 'set -o pipefail && chmod +x "$CODEBUILD_SRC_DIR/frontend/{{ FRONTEND_NAME }}/android/gradlew" && cd "$CODEBUILD_SRC_DIR/frontend/{{ FRONTEND_NAME }}" && flutter build appbundle --release --verbose 2>&1 | tee /tmp/flutter_full.log; EXIT=$?; echo "=== BUILD RESULT ==="; echo "BUILD EXIT=$EXIT"; echo "=== LAST 200 LINES ==="; tail -200 /tmp/flutter_full.log; echo "=== END ==="; exit $EXIT'
 
   post_build:
     commands:
-      - echo "Cleaning up signing files"
-      - rm -f android/key.properties
-      - rm -f android/upload-keystore.jks
+      - rm -f "$CODEBUILD_SRC_DIR/frontend/{{ FRONTEND_NAME }}/android/key.properties"
+      - rm -f "$CODEBUILD_SRC_DIR/frontend/{{ FRONTEND_NAME }}/android/upload-keystore.jks"
       - echo "Cleanup completed"
 
 artifacts:
   files:
-    - build/app/outputs/bundle/release/app-release.aab
+    - frontend/{{ FRONTEND_NAME }}/build/app/outputs/bundle/release/app-release.aab
   discard-paths: no
   name: $APPLICATION_ID-aab-$CODEBUILD_BUILD_ID
