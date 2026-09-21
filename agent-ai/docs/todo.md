@@ -1,9 +1,11 @@
 # Todo (priorizado)
 
 ## Frontend
-1. Generar el .aab firmado.
-2. Pipeline para generar .aab firmado.
-3. Supabase: login y registro.
+1. Generar el .aab firmado. DONE
+2. Reducir la cantidad de llamadas a secret manager.
+    Buscar primero los secret en las variables de entorno y localmente. 
+    Si no existe, entonces buscarlas en aws secret manager.
+3. Crear solo un secret por app
 4. Suscripción.
 5. AdMob.
 6. Consumo de servicios REST.
@@ -14,11 +16,15 @@
 3. AWS ElastiCache.
 
 ## DevSecOps
-1. SonarQube.
-2. Trivy.
-3. Azure Pipeline.
-4. Dependency Check.
-5. Observabilidad.
+1. Pipeline para generar .aab firmado. DONE
+2. Cuando se cree un proyecto, se debe crear el repositorio correspondiente (Code Commit). DONE
+3. Crear AWS secret manager con terraform
+4. Crear CodeBuild, CodePipeline y CodeCommit con terraform
+5. SonarQube.
+6. Trivy.
+7. Azure Pipeline.
+8. Dependency Check.
+9. Observabilidad.
 
 ## Documentación
 1. Diagram as Code.
@@ -26,3 +32,4 @@
 
 ## Backend
 1. Poder actualizar el arquetipo.
+2. Supabase: login y registro.
