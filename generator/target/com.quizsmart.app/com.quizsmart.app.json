@@ -17,6 +17,9 @@
     "gitHubRepo": "quizsmart",
     "gitHubBranch": "main"
   },
+  "cloud": {
+    "provider": "aws"
+  },
   "environments": [
     {
       "name": "develop",

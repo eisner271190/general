@@ -1,0 +1,36 @@
+﻿resource "aws_sns_topic_subscription" "{{ Name }}" {
+  topic_arn = aws_sns_topic.main.arn
+  protocol  = "sqs"
+  endpoint  = aws_sqs_queue.{{ Name }}.arn
+
+  filter_policy = jsonencode({
+    eventType = [
+      {{ for event in ConsumedEvents }}
+        "{{ event }}"{{ if for.last == false }},{{ end }}
+      {{ end }}
+    ]
+  })
+}
+
+resource "aws_sqs_queue_policy" "{{ Name }}" {
+  queue_url = aws_sqs_queue.{{ Name }}.id
+  policy    = data.aws_iam_policy_document.{{ Name }}.json
+}
+
+data "aws_iam_policy_document" "{{ Name }}" {
+  statement {
+    actions = ["sqs:SendMessage"]
+    resources = [aws_sqs_queue.{{ Name }}.arn]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sns.amazonaws.com"]
+    }
+
+    condition {
+      test     = "ArnEquals"
+      variable = "aws:SourceArn"
+      values   = [aws_sns_topic.main.arn]
+    }
+  }
+}

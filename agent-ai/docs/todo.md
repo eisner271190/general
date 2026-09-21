@@ -12,7 +12,7 @@
 
 ## Cloud
 1. Tener plantillas con todas las propiedades de cada servicio AWS.
-2. Mover proyecto Terraform a la carpeta `cloud`, fuera de `backend`.
+2. Mover proyecto Terraform a la carpeta `cloud`, fuera de `backend`. DONE
 3. AWS ElastiCache.
 
 ## DevSecOps

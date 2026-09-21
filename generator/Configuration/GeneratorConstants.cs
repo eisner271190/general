@@ -5,6 +5,7 @@ internal static class GeneratorConstants
     public const string ComponentsDirectory = "components";
     public const string BackendComponentType = "backend";
     public const string FrontendComponentType = "frontend";
+    public const string CloudComponentType = "cloud";
     public const string TargetDirectoryName = "target";
     public const string OutputDirectoryName = "output";
     public const string ProjectsDirectoryName = "projects";

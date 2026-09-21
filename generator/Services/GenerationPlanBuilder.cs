@@ -36,15 +36,7 @@ internal sealed class GenerationPlanBuilder(
 
         foreach (var microservice in configuration.Microservices)
         {
-            var componentPath = ResolveSource(Path.Combine(
-                GeneratorConstants.ComponentsDirectory,
-                GeneratorConstants.BackendComponentType,
-                microservice.Backend,
-                "component.json"));
-            var component = jsonReader.Read<BackendComponent>(componentPath);
-            GeneratorLogger.Info($"Backend seleccionado para '{microservice.Name}': {microservice.Backend}");
-            var componentDirectory = Path.GetDirectoryName(componentPath)!;
-            var componentVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
+            var microserviceVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
             {
                 [GeneratorConstants.TemplateNameVariable] = microservice.Name,
                 [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(configuration.ApplicationId),
@@ -60,38 +52,17 @@ internal sealed class GenerationPlanBuilder(
                 ["ConsumedEvents"] = microservice.ConsumedEvents
             };
 
-            foreach (var directory in component.Directories)
-            {
-                var target = RenderPath(Path.Combine("backend", directory), componentVariables);
-                AddUnique(directories, paths, target, "directorio");
-            }
-            foreach (var file in component.Files)
-            {
-                var target = RenderPath(Path.Combine("backend", file.Key), componentVariables);
-                AddUnique(files.Select(item => item.Key).ToList(), paths, target, "archivo");
-                var templatePath = ResolveComponentSource(componentDirectory, file.Value);
-                var content = File.ReadAllText(templatePath);
-                files.Add(new PlanFile(target, templateRenderer.Render(content, componentVariables, templatePath)));
-            }
-            foreach (var defaultFile in component.DefaultFiles)
-            {
-                var source = ResolveComponentSource(componentDirectory, defaultFile);
-                var target = Path.Combine("backend", pathValidator.DefaultOutputPath(defaultFile));
-                AddUnique(defaultFiles.Select(item => item.Key).ToList(), paths, target, "archivo predeterminado");
-                defaultFiles.Add(new PlanDefaultFile(target, Path.GetRelativePath(workingDirectory, source)));
-            }
+            ProcessComponent(
+                GeneratorConstants.BackendComponentType,
+                microservice.Backend,
+                "backend",
+                null,
+                microserviceVariables,
+                directories, files, defaultFiles, paths);
         }
 
         if (configuration.Frontend is not null)
         {
-            var componentPath = ResolveSource(Path.Combine(
-                GeneratorConstants.ComponentsDirectory,
-                GeneratorConstants.FrontendComponentType,
-                configuration.Frontend.Framework,
-                "component.json"));
-            var component = jsonReader.Read<ComponentDefinition>(componentPath);
-            GeneratorLogger.Info($"Frontend seleccionado: '{configuration.Frontend.Framework}' ({configuration.Frontend.Name})");
-            var componentDirectory = Path.GetDirectoryName(componentPath)!;
             var appIconPath = Path.Combine(Path.GetDirectoryName(inputPath) ?? workingDirectory, "app_icon.png");
             var hasAppIcon = File.Exists(appIconPath);
             var frontendVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
@@ -104,36 +75,100 @@ internal sealed class GenerationPlanBuilder(
                 ["HAS_APP_ICON"] = hasAppIcon
             };
 
-            foreach (var directory in component.Directories)
-            {
-                var target = RenderPath(directory, frontendVariables);
-                AddUnique(directories, paths, target, "directorio");
-            }
-            foreach (var file in component.Files)
-            {
-                var target = RenderPath(file.Key, frontendVariables);
-                AddUnique(files.Select(item => item.Key).ToList(), paths, target, "archivo");
-                var templatePath = ResolveComponentSource(componentDirectory, file.Value);
-                var content = File.ReadAllText(templatePath);
-                files.Add(new PlanFile(target, templateRenderer.Render(content, frontendVariables, templatePath)));
-            }
-            foreach (var defaultFile in component.DefaultFiles)
-            {
-                var source = ResolveComponentSource(componentDirectory, defaultFile);
-                var target = Path.Combine("frontend", frontendVariables["FRONTEND_NAME"]?.ToString() ?? string.Empty, pathValidator.DefaultOutputPath(defaultFile));
-                AddUnique(defaultFiles.Select(item => item.Key).ToList(), paths, target, "archivo predeterminado");
-                defaultFiles.Add(new PlanDefaultFile(target, Path.GetRelativePath(workingDirectory, source)));
-            }
+            ProcessComponent(
+                GeneratorConstants.FrontendComponentType,
+                configuration.Frontend.Framework,
+                null,
+                Path.Combine("frontend", configuration.Frontend.Name),
+                frontendVariables,
+                directories, files, defaultFiles, paths);
 
             if (hasAppIcon)
             {
-                var appIconTarget = Path.Combine("frontend", frontendVariables["FRONTEND_NAME"]?.ToString() ?? string.Empty, "assets", "icon", "app_icon.png");
+                var appIconTarget = Path.Combine("frontend", configuration.Frontend.Name, "assets", "icon", "app_icon.png");
                 AddUnique(defaultFiles.Select(item => item.Key).ToList(), paths, appIconTarget, "archivo predeterminado");
                 defaultFiles.Add(new PlanDefaultFile(appIconTarget, appIconPath));
             }
         }
 
+        if (configuration.Cloud is not null)
+        {
+            var cloudName = configuration.Cloud.Name ?? configuration.Cloud.Provider;
+            var cloudVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
+            {
+                [GeneratorConstants.TemplateNameVariable] = cloudName,
+                [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(configuration.ApplicationId)
+            };
+
+            foreach (var microservice in configuration.Microservices)
+            {
+                var microserviceCloudVariables = new Dictionary<string, object?>(cloudVariables, StringComparer.OrdinalIgnoreCase)
+                {
+                    [GeneratorConstants.MicroserviceNameVariable] = microservice.Name,
+                    [GeneratorConstants.MicroservicePortVariable] = microservice.Port.ToString(),
+                    [GeneratorConstants.TemplateMicroserviceNameVariable] = microservice.Name
+                };
+
+                ProcessComponent(
+                    GeneratorConstants.CloudComponentType,
+                    configuration.Cloud.Provider,
+                    null,
+                    null,
+                    microserviceCloudVariables,
+                    directories, files, defaultFiles, paths);
+            }
+        }
+
         return new GenerationPlan(configuration.ApplicationName, configuration.ApplicationId, environment.Name, directories, files, defaultFiles);
+    }
+
+    private void ProcessComponent(
+        string componentType,
+        string componentName,
+        string? outputPrefix,
+        string? defaultFilePrefix,
+        IReadOnlyDictionary<string, object?> variables,
+        List<string> directories,
+        List<PlanFile> files,
+        List<PlanDefaultFile> defaultFiles,
+        HashSet<string> paths)
+    {
+        var componentPath = ResolveSource(Path.Combine(
+            GeneratorConstants.ComponentsDirectory,
+            componentType,
+            componentName,
+            "component.json"));
+        var component = jsonReader.Read<ComponentDefinition>(componentPath);
+        GeneratorLogger.Info($"Componente '{componentType}' seleccionado: {componentName}");
+        var componentDirectory = Path.GetDirectoryName(componentPath)!;
+
+        foreach (var directory in component.Directories)
+        {
+            var target = outputPrefix is not null
+                ? RenderPath(Path.Combine(outputPrefix, directory), variables)
+                : RenderPath(directory, variables);
+            AddUnique(directories, paths, target, "directorio");
+        }
+        foreach (var file in component.Files)
+        {
+            var target = outputPrefix is not null
+                ? RenderPath(Path.Combine(outputPrefix, file.Key), variables)
+                : RenderPath(file.Key, variables);
+            AddUnique(files.Select(item => item.Key).ToList(), paths, target, "archivo");
+            var templatePath = ResolveComponentSource(componentDirectory, file.Value);
+            var content = File.ReadAllText(templatePath);
+            files.Add(new PlanFile(target, templateRenderer.Render(content, variables, templatePath)));
+        }
+        foreach (var defaultFile in component.DefaultFiles)
+        {
+            var source = ResolveComponentSource(componentDirectory, defaultFile);
+            var prefix = defaultFilePrefix ?? outputPrefix;
+            var target = prefix is not null
+                ? Path.Combine(prefix, pathValidator.DefaultOutputPath(defaultFile))
+                : pathValidator.DefaultOutputPath(defaultFile);
+            AddUnique(defaultFiles.Select(item => item.Key).ToList(), paths, target, "archivo predeterminado");
+            defaultFiles.Add(new PlanDefaultFile(target, Path.GetRelativePath(workingDirectory, source)));
+        }
     }
 
     private string ResolveSource(string relativePath)

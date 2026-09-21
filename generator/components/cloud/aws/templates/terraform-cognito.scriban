@@ -1,0 +1,68 @@
+﻿data "aws_region" "current" {}
+
+resource "aws_cognito_user_pool" "user_pool" {
+  name = "user-management-user-pool"
+
+  password_policy {
+    minimum_length    = 8
+    require_lowercase = true
+    require_numbers   = true
+    require_symbols   = true
+    require_uppercase = true
+  }
+
+  auto_verified_attributes = ["email"]
+
+  schema {
+    attribute_data_type      = "String"
+    name                     = "email"
+    required                 = true
+    developer_only_attribute = false
+    mutable                  = true
+  }
+
+  schema {
+    attribute_data_type      = "String"
+    name                     = "name"
+    required                 = false
+    developer_only_attribute = false
+    mutable                  = true
+  }
+
+  lifecycle {
+    ignore_changes = [
+      schema,
+    ]
+  }
+}
+
+resource "aws_cognito_user_pool_domain" "user_pool_domain" {
+  domain       = "user-management-domain"
+  user_pool_id = aws_cognito_user_pool.user_pool.id
+}
+
+variable "user_pool_name" {
+  description = "Nombre del User Pool"
+  type        = string
+  default     = "user-management-user-pool"
+}
+
+output "user_pool_id" {
+  value = aws_cognito_user_pool.user_pool.id
+  description = "ID del User Pool de Cognito"
+}
+
+output "user_pool_arn" {
+  value = aws_cognito_user_pool.user_pool.arn
+  description = "ARN del User Pool de Cognito"
+}
+
+output "user_pool_domain" {
+  value = aws_cognito_user_pool_domain.user_pool_domain.domain
+  description = "Domain del User Pool de Cognito"
+}
+
+output "user_pool_domain_url" {
+  value = "https://${aws_cognito_user_pool_domain.user_pool_domain.domain}.auth.${var.region}.amazoncognito.com"
+  description = "URL completa del dominio del User Pool de Cognito"
+}

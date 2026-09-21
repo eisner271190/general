@@ -53,9 +53,7 @@
     "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers",
     "{{MICROSERVICE_NAME}}/src/test/resources",
     "{{MICROSERVICE_NAME}}/src/test/resources/performance",
-    "{{MICROSERVICE_NAME}}/.mvn/wrapper",
-    "{{MICROSERVICE_NAME}}/deploy",
-    "{{MICROSERVICE_NAME}}/deploy/terraform"
+    "{{MICROSERVICE_NAME}}/.mvn/wrapper"
   ],
   "files": [
     { "key": "{{MICROSERVICE_NAME}}/.gitignore", "value": "templates/gitignore.scriban" },
@@ -160,19 +158,6 @@
     { "key": "{{MICROSERVICE_NAME}}/sonar-scanner.properties", "value": "templates/sonar-scanner-properties.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/rest/response/ApiResponse.java", "value": "templates/api-response.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/GraalHints.java", "value": "templates/graalvm-hints.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/deploy/terraform/variables.tf", "value": "templates/terraform-variables.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/deploy/terraform/provider.tf", "value": "templates/terraform-provider.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/deploy/terraform/apigateway.tf", "value": "templates/terraform-apigateway.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/deploy/terraform/apigateway_lambda_{{MICROSERVICE_NAME}}.tf", "value": "templates/terraform-apigateway-lambda.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/deploy/terraform/ecr_{{MICROSERVICE_NAME}}.tf", "value": "templates/terraform-ecr.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/deploy/terraform/sqs_{{MICROSERVICE_NAME}}.tf", "value": "templates/terraform-sqs.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/deploy/terraform/sns.tf", "value": "templates/terraform-sns.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/deploy/terraform/sns_subscription_{{MICROSERVICE_NAME}}.tf", "value": "templates/terraform-sns-subscriptions.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/deploy/terraform/cognito.tf", "value": "templates/terraform-cognito.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/deploy/terraform/cognito_iam.tf", "value": "templates/terraform-cognito-iam.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/deploy/terraform/cognito_client.tf", "value": "templates/terraform-cognito-client.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/deploy/terraform/cognito_google_provider.tf", "value": "templates/terraform-cognito-google-provider.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/deploy/terraform/lambda_{{MICROSERVICE_NAME}}.tf", "value": "templates/terraform-lambda.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/resources/logback.xml", "value": "templates/logback.scriban" }
   ],
   "defaultFiles": []

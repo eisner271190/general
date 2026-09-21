@@ -1,0 +1,15 @@
+﻿resource "aws_sqs_queue" "{{ Name }}" {
+  name = "{{ Name }}"
+  delay_seconds = 0
+  message_retention_seconds = 345600
+}
+
+output "sqs_queue_url_{{ Name }}" {
+  value = aws_sqs_queue.{{ Name }}.id
+  description = "La URL de la cola SQS creada."
+}
+
+output "sqs_queue_name_{{ Name }}" {
+  value = aws_sqs_queue.{{ Name }}.name
+  description = "El nombre de la cola SQS creada."
+}

@@ -1,0 +1,25 @@
+{
+  "name": "aws",
+  "type": "cloud",
+  "directories": [
+    "cloud",
+    "cloud/terraform",
+    "cloud/terraform/{{MICROSERVICE_NAME}}"
+  ],
+  "files": [
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/provider.tf", "value": "templates/terraform-provider.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/variables.tf", "value": "templates/terraform-variables.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/apigateway.tf", "value": "templates/terraform-apigateway.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/apigateway_lambda.tf", "value": "templates/terraform-apigateway-lambda.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/ecr.tf", "value": "templates/terraform-ecr.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/sqs.tf", "value": "templates/terraform-sqs.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/sns.tf", "value": "templates/terraform-sns.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/sns_subscription.tf", "value": "templates/terraform-sns-subscriptions.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/cognito.tf", "value": "templates/terraform-cognito.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/cognito_iam.tf", "value": "templates/terraform-cognito-iam.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/cognito_client.tf", "value": "templates/terraform-cognito-client.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/cognito_google_provider.tf", "value": "templates/terraform-cognito-google-provider.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/lambda.tf", "value": "templates/terraform-lambda.scriban" }
+  ],
+  "defaultFiles": []
+}

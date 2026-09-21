@@ -78,30 +78,31 @@ internal sealed class GeneratorApplication(
         if (configuration.Frontend?.Framework.StartsWith("flutter", StringComparison.OrdinalIgnoreCase) == true)
         {
             await CreateAndroidSigningSecretsAsync(plan.ApplicationId, outputDirectory);
-            var deployer = await CreatePipelineDeployerAsync(configuration.Frontend);
-            if (deployer is not null)
-            {
-                await deployer.DeployAsync(plan.ApplicationId, outputDirectory, configuration.Frontend.GitHubOwner, configuration.Frontend.GitHubRepo, configuration.Frontend.GitHubBranch);
-            }
-            
-            var sourceProvider = configuration.Frontend.SourceProvider?.ToLowerInvariant() ?? "codecommit";
-            if (sourceProvider == "codecommit" && !string.IsNullOrWhiteSpace(region))
-            {
-                // Copiar buildspec.yml a la raíz del proyecto para que CodeBuild lo encuentre
-                var buildspecSource = Path.Combine(outputDirectory, "frontend", configuration.Frontend.Name, "buildspec.yml");
-                var buildspecDest = Path.Combine(outputDirectory, "buildspec.yml");
-                if (File.Exists(buildspecSource) && !File.Exists(buildspecDest))
-                {
-                    File.Copy(buildspecSource, buildspecDest);
-                    GeneratorLogger.Info("buildspec.yml copiado a la raíz del proyecto");
-                }
 
-                var repoName = configuration.Frontend.GitHubRepo ?? plan.ApplicationId.Replace('.', '-').ToLowerInvariant();
-                var branchName = configuration.Frontend.GitHubBranch ?? "main";
-                var codeCommitService = new CodeCommitService(region);
-                GeneratorLogger.Info($"Subiendo código a CodeCommit: {repoName}");
-                await codeCommitService.PushFilesAsync(outputDirectory, repoName, branchName);
-            }
+            // TODO: Desactivado temporalmente — habilitar cuando se implemente CodeCommit/CodePipeline
+            // var deployer = await CreatePipelineDeployerAsync(configuration.Frontend);
+            // if (deployer is not null)
+            // {
+            //     await deployer.DeployAsync(plan.ApplicationId, outputDirectory, configuration.Frontend.GitHubOwner, configuration.Frontend.GitHubRepo, configuration.Frontend.GitHubBranch);
+            // }
+            //
+            // var sourceProvider = configuration.Frontend.SourceProvider?.ToLowerInvariant() ?? "codecommit";
+            // if (sourceProvider == "codecommit" && !string.IsNullOrWhiteSpace(region))
+            // {
+            //     var buildspecSource = Path.Combine(outputDirectory, "frontend", configuration.Frontend.Name, "buildspec.yml");
+            //     var buildspecDest = Path.Combine(outputDirectory, "buildspec.yml");
+            //     if (File.Exists(buildspecSource) && !File.Exists(buildspecDest))
+            //     {
+            //         File.Copy(buildspecSource, buildspecDest);
+            //         GeneratorLogger.Info("buildspec.yml copiado a la raíz del proyecto");
+            //     }
+            //
+            //     var repoName = configuration.Frontend.GitHubRepo ?? plan.ApplicationId.Replace('.', '-').ToLowerInvariant();
+            //     var branchName = configuration.Frontend.GitHubBranch ?? "main";
+            //     var codeCommitService = new CodeCommitService(region);
+            //     GeneratorLogger.Info($"Subiendo código a CodeCommit: {repoName}");
+            //     await codeCommitService.PushFilesAsync(outputDirectory, repoName, branchName);
+            // }
         }
     }
 
@@ -229,22 +230,23 @@ internal sealed class GeneratorApplication(
         }
     }
 
-    private async Task<IPipelineDeployer?> CreatePipelineDeployerAsync(FrontendConfiguration frontend)
-    {
-        if (string.IsNullOrWhiteSpace(region))
-        {
-            GeneratorLogger.Info("AWS_REGION no configurado, saltando despliegue del pipeline");
-            return null;
-        }
-
-        var sourceProvider = frontend.SourceProvider?.ToLowerInvariant() ?? "codecommit";
-        IRepositoryProvider repositoryProvider = sourceProvider switch
-        {
-            "github" => new GitHubProvider(region),
-            _ => new CodeCommitProvider(region)
-        };
-
-        GeneratorLogger.Info($"Usando proveedor de repositorio: {sourceProvider}");
-        return new PipelineDeployer(region, repositoryProvider);
-    }
+    // TODO: Desactivado temporalmente — habilitar cuando se implemente CodeCommit/CodePipeline
+    // private async Task<IPipelineDeployer?> CreatePipelineDeployerAsync(FrontendConfiguration frontend)
+    // {
+    //     if (string.IsNullOrWhiteSpace(region))
+    //     {
+    //         GeneratorLogger.Info("AWS_REGION no configurado, saltando despliegue del pipeline");
+    //         return null;
+    //     }
+    //
+    //     var sourceProvider = frontend.SourceProvider?.ToLowerInvariant() ?? "codecommit";
+    //     IRepositoryProvider repositoryProvider = sourceProvider switch
+    //     {
+    //         "github" => new GitHubProvider(region),
+    //         _ => new CodeCommitProvider(region)
+    //     };
+    //
+    //     GeneratorLogger.Info($"Usando proveedor de repositorio: {sourceProvider}");
+    //     return new PipelineDeployer(region, repositoryProvider);
+    // }
 }

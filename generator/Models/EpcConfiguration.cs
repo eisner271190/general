@@ -5,7 +5,10 @@ public sealed record EpcConfiguration(
     string ApplicationId,
     List<EnvironmentConfiguration> Environments,
     List<MicroserviceConfiguration> Microservices,
-    FrontendConfiguration? Frontend = null);
+    FrontendConfiguration? Frontend = null,
+    CloudConfiguration? Cloud = null);
+
+public sealed record CloudConfiguration(string Provider, string? Name = null);
 
 public sealed record FrontendConfiguration(
     string Name,
