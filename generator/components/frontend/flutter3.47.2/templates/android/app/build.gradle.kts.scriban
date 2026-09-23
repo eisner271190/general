@@ -46,24 +46,22 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            val storeFilePath = configuredStoreFilePath
-            check(!storeFilePath.isNullOrBlank()) {
-                "storeFile must be set in android/key.properties for release signing"
+        if (!configuredStoreFilePath.isNullOrBlank()) {
+            create("release") {
+                storeFile = rootProject.file(configuredStoreFilePath)
+                check(storeFile!!.isFile) {
+                    "Keystore file does not exist: ${storeFile!!.absolutePath}"
+                }
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
             }
-            storeFile = rootProject.file(storeFilePath)
-            check(storeFile!!.isFile) {
-                "Keystore file does not exist: ${storeFile!!.absolutePath}"
-            }
-            storePassword = keystoreProperties.getProperty("storePassword")
-            keyAlias = keystoreProperties.getProperty("keyAlias")
-            keyPassword = keystoreProperties.getProperty("keyPassword")
         }
     }
 
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 }

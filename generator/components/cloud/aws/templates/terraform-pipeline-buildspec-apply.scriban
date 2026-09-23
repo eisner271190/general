@@ -1,0 +1,37 @@
+version: 0.2
+
+env:
+  variables:
+    TF_VERSION: "1.5.0"
+
+phases:
+  install:
+    runtime-versions:
+      terraform: latest
+    commands:
+      - terraform --version
+      - curl -fsSL https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip -o terraform.zip
+      - unzip terraform.zip -d /usr/local/bin/
+      - terraform --version
+
+  pre_build:
+    commands:
+      - echo "Initializing Terraform..."
+      - terraform init -input=false
+
+  build:
+    commands:
+      - echo "Applying Terraform changes..."
+      - terraform apply -input=false -auto-approve tfplan
+
+  post_build:
+    commands:
+      - echo "Apply completed on $(date)"
+      - terraform state list | head -20
+
+artifacts:
+  files:
+    - '*.tf'
+    - '**/*.tf'
+  discard-paths: no
+  base-directory: .

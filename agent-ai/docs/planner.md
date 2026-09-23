@@ -13,6 +13,7 @@ Por cada tarea pendiente del TODO:
 7. Lista los **archivos a modificar** indicando qué cambios requieren.
 8. Hacer preguntas, dudas sobre la implementación.
 9. Crea un archivo `agent-ai/plans/plan-XXXX.md`.
+10. Siempre especificar los costos
 
 Importante: los planes deben basarse en el generador (archivos en `generator/`), no en aplicaciones generadas (archivos en `projects/`). El generador es la fuente de verdad; las apps generadas son el resultado.
 

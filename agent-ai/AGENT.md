@@ -10,3 +10,4 @@ Reglas clave:
 - Pedir aclaración ante requisitos ambiguos
 - Idioma: Español
 - Lineamiento para hacer planes [`agent-ai/docs/planner.md`](../agent-ai/docs/planner.md)
+- Lineamiento de codificación [`agent-ai/codification.md`](../agent-ai/codification.md) 

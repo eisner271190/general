@@ -6,14 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.3" />
-    <PackageReference Include="AWSSDK.CodePipeline" Version="4.0.*" />
-    <PackageReference Include="AWSSDK.CodeBuild" Version="4.0.*" />
-    <PackageReference Include="AWSSDK.CodeCommit" Version="4.0.*" />
-    <PackageReference Include="AWSSDK.CodeConnections" Version="4.0.*" />
-    <PackageReference Include="AWSSDK.IdentityManagement" Version="4.0.*" />
-    <PackageReference Include="AWSSDK.S3" Version="4.0.*" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.*" />
     <PackageReference Include="Scriban" Version="7.4.0" />
   </ItemGroup>
 </Project>

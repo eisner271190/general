@@ -1,0 +1,32 @@
+variable "environment" {
+  description = "Environment name (e.g., dev, staging, prod)"
+  type        = string
+}
+
+variable "project_name" {
+  description = "Project name for resource naming"
+  type        = string
+}
+
+variable "repo_name" {
+  description = "CodeCommit repository name"
+  type        = string
+}
+
+variable "repo_branch" {
+  description = "Branch name for the pipeline"
+  type        = string
+  default     = "main"
+}
+
+variable "tf_version" {
+  description = "Terraform version for CodeBuild"
+  type        = string
+  default     = "1.5.0"
+}
+
+variable "aws_region" {
+  description = "AWS region"
+  type        = string
+  default     = "us-east-1"
+}

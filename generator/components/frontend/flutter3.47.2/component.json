@@ -1298,7 +1298,6 @@
                   }
               ],
     "defaultFiles":  [
-                         "defaults/android/upload-keystore.jks",
                          "defaults/android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
                          "defaults/android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
                          "defaults/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",

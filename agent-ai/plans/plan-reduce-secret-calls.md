@@ -136,8 +136,27 @@ Referencia: https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrievi
 - `generator/components/frontend/flutter3.47.2/templates/buildspec.yml.scriban`: leer un solo JSON.
 - `generator/components/frontend/flutter3.47.2/templates/codepipeline.yml.scriban`: actualizar IAM policy.
 
+## Costes (AWS Secrets Manager)
+
+| Concepto | Antes | Después |
+|----------|-------|---------|
+| Almacenamiento por app (4 → 1 secret) | 4 × $0.40 = **$1.60/mes** | 1 × $0.40 = **$0.40/mes** |
+| Ahorro por app | — | **$1.20/mes** ($14.40/año) |
+| API calls por generación | 16 | 0 (env/local) o 2 (AWS) |
+| Coste API por generación | 16 × $0.000005 ≈ $0.00008 | ≈ $0.00001 |
+| Cifrado | KMS `aws/secretsmanager` (incluido) | Igual; CMK sería +$1/mes si se decidiera |
+
+- El ahorro real es de **almacenamiento** ($1.20/mes por app); el coste de API es despreciable.
+- 10 apps: $16/mes → $4/mes. Tamaño del JSON consolidado: .jks de 2-10 KB, límite 64 KB.
+- Sin otros costes: no hay cargos por escritura de versiones ni por rotation no configurada.
+
 ## Preguntas de implementación
 
 1. ¿Se debe validar el formato del JSON recuperado de AWS? → Sí, validar campos requeridos antes de usar (Fail Fast).
-2. ¿Se debe mantener compatibilidad con el formato anterior (4 secretos)? → No, es un cambio de formato nuevo.
+2. **Migración de secretos legacy → DECIDIDO: Opción B (sin soporte legacy)**
+   - `GetAsync` solo lee el secreto único JSON; si no existe, se genera keystore nuevo con keytool.
+   - Consecuencia aceptada: los 4 secretos legacy por app quedan **huérfanos** y las apps publicadas en Play Store con keystore anterior no podrán actualizarse con la nueva firma.
+   - Las apps no publicadas (en desarrollo) no se ven afectadas: al regenerar, simplemente cambian de keystore.
+   - Limpieza manual opcional fuera del alcance: `aws secretsmanager delete-secret` de los 4 legacy por app.
 3. ¿Se debe instalar `jq` en el buildspec? → No, viene preinstalado en `codebuild/standard:7.0`.
+4. ¿Eliminar los 4 secretos legacy tras consolidar, o dejarlos en la ventana de recuperación de 7-30 días? → Recomendado: eliminar con `ForceDeleteWithoutRecovery=false` (window por defecto) como red de seguridad.

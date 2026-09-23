@@ -3,6 +3,11 @@
 ## Frontend
 1. Crear proyecto Flutter
 2. Estructura base de carpetas y archivos
+3. Generar el .aab firmado.
+4. Reducir la cantidad de llamadas a secret manager.
+    Buscar primero los secret en las variables de entorno y localmente. 
+    Si no existe, entonces buscarlas en aws secret manager.
+5. Crear solo un secret por app.
 
 ## Cloud
 1. AWS DynamoDB.
@@ -14,6 +19,7 @@
 7. Crear lambda por cada ms.
 8. EDA Crear SQS + SNS.
 9. AWS Cognito.
+10. Mover proyecto Terraform a la carpeta `cloud`, fuera de `backend`.
 
 ## DevSecOps
 1. Ejecutar sonar automaticamente.
@@ -35,6 +41,10 @@
 17. Verificar funcionamiento de pipeline.
 18. Postman collection.
 19. PowerShell Core.
+20. Pipeline para generar .aab firmado.
+21. Cuando se cree un proyecto, se debe crear el repositorio correspondiente (Code Commit).
+22. Crear AWS secret manager con terraform.
+23. Crear CodeBuild, CodePipeline y CodeCommit con terraform.
 
 ## Documentación
 1. crear dashboard automaticamente.

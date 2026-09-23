@@ -22,12 +22,8 @@ try
         pathValidator,
         configurationValidator,
         templateRenderer);
-    var signingKeyGenerator = new AndroidSigningKeyGenerator();
-    var region = Environment.GetEnvironmentVariable(GeneratorConstants.AwsRegionVariable);
-    var secretsManager = string.IsNullOrWhiteSpace(region) ? null : new AwsSecretsManager(region);
-    
-    var application = new GeneratorApplication(workingDirectory, planBuilder, jsonReader, pathValidator, signingKeyGenerator, secretsManager, null, null, region);
-    await application.RunAsync();
+    var application = new GeneratorApplication(workingDirectory, planBuilder, jsonReader, pathValidator);
+    application.Run();
     return 0;
 }
 catch (Exception exception)

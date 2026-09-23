@@ -8,17 +8,22 @@ public sealed record EpcConfiguration(
     FrontendConfiguration? Frontend = null,
     CloudConfiguration? Cloud = null);
 
-public sealed record CloudConfiguration(string Provider, string? Name = null);
+public sealed record CloudConfiguration(
+    string Provider,
+    string? Name = null,
+    Dictionary<string, string>? Secrets = null,
+    PipelineConfiguration? Pipeline = null);
+
+public sealed record PipelineConfiguration(
+    string? RepoName = null,
+    string? Branch = null,
+    string? TfVersion = null);
 
 public sealed record FrontendConfiguration(
     string Name,
     string Framework,
     List<string>? Platforms = null,
-    string? Version = null,
-    string? SourceProvider = null,
-    string? GitHubOwner = null,
-    string? GitHubRepo = null,
-    string? GitHubBranch = null);
+    string? Version = null);
 
 public sealed record EnvironmentConfiguration(string Name, Dictionary<string, string> Variables);
 public sealed record MicroserviceConfiguration(string Name, string Backend, string Deploy, List<EntityConfiguration> Entities, List<EndpointConfiguration> Endpoints, int Port)

@@ -12,10 +12,7 @@
       "macos",
       "linux"
     ],
-    "version": "1.0.0+1",
-    "sourceProvider": "codecommit",
-    "gitHubRepo": "quizsmart",
-    "gitHubBranch": "main"
+    "version": "1.0.0+1"
   },
   "cloud": {
     "provider": "aws"

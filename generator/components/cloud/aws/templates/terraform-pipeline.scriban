@@ -1,0 +1,402 @@
+# -----------------------------------------------------------------------------
+# Pipeline CI/CD - CodeCommit + CodeBuild + CodePipeline
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# KMS Key para cifrado
+# -----------------------------------------------------------------------------
+resource "aws_kms_key" "pipeline" {
+  description             = "KMS key for ${var.project_name} pipeline artifacts"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+    ManagedBy   = "terraform"
+  }
+}
+
+resource "aws_kms_alias" "pipeline" {
+  name          = "alias/${var.project_name}-${var.environment}-pipeline"
+  target_key_id = aws_kms_key.pipeline.key_id
+}
+
+# -----------------------------------------------------------------------------
+# S3 Bucket para artefactos del pipeline
+# -----------------------------------------------------------------------------
+resource "aws_s3_bucket" "artifacts" {
+  bucket = "${var.project_name}-artifacts-${var.environment}"
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+    ManagedBy   = "terraform"
+  }
+}
+
+resource "aws_s3_bucket_versioning" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.pipeline.arn
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# -----------------------------------------------------------------------------
+# CodeCommit Repository
+# -----------------------------------------------------------------------------
+resource "aws_codecommit_repository" "repo" {
+  repository_name = var.repo_name
+  description     = "Infrastructure repository for ${var.project_name}"
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+    ManagedBy   = "terraform"
+  }
+}
+
+# -----------------------------------------------------------------------------
+# IAM Roles
+# -----------------------------------------------------------------------------
+
+# Rol para CodePipeline
+data "aws_iam_policy_document" "codepipeline_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["codepipeline.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "codepipeline" {
+  name               = "${var.project_name}-codepipeline-${var.environment}"
+  assume_role_policy = data.aws_iam_policy_document.codepipeline_assume.json
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+data "aws_iam_policy_document" "codepipeline_policy" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:GetObjectVersion",
+      "s3:GetBucketVersioning",
+      "s3:PutObject",
+      "s3:PutObjectAcl",
+    ]
+    resources = [
+      aws_s3_bucket.artifacts.arn,
+      "${aws_s3_bucket.artifacts.arn}/*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "codecommit:CancelUploadArchive",
+      "codecommit:GetBranch",
+      "codecommit:GetCommit",
+      "codecommit:GetUploadArchiveStatus",
+      "codecommit:UploadArchive",
+    ]
+    resources = [aws_codecommit_repository.repo.arn]
+  }
+
+  statement {
+    actions = [
+      "codebuild:BatchGetBuilds",
+      "codebuild:StartBuild",
+    ]
+    resources = [
+      aws_codebuild_project.plan.arn,
+      aws_codebuild_project.apply.arn,
+    ]
+  }
+
+  statement {
+    actions   = ["kms:Decrypt", "kms:GenerateDataKey"]
+    resources = [aws_kms_key.pipeline.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "codepipeline" {
+  name   = "${var.project_name}-codepipeline-${var.environment}"
+  role   = aws_iam_role.codepipeline.id
+  policy = data.aws_iam_policy_document.codepipeline_policy.json
+}
+
+# Rol para CodeBuild
+data "aws_iam_policy_document" "codebuild_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["codebuild.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "codebuild" {
+  name               = "${var.project_name}-codebuild-${var.environment}"
+  assume_role_policy = data.aws_iam_policy_document.codebuild_assume.json
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+data "aws_iam_policy_document" "codebuild_policy" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:GetObjectVersion",
+      "s3:GetBucketVersioning",
+      "s3:PutObject",
+    ]
+    resources = [
+      aws_s3_bucket.artifacts.arn,
+      "${aws_s3_bucket.artifacts.arn}/*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+    resources = ["arn:aws:logs:*:*:*"]
+  }
+
+  statement {
+    actions   = ["kms:Decrypt", "kms:GenerateDataKey"]
+    resources = [aws_kms_key.pipeline.arn]
+  }
+
+  statement {
+    actions = [
+      "secretsmanager:GetSecretValue",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "codebuild" {
+  name   = "${var.project_name}-codebuild-${var.environment}"
+  role   = aws_iam_role.codebuild.id
+  policy = data.aws_iam_policy_document.codebuild_policy.json
+}
+
+# -----------------------------------------------------------------------------
+# CodeBuild Projects
+# -----------------------------------------------------------------------------
+
+# Buildspec para PLAN
+resource "aws_codebuild_project" "plan" {
+  name          = "${var.project_name}-tf-plan-${var.environment}"
+  description   = "Terraform plan for ${var.project_name}"
+  service_role  = aws_iam_role.codebuild.arn
+  build_timeout = 30
+
+  artifacts {
+    type = "CODEPIPELINE"
+  }
+
+  environment {
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "hashicorp/terraform:${var.tf_version}"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
+    privileged_mode             = false
+
+    environment_variable {
+      name  = "TF_VERSION"
+      value = var.tf_version
+    }
+
+    environment_variable {
+      name  = "AWS_DEFAULT_REGION"
+      value = var.aws_region
+    }
+  }
+
+  source {
+    type      = "CODEPIPELINE"
+    buildspec = "buildspec-plan.yml"
+  }
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+# Buildspec para APPLY
+resource "aws_codebuild_project" "apply" {
+  name          = "${var.project_name}-tf-apply-${var.environment}"
+  description   = "Terraform apply for ${var.project_name}"
+  service_role  = aws_iam_role.codebuild.arn
+  build_timeout = 60
+
+  artifacts {
+    type = "CODEPIPELINE"
+  }
+
+  environment {
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "hashicorp/terraform:${var.tf_version}"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
+    privileged_mode             = false
+
+    environment_variable {
+      name  = "TF_VERSION"
+      value = var.tf_version
+    }
+
+    environment_variable {
+      name  = "AWS_DEFAULT_REGION"
+      value = var.aws_region
+    }
+  }
+
+  source {
+    type      = "CODEPIPELINE"
+    buildspec = "buildspec-apply.yml"
+  }
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+# -----------------------------------------------------------------------------
+# CodePipeline
+# -----------------------------------------------------------------------------
+resource "aws_codepipeline" "pipeline" {
+  name     = "${var.project_name}-${var.environment}"
+  role_arn = aws_iam_role.codepipeline.arn
+
+  artifact_store {
+    location = aws_s3_bucket.artifacts.bucket
+    type     = "S3"
+
+    encryption_key {
+      id   = aws_kms_key.pipeline.arn
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeCommit"
+      version          = "1"
+      output_artifacts = ["source_output"]
+
+      configuration = {
+        RepositoryName       = aws_codecommit_repository.repo.repository_name
+        BranchName           = var.repo_branch
+        PollForSourceChanges = false
+      }
+    }
+  }
+
+  stage {
+    name = "Plan"
+
+    action {
+      name             = "Plan"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      version          = "1"
+      input_artifacts  = ["source_output"]
+      output_artifacts = ["plan_output"]
+
+      configuration = {
+        ProjectName = aws_codebuild_project.plan.name
+      }
+    }
+  }
+
+  stage {
+    name = "Approval"
+
+    action {
+      name     = "ManualApproval"
+      category = "Approval"
+      owner    = "AWS"
+      provider = "ManualApproval"
+      version  = "1"
+
+      configuration = {
+        CustomData = "Please review the Terraform plan before approving."
+      }
+    }
+  }
+
+  stage {
+    name = "Apply"
+
+    action {
+      name             = "Apply"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      version          = "1"
+      input_artifacts  = ["plan_output"]
+      output_artifacts = ["apply_output"]
+
+      configuration = {
+        ProjectName = aws_codebuild_project.apply.name
+      }
+    }
+  }
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+    ManagedBy   = "terraform"
+  }
+}

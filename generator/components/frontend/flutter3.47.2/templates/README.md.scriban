@@ -18,10 +18,12 @@ samples, guidance on mobile development, and a full API reference.
 
 ## Android signing
 
-The generator stores the upload keystore and its credentials in AWS Secrets Manager.
-Before a local release build, retrieve them into temporary files, create
-`android/key.properties`, run `flutter build appbundle`, then delete the temporary files.
-The signed bundle is created at `build/app/outputs/bundle/release/app.aab`.
+The `.aab` signed for release is produced **only in the CI pipeline**; the
+keystore lives only in AWS Secrets Manager (secret
+`/epc/{applicationId}/android-signing`, single JSON). On its first run the
+pipeline generates the keystore if the secret does not exist yet, and stores
+it for all later runs. Nothing signing-related is written to the repository
+or to developer machines.
 
 ## CI/CD Pipeline (AWS CodePipeline)
 
@@ -39,7 +41,8 @@ The CodeBuild IAM role needs access to:
 
 ```
 secretsmanager:GetSecretValue
-Resource: arn:aws:secretsmanager:{region}:{account}:secret:/epc/{applicationId}/android-signing/*
+secretsmanager:CreateSecret
+Resource: arn:aws:secretsmanager:{region}:{account}:secret:/epc/{applicationId}/android-signing-*
 ```
 
 ### Required variables
@@ -57,12 +60,9 @@ Resource: arn:aws:secretsmanager:{region}:{account}:secret:/epc/{applicationId}/
 
 ### Local build
 
+Release builds are not signed locally — Gradle fails with an explicit message.
+For local testing use a debug build:
+
 ```bash
-# Retrieve secrets from AWS Secrets Manager
-SECRET_PREFIX="/epc/{applicationId}/android-signing"
-aws secretsmanager get-secret-value --secret-id "$SECRET_PREFIX/keystore" --query SecretBinary --output text | base64 --decode > android/upload-keystore.jks
-# Create android/key.properties with storePassword, keyPassword, keyAlias, storeFile
-flutter build appbundle --release
-# Clean up
-rm -f android/key.properties android/upload-keystore.jks
+flutter build apk --debug
 ```

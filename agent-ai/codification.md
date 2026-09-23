@@ -138,15 +138,6 @@ Do not add a pattern only to make the architecture look more sophisticated. A di
 - Do not extract every literal automatically; extract values that have semantic meaning, are reused, or are likely to change.
 - Prefer names such as `GenerationPlanFileName` over literals such as `"generation-plan.json"`.
 
-## Testing
-
-- Add unit tests for validators, path normalization, placeholder rendering, relation rules, and plan construction.
-- Add integration tests for the complete CLI flow using temporary directories.
-- Test both successful generation and expected failures.
-- Keep tests deterministic and independent of the developer machine.
-- Test filesystem behavior without modifying production fixtures.
-- Run the narrowest relevant test first, then the complete test suite.
-
 ## Change Discipline
 
 - Make the smallest change that solves the requirement.
