@@ -95,6 +95,11 @@
                         "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/domain",
                         "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/presentation",
                         "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/presentation/widgets",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/health",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/health/application",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/health/data",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/health/domain",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/health/presentation",
                         "frontend/{{ FRONTEND_NAME }}/lib/features/monetization",
                         "frontend/{{ FRONTEND_NAME }}/lib/features/monetization/domain",
                         "frontend/{{ FRONTEND_NAME }}/lib/providers/ads",
@@ -247,6 +252,30 @@
                   {
                       "key":  "frontend/{{ FRONTEND_NAME }}/lib/ui/my_app.dart",
                       "value":  "templates/lib/ui/my_app.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/health/domain/health_status.dart",
+                      "value":  "templates/lib/features/health/domain/health_status.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/health/domain/i_health_repository.dart",
+                      "value":  "templates/lib/features/health/domain/i_health_repository.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/health/data/api_health_repository.dart",
+                      "value":  "templates/lib/features/health/data/api_health_repository.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/health/data/mock_health_repository.dart",
+                      "value":  "templates/lib/features/health/data/mock_health_repository.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/health/application/health_view_model.dart",
+                      "value":  "templates/lib/features/health/application/health_view_model.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/health/presentation/health_status_dot.dart",
+                      "value":  "templates/lib/features/health/presentation/health_status_dot.dart.scriban"
                   },
                   {
                       "key":  "frontend/{{ FRONTEND_NAME }}/android/.gitignore",
@@ -1211,6 +1240,10 @@
                   {
                       "key":  "frontend/{{ FRONTEND_NAME }}/test/quiz_generation_config_test.dart",
                       "value":  "templates/test/quiz_generation_config_test.dart.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/test/health_repository_test.dart",
+                      "value":  "templates/test/health_repository_test.dart.scriban"
                   },
                   {
                       "key":  "frontend/{{ FRONTEND_NAME }}/web/index.html",

@@ -11,7 +11,7 @@ Por cada tarea pendiente del TODO:
 5. Definir el flujo como una lista. Debe mostrar de donde sale cada dato.
 6. Lista los **archivos a crear** indicando su propósito.
 7. Lista los **archivos a modificar** indicando qué cambios requieren.
-8. Hacer preguntas, dudas sobre la implementación.
+8. Hacer preguntas, dudas sobre la implementación. Siempre dar recomendación
 9. Crea un archivo `agent-ai/plans/plan-XXXX.md`.
 10. Siempre especificar los costos
 

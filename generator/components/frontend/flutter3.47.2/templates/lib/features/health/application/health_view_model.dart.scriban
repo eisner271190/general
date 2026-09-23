@@ -1,0 +1,49 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import '../domain/health_status.dart';
+import '../domain/i_health_repository.dart';
+
+/// Consulta la salud del backend al iniciar y en polling.
+/// Lógica de estado fuera de la UI (SOLID/SRP).
+class HealthViewModel extends ChangeNotifier {
+  static const Duration pollInterval = Duration(seconds: 30);
+
+  final IHealthRepository _repository;
+  Timer? _timer;
+  HealthStatus _status = HealthStatus.unavailable;
+
+  HealthViewModel({required IHealthRepository repository})
+      : _repository = repository;
+
+  HealthStatus get status => _status;
+
+  bool get isAvailable => _status == HealthStatus.available;
+
+  /// Consulta una vez y notifica si el estado cambia.
+  Future<void> refresh() async {
+    final result = await _repository.check();
+    if (_status != result) {
+      _status = result;
+      notifyListeners();
+    }
+  }
+
+  /// Primera consulta inmediata + polling periódico.
+  void startPolling() {
+    refresh();
+    _timer?.cancel();
+    _timer = Timer.periodic(pollInterval, (_) => refresh());
+  }
+
+  void stopPolling() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+}

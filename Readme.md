@@ -1,4 +1,4 @@
-# general
+# General
 
 Repositorio raíz que contiene herramientas y plantillas para generar proyectos y componentes.
 

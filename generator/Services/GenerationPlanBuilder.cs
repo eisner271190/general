@@ -154,10 +154,15 @@ internal sealed class GenerationPlanBuilder(
             var target = outputPrefix is not null
                 ? RenderPath(Path.Combine(outputPrefix, file.Key), variables)
                 : RenderPath(file.Key, variables);
-            AddUnique(files.Select(item => item.Key).ToList(), paths, target, "archivo");
             var templatePath = ResolveComponentSource(componentDirectory, file.Value);
-            var content = File.ReadAllText(templatePath);
-            files.Add(new PlanFile(target, templateRenderer.Render(content, variables, templatePath)));
+            var content = templateRenderer.Render(File.ReadAllText(templatePath), variables, templatePath);
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                GeneratorLogger.Debug(GeneratorMessages.EmptyTemplateSkipped(file.Value, target));
+                continue;
+            }
+            AddUnique(files.Select(item => item.Key).ToList(), paths, target, "archivo");
+            files.Add(new PlanFile(target, content));
         }
         foreach (var defaultFile in component.DefaultFiles)
         {

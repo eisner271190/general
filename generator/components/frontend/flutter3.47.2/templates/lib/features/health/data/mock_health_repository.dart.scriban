@@ -1,0 +1,14 @@
+import '../domain/health_status.dart';
+import '../domain/i_health_repository.dart';
+
+/// Simula el estado del backend alternando disponible/no disponible.
+class MockHealthRepository implements IHealthRepository {
+  bool _available = true;
+
+  @override
+  Future<HealthStatus> check() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    _available = !_available;
+    return _available ? HealthStatus.available : HealthStatus.unavailable;
+  }
+}

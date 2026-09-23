@@ -20,4 +20,5 @@ internal static class GeneratorMessages
     public static string MissingComponentFile(string path) => $"No existe el archivo fuente '{path}' dentro del componente.";
     public static string EmptyJson(string path) => $"El JSON '{path}' esta vacio.";
     public static string NoInputConfigurations(string path) => $"No se encontraron configuraciones JSON en '{path}'.";
+    public static string EmptyTemplateSkipped(string template, string target) => $"Plantilla omitida por render vacio: '{template}' -> '{target}'.";
 }

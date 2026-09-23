@@ -5,6 +5,9 @@ import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
 import 'package:{{ FRONTEND_NAME }}/features/auth/domain/i_auth_service.dart';
 import 'package:{{ FRONTEND_NAME }}/features/auth/data/auth_service.dart';
 import 'package:{{ FRONTEND_NAME }}/features/auth/data/mock_auth_service.dart';
+import 'package:{{ FRONTEND_NAME }}/features/health/domain/i_health_repository.dart';
+import 'package:{{ FRONTEND_NAME }}/features/health/data/api_health_repository.dart';
+import 'package:{{ FRONTEND_NAME }}/features/health/data/mock_health_repository.dart';
 
 class ServiceFactory {
   ServiceFactory._();
@@ -54,6 +57,22 @@ class ServiceFactory {
       case ServiceMode.none:
         Logger.info('[SERVICE_FACTORY] Creating Real AuthService (default)');
         return AuthService();
+    }
+  }
+
+  static IHealthRepository createHealthRepository() {
+    final mode = _resolveMode(ServiceEnv.keyHealthMode);
+
+    switch (mode) {
+      case ServiceMode.mock:
+        Logger.info('[SERVICE_FACTORY] Creating Mock HealthRepository');
+        return MockHealthRepository();
+      case ServiceMode.real:
+        Logger.info('[SERVICE_FACTORY] Creating Real HealthRepository');
+        return ApiHealthRepository();
+      case ServiceMode.none:
+        Logger.info('[SERVICE_FACTORY] Creating Real HealthRepository (default)');
+        return ApiHealthRepository();
     }
   }
 }

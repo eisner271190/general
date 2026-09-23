@@ -1,0 +1,8 @@
+import 'health_status.dart';
+
+/// Contrato para verificar la salud del backend.
+/// SRP: una sola responsabilidad, consultar el estado.
+abstract class IHealthRepository {
+  /// Consulta el endpoint de salud y devuelve el estado resultante.
+  Future<HealthStatus> check();
+}

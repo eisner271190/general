@@ -1,0 +1,2 @@
+/// Estado de disponibilidad del backend.
+enum HealthStatus { available, unavailable }

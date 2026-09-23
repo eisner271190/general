@@ -1,5 +1,10 @@
 # Todo (priorizado)
 
+## MVP (Prioridad)
+    frontend compilando y ejecutando
+    frontend consumiendo API REST del backend
+    backend funcionando con infraestructura AWS
+
 ## Frontend
 1. Suscripción.
 2. AdMob.
@@ -12,9 +17,8 @@
 ## DevSecOps
 1. SonarQube.
 2. Trivy.
-3. Azure Pipeline.
-4. Dependency Check.
-5. Observabilidad.
+3. Dependency Check.
+4. Observabilidad.
 
 ## Documentación
 1. Diagram as Code.

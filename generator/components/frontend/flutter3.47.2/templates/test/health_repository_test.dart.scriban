@@ -1,0 +1,85 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:{{ FRONTEND_NAME }}/features/health/data/api_health_repository.dart';
+import 'package:{{ FRONTEND_NAME }}/features/health/domain/health_status.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/consume/i_http_client.dart';
+
+class _FakeHttpClient implements IHttpClient {
+  final int statusCode;
+  final String body;
+
+  _FakeHttpClient({required this.statusCode, required this.body});
+
+  @override
+  Future<HttpResponse> get(String url, {Map<String, String>? headers}) async {
+    return HttpResponse(
+      statusCode: statusCode,
+      body: body,
+      headers: const {},
+    );
+  }
+
+  @override
+  Future<HttpResponse> post(
+    String url, {
+    Map<String, String>? headers,
+    dynamic body,
+  }) => get(url, headers: headers);
+
+  @override
+  Future<HttpResponse> put(
+    String url, {
+    Map<String, String>? headers,
+    dynamic body,
+  }) => get(url, headers: headers);
+
+  @override
+  Future<HttpResponse> delete(String url, {Map<String, String>? headers}) =>
+      get(url, headers: headers);
+
+  @override
+  Future<HttpResponse> patch(
+    String url, {
+    Map<String, String>? headers,
+    dynamic body,
+  }) => get(url, headers: headers);
+}
+
+void main() {
+  setUpAll(() {
+    dotenv.loadFromString(envString: 'API_BASE_URL=http://localhost:5000');
+  });
+
+  test('available when status code is 200 and body is UP', () async {
+    final repository = ApiHealthRepository(
+      httpClient: _FakeHttpClient(
+        statusCode: 200,
+        body: '{"status":"UP"}',
+      ),
+    );
+
+    expect(await repository.check(), HealthStatus.available);
+  });
+
+  test('unavailable when status code is 503', () async {
+    final repository = ApiHealthRepository(
+      httpClient: _FakeHttpClient(
+        statusCode: 503,
+        body: '{"status":"DOWN"}',
+      ),
+    );
+
+    expect(await repository.check(), HealthStatus.unavailable);
+  });
+
+  test('unavailable when server returns 200 with DOWN', () async {
+    final repository = ApiHealthRepository(
+      httpClient: _FakeHttpClient(
+        statusCode: 200,
+        body: '{"status":"DOWN"}',
+      ),
+    );
+
+    expect(await repository.check(), HealthStatus.unavailable);
+  });
+}

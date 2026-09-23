@@ -1,0 +1,53 @@
+import 'package:flutter/material.dart';
+import 'package:{{ FRONTEND_NAME }}/core/service_factory.dart';
+import '../application/health_view_model.dart';
+
+/// Punto de estado del backend en el AppBar.
+/// Verde: backend disponible. Rojo: no disponible.
+class HealthStatusDot extends StatefulWidget {
+  const HealthStatusDot({super.key});
+
+  @override
+  State<HealthStatusDot> createState() => _HealthStatusDotState();
+}
+
+class _HealthStatusDotState extends State<HealthStatusDot> {
+  late final HealthViewModel _viewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = HealthViewModel(
+      repository: ServiceFactory.createHealthRepository(),
+    );
+    _viewModel.addListener(_onStatusChanged);
+    _viewModel.startPolling();
+  }
+
+  void _onStatusChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _viewModel.removeListener(_onStatusChanged);
+    _viewModel.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final available = _viewModel.isAvailable;
+    return Tooltip(
+      message: available ? 'Backend available' : 'Backend unavailable',
+      child: Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(
+          color: available ? Colors.green : Colors.red,
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+}
