@@ -14,6 +14,7 @@ description: Principios y reglas de código limpio (SOLID, DRY, KISS, naming) al
 8. **YAGNI** — no introducir abstracciones sin caso de uso actual.
 9. **Fail fast** — validar entradas e invariantes antes de mutar estado.
 10. **Separación de concerns** — dominio / aplicación / infraestructura / presentación independientes.
+11. **G30 (énfasis fuerte)** — una función = una cosa; si hace "y" (dos verbos o dos acciones en el nombre/cuerpo), extraer de inmediato en un método con un solo propósito. Regla de oro al escribir **y** al revisar.
 
 ## Naming
 - Inglés para identificadores; PascalCase clases/métodos/públicos; camelCase locales/privados; prefijo `I` en interfaces.

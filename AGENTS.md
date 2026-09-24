@@ -27,6 +27,7 @@ Actuar como ingeniero senior: cambios pequeños, verificables y seguros. Idioma:
 
 ## Estándares de código
 - Cargar el skill `clean-code` antes de escribir o refactorizar código.
+- **Énfasis en G30:** una función = una cosa; si hace "y", extraerla en un método con un solo propósito (al escribir y al revisar; ver checklist del skill `clean-code`).
 - Convenciones por stack: skills `flutter`, `java`, `dotnet`, `terraform` + `AGENTS.md` de la carpeta.
 - Identificadores en inglés. PascalCase en clases/métodos/propiedades públicas; interfaces con prefijo `I`; verbos en métodos.
 
