@@ -38,9 +38,6 @@ resource "aws_iam_role_policy" "{{ Name }}" {
           "dynamodb:Query"
         ],
         Resource = [
-{{- for entity in Entities }}
-                    aws_dynamodb_table.{{ entity }}.arn{{ if for.last == false }},{{ end }}
-{{- end }}
                     ]
       }
     ]

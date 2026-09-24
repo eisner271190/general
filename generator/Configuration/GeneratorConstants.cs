@@ -10,6 +10,8 @@ internal static class GeneratorConstants
     public const string OutputDirectoryName = "output";
     public const string ProjectsDirectoryName = "projects";
     public const string GenerationPlanFileName = "generation-plan.json";
+    public const string ConfigurationFileName = "epc.json";
+    public const string JsonExtension = ".json";
     public const string DefaultsDirectory = "defaults";
     public const string DefaultErrorCode = "GEN000";
 
@@ -23,11 +25,16 @@ internal static class GeneratorConstants
     public const string BackendVariable = "BACKEND";
     public const string EntitiesVariable = "ENTITIES_JSON";
     public const string EndpointsVariable = "ENDPOINTS_JSON";
+    public const string ConsumedEventsVariable = "ConsumedEvents";
     public const string TemplateNameVariable = "Name";
     public const string TemplateCompanyVariable = "Company";
     public const string TemplateMicroserviceNameVariable = "MicroserviceName";
     public const string TemplatePortVariable = "Port";
     public const string TemplateGraalvmVariable = "Graalvm";
+    public const string FrontendNameVariable = "FRONTEND_NAME";
+    public const string FrontendFrameworkVariable = "FRONTEND_FRAMEWORK";
+    public const string FrontendVersionVariable = "FRONTEND_VERSION";
+    public const string HasAppIconVariable = "HAS_APP_ICON";
 
     public const string OneToOneRelation = "one-to-one";
     public const string OneToManyRelation = "one-to-many";

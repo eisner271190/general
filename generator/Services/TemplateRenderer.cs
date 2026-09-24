@@ -1,6 +1,8 @@
+using System.Text.RegularExpressions;
 using Generator.Messages;
 using Scriban;
 using Scriban.Runtime;
+using Scriban.Syntax;
 
 namespace Generator.Services;
 
@@ -15,26 +17,30 @@ internal sealed class TemplateRenderer : ITemplateRenderer
     {
         var template = Template.Parse(content, templatePath);
         if (template.HasErrors)
-        {
             throw new GeneratorException(ErrorCodes.InvalidTemplate, string.Join(Environment.NewLine, template.Messages));
-        }
 
         var scriptObject = new ScriptObject();
         foreach (var variable in variables)
             scriptObject.Add(variable.Key, variable.Value);
 
-        var context = new TemplateContext();
+        var context = new TemplateContext { StrictVariables = true };
         context.PushGlobal(scriptObject);
-        var rendered = template.Render(context);
-        var unresolvedPlaceholder = rendered
-            .Split("{{", StringSplitOptions.None)
-            .Skip(1)
-            .Select(part => part.Split("}}", 2, StringSplitOptions.None)[0])
-            .FirstOrDefault();
 
-        if (unresolvedPlaceholder is not null)
-            throw new GeneratorException(ErrorCodes.UnresolvedPlaceholder, GeneratorMessages.UnresolvedPlaceholder(unresolvedPlaceholder.Trim(), templatePath));
+        try
+        {
+            return template.Render(context);
+        }
+        catch (ScriptRuntimeException exception)
+        {
+            throw new GeneratorException(
+                ErrorCodes.UnresolvedPlaceholder,
+                GeneratorMessages.UnresolvedPlaceholder(ExtractPlaceholder(exception.Message), templatePath));
+        }
+    }
 
-        return rendered;
+    private static string ExtractPlaceholder(string message)
+    {
+        var match = Regex.Match(message, "`([^`]+)`");
+        return match.Success ? match.Groups[1].Value : message;
     }
 }

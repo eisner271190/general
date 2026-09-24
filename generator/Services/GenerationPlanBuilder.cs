@@ -12,28 +12,52 @@ internal sealed class GenerationPlanBuilder(
     IConfigurationValidator configurationValidator,
     ITemplateRenderer templateRenderer)
 {
+    private sealed class PlanState
+    {
+        public List<string> Directories { get; } = [];
+        public List<PlanFile> Files { get; } = [];
+        public List<PlanDefaultFile> DefaultFiles { get; } = [];
+        public HashSet<string> Paths { get; } = new(StringComparer.OrdinalIgnoreCase);
+    }
+
     public GenerationPlan Build(string inputPath, string? requestedEnvironment)
     {
         var configuration = jsonReader.Read<EpcConfiguration>(inputPath);
         configurationValidator.Validate(configuration);
-        var environment = requestedEnvironment is null
-            ? configuration.Environments[0]
-            : configuration.Environments.FirstOrDefault(item => item.Name.Equals(requestedEnvironment, StringComparison.OrdinalIgnoreCase))
-                ?? throw new GeneratorException(ErrorCodes.EnvironmentNotFound, GeneratorMessages.EnvironmentNotFound(requestedEnvironment));
+        var environment = ResolveEnvironment(configuration, requestedEnvironment);
+        var variables = BuildVariables(configuration, environment);
+        var state = new PlanState();
 
-        var variables = environment.Variables.ToDictionary(item => item.Key, item => (object?)item.Value, StringComparer.OrdinalIgnoreCase);
-        variables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
+        AddBackendComponents(configuration, variables, state);
+        AddFrontendComponent(configuration, inputPath, variables, state);
+        AddCloudComponents(configuration, variables, state);
+
+        return new GenerationPlan(configuration.ApplicationName, configuration.ApplicationId, environment.Name, state.Directories, state.Files, state.DefaultFiles);
+    }
+
+    private static EnvironmentConfiguration ResolveEnvironment(EpcConfiguration configuration, string? requestedEnvironment)
+    {
+        if (requestedEnvironment is null)
+            return configuration.Environments[0];
+
+        return configuration.Environments.FirstOrDefault(item => item.Name.Equals(requestedEnvironment, StringComparison.OrdinalIgnoreCase))
+            ?? throw new GeneratorException(ErrorCodes.EnvironmentNotFound, GeneratorMessages.EnvironmentNotFound(requestedEnvironment));
+    }
+
+    private static Dictionary<string, object?> BuildVariables(EpcConfiguration configuration, EnvironmentConfiguration environment)
+    {
+        var environmentVariables = environment.Variables.ToDictionary(item => item.Key, item => (object?)item.Value, StringComparer.OrdinalIgnoreCase);
+        return new Dictionary<string, object?>(environmentVariables, StringComparer.OrdinalIgnoreCase)
         {
             [GeneratorConstants.ApplicationNameVariable] = configuration.ApplicationName,
             [GeneratorConstants.ApplicationIdVariable] = configuration.ApplicationId,
             [GeneratorConstants.ApplicationPackageVariable] = configuration.ApplicationId.Replace('.', Path.DirectorySeparatorChar),
             [GeneratorConstants.EnvironmentVariable] = environment.Name
         };
-        var directories = new List<string>();
-        var files = new List<PlanFile>();
-        var defaultFiles = new List<PlanDefaultFile>();
-        var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    }
 
+    private void AddBackendComponents(EpcConfiguration configuration, IReadOnlyDictionary<string, object?> variables, PlanState state)
+    {
         foreach (var microservice in configuration.Microservices)
         {
             var microserviceVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
@@ -49,77 +73,70 @@ internal sealed class GenerationPlanBuilder(
                 [GeneratorConstants.BackendVariable] = microservice.Backend,
                 [GeneratorConstants.EntitiesVariable] = jsonReader.Serialize(microservice.Entities),
                 [GeneratorConstants.EndpointsVariable] = jsonReader.Serialize(microservice.Endpoints),
-                ["ConsumedEvents"] = microservice.ConsumedEvents
+                [GeneratorConstants.ConsumedEventsVariable] = microservice.ConsumedEvents
             };
 
-            ProcessComponent(
-                GeneratorConstants.BackendComponentType,
-                microservice.Backend,
-                "backend",
-                null,
-                microserviceVariables,
-                directories, files, defaultFiles, paths);
+            ProcessComponent(GeneratorConstants.BackendComponentType, microservice.Backend, "backend", null, microserviceVariables, state);
         }
+    }
 
-        if (configuration.Frontend is not null)
+    private void AddFrontendComponent(EpcConfiguration configuration, string inputPath, IReadOnlyDictionary<string, object?> variables, PlanState state)
+    {
+        if (configuration.Frontend is null)
+            return;
+
+        var appIconPath = Path.Combine(Path.GetDirectoryName(inputPath) ?? workingDirectory, "app_icon.png");
+        var hasAppIcon = File.Exists(appIconPath);
+        var frontendVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
         {
-            var appIconPath = Path.Combine(Path.GetDirectoryName(inputPath) ?? workingDirectory, "app_icon.png");
-            var hasAppIcon = File.Exists(appIconPath);
-            var frontendVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
-            {
-                [GeneratorConstants.TemplateNameVariable] = configuration.Frontend.Name,
-                [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(configuration.ApplicationId),
-                ["FRONTEND_NAME"] = configuration.Frontend.Name,
-                ["FRONTEND_FRAMEWORK"] = configuration.Frontend.Framework,
-                ["FRONTEND_VERSION"] = configuration.Frontend.Version ?? "1.0.0+1",
-                ["HAS_APP_ICON"] = hasAppIcon
-            };
+            [GeneratorConstants.TemplateNameVariable] = configuration.Frontend.Name,
+            [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(configuration.ApplicationId),
+            [GeneratorConstants.FrontendNameVariable] = configuration.Frontend.Name,
+            [GeneratorConstants.FrontendFrameworkVariable] = configuration.Frontend.Framework,
+            [GeneratorConstants.FrontendVersionVariable] = configuration.Frontend.Version ?? "1.0.0+1",
+            [GeneratorConstants.HasAppIconVariable] = hasAppIcon
+        };
 
-            ProcessComponent(
-                GeneratorConstants.FrontendComponentType,
-                configuration.Frontend.Framework,
-                null,
-                Path.Combine("frontend", configuration.Frontend.Name),
-                frontendVariables,
-                directories, files, defaultFiles, paths);
+        ProcessComponent(
+            GeneratorConstants.FrontendComponentType,
+            configuration.Frontend.Framework,
+            null,
+            Path.Combine("frontend", configuration.Frontend.Name),
+            frontendVariables,
+            state);
 
-            if (hasAppIcon)
-            {
-                var appIconTarget = Path.Combine("frontend", configuration.Frontend.Name, "assets", "icon", "app_icon.png");
-                AddUnique(defaultFiles.Select(item => item.Key).ToList(), paths, appIconTarget, "archivo predeterminado");
-                defaultFiles.Add(new PlanDefaultFile(appIconTarget, appIconPath));
-            }
-        }
-
-        if (configuration.Cloud is not null)
+        if (hasAppIcon)
         {
-            var cloudName = configuration.Cloud.Name ?? configuration.Cloud.Provider;
-            var cloudVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
+            var appIconTarget = Path.Combine("frontend", configuration.Frontend.Name, "assets", "icon", "app_icon.png");
+            EnsureUniquePath(state.Paths, appIconTarget, "archivo predeterminado");
+            state.DefaultFiles.Add(new PlanDefaultFile(appIconTarget, appIconPath));
+        }
+    }
+
+    private void AddCloudComponents(EpcConfiguration configuration, IReadOnlyDictionary<string, object?> variables, PlanState state)
+    {
+        if (configuration.Cloud is null)
+            return;
+
+        var cloudName = configuration.Cloud.Name ?? configuration.Cloud.Provider;
+        var cloudVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
+        {
+            [GeneratorConstants.TemplateNameVariable] = cloudName,
+            [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(configuration.ApplicationId)
+        };
+
+        foreach (var microservice in configuration.Microservices)
+        {
+            var microserviceCloudVariables = new Dictionary<string, object?>(cloudVariables, StringComparer.OrdinalIgnoreCase)
             {
-                [GeneratorConstants.TemplateNameVariable] = cloudName,
-                [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(configuration.ApplicationId)
+                [GeneratorConstants.MicroserviceNameVariable] = microservice.Name,
+                [GeneratorConstants.MicroservicePortVariable] = microservice.Port.ToString(),
+                [GeneratorConstants.TemplateMicroserviceNameVariable] = microservice.Name,
+                [GeneratorConstants.ConsumedEventsVariable] = microservice.ConsumedEvents
             };
 
-            foreach (var microservice in configuration.Microservices)
-            {
-                var microserviceCloudVariables = new Dictionary<string, object?>(cloudVariables, StringComparer.OrdinalIgnoreCase)
-                {
-                    [GeneratorConstants.MicroserviceNameVariable] = microservice.Name,
-                    [GeneratorConstants.MicroservicePortVariable] = microservice.Port.ToString(),
-                    [GeneratorConstants.TemplateMicroserviceNameVariable] = microservice.Name
-                };
-
-                ProcessComponent(
-                    GeneratorConstants.CloudComponentType,
-                    configuration.Cloud.Provider,
-                    null,
-                    null,
-                    microserviceCloudVariables,
-                    directories, files, defaultFiles, paths);
-            }
+            ProcessComponent(GeneratorConstants.CloudComponentType, configuration.Cloud.Provider, null, null, microserviceCloudVariables, state);
         }
-
-        return new GenerationPlan(configuration.ApplicationName, configuration.ApplicationId, environment.Name, directories, files, defaultFiles);
     }
 
     private void ProcessComponent(
@@ -128,10 +145,7 @@ internal sealed class GenerationPlanBuilder(
         string? outputPrefix,
         string? defaultFilePrefix,
         IReadOnlyDictionary<string, object?> variables,
-        List<string> directories,
-        List<PlanFile> files,
-        List<PlanDefaultFile> defaultFiles,
-        HashSet<string> paths)
+        PlanState state)
     {
         var componentPath = ResolveSource(Path.Combine(
             GeneratorConstants.ComponentsDirectory,
@@ -147,8 +161,10 @@ internal sealed class GenerationPlanBuilder(
             var target = outputPrefix is not null
                 ? RenderPath(Path.Combine(outputPrefix, directory), variables)
                 : RenderPath(directory, variables);
-            AddUnique(directories, paths, target, "directorio");
+            EnsureUniquePath(state.Paths, target, "directorio");
+            state.Directories.Add(target);
         }
+
         foreach (var file in component.Files)
         {
             var target = outputPrefix is not null
@@ -161,9 +177,10 @@ internal sealed class GenerationPlanBuilder(
                 GeneratorLogger.Debug(GeneratorMessages.EmptyTemplateSkipped(file.Value, target));
                 continue;
             }
-            AddUnique(files.Select(item => item.Key).ToList(), paths, target, "archivo");
-            files.Add(new PlanFile(target, content));
+            EnsureUniquePath(state.Paths, target, "archivo");
+            state.Files.Add(new PlanFile(target, content));
         }
+
         foreach (var defaultFile in component.DefaultFiles)
         {
             var source = ResolveComponentSource(componentDirectory, defaultFile);
@@ -171,8 +188,8 @@ internal sealed class GenerationPlanBuilder(
             var target = prefix is not null
                 ? Path.Combine(prefix, pathValidator.DefaultOutputPath(defaultFile))
                 : pathValidator.DefaultOutputPath(defaultFile);
-            AddUnique(defaultFiles.Select(item => item.Key).ToList(), paths, target, "archivo predeterminado");
-            defaultFiles.Add(new PlanDefaultFile(target, Path.GetRelativePath(workingDirectory, source)));
+            EnsureUniquePath(state.Paths, target, "archivo predeterminado");
+            state.DefaultFiles.Add(new PlanDefaultFile(target, Path.GetRelativePath(workingDirectory, source)));
         }
     }
 
@@ -204,10 +221,9 @@ internal sealed class GenerationPlanBuilder(
         return segments.Length >= 2 ? segments[^2] : applicationId;
     }
 
-    private static void AddUnique(ICollection<string> collection, HashSet<string> allPaths, string path, string kind)
+    private static void EnsureUniquePath(HashSet<string> allPaths, string path, string kind)
     {
         if (!allPaths.Add(path))
             throw new GeneratorException(ErrorCodes.DuplicateOutput, GeneratorMessages.DuplicateOutput(kind, path));
-        collection.Add(path);
     }
 }

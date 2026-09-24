@@ -2,6 +2,7 @@
 
 Formato: `fecha — decisión — contexto — consecuencias`.
 
+- **2026-09-24** — Sobreescritura de salida permitida: `PlanExecutor` sobrescribe archivos existentes sin comprobación previa; `GEN010 ExistingOutput` (código muerto) eliminado. Contexto: decisión explícita del usuario ("está bien que sobreescriba"); los duplicados internos del plan siguen fallando con `GEN009`. Consecuencias: ediciones manuales en `projects/<id>` se regeneran encima; los conflictos ruta/archivo (archivo donde debe haber directorio, viceversa) se validan antes de escribir con `GEN007`.
 - **2026-09-23** — Flujo "Trabajar": `todo.md` con IDs T01–T16; skill `trabajar` + comando `/trabajar`; branch `feature/<plan-sin-.md>` → plan → implementar → PR (`gh pr*` = ask; sin `gh`, fallback a URL de compare de GitHub).
 - **2026-09-23** — Criterio "tarea grande": >5 archivos, o >2 capas/componentes, o diff estimado >400 líneas; riesgo alto (BD/migraciones/renombres) obliga a plan **primero** aunque sea pequeña. Vigente en los skills `plan-workflow` (fuente canónica) y `trabajar`.
 

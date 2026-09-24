@@ -22,7 +22,8 @@ try
         pathValidator,
         configurationValidator,
         templateRenderer);
-    var application = new GeneratorApplication(workingDirectory, planBuilder, jsonReader, pathValidator);
+    var planExecutorFactory = new PlanExecutorFactory(workingDirectory, jsonReader, pathValidator);
+    var application = new GeneratorApplication(workingDirectory, planBuilder, pathValidator, planExecutorFactory);
     application.Run();
     return 0;
 }

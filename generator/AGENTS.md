@@ -7,7 +7,7 @@
 
 ## Convenciones
 - Cargar el skill `dotnet` antes de escribir o refactorizar código aquí (nullable, records, DI, capas, valores).
-- Carpetas propias: mensajes fijos en `Messages/GeneratorMessages.cs`, códigos estables en `ErrorCodes` (ej. `GEN001`); salida CLI: `<error-code>: <message>`; nombres tipo `GenerationPlanFileName`, no `"generation-plan.json"`.
+- Carpetas propias: mensajes fijos en `Messages/GeneratorMessages.cs`, códigos estables en `ErrorCodes` (ej. `GEN002`); salida CLI: `<error-code>: <message>`; nombres tipo `GenerationPlanFileName`, no `"generation-plan.json"`.
 
 ## Reglas del generador
 - `epc.json` es entrada de configuración, no artefacto generado.

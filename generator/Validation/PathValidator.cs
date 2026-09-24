@@ -7,11 +7,14 @@ namespace Generator.Validation;
 internal interface IPathValidator
 {
     string NormalizeRelative(string path);
+    string NormalizeOutputSegment(string segment);
     string DefaultOutputPath(string sourcePath);
 }
 
 internal sealed class PathValidator : IPathValidator
 {
+    private static readonly HashSet<char> InvalidFileNameCharacters = new(Path.GetInvalidFileNameChars());
+
     public string NormalizeRelative(string path)
     {
         if (string.IsNullOrWhiteSpace(path) || Path.IsPathRooted(path))
@@ -21,6 +24,20 @@ internal sealed class PathValidator : IPathValidator
         if (normalized.Split(Path.DirectorySeparatorChar).Any(part => part == ".."))
             throw new GeneratorException(ErrorCodes.InvalidPath, GeneratorMessages.InvalidPath(path));
 
+        var invalidSegment = normalized
+            .Split(Path.DirectorySeparatorChar)
+            .FirstOrDefault(segment => segment.Any(InvalidFileNameCharacters.Contains));
+        if (invalidSegment is not null)
+            throw new GeneratorException(ErrorCodes.InvalidPath, GeneratorMessages.InvalidFileName(invalidSegment));
+
+        return normalized;
+    }
+
+    public string NormalizeOutputSegment(string segment)
+    {
+        var normalized = NormalizeRelative(segment);
+        if (normalized == "." || normalized.Contains(Path.DirectorySeparatorChar))
+            throw new GeneratorException(ErrorCodes.InvalidPath, GeneratorMessages.InvalidOutputSegment(segment));
         return normalized;
     }
 

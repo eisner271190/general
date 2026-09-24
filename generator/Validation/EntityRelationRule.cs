@@ -10,6 +10,7 @@ internal sealed class EntityRelationRule : IValidationRule
     {
         foreach (var microservice in configuration.Microservices)
         {
+            EnsureNoDuplicateEntities(microservice);
             var entities = microservice.Entities.ToDictionary(item => item.Name, StringComparer.OrdinalIgnoreCase);
             foreach (var entity in microservice.Entities)
             foreach (var relation in entity.Relations)
@@ -22,6 +23,15 @@ internal sealed class EntityRelationRule : IValidationRule
                     throw new GeneratorException(ErrorCodes.InvalidRelation, GeneratorMessages.InvalidRelation(entity.Name, relation.Entity));
             }
         }
+    }
+
+    private static void EnsureNoDuplicateEntities(MicroserviceConfiguration microservice)
+    {
+        var duplicatedEntity = microservice.Entities
+            .GroupBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault(group => group.Count() > 1);
+        if (duplicatedEntity is not null)
+            throw new GeneratorException(ErrorCodes.InvalidConfiguration, GeneratorMessages.DuplicateEntity(duplicatedEntity.Key));
     }
 
     private static string? InverseRelationType(string relationType) => relationType.ToLowerInvariant() switch
