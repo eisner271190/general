@@ -1,0 +1,55 @@
+#Requires -Version 7.0
+<#
+.SYNOPSIS
+    Detiene y retira el microservicio {{ MICROSERVICE_NAME }}.
+.DESCRIPTION
+    Para y elimina el contenedor y la imagen local. No borra la imagen en ECR
+    ni la infraestructura: eso lo hace cloud/down.ps1.
+    Cada paso imprime sus valores con Write-Log.
+.EXAMPLE
+    ./down.ps1
+#>
+[CmdletBinding()]
+param()
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$script:ServiceName = '{{ MICROSERVICE_NAME }}'
+
+function Write-Log {
+    param(
+        [Parameter(Mandatory)][string]$Message,
+        [string]$Value = ''
+    )
+
+    $stamp = "[$(Get-Date -Format 'HH:mm:ss')]"
+    Write-Host "$stamp $Message"
+    if ($Value -ne '') {
+        Write-Host "$stamp     $Value"
+    }
+}
+
+function Remove-Container {
+    Write-Log -Message 'Docker rm' -Value "container=$script:ServiceName"
+    & docker rm -f $script:ServiceName 2>$null
+    Write-Log -Message 'Docker rm' -Value "exit=$LASTEXITCODE"
+}
+
+function Remove-Image {
+    Write-Log -Message 'Docker rmi' -Value "image=$script:ServiceName"
+    & docker rmi $script:ServiceName 2>$null
+    Write-Log -Message 'Docker rmi' -Value "exit=$LASTEXITCODE"
+}
+
+# Facade: una sola entrada para el componente backend.
+function Invoke-BackendDown {
+    Write-Log -Message 'backend/down.ps1 inicio' -Value "serviceName=$script:ServiceName"
+
+    Remove-Container
+    Remove-Image
+
+    Write-Log -Message 'backend/down.ps1 fin' -Value "serviceName=$script:ServiceName"
+}
+
+Invoke-BackendDown

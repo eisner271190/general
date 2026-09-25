@@ -1,26 +1,29 @@
-﻿resource "aws_sns_topic_subscription" "{{ Name }}" {
+﻿resource "aws_sns_topic_subscription" "{{ MICROSERVICE_NAME }}" {
   topic_arn = aws_sns_topic.main.arn
   protocol  = "sqs"
-  endpoint  = aws_sqs_queue.{{ Name }}.arn
+  endpoint  = aws_sqs_queue.{{ MICROSERVICE_NAME }}.arn
 
+  # AWS rechaza arrays vacíos en el filter policy: sin eventos consumidos no se filtra.
+{{ if ConsumedEvents.size > 0 }}
   filter_policy = jsonencode({
     eventType = [
-      {{ for event in ConsumedEvents }}
-        "{{ event }}"{{ if for.last == false }},{{ end }}
-      {{ end }}
+{{ for event in ConsumedEvents }}
+      "{{ event }}"{{ if for.last == false }},{{ end }}
+{{ end }}
     ]
   })
+{{ end }}
 }
 
-resource "aws_sqs_queue_policy" "{{ Name }}" {
-  queue_url = aws_sqs_queue.{{ Name }}.id
-  policy    = data.aws_iam_policy_document.{{ Name }}.json
+resource "aws_sqs_queue_policy" "{{ MICROSERVICE_NAME }}" {
+  queue_url = aws_sqs_queue.{{ MICROSERVICE_NAME }}.id
+  policy    = data.aws_iam_policy_document.{{ MICROSERVICE_NAME }}.json
 }
 
-data "aws_iam_policy_document" "{{ Name }}" {
+data "aws_iam_policy_document" "{{ MICROSERVICE_NAME }}" {
   statement {
-    actions = ["sqs:SendMessage"]
-    resources = [aws_sqs_queue.{{ Name }}.arn]
+    actions   = ["sqs:SendMessage"]
+    resources = [aws_sqs_queue.{{ MICROSERVICE_NAME }}.arn]
 
     principals {
       type        = "Service"

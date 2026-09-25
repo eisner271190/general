@@ -1,4 +1,4 @@
-﻿{{ if(!Graalvm) }}FROM maven:3.9.6-eclipse-temurin-17 AS builder
+﻿{{ if Graalvm == "false" }}FROM maven:3.9.6-eclipse-temurin-17 AS builder
 WORKDIR /app
 COPY . .
 RUN mvn compile dependency:copy-dependencies -DincludeScope=runtime -DskipTests
@@ -7,5 +7,5 @@ FROM public.ecr.aws/lambda/java:17
 COPY --from=builder /app/target/classes ${LAMBDA_TASK_ROOT}
 COPY --from=builder /app/target/dependency/* ${LAMBDA_TASK_ROOT}/lib/
 
-CMD [ "com.{{ Company }}.{{ Name }}.LambdaHandler::handleRequest" ]
+CMD [ "{{ APPLICATION_ID }}.LambdaHandler::handleRequest" ]
 {{ end }}

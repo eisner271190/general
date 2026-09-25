@@ -1,0 +1,124 @@
+#Requires -Version 7.0
+<#
+.SYNOPSIS
+    Retira la infraestructura del componente cloud.
+.DESCRIPTION
+    Ejecuta terraform destroy en cada directorio microservicio, en orden
+    inverso al de up.ps1. El directorio modules/ se excluye.
+    Cada paso imprime sus valores con Write-Log.
+.PARAMETER Environment
+    Entorno a retirar. Por defecto el entorno con el que se generó el proyecto.
+.PARAMETER AutoApprove
+    Omite la confirmación previa al destroy.
+.EXAMPLE
+    ./down.ps1 -AutoApprove
+#>
+[CmdletBinding()]
+param(
+    [string]$Environment = '{{ ENVIRONMENT }}',
+    [switch]$AutoApprove
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$script:TerraformRoot = Join-Path $PSScriptRoot 'terraform'
+$script:TerraformFile = "terraform.$Environment.tfvars"
+
+function Write-Log {
+    param(
+        [Parameter(Mandatory)][string]$Message,
+        [string]$Value = ''
+    )
+
+    $stamp = "[$(Get-Date -Format 'HH:mm:ss')]"
+    Write-Host "$stamp $Message"
+    if ($Value -ne '') {
+        Write-Host "$stamp     $Value"
+    }
+}
+
+function Invoke-Terraform {
+    param(
+        [Parameter(Mandatory)][string]$WorkingDirectory,
+        [Parameter(Mandatory)][string[]]$Arguments
+    )
+
+    Write-Log -Message 'terraform' -Value "cwd=$WorkingDirectory"
+    Write-Log -Message 'terraform' -Value "args=$($Arguments -join ' ')"
+
+    Push-Location $WorkingDirectory
+    try {
+        & terraform @Arguments
+        $code = $LASTEXITCODE
+        Write-Log -Message 'terraform' -Value "exit=$code"
+        if ($code -ne 0) {
+            throw "terraform $($Arguments -join ' ') falló con código $code en $WorkingDirectory"
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+function Get-MicroserviceDirectory {
+    Write-Log -Message 'Descubrimiento' -Value "root=$script:TerraformRoot"
+
+    $directories = @(Get-ChildItem -Path $script:TerraformRoot -Directory |
+        Where-Object { $_.Name -ne 'modules' } |
+        Sort-Object -Property Name |
+        ForEach-Object -Process { $_.FullName })
+
+    return $directories
+}
+
+function Invoke-TerraformDestroy {
+    param([Parameter(Mandatory)][string]$WorkingDirectory)
+
+    Write-Log -Message 'Destroy' -Value "tfvars=$script:TerraformFile | autoApprove=true"
+    Invoke-Terraform -WorkingDirectory $WorkingDirectory -Arguments @(
+        'destroy', '-input=false', '-auto-approve', '-var-file', $script:TerraformFile
+    )
+}
+
+function Confirm-Destroy {
+    param([Parameter(Mandatory)][string]$Name)
+
+    if ($AutoApprove) {
+        Write-Log -Message 'Confirmación' -Value "name=$Name | autoApprove=true | respuesta=forzada"
+        return $true
+    }
+
+    $answer = Read-Host "Destruir la infraestructura de '$Name'? [s/N]"
+    Write-Log -Message 'Confirmación' -Value "name=$Name | respuesta=$answer"
+    return ($answer -match '^[sS]')
+}
+
+function Invoke-MicroserviceDown {
+    param([Parameter(Mandatory)][string]$WorkingDirectory)
+
+    $name = Split-Path -Path $WorkingDirectory -Leaf
+    Write-Log -Message 'Microservicio' -Value "name=$name | action=destroy"
+
+    if (Confirm-Destroy -Name $name) {
+        Invoke-TerraformDestroy -WorkingDirectory $WorkingDirectory
+    }
+}
+
+# Facade: una sola entrada para el componente cloud, en orden inverso a up.ps1.
+function Invoke-CloudDown {
+    Write-Log -Message 'cloud/down.ps1 inicio' -Value "environment=$Environment | autoApprove=$AutoApprove"
+    Write-Log -Message 'Variables' -Value "scriptRoot=$PSScriptRoot | terraformRoot=$script:TerraformRoot | tfvars=$script:TerraformFile"
+
+    $directories = @(Get-MicroserviceDirectory)
+    [array]::Reverse($directories)
+    Write-Log -Message 'Orden inverso' -Value "total=$($directories.Count)"
+
+    foreach ($directory in $directories) {
+        Invoke-MicroserviceDown -WorkingDirectory $directory
+    }
+
+    Write-Log -Message 'cloud/down.ps1 fin' -Value "procesados=$($directories.Count)"
+}
+
+Invoke-CloudDown

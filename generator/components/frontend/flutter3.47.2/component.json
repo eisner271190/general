@@ -1328,6 +1328,14 @@
                   {
                       "key":  "frontend/{{ FRONTEND_NAME }}/codepipeline.yml",
                       "value":  "templates/codepipeline.yml.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/up.ps1",
+                      "value":  "templates/up.ps1.scriban"
+                  },
+                  {
+                      "key":  "frontend/{{ FRONTEND_NAME }}/down.ps1",
+                      "value":  "templates/down.ps1.scriban"
                   }
               ],
     "defaultFiles":  [

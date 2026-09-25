@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Generator.Domain.Models;
 using Generator.Domain.Messages;
 using Generator.Domain.Validation;
@@ -12,6 +13,7 @@ internal sealed class GenerationPlanBuilder(
     IConfigurationValidator configurationValidator,
     ITemplateRenderer templateRenderer)
 {
+
     public GenerationPlan Build(string inputPath, string? requestedEnvironment)
     {
         var configuration = jsonReader.Read<EpcConfiguration>(inputPath);
@@ -20,6 +22,7 @@ internal sealed class GenerationPlanBuilder(
         var variables = BuildVariables(configuration, environment);
         var context = CreateContext(configuration, inputPath, variables);
 
+        AddRootComponent(context);
         AddBackendComponents(context);
         AddFrontendComponent(context);
         AddCloudComponents(context);
@@ -67,6 +70,13 @@ internal sealed class GenerationPlanBuilder(
 
     private static Dictionary<string, object?> BuildVariables(EpcConfiguration configuration, EnvironmentConfiguration environment)
     {
+        var variables = MergeEnvironmentVariables(configuration, environment);
+        variables[GeneratorConstants.EnvironmentVariablesHclVariable] = SerializeEnvironmentVariables(variables);
+        return variables;
+    }
+
+    private static Dictionary<string, object?> MergeEnvironmentVariables(EpcConfiguration configuration, EnvironmentConfiguration environment)
+    {
         var environmentVariables = environment.Variables.ToDictionary(item => item.Key, item => (object?)item.Value, StringComparer.OrdinalIgnoreCase);
         return new Dictionary<string, object?>(environmentVariables, StringComparer.OrdinalIgnoreCase)
         {
@@ -75,6 +85,19 @@ internal sealed class GenerationPlanBuilder(
             [GeneratorConstants.ApplicationPackageVariable] = configuration.ApplicationId.Replace('.', Path.DirectorySeparatorChar),
             [GeneratorConstants.EnvironmentVariable] = environment.Name
         };
+    }
+
+    private static string SerializeEnvironmentVariables(IReadOnlyDictionary<string, object?> variables) =>
+        "{ " + string.Join(", ", variables.Select(item => $"{JsonSerializer.Serialize(item.Key)} = {JsonSerializer.Serialize(item.Value)}")) + " }";
+
+    // Componente raíz: los scripts que orquestan el resto (up.ps1 / down.ps1).
+    private void AddRootComponent(PlanContext context)
+    {
+        var rootContext = context with
+        {
+            Component = CreateComponentRef(GeneratorConstants.RootComponentType, GeneratorConstants.RootComponentName)
+        };
+        ProcessComponent(rootContext);
     }
 
     private void AddBackendComponents(PlanContext context)
@@ -184,7 +207,8 @@ internal sealed class GenerationPlanBuilder(
         return new Dictionary<string, object?>(context.Variables, StringComparer.OrdinalIgnoreCase)
         {
             [GeneratorConstants.TemplateNameVariable] = cloudName,
-            [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(context.Configuration.ApplicationId)
+            [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(context.Configuration.ApplicationId),
+            [GeneratorConstants.CloudRegionVariable] = cloud.Region ?? GeneratorConstants.DefaultCloudRegion
         };
     }
 
@@ -201,7 +225,7 @@ internal sealed class GenerationPlanBuilder(
         };
     }
 
-    // Solo se invoca con contextos que definen Component (los tres Add*Component).
+    // Solo se invoca con contextos que definen Component (los cuatro Add*Component).
     private void ProcessComponent(PlanContext context)
     {
         var component = context.Component!;

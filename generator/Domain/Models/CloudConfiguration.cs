@@ -3,5 +3,6 @@ namespace Generator.Domain.Models;
 public sealed record CloudConfiguration(
     string Provider,
     string? Name = null,
+    string? Region = null,
     Dictionary<string, string>? Secrets = null,
     PipelineConfiguration? Pipeline = null);

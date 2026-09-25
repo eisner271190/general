@@ -1,0 +1,229 @@
+#Requires -Version 7.0
+<#
+.SYNOPSIS
+    Compila, publica y ejecuta el microservicio {{ MICROSERVICE_NAME }}.
+.DESCRIPTION
+    Phase Build: build + tag + push de la imagen al repositorio ECR.
+    Phase Run:   lee los parámetros de Parameter Store y arranca el
+                 contenedor inyectándolos como variables de entorno.
+    Phase All:   Build y Run, en ese orden.
+    Cada paso imprime sus valores con Write-Log.
+.PARAMETER Phase
+    Qué realizar: Build, Run o All.
+.PARAMETER Port
+    Puerto expuesto por el contenedor.
+.EXAMPLE
+    ./up.ps1 -Phase Build
+.EXAMPLE
+    ./up.ps1 -Phase Run
+#>
+[CmdletBinding()]
+param(
+    [ValidateSet('Build', 'Run', 'All')]
+    [string]$Phase = 'All',
+    [int]$Port = {{ MICROSERVICE_PORT }}
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$script:ServiceName = '{{ MICROSERVICE_NAME }}'
+$script:Environment = '{{ ENVIRONMENT }}'
+$script:ParameterPath = "/{{ ENVIRONMENT }}/{{ APPLICATION_ID }}/{{ MICROSERVICE_NAME }}/"
+$script:RepositoryName = '{{ Name }}'
+
+function Write-Log {
+    param(
+        [Parameter(Mandatory)][string]$Message,
+        [string]$Value = ''
+    )
+
+    $stamp = "[$(Get-Date -Format 'HH:mm:ss')]"
+    Write-Host "$stamp $Message"
+    if ($Value -ne '') {
+        Write-Host "$stamp     $Value"
+    }
+}
+
+function Invoke-Process {
+    param(
+        [Parameter(Mandatory)][string]$FilePath,
+        [Parameter(Mandatory)][string[]]$Arguments
+    )
+
+    Write-Log -Message 'proceso' -Value "cmd=$FilePath $($Arguments -join ' ')"
+
+    & $FilePath @Arguments
+    $code = $LASTEXITCODE
+    Write-Log -Message 'proceso' -Value "cmd=$FilePath | exit=$code"
+    if ($code -ne 0) {
+        throw "$FilePath $($Arguments -join ' ') falló con código $code"
+    }
+}
+
+function Get-RepositoryUri {
+    $arguments = @(
+        'ecr', 'describe-repositories',
+        '--repository-names', $script:RepositoryName,
+        '--query', 'repositories[0].repositoryUri',
+        '--output', 'text'
+    )
+
+    Write-Log -Message 'ECR' -Value "repositoryName=$script:RepositoryName"
+    $uri = (& aws @arguments) -join ''
+    $code = $LASTEXITCODE
+    Write-Log -Message 'ECR' -Value "exit=$code | repositoryUri=$uri"
+
+    if ($code -ne 0 -or [string]::IsNullOrWhiteSpace($uri)) {
+        throw "No se pudo resolver el URI del repositorio ECR '$($script:RepositoryName)'. Ejecuta primero 'cloud/up.ps1 -Phase Bootstrap'."
+    }
+
+    return $uri
+}
+
+function Invoke-ImageBuild {
+    Write-Log -Message 'Docker build' -Value "imageName=$script:ServiceName | dockerfile=Dockerfile | context=."
+    # --provenance=false: Lambda rechaza el image index con attestations que BuildKit añade por defecto.
+    Invoke-Process -FilePath 'docker' -Arguments @('build', '--provenance=false', '--platform', 'linux/amd64', '-t', $script:ServiceName, '.')
+}
+
+function Get-RegistryHost {
+    param([Parameter(Mandatory)][string]$RepositoryUri)
+
+    return ($RepositoryUri -split '/')[0]
+}
+
+function Get-RegistryRegion {
+    param([Parameter(Mandatory)][string]$Registry)
+
+    # 577638384397.dkr.ecr.us-east-1.amazonaws.com -> us-east-1
+    return ($Registry -split '\.')[3]
+}
+
+function Get-RegistryPassword {
+    param([Parameter(Mandatory)][string]$Region)
+
+    $arguments = @('ecr', 'get-login-password', '--region', $Region)
+    Write-Log -Message 'ECR login' -Value "aws ecr get-login-password | region=$Region"
+    $password = (& aws @arguments) -join ''
+    $code = $LASTEXITCODE
+    Write-Log -Message 'ECR login' -Value "exit=$code | longitud=$($password.Length)"
+
+    if ($code -ne 0 -or [string]::IsNullOrWhiteSpace($password)) {
+        throw "No se pudo obtener el token de ECR (exit $code)."
+    }
+
+    return $password
+}
+
+function Invoke-RegistryLogin {
+    param(
+        [Parameter(Mandatory)][string]$Registry,
+        [Parameter(Mandatory)][string]$Region
+    )
+
+    $password = Get-RegistryPassword -Region $Region
+    Write-Log -Message 'ECR login' -Value "registry=$Registry"
+    $password | & docker login --username AWS --password-stdin $Registry
+    $code = $LASTEXITCODE
+    Write-Log -Message 'ECR login' -Value "registry=$Registry | exit=$code"
+    if ($code -ne 0) {
+        throw "docker login a '$Registry' falló con código $code"
+    }
+}
+
+function Invoke-ImagePush {
+    $uri = Get-RepositoryUri
+    $registry = Get-RegistryHost -RepositoryUri $uri
+    $region = Get-RegistryRegion -Registry $registry
+    Invoke-RegistryLogin -Registry $registry -Region $region
+
+    $tag = "${uri}:latest"
+    Write-Log -Message 'Docker tag' -Value "source=$script:ServiceName | target=$tag"
+    Invoke-Process -FilePath 'docker' -Arguments @('tag', $script:ServiceName, $tag)
+
+    Write-Log -Message 'Docker push' -Value "tag=$tag"
+    Invoke-Process -FilePath 'docker' -Arguments @('push', $tag)
+}
+
+function Get-ParameterEnvironment {
+    $arguments = @(
+        'ssm', 'get-parameters-by-path',
+        '--path', $script:ParameterPath,
+        '--recursive', '--with-decryption',
+        '--query', 'Parameters[].{Name:Name,Value:Value}',
+        '--output', 'json'
+    )
+
+    Write-Log -Message 'Parameter Store' -Value "path=$script:ParameterPath"
+    $json = (& aws @arguments) -join ''
+    $code = $LASTEXITCODE
+    Write-Log -Message 'Parameter Store' -Value "exit=$code"
+
+    if ($code -ne 0 -or [string]::IsNullOrWhiteSpace($json)) {
+        throw "No se pudieron leer los parámetros de '$($script:ParameterPath)'. Ejecuta primero 'cloud/up.ps1'."
+    }
+
+    $prefix = $script:ParameterPath.TrimEnd('/')
+    $records = @(ConvertFrom-Json -InputObject $json)
+    Write-Log -Message 'Parameter Store' -Value "total=$($records.Count)"
+
+    return @(
+        $records | ForEach-Object -Process {
+            $name = $_.Name.Substring($prefix.Length + 1)
+            Write-Log -Message 'Parámetro' -Value "$name=$($_.Value)"
+            [PSCustomObject]@{ Name = $name; Value = $_.Value }
+        }
+    )
+}
+
+function Invoke-ContainerRun {
+    $parameters = @(Get-ParameterEnvironment)
+    # El host usa el puerto del proyecto (target/*.json); el contenedor expone el RIE de Lambda (8080).
+    $arguments = @('run', '--rm', '-d', '--name', $script:ServiceName, '-p', "${Port}:8080")
+    foreach ($parameter in $parameters) {
+        # La coma tiene precedencia sobre '+': construir el par fuera del array literal.
+        $entry = '{0}={1}' -f $parameter.Name, $parameter.Value
+        $arguments += @('-e', $entry)
+    }
+    $arguments += $script:ServiceName
+
+    Write-Log -Message 'Docker run' -Value "container=$script:ServiceName | port=$Port | image=$script:ServiceName | variables=$($parameters.Count)"
+    Invoke-Process -FilePath 'docker' -Arguments $arguments
+}
+
+function Remove-Container {
+    Write-Log -Message 'Docker rm' -Value "container=$script:ServiceName"
+    & docker rm -f $script:ServiceName 2>$null
+    Write-Log -Message 'Docker rm' -Value "exit=$LASTEXITCODE"
+}
+
+function Invoke-SelectedPhase {
+    if ($Phase -in @('Build', 'All')) {
+        Invoke-ImageBuild
+        Invoke-ImagePush
+    }
+    if ($Phase -in @('Run', 'All')) {
+        Remove-Container
+        Invoke-ContainerRun
+    }
+}
+
+# Facade: una sola entrada para el componente backend.
+function Invoke-BackendUp {
+    Write-Log -Message 'backend/up.ps1 inicio' -Value "phase=$Phase | port=$Port"
+    Write-Log -Message 'Variables' -Value "serviceName=$script:ServiceName | environment=$script:Environment | repositoryName=$script:RepositoryName | parameterPath=$script:ParameterPath"
+
+    # docker build usa '.' como contexto: hay que operar en el directorio del microservicio.
+    Push-Location $PSScriptRoot
+    try {
+        Invoke-SelectedPhase
+    }
+    finally {
+        Pop-Location
+    }
+
+    Write-Log -Message 'backend/up.ps1 fin' -Value "phase=$Phase"
+}
+
+Invoke-BackendUp

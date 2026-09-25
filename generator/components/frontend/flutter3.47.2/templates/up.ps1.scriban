@@ -1,0 +1,136 @@
+#Requires -Version 7.0
+<#
+.SYNOPSIS
+    Compila y ejecuta la app Flutter del componente frontend.
+.DESCRIPTION
+    Secuencia: clean -> pub get -> (dart pub add) -> regenerar iconos ->
+    appbundle release -> flutter run.
+    dart pub add solo se ejecuta si se indican dependencias: pubspec.yaml
+    ya declara flutter_launcher_icons.
+    Cada paso imprime sus valores con Write-Log.
+.PARAMETER DeviceId
+    Identificador del dispositivo para flutter run. Si se omite, flutter run
+    no se ejecuta: es interactivo y Flutter aborta con más de un dispositivo
+    conectado. Compilar no depende de este parámetro.
+.PARAMETER Dependencies
+    Paquetes a añadir con `dart pub add --dev` antes de compilar.
+.PARAMETER SkipIcons
+    Omite la regeneración de los iconos de lanzamiento.
+.PARAMETER SkipBuild
+    Omite el `flutter build appbundle --release`.
+.PARAMETER SkipRun
+    Omite el `flutter run`, dejando solo la compilación.
+.EXAMPLE
+    ./up.ps1 -SkipRun
+.EXAMPLE
+    ./up.ps1 -DeviceId 2201117SL
+#>
+[CmdletBinding()]
+param(
+    [string]$DeviceId = '',
+    [string[]]$Dependencies = @(),
+    [switch]$SkipIcons,
+    [switch]$SkipBuild,
+    [switch]$SkipRun
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$script:ProjectRoot = $PSScriptRoot
+
+function Write-Log {
+    param(
+        [Parameter(Mandatory)][string]$Message,
+        [string]$Value = ''
+    )
+
+    $stamp = "[$(Get-Date -Format 'HH:mm:ss')]"
+    Write-Host "$stamp $Message"
+    if ($Value -ne '') {
+        Write-Host "$stamp     $Value"
+    }
+}
+
+function Invoke-Flutter {
+    param([Parameter(Mandatory)][string[]]$Arguments)
+
+    Write-Log -Message 'flutter' -Value "cwd=$script:ProjectRoot"
+    Write-Log -Message 'flutter' -Value "args=$($Arguments -join ' ')"
+
+    Push-Location $script:ProjectRoot
+    try {
+        & flutter @Arguments
+        $code = $LASTEXITCODE
+        Write-Log -Message 'flutter' -Value "exit=$code"
+        if ($code -ne 0) {
+            throw "flutter $($Arguments -join ' ') falló con código $code"
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+function Invoke-DependencyAdd {
+    Write-Log -Message 'Dependencias' -Value "total=$($Dependencies.Count) | values=$($Dependencies -join ', ')"
+
+    foreach ($dependency in $Dependencies) {
+        Write-Log -Message 'dart pub add' -Value "dependency=$dependency | scope=dev"
+        Invoke-Flutter -Arguments @('pub', 'add', '--dev', $dependency)
+    }
+}
+
+function Invoke-IconGeneration {
+    if ($SkipIcons) {
+        Write-Log -Message 'Iconos' -Value "skipIcons=true | se omite la generación"
+        return
+    }
+
+    Write-Log -Message 'Iconos' -Value "skipIcons=false | command=flutter pub run flutter_launcher_icons"
+    Invoke-Flutter -Arguments @('pub', 'run', 'flutter_launcher_icons')
+}
+
+function Invoke-Bundle {
+    if ($SkipBuild) {
+        Write-Log -Message 'Appbundle' -Value "skipBuild=true | se omite la compilación"
+        return
+    }
+
+    Write-Log -Message 'Appbundle' -Value "mode=release | command=flutter build appbundle --release"
+    Invoke-Flutter -Arguments @('build', 'appbundle', '--release')
+}
+
+function Invoke-ApplicationRun {
+    if ($SkipRun) {
+        Write-Log -Message 'Ejecución' -Value "skipRun=true | se omite flutter run"
+        return
+    }
+
+    if ($DeviceId -eq '') {
+        # flutter run es interactivo y aborta si hay más de un dispositivo:
+        # sin dispositivo indicado no se ejecuta para no bloquear al orquestador.
+        Write-Log -Message 'Ejecución' -Value "deviceId= | omitido=true | motivo=sin-dispositivo-indicado | usa -DeviceId"
+        return
+    }
+
+    Write-Log -Message 'Ejecución' -Value "deviceId=$DeviceId | args=run --debug -d $DeviceId"
+    Invoke-Flutter -Arguments @('run', '--debug', '-d', $DeviceId)
+}
+
+# Facade: una sola entrada para el componente frontend.
+function Invoke-FrontendUp {
+    Write-Log -Message 'frontend/up.ps1 inicio' -Value "projectRoot=$script:ProjectRoot"
+    Write-Log -Message 'Variables' -Value "deviceId=$DeviceId | dependencies=$($Dependencies -join ', ') | skipIcons=$SkipIcons | skipBuild=$SkipBuild | skipRun=$SkipRun"
+
+    Invoke-Flutter -Arguments @('clean')
+    Invoke-Flutter -Arguments @('pub', 'get')
+    Invoke-DependencyAdd
+    Invoke-IconGeneration
+    Invoke-Bundle
+    Invoke-ApplicationRun
+
+    Write-Log -Message 'frontend/up.ps1 fin' -Value "skipRun=$SkipRun"
+}
+
+Invoke-FrontendUp

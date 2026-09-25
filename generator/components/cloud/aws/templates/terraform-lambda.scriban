@@ -1,5 +1,5 @@
-﻿resource "aws_iam_role" "{{ Name }}" {
-  name = "{{ Name }}"
+﻿resource "aws_iam_role" "{{ MICROSERVICE_NAME }}" {
+  name = "{{ MICROSERVICE_NAME }}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -15,9 +15,9 @@
   })
 }
 
-resource "aws_iam_role_policy" "{{ Name }}" {
-  name = "{{ Name }}"
-  role = aws_iam_role.{{ Name }}.id
+resource "aws_iam_role_policy" "{{ MICROSERVICE_NAME }}" {
+  name = "{{ MICROSERVICE_NAME }}"
+  role = aws_iam_role.{{ MICROSERVICE_NAME }}.id
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -37,20 +37,19 @@ resource "aws_iam_role_policy" "{{ Name }}" {
           "dynamodb:Scan",
           "dynamodb:Query"
         ],
-        Resource = [
-                    ]
+        Resource = ["*"]
       }
     ]
   })
 }
 
-resource "aws_lambda_function" "{{ Name }}" {
-  function_name = "{{ Name }}"
-  role          = aws_iam_role.{{ Name }}.arn
+resource "aws_lambda_function" "{{ MICROSERVICE_NAME }}" {
+  function_name = "{{ MICROSERVICE_NAME }}"
+  role          = aws_iam_role.{{ MICROSERVICE_NAME }}.arn
   package_type  = "Image"
   memory_size   = 512
   timeout       = 60
-  image_uri     = replace(var.image_uri_ecr, "{SERVICENAME}", "{{ Name }}")
+  image_uri     = "${aws_ecr_repository.{{ MICROSERVICE_NAME }}.repository_url}:latest"
   environment {
     variables = var.environment_variables
   }

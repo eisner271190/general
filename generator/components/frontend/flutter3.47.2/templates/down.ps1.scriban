@@ -1,0 +1,75 @@
+#Requires -Version 7.0
+<#
+.SYNOPSIS
+    Detiene la ejecución y limpia la app Flutter del componente frontend.
+.DESCRIPTION
+    Cierra una sesión `flutter run` en curso y deja el proyecto sin
+    artefactos de compilación.
+    Cada paso imprime sus valores con Write-Log.
+.EXAMPLE
+    ./down.ps1
+#>
+[CmdletBinding()]
+param()
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$script:ProjectRoot = $PSScriptRoot
+
+function Write-Log {
+    param(
+        [Parameter(Mandatory)][string]$Message,
+        [string]$Value = ''
+    )
+
+    $stamp = "[$(Get-Date -Format 'HH:mm:ss')]"
+    Write-Host "$stamp $Message"
+    if ($Value -ne '') {
+        Write-Host "$stamp     $Value"
+    }
+}
+
+function Invoke-Flutter {
+    param([Parameter(Mandatory)][string[]]$Arguments)
+
+    Write-Log -Message 'flutter' -Value "cwd=$script:ProjectRoot | args=$($Arguments -join ' ')"
+
+    Push-Location $script:ProjectRoot
+    try {
+        & flutter @Arguments
+        $code = $LASTEXITCODE
+        Write-Log -Message 'flutter' -Value "exit=$code"
+        if ($code -ne 0) {
+            throw "flutter $($Arguments -join ' ') falló con código $code"
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+function Stop-RunningApplication {
+    $processes = @(Get-Process -Name 'flutter_tools', 'dart' -ErrorAction SilentlyContinue |
+        Where-Object -FilterScript { $_.Path -like "$script:ProjectRoot*" })
+
+    foreach ($process in $processes) {
+        Write-Log -Message 'Proceso' -Value "name=$($process.ProcessName) | id=$($process.Id) | path=$($process.Path)"
+    }
+    Write-Log -Message 'Proceso' -Value "total=$($processes.Count)"
+
+    $processes | Stop-Process -ErrorAction SilentlyContinue
+    Write-Log -Message 'Proceso' -Value "accion=stop | completado=true"
+}
+
+# Facade: una sola entrada para el componente frontend.
+function Invoke-FrontendDown {
+    Write-Log -Message 'frontend/down.ps1 inicio' -Value "projectRoot=$script:ProjectRoot"
+
+    Stop-RunningApplication
+    Invoke-Flutter -Arguments @('clean')
+
+    Write-Log -Message 'frontend/down.ps1 fin' -Value "projectRoot=$script:ProjectRoot"
+}
+
+Invoke-FrontendDown

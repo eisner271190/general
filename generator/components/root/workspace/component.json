@@ -1,0 +1,10 @@
+{
+  "name": "workspace",
+  "type": "root",
+  "directories": [],
+  "files": [
+    { "key": "up.ps1", "value": "templates/up.ps1.scriban" },
+    { "key": "down.ps1", "value": "templates/down.ps1.scriban" }
+  ],
+  "defaultFiles": []
+}

@@ -12,6 +12,9 @@
   "files": [
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/provider.tf", "value": "templates/terraform-provider.scriban" },
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/variables.tf", "value": "templates/terraform-variables.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/terraform.{{ENVIRONMENT}}.tfvars", "value": "templates/terraform-tfvars.scriban" },
+    { "key": "cloud/up.ps1", "value": "templates/up.ps1.scriban" },
+    { "key": "cloud/down.ps1", "value": "templates/down.ps1.scriban" },
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/apigateway.tf", "value": "templates/terraform-apigateway.scriban" },
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/apigateway_lambda.tf", "value": "templates/terraform-apigateway-lambda.scriban" },
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/ecr.tf", "value": "templates/terraform-ecr.scriban" },
@@ -23,6 +26,7 @@
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/cognito_client.tf", "value": "templates/terraform-cognito-client.scriban" },
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/cognito_google_provider.tf", "value": "templates/terraform-cognito-google-provider.scriban" },
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/lambda.tf", "value": "templates/terraform-lambda.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/ssm.tf", "value": "templates/terraform-ssm.scriban" },
     { "key": "cloud/terraform/modules/secrets-manager/main.tf", "value": "templates/terraform-secrets-manager.scriban" },
     { "key": "cloud/terraform/modules/secrets-manager/variables.tf", "value": "templates/terraform-secrets-manager-variables.scriban" },
     { "key": "cloud/terraform/modules/pipeline/main.tf", "value": "templates/terraform-pipeline.scriban" },

@@ -59,6 +59,8 @@
     { "key": "{{MICROSERVICE_NAME}}/.gitignore", "value": "templates/gitignore.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/azure-build.yml", "value": "templates/azure-build.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/Dockerfile", "value": "templates/Dockerfile.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/up.ps1", "value": "templates/up.ps1.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/down.ps1", "value": "templates/down.ps1.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/pom.xml", "value": "templates/pom.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/sonar-project.properties", "value": "templates/sonar-properties.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/bootstrap", "value": "templates/bootstrap.scriban" },

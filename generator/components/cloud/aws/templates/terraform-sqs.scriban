@@ -1,15 +1,15 @@
-﻿resource "aws_sqs_queue" "{{ Name }}" {
-  name = "{{ Name }}"
-  delay_seconds = 0
+﻿resource "aws_sqs_queue" "{{ MICROSERVICE_NAME }}" {
+  name                      = "{{ MICROSERVICE_NAME }}"
+  delay_seconds             = 0
   message_retention_seconds = 345600
 }
 
-output "sqs_queue_url_{{ Name }}" {
-  value = aws_sqs_queue.{{ Name }}.id
+output "sqs_queue_url_{{ MICROSERVICE_NAME }}" {
+  value       = aws_sqs_queue.{{ MICROSERVICE_NAME }}.id
   description = "La URL de la cola SQS creada."
 }
 
-output "sqs_queue_name_{{ Name }}" {
-  value = aws_sqs_queue.{{ Name }}.name
+output "sqs_queue_name_{{ MICROSERVICE_NAME }}" {
+  value       = aws_sqs_queue.{{ MICROSERVICE_NAME }}.name
   description = "El nombre de la cola SQS creada."
 }

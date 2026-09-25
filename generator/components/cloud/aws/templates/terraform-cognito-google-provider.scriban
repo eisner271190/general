@@ -1,4 +1,7 @@
 resource "aws_cognito_identity_provider" "google_provider" {
+  # Sin credenciales de Google no se crea: AWS rechaza el IdP con client_id/client_secret vacíos.
+  count = var.google_client_id == "" ? 0 : 1
+
   user_pool_id  = aws_cognito_user_pool.user_pool.id
   provider_name = "Google"
   provider_type = "Google"
@@ -17,6 +20,6 @@ resource "aws_cognito_identity_provider" "google_provider" {
 }
 
 output "google_provider_name" {
-  value       = aws_cognito_identity_provider.google_provider.provider_name
+  value       = length(aws_cognito_identity_provider.google_provider) > 0 ? aws_cognito_identity_provider.google_provider[0].provider_name : ""
   description = "Nombre del proveedor de identidad de Google"
 }

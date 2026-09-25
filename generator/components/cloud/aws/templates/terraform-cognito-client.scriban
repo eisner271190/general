@@ -8,7 +8,8 @@
   allowed_oauth_flows = ["code", "implicit"]
   allowed_oauth_scopes = ["email", "openid", "profile"]
 
-  supported_identity_providers = ["COGNITO", "Google"]
+  # Solo se declara Google si el IdP existe: AWS rechaza un proveedor no registrado.
+  supported_identity_providers = length(aws_cognito_identity_provider.google_provider) > 0 ? ["COGNITO", "Google"] : ["COGNITO"]
 
   explicit_auth_flows = [
     "ALLOW_USER_PASSWORD_AUTH",

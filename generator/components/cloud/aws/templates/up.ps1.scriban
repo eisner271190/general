@@ -1,0 +1,179 @@
+#Requires -Version 7.0
+<#
+.SYNOPSIS
+    Levanta la infraestructura del componente cloud.
+.DESCRIPTION
+    Recorre cada directorio microservicio de cloud/terraform y ejecuta
+    init -> plan -> apply. El directorio modules/ se excluye porque contiene
+    módulos reutilizables y no un estado propio.
+    Cada paso imprime sus valores con Write-Log.
+.PARAMETER Environment
+    Entorno a desplegar. Por defecto el entorno con el que se generó el proyecto.
+.PARAMETER AutoApprove
+    Omite la confirmación previa al apply.
+.PARAMETER PlanOnly
+    Se detiene tras el plan, sin aplicar.
+.PARAMETER Phase
+    Bootstrap crea solo el repositorio ECR (antes de subir imágenes).
+    Apply ejecuta init -> plan -> apply completo. Por defecto Apply.
+.EXAMPLE
+    ./up.ps1 -PlanOnly
+.EXAMPLE
+    ./up.ps1 -AutoApprove
+#>
+[CmdletBinding()]
+param(
+    [string]$Environment = '{{ ENVIRONMENT }}',
+    [switch]$AutoApprove,
+    [switch]$PlanOnly,
+    [ValidateSet('Bootstrap', 'Apply')]
+    [string]$Phase = 'Apply'
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$script:TerraformRoot = Join-Path $PSScriptRoot 'terraform'
+$script:TerraformFile = "terraform.$Environment.tfvars"
+
+function Write-Log {
+    param(
+        [Parameter(Mandatory)][string]$Message,
+        [string]$Value = ''
+    )
+
+    $stamp = "[$(Get-Date -Format 'HH:mm:ss')]"
+    Write-Host "$stamp $Message"
+    if ($Value -ne '') {
+        Write-Host "$stamp     $Value"
+    }
+}
+
+function Invoke-Terraform {
+    param(
+        [Parameter(Mandatory)][string]$WorkingDirectory,
+        [Parameter(Mandatory)][string[]]$Arguments
+    )
+
+    Write-Log -Message 'terraform' -Value "cwd=$WorkingDirectory"
+    Write-Log -Message 'terraform' -Value "args=$($Arguments -join ' ')"
+
+    Push-Location $WorkingDirectory
+    try {
+        & terraform @Arguments
+        $code = $LASTEXITCODE
+        Write-Log -Message 'terraform' -Value "exit=$code"
+        if ($code -ne 0) {
+            throw "terraform $($Arguments -join ' ') falló con código $code en $WorkingDirectory"
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+function Get-MicroserviceDirectory {
+    Write-Log -Message 'Descubrimiento' -Value "root=$script:TerraformRoot"
+
+    $directories = @(Get-ChildItem -Path $script:TerraformRoot -Directory |
+        Where-Object { $_.Name -ne 'modules' } |
+        Sort-Object -Property Name |
+        ForEach-Object -Process { $_.FullName })
+
+    foreach ($directory in $directories) {
+        Write-Log -Message 'Microservicio' -Value "path=$directory"
+    }
+    Write-Log -Message 'Descubrimiento' -Value "total=$($directories.Count) | excluido=modules"
+
+    return $directories
+}
+
+function Invoke-TerraformInit {
+    param([Parameter(Mandatory)][string]$WorkingDirectory)
+
+    Invoke-Terraform -WorkingDirectory $WorkingDirectory -Arguments @('init', '-input=false')
+}
+
+function Invoke-TerraformPlan {
+    param([Parameter(Mandatory)][string]$WorkingDirectory)
+
+    Write-Log -Message 'Plan' -Value "tfvars=$script:TerraformFile"
+    Invoke-Terraform -WorkingDirectory $WorkingDirectory -Arguments @(
+        'plan', '-input=false', '-var-file', $script:TerraformFile
+    )
+}
+
+function Invoke-TerraformApply {
+    param([Parameter(Mandatory)][string]$WorkingDirectory)
+
+    Write-Log -Message 'Apply' -Value "tfvars=$script:TerraformFile | autoApprove=true"
+    Invoke-Terraform -WorkingDirectory $WorkingDirectory -Arguments @(
+        'apply', '-input=false', '-auto-approve', '-var-file', $script:TerraformFile
+    )
+}
+
+function Invoke-TerraformBootstrap {
+    param([Parameter(Mandatory)][string]$WorkingDirectory)
+
+    # Aísla la creación del repositorio ECR: la imagen debe subirse antes de
+    # que la Lambda pueda referenciarla. Rompe el ciclo ECR <-> Lambda sin
+    # partir el estado de Terraform.
+    $target = '-target=aws_ecr_repository.{{ MICROSERVICE_NAME }}'
+    Write-Log -Message 'Bootstrap ECR' -Value "target=$target | tfvars=$script:TerraformFile"
+    Invoke-Terraform -WorkingDirectory $WorkingDirectory -Arguments @(
+        'apply', '-input=false', '-auto-approve', '-var-file', $script:TerraformFile, $target
+    )
+}
+
+function Confirm-Apply {
+    param([Parameter(Mandatory)][string]$Name)
+
+    if ($AutoApprove) {
+        Write-Log -Message 'Confirmación' -Value "name=$Name | autoApprove=true | respuesta=forzada"
+        return $true
+    }
+
+    $answer = Read-Host "Aplicar cambios de '$Name'? [s/N]"
+    Write-Log -Message 'Confirmación' -Value "name=$Name | respuesta=$answer"
+    return ($answer -match '^[sS]')
+}
+
+function Invoke-MicroserviceUp {
+    param([Parameter(Mandatory)][string]$WorkingDirectory)
+
+    $name = Split-Path -Path $WorkingDirectory -Leaf
+    Write-Log -Message 'Microservicio inicio' -Value "name=$name | phase=$Phase | planOnly=$PlanOnly"
+
+    if ($Phase -eq 'Bootstrap') {
+        Invoke-TerraformInit -WorkingDirectory $WorkingDirectory
+        Invoke-TerraformBootstrap -WorkingDirectory $WorkingDirectory
+        Write-Log -Message 'Microservicio fin' -Value "name=$name | phase=Bootstrap"
+        return
+    }
+
+    Invoke-TerraformInit -WorkingDirectory $WorkingDirectory
+    Invoke-TerraformPlan -WorkingDirectory $WorkingDirectory
+    if ($PlanOnly) {
+        Write-Log -Message 'Microservicio fin' -Value "name=$name | planOnly=true, se omite apply"
+        return
+    }
+    if (Confirm-Apply -Name $name) {
+        Invoke-TerraformApply -WorkingDirectory $WorkingDirectory
+    }
+    Write-Log -Message 'Microservicio fin' -Value "name=$name"
+}
+
+# Facade: una sola entrada para el componente cloud.
+function Invoke-CloudUp {
+    Write-Log -Message 'cloud/up.ps1 inicio' -Value "environment=$Environment | phase=$Phase | autoApprove=$AutoApprove | planOnly=$PlanOnly"
+    Write-Log -Message 'Variables' -Value "scriptRoot=$PSScriptRoot | terraformRoot=$script:TerraformRoot | tfvars=$script:TerraformFile"
+
+    $directories = @(Get-MicroserviceDirectory)
+    foreach ($directory in $directories) {
+        Invoke-MicroserviceUp -WorkingDirectory $directory
+    }
+
+    Write-Log -Message 'cloud/up.ps1 fin' -Value "phase=$Phase | procesados=$($directories.Count)"
+}
+
+Invoke-CloudUp

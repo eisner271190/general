@@ -1,14 +1,14 @@
-﻿resource "aws_ecr_repository" "{{ Name }}" {
-    name = "{{ Name }}"
-    lifecycle {
-        prevent_destroy = false
-    }
+﻿resource "aws_ecr_repository" "{{ MICROSERVICE_NAME }}" {
+  name = "{{ MICROSERVICE_NAME }}"
+  lifecycle {
+    prevent_destroy = false
+  }
 
-    force_delete = true
+  force_delete = true
 }
-output "ecr_{{ Name }}_url" {
-    value = aws_ecr_repository.{{ Name }}.repository_url
+output "ecr_{{ MICROSERVICE_NAME }}_url" {
+  value = aws_ecr_repository.{{ MICROSERVICE_NAME }}.repository_url
 }
-output "ecr_{{ Name }}_arn" {
-    value = aws_ecr_repository.{{ Name }}.arn
+output "ecr_{{ MICROSERVICE_NAME }}_arn" {
+  value = aws_ecr_repository.{{ MICROSERVICE_NAME }}.arn
 }

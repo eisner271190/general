@@ -1,0 +1,124 @@
+#Requires -Version 7.0
+<#
+.SYNOPSIS
+    Retira la aplicación completa (frontend -> backend -> cloud).
+.DESCRIPTION
+    Orden inverso a up.ps1: primero la app, luego los contenedores y por
+    último la infraestructura de Terraform.
+    Cada paso imprime sus valores con Write-Log.
+.PARAMETER Environment
+    Entorno a retirar. Por defecto el entorno con el que se generó el proyecto.
+.PARAMETER AutoApprove
+    Omite la confirmación previa al destroy de Terraform.
+.PARAMETER SkipFrontend
+    Omite la limpieza del frontend.
+.EXAMPLE
+    ./down.ps1
+.EXAMPLE
+    ./down.ps1 -AutoApprove
+#>
+[CmdletBinding()]
+param(
+    [string]$Environment = '{{ ENVIRONMENT }}',
+    [switch]$AutoApprove,
+    [switch]$SkipFrontend
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+function Write-Log {
+    param(
+        [Parameter(Mandatory)][string]$Message,
+        [string]$Value = ''
+    )
+
+    $stamp = "[$(Get-Date -Format 'HH:mm:ss')]"
+    Write-Host "$stamp $Message"
+    if ($Value -ne '') {
+        Write-Host "$stamp     $Value"
+    }
+}
+
+function Write-Arguments {
+    param([Parameter(Mandatory)][hashtable]$Arguments)
+
+    foreach ($key in ($Arguments.Keys | Sort-Object)) {
+        Write-Log -Message 'argumento' -Value "$key=$($Arguments[$key])"
+    }
+}
+
+function Invoke-ComponentScript {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)][hashtable]$Arguments
+    )
+
+    if (-not (Test-Path -Path $Path)) {
+        throw "No se encontró el script de componente: $Path"
+    }
+
+    Write-Log -Message 'Componente' -Value "path=$Path"
+    Write-Arguments -Arguments $Arguments
+    & $Path @Arguments
+    Write-Log -Message 'Componente' -Value "path=$Path | status=ok"
+}
+
+function Get-ComponentScript {
+    param(
+        [Parameter(Mandatory)][string]$Component,
+        [Parameter(Mandatory)][string]$ScriptName
+    )
+
+    $root = Join-Path -Path $PSScriptRoot -ChildPath $Component
+    Write-Log -Message 'Descubrimiento' -Value "root=$root | filter=$ScriptName"
+
+    $scripts = @(Get-ChildItem -Path $root -Filter $ScriptName -Recurse -ErrorAction SilentlyContinue |
+        Sort-Object -Property FullName |
+        ForEach-Object -Process { $_.FullName })
+
+    foreach ($script in $scripts) {
+        Write-Log -Message 'Script' -Value "path=$script"
+    }
+    Write-Log -Message 'Descubrimiento' -Value "total=$($scripts.Count)"
+
+    return $scripts
+}
+
+function Invoke-ComponentScriptList {
+    param([Parameter(Mandatory)][string]$Component)
+
+    Write-Log -Message 'Fase' -Value "component=$Component | action=down"
+    foreach ($path in Get-ComponentScript -Component $Component -ScriptName 'down.ps1') {
+        Invoke-ComponentScript -Path $path -Arguments @{}
+    }
+}
+
+function Invoke-FrontendDown {
+    if ($SkipFrontend) {
+        Write-Log -Message 'Frontend' -Value "skipFrontend=true | se omite"
+        return
+    }
+
+    Invoke-ComponentScriptList -Component 'frontend'
+}
+
+function Invoke-CloudDown {
+    $path = Join-Path -Path $PSScriptRoot -ChildPath 'cloud/down.ps1'
+    Write-Log -Message 'Fase cloud' -Value "path=$path"
+    Invoke-ComponentScript -Path $path -Arguments @{ Environment = $Environment; AutoApprove = [bool]$AutoApprove }
+}
+
+# Facade: una sola entrada para retirar la aplicación completa.
+function Invoke-ApplicationDown {
+    Write-Log -Message 'down.ps1 inicio' -Value "environment=$Environment | autoApprove=$AutoApprove | skipFrontend=$SkipFrontend"
+    Write-Log -Message 'Orden' -Value "1 Frontend -> 2 Backend -> 3 Cloud (inverso a up.ps1)"
+
+    Invoke-FrontendDown
+    Invoke-ComponentScriptList -Component 'backend'
+    Invoke-CloudDown
+
+    Write-Log -Message 'down.ps1 fin' -Value "environment=$Environment"
+}
+
+Invoke-ApplicationDown

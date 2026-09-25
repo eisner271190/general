@@ -1,12 +1,36 @@
-﻿variable "region"                       {}
-variable "access_key"                   {}
-variable "secret_key"                   {}
-variable "profile"                      {}
-variable "environment"                  {}
-variable "skip_credentials_validation"  {}
-variable "skip_metadata_api_check"      {}
-variable "endpoint_url"                 {}
-variable "image_uri_ecr"                {}
-variable "environment_variables"        {}
-variable "google_client_id"             {}
-variable "google_client_secret"         {}
+﻿variable "region" {
+  type        = string
+  description = "Región AWS de despliegue. La fuente de verdad es cloud.region en epc.json."
+  default     = "{{ CLOUD_REGION }}"
+}
+
+variable "environment" {
+  type        = string
+  description = "Entorno de despliegue. La fuente de verdad es environments[].name en epc.json."
+  default     = "{{ ENVIRONMENT }}"
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]*$", var.environment))
+    error_message = "El entorno debe ser minúsculas, dígitos y guiones."
+  }
+}
+
+variable "environment_variables" {
+  type        = map(string)
+  description = "Variables de entorno inyectadas en la Lambda."
+  default     = {}
+}
+
+variable "google_client_id" {
+  type        = string
+  description = "Client ID de Google para el proveedor de Cognito. Sensible: se inyecta con -var o TF_VAR_google_client_id."
+  sensitive   = true
+  default     = ""
+}
+
+variable "google_client_secret" {
+  type        = string
+  description = "Client secret de Google para el proveedor de Cognito. Sensible: se inyecta con -var o TF_VAR_google_client_secret."
+  sensitive   = true
+  default     = ""
+}
