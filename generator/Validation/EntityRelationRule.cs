@@ -1,45 +1,87 @@
 using Generator.Messages;
 using Generator.Models;
-using Generator.Configuration;
 
 namespace Generator.Validation;
 
-internal sealed class EntityRelationRule : IValidationRule
+internal sealed class EntityRelationRule(IEnumerable<IInverseRelationStrategy> inverseStrategies) : IValidationRule
 {
     public void Validate(EpcConfiguration configuration)
     {
         foreach (var microservice in configuration.Microservices)
-        {
-            EnsureNoDuplicateEntities(microservice);
-            var entities = microservice.Entities.ToDictionary(item => item.Name, StringComparer.OrdinalIgnoreCase);
-            foreach (var entity in microservice.Entities)
-            foreach (var relation in entity.Relations)
-            {
-                if (!entities.TryGetValue(relation.Entity, out var target))
-                    throw new GeneratorException(ErrorCodes.EntityNotFound, GeneratorMessages.EntityNotFound(relation.Entity));
+            ValidateMicroservice(microservice);
+    }
 
-                var inverseType = InverseRelationType(relation.Type);
-                if (inverseType is null || !target.Relations.Any(item => item.Entity.Equals(entity.Name, StringComparison.OrdinalIgnoreCase) && item.Type.Equals(inverseType, StringComparison.OrdinalIgnoreCase)))
-                    throw new GeneratorException(ErrorCodes.InvalidRelation, GeneratorMessages.InvalidRelation(entity.Name, relation.Entity));
-            }
-        }
+    private void ValidateMicroservice(MicroserviceConfiguration microservice)
+    {
+        EnsureNoDuplicateEntities(microservice);
+        var entities = BuildEntityIndex(microservice);
+        foreach (var entity in microservice.Entities)
+            ValidateEntityRelations(entity, entities);
+    }
+
+    private void ValidateEntityRelations(EntityConfiguration entity, Dictionary<string, EntityConfiguration> entities)
+    {
+        var scope = CreateScope(entity, entities);
+        foreach (var relation in entity.Relations)
+            ValidateRelation(relation, scope);
+    }
+
+    private void ValidateRelation(RelationConfiguration relation, EntityScope scope)
+    {
+        var context = CreateRelationContext(relation, scope);
+        EnsureInverseExists(context);
+    }
+
+    private RelationContext CreateRelationContext(RelationConfiguration relation, EntityScope scope) =>
+        new RelationContext(
+            scope.Entity,
+            relation,
+            FindTarget(scope.Entities, relation),
+            ResolveInverseType(relation.Type));
+
+    private static EntityScope CreateScope(EntityConfiguration entity, Dictionary<string, EntityConfiguration> entities) =>
+        new EntityScope(entity, entities);
+
+    private static EntityConfiguration FindTarget(Dictionary<string, EntityConfiguration> entities, RelationConfiguration relation) =>
+        entities.TryGetValue(relation.Entity, out var target)
+            ? target
+            : throw new GeneratorException(ErrorCodes.EntityNotFound, GeneratorMessages.EntityNotFound(relation.Entity));
+
+    private void EnsureInverseExists(RelationContext context)
+    {
+        if (!HasInverseRelation(context))
+            throw new GeneratorException(ErrorCodes.InvalidRelation, GeneratorMessages.InvalidRelation(context.Source.Name, context.Relation.Entity));
+    }
+
+    private static bool HasInverseRelation(RelationContext context)
+    {
+        if (context.InverseType is null)
+            return false;
+        return context.Target.Relations.Any(item => IsInverseMatch(item, context));
+    }
+
+    private static bool IsInverseMatch(RelationConfiguration item, RelationContext context) =>
+        item.Entity.Equals(context.Source.Name, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(item.Type, context.InverseType, StringComparison.OrdinalIgnoreCase);
+
+    private string? ResolveInverseType(string relationType)
+    {
+        var strategy = inverseStrategies.FirstOrDefault(item => item.Supports(relationType));
+        return strategy?.Inverse();
     }
 
     private static void EnsureNoDuplicateEntities(MicroserviceConfiguration microservice)
     {
-        var duplicatedEntity = microservice.Entities
-            .GroupBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
-            .FirstOrDefault(group => group.Count() > 1);
+        var duplicatedEntity = FindDuplicatedEntity(microservice);
         if (duplicatedEntity is not null)
             throw new GeneratorException(ErrorCodes.InvalidConfiguration, GeneratorMessages.DuplicateEntity(duplicatedEntity.Key));
     }
 
-    private static string? InverseRelationType(string relationType) => relationType.ToLowerInvariant() switch
-    {
-        GeneratorConstants.OneToOneRelation => GeneratorConstants.OneToOneRelation,
-        GeneratorConstants.OneToManyRelation => GeneratorConstants.ManyToOneRelation,
-        GeneratorConstants.ManyToOneRelation => GeneratorConstants.OneToManyRelation,
-        GeneratorConstants.ManyToManyRelation => GeneratorConstants.ManyToManyRelation,
-        _ => null
-    };
+    private static IGrouping<string, EntityConfiguration>? FindDuplicatedEntity(MicroserviceConfiguration microservice) =>
+        microservice.Entities
+            .GroupBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault(group => group.Count() > 1);
+
+    private static Dictionary<string, EntityConfiguration> BuildEntityIndex(MicroserviceConfiguration microservice) =>
+        microservice.Entities.ToDictionary(item => item.Name, StringComparer.OrdinalIgnoreCase);
 }

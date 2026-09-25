@@ -6,16 +6,23 @@ internal sealed class ProjectDirectoryResolver
 {
     public string Resolve()
     {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        var directory = CreateBaseDirectory();
         while (directory is not null)
         {
-            if (Directory.Exists(Path.Combine(directory.FullName, GeneratorConstants.TargetDirectoryName)))
+            if (IsProjectRoot(directory))
                 return directory.FullName;
 
             directory = directory.Parent;
         }
 
-        throw new DirectoryNotFoundException(
-            $"No se encontro la raiz del proyecto con la carpeta '{GeneratorConstants.TargetDirectoryName}'.");
+        throw ProjectRootNotFound();
     }
+
+    private static DirectoryInfo CreateBaseDirectory() => new(AppContext.BaseDirectory);
+
+    private static bool IsProjectRoot(DirectoryInfo directory) =>
+        Directory.Exists(Path.Combine(directory.FullName, GeneratorConstants.TargetDirectoryName));
+
+    private static DirectoryNotFoundException ProjectRootNotFound() =>
+        new($"No se encontro la raiz del proyecto con la carpeta '{GeneratorConstants.TargetDirectoryName}'.");
 }

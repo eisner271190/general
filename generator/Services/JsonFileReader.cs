@@ -3,12 +3,6 @@ using Generator.Messages;
 
 namespace Generator.Services;
 
-internal interface IJsonFileReader
-{
-    T Read<T>(string path);
-    string Serialize<T>(T value);
-}
-
 internal sealed class JsonFileReader : IJsonFileReader
 {
     private static readonly JsonSerializerOptions Options = new()
@@ -25,14 +19,20 @@ internal sealed class JsonFileReader : IJsonFileReader
     {
         try
         {
-            return JsonSerializer.Deserialize<T>(content, Options)
-                ?? throw new GeneratorException(ErrorCodes.EmptyJson, GeneratorMessages.EmptyJson(path));
+            return Deserialize<T>(content, path);
         }
         catch (JsonException exception)
         {
-            throw new GeneratorException(ErrorCodes.InvalidJson, GeneratorMessages.InvalidJson(path, exception.Message));
+            throw InvalidJson(path, exception);
         }
     }
+
+    private static T Deserialize<T>(string content, string path) =>
+        JsonSerializer.Deserialize<T>(content, Options)
+            ?? throw new GeneratorException(ErrorCodes.EmptyJson, GeneratorMessages.EmptyJson(path));
+
+    private static GeneratorException InvalidJson(string path, JsonException exception) =>
+        new(ErrorCodes.InvalidJson, GeneratorMessages.InvalidJson(path, exception.Message));
 
     private static string ReadText(string path)
     {
@@ -40,9 +40,15 @@ internal sealed class JsonFileReader : IJsonFileReader
         {
             return File.ReadAllText(path);
         }
-        catch (Exception exception) when (exception is FileNotFoundException or DirectoryNotFoundException)
+        catch (Exception exception) when (IsMissingSourceFile(exception))
         {
-            throw new GeneratorException(ErrorCodes.MissingSourceFile, GeneratorMessages.MissingSourceFile(path));
+            throw MissingSourceFile(path);
         }
     }
+
+    private static bool IsMissingSourceFile(Exception exception) =>
+        exception is FileNotFoundException or DirectoryNotFoundException;
+
+    private static GeneratorException MissingSourceFile(string path) =>
+        new(ErrorCodes.MissingSourceFile, GeneratorMessages.MissingSourceFile(path));
 }

@@ -12,37 +12,58 @@ internal sealed class GenerationPlanBuilder(
     IConfigurationValidator configurationValidator,
     ITemplateRenderer templateRenderer)
 {
-    private sealed class PlanState
-    {
-        public List<string> Directories { get; } = [];
-        public List<PlanFile> Files { get; } = [];
-        public List<PlanDefaultFile> DefaultFiles { get; } = [];
-        public HashSet<string> Paths { get; } = new(StringComparer.OrdinalIgnoreCase);
-    }
-
     public GenerationPlan Build(string inputPath, string? requestedEnvironment)
     {
         var configuration = jsonReader.Read<EpcConfiguration>(inputPath);
         configurationValidator.Validate(configuration);
         var environment = ResolveEnvironment(configuration, requestedEnvironment);
         var variables = BuildVariables(configuration, environment);
-        var state = new PlanState();
+        var context = CreateContext(configuration, inputPath, variables);
 
-        AddBackendComponents(configuration, variables, state);
-        AddFrontendComponent(configuration, inputPath, variables, state);
-        AddCloudComponents(configuration, variables, state);
+        AddBackendComponents(context);
+        AddFrontendComponent(context);
+        AddCloudComponents(context);
 
-        return new GenerationPlan(configuration.ApplicationName, configuration.ApplicationId, environment.Name, state.Directories, state.Files, state.DefaultFiles);
+        return CreatePlan(configuration, environment, context.State);
     }
+
+    private static PlanContext CreateContext(
+        EpcConfiguration configuration,
+        string inputPath,
+        IReadOnlyDictionary<string, object?> variables) =>
+        new PlanContext(configuration, inputPath, variables, CreateState());
+
+    private static PlanState CreateState() => new PlanState();
+
+    private static GenerationPlan CreatePlan(
+        EpcConfiguration configuration,
+        EnvironmentConfiguration environment,
+        PlanState state) =>
+        new GenerationPlan(
+            configuration.ApplicationName,
+            configuration.ApplicationId,
+            environment.Name,
+            state.Directories,
+            state.Files,
+            state.DefaultFiles);
+
+    private static ComponentRef CreateComponentRef(string componentType, string componentName) =>
+        new ComponentRef(componentType, componentName);
+
+    private static TemplateSource CreateTemplateSource(string content, string templatePath) =>
+        new TemplateSource(content, templatePath);
 
     private static EnvironmentConfiguration ResolveEnvironment(EpcConfiguration configuration, string? requestedEnvironment)
     {
         if (requestedEnvironment is null)
             return configuration.Environments[0];
 
-        return configuration.Environments.FirstOrDefault(item => item.Name.Equals(requestedEnvironment, StringComparison.OrdinalIgnoreCase))
+        return FindEnvironment(configuration, requestedEnvironment)
             ?? throw new GeneratorException(ErrorCodes.EnvironmentNotFound, GeneratorMessages.EnvironmentNotFound(requestedEnvironment));
     }
+
+    private static EnvironmentConfiguration? FindEnvironment(EpcConfiguration configuration, string requestedEnvironment) =>
+        configuration.Environments.FirstOrDefault(item => item.Name.Equals(requestedEnvironment, StringComparison.OrdinalIgnoreCase));
 
     private static Dictionary<string, object?> BuildVariables(EpcConfiguration configuration, EnvironmentConfiguration environment)
     {
@@ -56,162 +77,240 @@ internal sealed class GenerationPlanBuilder(
         };
     }
 
-    private void AddBackendComponents(EpcConfiguration configuration, IReadOnlyDictionary<string, object?> variables, PlanState state)
+    private void AddBackendComponents(PlanContext context)
     {
-        foreach (var microservice in configuration.Microservices)
-        {
-            var microserviceVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
-            {
-                [GeneratorConstants.TemplateNameVariable] = microservice.Name,
-                [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(configuration.ApplicationId),
-                [GeneratorConstants.TemplateMicroserviceNameVariable] = microservice.Name,
-                [GeneratorConstants.TemplatePortVariable] = microservice.Port.ToString(),
-                [GeneratorConstants.TemplateGraalvmVariable] = "false",
-                [GeneratorConstants.MicroserviceNameVariable] = microservice.Name,
-                [GeneratorConstants.MicroservicePortVariable] = microservice.Port.ToString(),
-                [GeneratorConstants.MicroserviceDeployVariable] = microservice.Deploy,
-                [GeneratorConstants.BackendVariable] = microservice.Backend,
-                [GeneratorConstants.EntitiesVariable] = jsonReader.Serialize(microservice.Entities),
-                [GeneratorConstants.EndpointsVariable] = jsonReader.Serialize(microservice.Endpoints),
-                [GeneratorConstants.ConsumedEventsVariable] = microservice.ConsumedEvents
-            };
-
-            ProcessComponent(GeneratorConstants.BackendComponentType, microservice.Backend, "backend", null, microserviceVariables, state);
-        }
+        var backendContext = context with { OutputPrefix = "backend" };
+        foreach (var microservice in context.Configuration.Microservices)
+            AddBackendComponent(microservice, backendContext);
     }
 
-    private void AddFrontendComponent(EpcConfiguration configuration, string inputPath, IReadOnlyDictionary<string, object?> variables, PlanState state)
+    private void AddBackendComponent(MicroserviceConfiguration microservice, PlanContext context)
     {
-        if (configuration.Frontend is null)
+        var componentContext = context with
+        {
+            Component = CreateComponentRef(GeneratorConstants.BackendComponentType, microservice.Backend),
+            Variables = CreateBackendVariables(microservice, context)
+        };
+        ProcessComponent(componentContext);
+    }
+
+    private Dictionary<string, object?> CreateBackendVariables(MicroserviceConfiguration microservice, PlanContext context)
+    {
+        var microserviceVariables = new Dictionary<string, object?>(context.Variables, StringComparer.OrdinalIgnoreCase)
+        {
+            [GeneratorConstants.TemplateNameVariable] = microservice.Name,
+            [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(context.Configuration.ApplicationId),
+            [GeneratorConstants.TemplateMicroserviceNameVariable] = microservice.Name,
+            [GeneratorConstants.TemplatePortVariable] = microservice.Port.ToString(),
+            [GeneratorConstants.TemplateGraalvmVariable] = "false",
+            [GeneratorConstants.MicroserviceNameVariable] = microservice.Name,
+            [GeneratorConstants.MicroservicePortVariable] = microservice.Port.ToString(),
+            [GeneratorConstants.MicroserviceDeployVariable] = microservice.Deploy,
+            [GeneratorConstants.BackendVariable] = microservice.Backend,
+            [GeneratorConstants.EntitiesVariable] = jsonReader.Serialize(microservice.Entities),
+            [GeneratorConstants.EndpointsVariable] = jsonReader.Serialize(microservice.Endpoints),
+            [GeneratorConstants.ConsumedEventsVariable] = microservice.ConsumedEvents
+        };
+        return microserviceVariables;
+    }
+
+    private void AddFrontendComponent(PlanContext context)
+    {
+        var frontend = context.Configuration.Frontend;
+        if (frontend is null)
             return;
 
-        var appIconPath = Path.Combine(Path.GetDirectoryName(inputPath) ?? workingDirectory, "app_icon.png");
-        var hasAppIcon = File.Exists(appIconPath);
-        var frontendVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
+        var componentContext = context with
         {
-            [GeneratorConstants.TemplateNameVariable] = configuration.Frontend.Name,
-            [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(configuration.ApplicationId),
-            [GeneratorConstants.FrontendNameVariable] = configuration.Frontend.Name,
-            [GeneratorConstants.FrontendFrameworkVariable] = configuration.Frontend.Framework,
-            [GeneratorConstants.FrontendVersionVariable] = configuration.Frontend.Version ?? "1.0.0+1",
+            Component = CreateComponentRef(GeneratorConstants.FrontendComponentType, frontend.Framework),
+            DefaultFilePrefix = Path.Combine("frontend", frontend.Name),
+            Variables = CreateFrontendVariables(frontend, context)
+        };
+        ProcessComponent(componentContext);
+        AddAppIcon(frontend, context);
+    }
+
+    private Dictionary<string, object?> CreateFrontendVariables(FrontendConfiguration frontend, PlanContext context)
+    {
+        var hasAppIcon = File.Exists(AppIconPath(context));
+        return new Dictionary<string, object?>(context.Variables, StringComparer.OrdinalIgnoreCase)
+        {
+            [GeneratorConstants.TemplateNameVariable] = frontend.Name,
+            [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(context.Configuration.ApplicationId),
+            [GeneratorConstants.FrontendNameVariable] = frontend.Name,
+            [GeneratorConstants.FrontendFrameworkVariable] = frontend.Framework,
+            [GeneratorConstants.FrontendVersionVariable] = frontend.Version ?? "1.0.0+1",
             [GeneratorConstants.HasAppIconVariable] = hasAppIcon
         };
-
-        ProcessComponent(
-            GeneratorConstants.FrontendComponentType,
-            configuration.Frontend.Framework,
-            null,
-            Path.Combine("frontend", configuration.Frontend.Name),
-            frontendVariables,
-            state);
-
-        if (hasAppIcon)
-        {
-            var appIconTarget = Path.Combine("frontend", configuration.Frontend.Name, "assets", "icon", "app_icon.png");
-            EnsureUniquePath(state.Paths, appIconTarget, "archivo predeterminado");
-            state.DefaultFiles.Add(new PlanDefaultFile(appIconTarget, appIconPath));
-        }
     }
 
-    private void AddCloudComponents(EpcConfiguration configuration, IReadOnlyDictionary<string, object?> variables, PlanState state)
+    private void AddAppIcon(FrontendConfiguration frontend, PlanContext context)
     {
-        if (configuration.Cloud is null)
+        var appIconPath = AppIconPath(context);
+        if (File.Exists(appIconPath))
+            context.State.AddDefaultFile(AppIconTarget(frontend), appIconPath);
+    }
+
+    private string AppIconPath(PlanContext context) =>
+        Path.Combine(Path.GetDirectoryName(context.InputPath) ?? workingDirectory, "app_icon.png");
+
+    private static string AppIconTarget(FrontendConfiguration frontend) =>
+        Path.Combine("frontend", frontend.Name, "assets", "icon", "app_icon.png");
+
+    private void AddCloudComponents(PlanContext context)
+    {
+        var cloud = context.Configuration.Cloud;
+        if (cloud is null)
             return;
 
-        var cloudName = configuration.Cloud.Name ?? configuration.Cloud.Provider;
-        var cloudVariables = new Dictionary<string, object?>(variables, StringComparer.OrdinalIgnoreCase)
+        var cloudContext = context with
+        {
+            Component = CreateComponentRef(GeneratorConstants.CloudComponentType, cloud.Provider),
+            Variables = CreateCloudVariables(cloud, context)
+        };
+        foreach (var microservice in context.Configuration.Microservices)
+            AddCloudComponent(microservice, cloudContext);
+    }
+
+    private void AddCloudComponent(MicroserviceConfiguration microservice, PlanContext context)
+    {
+        var componentContext = context with { Variables = CreateMicroserviceCloudVariables(microservice, context.Variables) };
+        ProcessComponent(componentContext);
+    }
+
+    private static Dictionary<string, object?> CreateCloudVariables(CloudConfiguration cloud, PlanContext context)
+    {
+        var cloudName = cloud.Name ?? cloud.Provider;
+        return new Dictionary<string, object?>(context.Variables, StringComparer.OrdinalIgnoreCase)
         {
             [GeneratorConstants.TemplateNameVariable] = cloudName,
-            [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(configuration.ApplicationId)
+            [GeneratorConstants.TemplateCompanyVariable] = GetCompanyName(context.Configuration.ApplicationId)
         };
-
-        foreach (var microservice in configuration.Microservices)
-        {
-            var microserviceCloudVariables = new Dictionary<string, object?>(cloudVariables, StringComparer.OrdinalIgnoreCase)
-            {
-                [GeneratorConstants.MicroserviceNameVariable] = microservice.Name,
-                [GeneratorConstants.MicroservicePortVariable] = microservice.Port.ToString(),
-                [GeneratorConstants.TemplateMicroserviceNameVariable] = microservice.Name,
-                [GeneratorConstants.ConsumedEventsVariable] = microservice.ConsumedEvents
-            };
-
-            ProcessComponent(GeneratorConstants.CloudComponentType, configuration.Cloud.Provider, null, null, microserviceCloudVariables, state);
-        }
     }
 
-    private void ProcessComponent(
-        string componentType,
-        string componentName,
-        string? outputPrefix,
-        string? defaultFilePrefix,
-        IReadOnlyDictionary<string, object?> variables,
-        PlanState state)
+    private static Dictionary<string, object?> CreateMicroserviceCloudVariables(
+        MicroserviceConfiguration microservice,
+        IReadOnlyDictionary<string, object?> cloudVariables)
     {
+        return new Dictionary<string, object?>(cloudVariables, StringComparer.OrdinalIgnoreCase)
+        {
+            [GeneratorConstants.MicroserviceNameVariable] = microservice.Name,
+            [GeneratorConstants.MicroservicePortVariable] = microservice.Port.ToString(),
+            [GeneratorConstants.TemplateMicroserviceNameVariable] = microservice.Name,
+            [GeneratorConstants.ConsumedEventsVariable] = microservice.ConsumedEvents
+        };
+    }
+
+    // Solo se invoca con contextos que definen Component (los tres Add*Component).
+    private void ProcessComponent(PlanContext context)
+    {
+        var component = context.Component!;
         var componentPath = ResolveSource(Path.Combine(
             GeneratorConstants.ComponentsDirectory,
-            componentType,
-            componentName,
+            component.Type,
+            component.Name,
             "component.json"));
-        var component = jsonReader.Read<ComponentDefinition>(componentPath);
-        GeneratorLogger.Info($"Componente '{componentType}' seleccionado: {componentName}");
-        var componentDirectory = Path.GetDirectoryName(componentPath)!;
+        var definition = jsonReader.Read<ComponentDefinition>(componentPath);
+        GeneratorLogger.Info($"Componente '{component.Type}' seleccionado: {component.Name}");
+        var componentContext = context with { ComponentDirectory = Path.GetDirectoryName(componentPath)! };
 
-        foreach (var directory in component.Directories)
-        {
-            var target = outputPrefix is not null
-                ? RenderPath(Path.Combine(outputPrefix, directory), variables)
-                : RenderPath(directory, variables);
-            EnsureUniquePath(state.Paths, target, "directorio");
-            state.Directories.Add(target);
-        }
-
-        foreach (var file in component.Files)
-        {
-            var target = outputPrefix is not null
-                ? RenderPath(Path.Combine(outputPrefix, file.Key), variables)
-                : RenderPath(file.Key, variables);
-            var templatePath = ResolveComponentSource(componentDirectory, file.Value);
-            var content = templateRenderer.Render(File.ReadAllText(templatePath), variables, templatePath);
-            if (string.IsNullOrWhiteSpace(content))
-            {
-                GeneratorLogger.Debug(GeneratorMessages.EmptyTemplateSkipped(file.Value, target));
-                continue;
-            }
-            EnsureUniquePath(state.Paths, target, "archivo");
-            state.Files.Add(new PlanFile(target, content));
-        }
-
-        foreach (var defaultFile in component.DefaultFiles)
-        {
-            var source = ResolveComponentSource(componentDirectory, defaultFile);
-            var prefix = defaultFilePrefix ?? outputPrefix;
-            var target = prefix is not null
-                ? Path.Combine(prefix, pathValidator.DefaultOutputPath(defaultFile))
-                : pathValidator.DefaultOutputPath(defaultFile);
-            EnsureUniquePath(state.Paths, target, "archivo predeterminado");
-            state.DefaultFiles.Add(new PlanDefaultFile(target, Path.GetRelativePath(workingDirectory, source)));
-        }
+        AddDirectories(definition, componentContext);
+        AddFiles(definition, componentContext);
+        AddDefaultFiles(definition, componentContext);
     }
+
+    private void AddDirectories(ComponentDefinition definition, PlanContext context)
+    {
+        foreach (var directory in definition.Directories)
+            AddDirectory(directory, context);
+    }
+
+    private void AddDirectory(string directory, PlanContext context) =>
+        context.State.AddDirectory(ResolveTarget(directory, context));
+
+    private void AddFiles(ComponentDefinition definition, PlanContext context)
+    {
+        foreach (var file in definition.Files)
+            AddFile(file, context);
+    }
+
+    private void AddFile(ComponentFile file, PlanContext context)
+    {
+        var target = ResolveTarget(file.Key, context);
+        var content = RenderFile(file, context);
+        if (IsEmptyContent(content))
+            LogSkippedTemplate(file, target);
+        else
+            context.State.AddFile(target, content);
+    }
+
+    private string RenderFile(ComponentFile file, PlanContext context)
+    {
+        var templatePath = ResolveComponentSource(file.Value, context);
+        var source = CreateTemplateSource(File.ReadAllText(templatePath), templatePath);
+        return templateRenderer.Render(source, context.Variables);
+    }
+
+    private static bool IsEmptyContent(string content) => string.IsNullOrWhiteSpace(content);
+
+    private static void LogSkippedTemplate(ComponentFile file, string target) =>
+        GeneratorLogger.Debug(GeneratorMessages.EmptyTemplateSkipped(file.Value, target));
+
+    private void AddDefaultFiles(ComponentDefinition definition, PlanContext context)
+    {
+        foreach (var defaultFile in definition.DefaultFiles)
+            AddDefaultFile(defaultFile, context);
+    }
+
+    private void AddDefaultFile(string defaultFile, PlanContext context)
+    {
+        var source = ResolveComponentSource(defaultFile, context);
+        var target = ResolveDefaultTarget(defaultFile, context);
+        context.State.AddDefaultFile(target, Path.GetRelativePath(workingDirectory, source));
+    }
+
+    private string ResolveDefaultTarget(string defaultFile, PlanContext context)
+    {
+        var prefix = context.DefaultFilePrefix ?? context.OutputPrefix;
+        var normalized = pathValidator.DefaultOutputPath(defaultFile);
+        return prefix is not null ? Path.Combine(prefix, normalized) : normalized;
+    }
+
+    private string ResolveTarget(string key, PlanContext context) =>
+        context.OutputPrefix is not null
+            ? RenderPath(Path.Combine(context.OutputPrefix, key), context.Variables)
+            : RenderPath(key, context.Variables);
 
     private string ResolveSource(string relativePath)
     {
         var path = Path.GetFullPath(pathValidator.NormalizeRelative(relativePath), workingDirectory);
-        if (!File.Exists(path))
-            throw new FileNotFoundException(GeneratorMessages.MissingSourceFile(relativePath), path);
+        EnsureSourceExists(path, relativePath);
         return path;
     }
 
-    private string ResolveComponentSource(string componentDirectory, string relativePath)
+    private static void EnsureSourceExists(string path, string relativePath)
     {
-        var path = Path.GetFullPath(pathValidator.NormalizeRelative(relativePath), componentDirectory);
+        if (!File.Exists(path))
+            throw new FileNotFoundException(GeneratorMessages.MissingSourceFile(relativePath), path);
+    }
+
+    private string ResolveComponentSource(string relativePath, PlanContext context)
+    {
+        // El directorio del componente se define en ProcessComponent antes de resolver sus archivos.
+        var path = Path.GetFullPath(pathValidator.NormalizeRelative(relativePath), context.ComponentDirectory!);
+        EnsureComponentSourceExists(path, relativePath);
+        return path;
+    }
+
+    private static void EnsureComponentSourceExists(string path, string relativePath)
+    {
         if (!File.Exists(path))
             throw new FileNotFoundException(GeneratorMessages.MissingComponentFile(relativePath), path);
-        return path;
     }
 
     private string RenderPath(string path, IReadOnlyDictionary<string, object?> variables)
     {
-        var renderedPath = templateRenderer.Render(path, variables, path);
+        var renderedPath = templateRenderer.Render(CreateTemplateSource(path, path), variables);
         return pathValidator.NormalizeRelative(renderedPath);
     }
 
@@ -219,11 +318,5 @@ internal sealed class GenerationPlanBuilder(
     {
         var segments = applicationId.Split('.', StringSplitOptions.RemoveEmptyEntries);
         return segments.Length >= 2 ? segments[^2] : applicationId;
-    }
-
-    private static void EnsureUniquePath(HashSet<string> allPaths, string path, string kind)
-    {
-        if (!allPaths.Add(path))
-            throw new GeneratorException(ErrorCodes.DuplicateOutput, GeneratorMessages.DuplicateOutput(kind, path));
     }
 }

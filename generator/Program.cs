@@ -5,25 +5,16 @@ using Generator.Configuration;
 
 try
 {
-    var workingDirectory = new ProjectDirectoryResolver().Resolve();
-    var jsonReader = new JsonFileReader();
-    var pathValidator = new PathValidator();
-    var validationRules = new IValidationRule[]
-    {
-        new RequiredConfigurationRule(),
-        new DuplicatePortRule(),
-        new EntityRelationRule()
-    };
-    var configurationValidator = new ConfigurationValidator(validationRules);
-    var templateRenderer = new TemplateRenderer();
-    var planBuilder = new GenerationPlanBuilder(
-        workingDirectory,
-        jsonReader,
-        pathValidator,
-        configurationValidator,
-        templateRenderer);
-    var planExecutorFactory = new PlanExecutorFactory(workingDirectory, jsonReader, pathValidator);
-    var application = new GeneratorApplication(workingDirectory, planBuilder, pathValidator, planExecutorFactory);
+    var workingDirectory = ResolveWorkingDirectory();
+    var jsonReader = CreateJsonReader();
+    var pathValidator = CreatePathValidator();
+    var inverseStrategies = CreateInverseStrategies();
+    var validationRules = CreateValidationRules(inverseStrategies);
+    var configurationValidator = CreateConfigurationValidator(validationRules);
+    var templateRenderer = CreateTemplateRenderer();
+    var planBuilder = CreatePlanBuilder(workingDirectory, jsonReader, pathValidator, configurationValidator, templateRenderer);
+    var planExecutorFactory = CreatePlanExecutorFactory(workingDirectory, jsonReader, pathValidator);
+    var application = CreateApplication(workingDirectory, planBuilder, pathValidator, planExecutorFactory);
     application.Run();
     return 0;
 }
@@ -33,3 +24,50 @@ catch (Exception exception)
     GeneratorLogger.Error($"{code}: {exception.Message}");
     return 1;
 }
+
+static string ResolveWorkingDirectory() => new ProjectDirectoryResolver().Resolve();
+
+static IJsonFileReader CreateJsonReader() => new JsonFileReader();
+
+static IPathValidator CreatePathValidator() => new PathValidator();
+
+static IInverseRelationStrategy[] CreateInverseStrategies() =>
+[
+    new OneToOneInverseStrategy(),
+    new OneToManyInverseStrategy(),
+    new ManyToOneInverseStrategy(),
+    new ManyToManyInverseStrategy()
+];
+
+static IValidationRule[] CreateValidationRules(IInverseRelationStrategy[] inverseStrategies) =>
+[
+    new RequiredConfigurationRule(),
+    new DuplicatePortRule(),
+    new EntityRelationRule(inverseStrategies)
+];
+
+static IConfigurationValidator CreateConfigurationValidator(IValidationRule[] validationRules) =>
+    new ConfigurationValidator(validationRules);
+
+static ITemplateRenderer CreateTemplateRenderer() => new TemplateRenderer();
+
+static GenerationPlanBuilder CreatePlanBuilder(
+    string workingDirectory,
+    IJsonFileReader jsonReader,
+    IPathValidator pathValidator,
+    IConfigurationValidator configurationValidator,
+    ITemplateRenderer templateRenderer) =>
+    new GenerationPlanBuilder(workingDirectory, jsonReader, pathValidator, configurationValidator, templateRenderer);
+
+static IPlanExecutorFactory CreatePlanExecutorFactory(
+    string workingDirectory,
+    IJsonFileReader jsonReader,
+    IPathValidator pathValidator) =>
+    new PlanExecutorFactory(workingDirectory, jsonReader, pathValidator);
+
+static GeneratorApplication CreateApplication(
+    string workingDirectory,
+    GenerationPlanBuilder planBuilder,
+    IPathValidator pathValidator,
+    IPlanExecutorFactory planExecutorFactory) =>
+    new GeneratorApplication(workingDirectory, planBuilder, pathValidator, planExecutorFactory);
