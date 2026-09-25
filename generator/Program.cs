@@ -1,7 +1,8 @@
-using Generator.Services;
-using Generator.Validation;
-using Generator.Messages;
+using Generator.Application;
 using Generator.Configuration;
+using Generator.Domain.Messages;
+using Generator.Domain.Validation;
+using Generator.Infrastructure;
 
 try
 {
