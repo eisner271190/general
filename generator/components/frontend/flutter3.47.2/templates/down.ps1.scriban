@@ -5,7 +5,8 @@
 .DESCRIPTION
     Cierra una sesión `flutter run` en curso y deja el proyecto sin
     artefactos de compilación.
-    Cada paso imprime sus valores con Write-Log.
+    Consola: solo líneas con formato [yyyy-MM-dd HH:mm:ss] [Frontend] mensaje.
+    Archivo: logs/yyyy-MM-dd-HH-mm-ss.log con la salida real de flutter.
 .EXAMPLE
     ./down.ps1
 #>
@@ -15,31 +16,59 @@ param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+$script:Stage = 'Frontend'
 $script:ProjectRoot = $PSScriptRoot
+$script:AppName = '{{ FRONTEND_NAME }}'
+$script:LogDirectory = Join-Path -Path $PSScriptRoot -ChildPath 'logs'
+$script:LogFile = Join-Path -Path $script:LogDirectory -ChildPath ("{0}.log" -f (Get-Date -Format 'yyyy-MM-dd-HH-mm-ss'))
+
+function Format-LogLine {
+    param([Parameter(Mandatory)][string]$Message)
+
+    $stamp = '[' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + ']'
+    if ($script:Stage -eq '') {
+        return "$stamp $Message"
+    }
+
+    return "$stamp [$script:Stage] $Message"
+}
 
 function Write-Log {
-    param(
-        [Parameter(Mandatory)][string]$Message,
-        [string]$Value = ''
-    )
+    param([Parameter(Mandatory)][string]$Message)
 
-    $stamp = "[$(Get-Date -Format 'HH:mm:ss')]"
-    Write-Host "$stamp $Message"
-    if ($Value -ne '') {
-        Write-Host "$stamp     $Value"
-    }
+    $line = Format-LogLine -Message $Message
+    Write-Host $line
+    Add-Content -Path $script:LogFile -Value $line
+}
+
+function Write-LogDetail {
+    param([Parameter(Mandatory)][string]$Message)
+
+    Add-Content -Path $script:LogFile -Value (Format-LogLine -Message $Message)
+}
+
+function Initialize-Log {
+    New-Item -ItemType Directory -Path $script:LogDirectory -Force | Out-Null
+}
+
+function Stop-WithError {
+    param([Parameter(Mandatory)][string]$Reason)
+
+    Write-Log -Message "ERROR: $Reason"
+    Write-Log -Message "Log: $script:LogFile"
+    exit 1
 }
 
 function Invoke-Flutter {
     param([Parameter(Mandatory)][string[]]$Arguments)
 
-    Write-Log -Message 'flutter' -Value "cwd=$script:ProjectRoot | args=$($Arguments -join ' ')"
-
+    Write-LogDetail -Message "flutter cwd=$($script:ProjectRoot) args=$($Arguments -join ' ')"
     Push-Location $script:ProjectRoot
     try {
-        & flutter @Arguments
+        # La salida de flutter va solo al archivo de log.
+        & flutter @Arguments 2>&1 | Out-File -FilePath $script:LogFile -Append
         $code = $LASTEXITCODE
-        Write-Log -Message 'flutter' -Value "exit=$code"
+        Write-LogDetail -Message "flutter exit=$code"
         if ($code -ne 0) {
             throw "flutter $($Arguments -join ' ') falló con código $code"
         }
@@ -54,22 +83,34 @@ function Stop-RunningApplication {
         Where-Object -FilterScript { $_.Path -like "$script:ProjectRoot*" })
 
     foreach ($process in $processes) {
-        Write-Log -Message 'Proceso' -Value "name=$($process.ProcessName) | id=$($process.Id) | path=$($process.Path)"
+        Write-LogDetail -Message "proceso name=$($process.ProcessName) id=$($process.Id) path=$($process.Path)"
     }
-    Write-Log -Message 'Proceso' -Value "total=$($processes.Count)"
+    Write-LogDetail -Message "proceso total=$($processes.Count)"
 
     $processes | Stop-Process -ErrorAction SilentlyContinue
-    Write-Log -Message 'Proceso' -Value "accion=stop | completado=true"
+    Write-LogDetail -Message 'proceso accion=stop completado=true'
 }
 
 # Facade: una sola entrada para el componente frontend.
 function Invoke-FrontendDown {
-    Write-Log -Message 'frontend/down.ps1 inicio' -Value "projectRoot=$script:ProjectRoot"
+    Write-Log -Message "Iniciando retiro de $($script:AppName)"
+    Write-LogDetail -Message "log=$script:LogFile"
 
+    Write-Log -Message 'Deteniendo sesión flutter run'
     Stop-RunningApplication
-    Invoke-Flutter -Arguments @('clean')
 
-    Write-Log -Message 'frontend/down.ps1 fin' -Value "projectRoot=$script:ProjectRoot"
+    Write-Log -Message 'Limpiando proyecto flutter'
+    Invoke-Flutter -Arguments @('clean')
+    Write-Log -Message 'Proyecto limpio'
+
+    Write-Log -Message 'Retiro finalizado'
 }
 
-Invoke-FrontendDown
+Initialize-Log
+try {
+    Invoke-FrontendDown
+    exit 0
+}
+catch {
+    Stop-WithError -Reason $_.Exception.Message
+}

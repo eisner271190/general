@@ -7,7 +7,12 @@
     Phase Run:   lee los parámetros de Parameter Store y arranca el
                  contenedor inyectándolos como variables de entorno.
     Phase All:   Build y Run, en ese orden.
-    Cada paso imprime sus valores con Write-Log.
+    Antes de trabajar comprueba el motor de Docker: si está caído intenta
+    arrancar Docker Desktop y espera; si no levanta, sale con un mensaje
+    claro (sin stack trace) indicando qué hacer.
+    Consola: solo líneas con formato [yyyy-MM-dd HH:mm:ss] [Backend] mensaje
+    ('Creando imagen docker {ms}', 'Imagen docker creada {ms}', ...).
+    Archivo: logs/yyyy-MM-dd-HH-mm-ss.log con la salida real de docker/aws.
 .PARAMETER Phase
     Qué realizar: Build, Run o All.
 .PARAMETER Port
@@ -27,22 +32,62 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+$script:Stage = 'Backend'
 $script:ServiceName = '{{ MICROSERVICE_NAME }}'
 $script:Environment = '{{ ENVIRONMENT }}'
 $script:ParameterPath = "/{{ ENVIRONMENT }}/{{ APPLICATION_ID }}/{{ MICROSERVICE_NAME }}/"
 $script:RepositoryName = '{{ Name }}'
+$script:LogDirectory = Join-Path -Path $PSScriptRoot -ChildPath 'logs'
+$script:LogFile = Join-Path -Path $script:LogDirectory -ChildPath ("{0}.log" -f (Get-Date -Format 'yyyy-MM-dd-HH-mm-ss'))
+$script:DockerDesktopPath = Join-Path -Path $env:ProgramFiles -ChildPath 'Docker\Docker\Docker Desktop.exe'
+$script:DockerTimeoutSeconds = 60
+
+function Format-LogLine {
+    param([Parameter(Mandatory)][string]$Message)
+
+    $stamp = '[' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + ']'
+    if ($script:Stage -eq '') {
+        return "$stamp $Message"
+    }
+
+    return "$stamp [$script:Stage] $Message"
+}
 
 function Write-Log {
+    param([Parameter(Mandatory)][string]$Message)
+
+    $line = Format-LogLine -Message $Message
+    Write-Host $line
+    Add-Content -Path $script:LogFile -Value $line
+}
+
+function Write-LogDetail {
+    param([Parameter(Mandatory)][string]$Message)
+
+    Add-Content -Path $script:LogFile -Value (Format-LogLine -Message $Message)
+}
+
+function Initialize-Log {
+    New-Item -ItemType Directory -Path $script:LogDirectory -Force | Out-Null
+}
+
+function Stop-WithError {
+    param([Parameter(Mandatory)][string]$Reason)
+
+    Write-Log -Message "ERROR: $Reason"
+    Write-Log -Message "Log: $script:LogFile"
+    exit 1
+}
+
+function Invoke-ProcessToFile {
     param(
-        [Parameter(Mandatory)][string]$Message,
-        [string]$Value = ''
+        [Parameter(Mandatory)][string]$FilePath,
+        [Parameter(Mandatory)][string[]]$Arguments
     )
 
-    $stamp = "[$(Get-Date -Format 'HH:mm:ss')]"
-    Write-Host "$stamp $Message"
-    if ($Value -ne '') {
-        Write-Host "$stamp     $Value"
-    }
+    # La salida real del proceso va solo al archivo de log.
+    & $FilePath @Arguments 2>&1 | Out-File -FilePath $script:LogFile -Append
+    return $LASTEXITCODE
 }
 
 function Invoke-Process {
@@ -51,14 +96,25 @@ function Invoke-Process {
         [Parameter(Mandatory)][string[]]$Arguments
     )
 
-    Write-Log -Message 'proceso' -Value "cmd=$FilePath $($Arguments -join ' ')"
-
-    & $FilePath @Arguments
-    $code = $LASTEXITCODE
-    Write-Log -Message 'proceso' -Value "cmd=$FilePath | exit=$code"
+    $command = "$FilePath $($Arguments -join ' ')"
+    Write-LogDetail -Message "proceso cmd=$command"
+    $code = Invoke-ProcessToFile -FilePath $FilePath -Arguments $Arguments
+    Write-LogDetail -Message "proceso cmd=$FilePath exit=$code"
     if ($code -ne 0) {
-        throw "$FilePath $($Arguments -join ' ') falló con código $code"
+        throw "$command falló con código $code"
     }
+}
+
+# Ejecuta la CLI de AWS: stdout como valor, stderr al archivo de log (2>>).
+function Invoke-Aws {
+    param([Parameter(Mandatory)][string[]]$Arguments)
+
+    Write-LogDetail -Message "aws args=$($Arguments -join ' ')"
+    $output = @(& aws @Arguments 2>> $script:LogFile)
+    $code = $LASTEXITCODE
+    Write-LogDetail -Message "aws exit=$code"
+
+    return [PSCustomObject]@{ Output = ($output -join ''); ExitCode = $code }
 }
 
 function Get-RepositoryUri {
@@ -69,22 +125,22 @@ function Get-RepositoryUri {
         '--output', 'text'
     )
 
-    Write-Log -Message 'ECR' -Value "repositoryName=$script:RepositoryName"
-    $uri = (& aws @arguments) -join ''
-    $code = $LASTEXITCODE
-    Write-Log -Message 'ECR' -Value "exit=$code | repositoryUri=$uri"
+    $result = Invoke-Aws -Arguments $arguments
+    $uri = $result.Output
 
-    if ($code -ne 0 -or [string]::IsNullOrWhiteSpace($uri)) {
+    if ($result.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($uri)) {
         throw "No se pudo resolver el URI del repositorio ECR '$($script:RepositoryName)'. Ejecuta primero 'cloud/up.ps1 -Phase Bootstrap'."
     }
 
+    Write-LogDetail -Message "ecr repositoryName=$script:RepositoryName repositoryUri=$uri"
     return $uri
 }
 
 function Invoke-ImageBuild {
-    Write-Log -Message 'Docker build' -Value "imageName=$script:ServiceName | dockerfile=Dockerfile | context=."
+    Write-Log -Message "Creando imagen docker $($script:ServiceName)"
     # --provenance=false: Lambda rechaza el image index con attestations que BuildKit añade por defecto.
     Invoke-Process -FilePath 'docker' -Arguments @('build', '--provenance=false', '--platform', 'linux/amd64', '-t', $script:ServiceName, '.')
+    Write-Log -Message "Imagen docker creada $($script:ServiceName)"
 }
 
 function Get-RegistryHost {
@@ -104,15 +160,14 @@ function Get-RegistryPassword {
     param([Parameter(Mandatory)][string]$Region)
 
     $arguments = @('ecr', 'get-login-password', '--region', $Region)
-    Write-Log -Message 'ECR login' -Value "aws ecr get-login-password | region=$Region"
-    $password = (& aws @arguments) -join ''
-    $code = $LASTEXITCODE
-    Write-Log -Message 'ECR login' -Value "exit=$code | longitud=$($password.Length)"
+    $result = Invoke-Aws -Arguments $arguments
+    $password = $result.Output
 
-    if ($code -ne 0 -or [string]::IsNullOrWhiteSpace($password)) {
-        throw "No se pudo obtener el token de ECR (exit $code)."
+    if ($result.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($password)) {
+        throw "No se pudo obtener el token de ECR (exit $($result.ExitCode))."
     }
 
+    Write-LogDetail -Message "ecr login region=$Region longitud=$($password.Length)"
     return $password
 }
 
@@ -123,27 +178,33 @@ function Invoke-RegistryLogin {
     )
 
     $password = Get-RegistryPassword -Region $Region
-    Write-Log -Message 'ECR login' -Value "registry=$Registry"
-    $password | & docker login --username AWS --password-stdin $Registry
+    Write-LogDetail -Message "ecr login registry=$Registry"
+    # El token viaja por stdin: no aparece ni en consola ni en el log.
+    $password | & docker login --username AWS --password-stdin $Registry 2>&1 | Out-File -FilePath $script:LogFile -Append
     $code = $LASTEXITCODE
-    Write-Log -Message 'ECR login' -Value "registry=$Registry | exit=$code"
+    Write-LogDetail -Message "ecr login exit=$code"
     if ($code -ne 0) {
         throw "docker login a '$Registry' falló con código $code"
     }
 }
 
 function Invoke-ImagePush {
+    Write-Log -Message "Subiendo imagen docker $($script:ServiceName) a ECR"
     $uri = Get-RepositoryUri
     $registry = Get-RegistryHost -RepositoryUri $uri
     $region = Get-RegistryRegion -Registry $registry
+
+    Write-Log -Message 'Iniciando sesión en ECR'
     Invoke-RegistryLogin -Registry $registry -Region $region
+    Write-Log -Message 'Sesión iniciada en ECR'
 
     $tag = "${uri}:latest"
-    Write-Log -Message 'Docker tag' -Value "source=$script:ServiceName | target=$tag"
+    Write-LogDetail -Message "docker tag source=$($script:ServiceName) target=$tag"
     Invoke-Process -FilePath 'docker' -Arguments @('tag', $script:ServiceName, $tag)
 
-    Write-Log -Message 'Docker push' -Value "tag=$tag"
+    Write-LogDetail -Message "docker push tag=$tag"
     Invoke-Process -FilePath 'docker' -Arguments @('push', $tag)
+    Write-Log -Message "Imagen docker subida $($script:ServiceName)"
 }
 
 function Get-ParameterEnvironment {
@@ -155,30 +216,31 @@ function Get-ParameterEnvironment {
         '--output', 'json'
     )
 
-    Write-Log -Message 'Parameter Store' -Value "path=$script:ParameterPath"
-    $json = (& aws @arguments) -join ''
-    $code = $LASTEXITCODE
-    Write-Log -Message 'Parameter Store' -Value "exit=$code"
+    $result = Invoke-Aws -Arguments $arguments
+    $json = $result.Output
 
-    if ($code -ne 0 -or [string]::IsNullOrWhiteSpace($json)) {
+    if ($result.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($json)) {
         throw "No se pudieron leer los parámetros de '$($script:ParameterPath)'. Ejecuta primero 'cloud/up.ps1'."
     }
 
     $prefix = $script:ParameterPath.TrimEnd('/')
     $records = @(ConvertFrom-Json -InputObject $json)
-    Write-Log -Message 'Parameter Store' -Value "total=$($records.Count)"
+    Write-LogDetail -Message "parameterStore path=$($script:ParameterPath) total=$($records.Count)"
 
     return @(
         $records | ForEach-Object -Process {
             $name = $_.Name.Substring($prefix.Length + 1)
-            Write-Log -Message 'Parámetro' -Value "$name=$($_.Value)"
+            Write-LogDetail -Message "parametro $name=$($_.Value)"
             [PSCustomObject]@{ Name = $name; Value = $_.Value }
         }
     )
 }
 
 function Invoke-ContainerRun {
+    Write-Log -Message 'Leyendo parámetros de Parameter Store'
     $parameters = @(Get-ParameterEnvironment)
+    Write-Log -Message "Parámetros leídos ($($parameters.Count))"
+
     # El host usa el puerto del proyecto (target/*.json); el contenedor expone el RIE de Lambda (8080).
     $arguments = @('run', '--rm', '-d', '--name', $script:ServiceName, '-p', "${Port}:8080")
     foreach ($parameter in $parameters) {
@@ -188,14 +250,75 @@ function Invoke-ContainerRun {
     }
     $arguments += $script:ServiceName
 
-    Write-Log -Message 'Docker run' -Value "container=$script:ServiceName | port=$Port | image=$script:ServiceName | variables=$($parameters.Count)"
+    Write-Log -Message "Iniciando contenedor $($script:ServiceName)"
     Invoke-Process -FilePath 'docker' -Arguments $arguments
+    Write-Log -Message "Contenedor $($script:ServiceName) iniciado"
 }
 
 function Remove-Container {
-    Write-Log -Message 'Docker rm' -Value "container=$script:ServiceName"
-    & docker rm -f $script:ServiceName 2>$null
-    Write-Log -Message 'Docker rm' -Value "exit=$LASTEXITCODE"
+    Write-Log -Message "Eliminando contenedor previo de $($script:ServiceName)"
+    & docker rm -f $script:ServiceName 2>&1 | Out-File -FilePath $script:LogFile -Append
+    Write-LogDetail -Message "docker rm exit=$LASTEXITCODE"
+}
+
+function Test-DockerCli {
+    return ($null -ne (Get-Command -Name 'docker' -ErrorAction SilentlyContinue))
+}
+
+function Test-DockerEngine {
+    if (-not (Test-DockerCli)) {
+        return $false
+    }
+
+    & docker info *> $null
+    return ($LASTEXITCODE -eq 0)
+}
+
+function Start-DockerDesktop {
+    if (-not (Test-Path -Path $script:DockerDesktopPath)) {
+        return $false
+    }
+
+    Write-LogDetail -Message "docker arrancar path=$($script:DockerDesktopPath)"
+    Start-Process -FilePath $script:DockerDesktopPath
+    return $true
+}
+
+function Wait-DockerEngine {
+    $deadline = (Get-Date).AddSeconds($script:DockerTimeoutSeconds)
+    while ((Get-Date) -lt $deadline) {
+        if (Test-DockerEngine) {
+            return $true
+        }
+        Start-Sleep -Seconds 3
+    }
+
+    return $false
+}
+
+# Facade del chequeo de Docker: comprueba -> intenta arrancar -> espera ->
+# mensaje claro y salida limpia si el motor no responde.
+function Assert-DockerEngine {
+    if (-not (Test-DockerCli)) {
+        Stop-WithError -Reason "No se encontró el ejecutable 'docker' en el PATH. Instala Docker Desktop (https://docs.docker.com/get-docker/) y vuelve a ejecutar el script."
+    }
+
+    if (Test-DockerEngine) {
+        Write-LogDetail -Message 'docker estado=disponible'
+        return
+    }
+
+    Write-Log -Message 'Docker está caído, intentando arrancar Docker Desktop'
+    if (-not (Start-DockerDesktop)) {
+        Stop-WithError -Reason "Docker está caído y no se encontró Docker Desktop en '$script:DockerDesktopPath'. Ábrelo manualmente y vuelve a ejecutar el script."
+    }
+
+    if (Wait-DockerEngine) {
+        Write-Log -Message 'Docker disponible'
+        return
+    }
+
+    Stop-WithError -Reason "Docker está caído y Docker Desktop no levantó el motor en $($script:DockerTimeoutSeconds) s. Ábrelo manualmente, espera a que diga 'engine running' y vuelve a ejecutar el script."
 }
 
 function Invoke-SelectedPhase {
@@ -211,8 +334,11 @@ function Invoke-SelectedPhase {
 
 # Facade: una sola entrada para el componente backend.
 function Invoke-BackendUp {
-    Write-Log -Message 'backend/up.ps1 inicio' -Value "phase=$Phase | port=$Port"
-    Write-Log -Message 'Variables' -Value "serviceName=$script:ServiceName | environment=$script:Environment | repositoryName=$script:RepositoryName | parameterPath=$script:ParameterPath"
+    Write-Log -Message "Iniciando despliegue de $($script:ServiceName)"
+    Write-LogDetail -Message "log=$script:LogFile"
+    Write-LogDetail -Message "phase=$Phase port=$Port environment=$script:Environment repository=$script:RepositoryName parameterPath=$script:ParameterPath"
+
+    Assert-DockerEngine
 
     # docker build usa '.' como contexto: hay que operar en el directorio del microservicio.
     Push-Location $PSScriptRoot
@@ -223,7 +349,14 @@ function Invoke-BackendUp {
         Pop-Location
     }
 
-    Write-Log -Message 'backend/up.ps1 fin' -Value "phase=$Phase"
+    Write-Log -Message 'Despliegue finalizado'
 }
 
-Invoke-BackendUp
+Initialize-Log
+try {
+    Invoke-BackendUp
+    exit 0
+}
+catch {
+    Stop-WithError -Reason $_.Exception.Message
+}

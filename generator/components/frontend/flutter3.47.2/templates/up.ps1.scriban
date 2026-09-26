@@ -7,7 +7,9 @@
     appbundle release -> flutter run.
     dart pub add solo se ejecuta si se indican dependencias: pubspec.yaml
     ya declara flutter_launcher_icons.
-    Cada paso imprime sus valores con Write-Log.
+    Consola: solo líneas con formato [yyyy-MM-dd HH:mm:ss] [Frontend] mensaje,
+    más la salida de `flutter run` (interactivo), que también se guarda.
+    Archivo: logs/yyyy-MM-dd-HH-mm-ss.log con la salida real de flutter.
 .PARAMETER DeviceId
     Identificador del dispositivo para flutter run. Si se omite, flutter run
     no se ejecuta: es interactivo y Flutter aborta con más de un dispositivo
@@ -37,32 +39,81 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+$script:Stage = 'Frontend'
 $script:ProjectRoot = $PSScriptRoot
+$script:AppName = '{{ FRONTEND_NAME }}'
+$script:LogDirectory = Join-Path -Path $PSScriptRoot -ChildPath 'logs'
+$script:LogFile = Join-Path -Path $script:LogDirectory -ChildPath ("{0}.log" -f (Get-Date -Format 'yyyy-MM-dd-HH-mm-ss'))
+
+function Format-LogLine {
+    param([Parameter(Mandatory)][string]$Message)
+
+    $stamp = '[' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + ']'
+    if ($script:Stage -eq '') {
+        return "$stamp $Message"
+    }
+
+    return "$stamp [$script:Stage] $Message"
+}
 
 function Write-Log {
-    param(
-        [Parameter(Mandatory)][string]$Message,
-        [string]$Value = ''
-    )
+    param([Parameter(Mandatory)][string]$Message)
 
-    $stamp = "[$(Get-Date -Format 'HH:mm:ss')]"
-    Write-Host "$stamp $Message"
-    if ($Value -ne '') {
-        Write-Host "$stamp     $Value"
-    }
+    $line = Format-LogLine -Message $Message
+    Write-Host $line
+    Add-Content -Path $script:LogFile -Value $line
+}
+
+function Write-LogDetail {
+    param([Parameter(Mandatory)][string]$Message)
+
+    Add-Content -Path $script:LogFile -Value (Format-LogLine -Message $Message)
+}
+
+function Initialize-Log {
+    New-Item -ItemType Directory -Path $script:LogDirectory -Force | Out-Null
+}
+
+function Stop-WithError {
+    param([Parameter(Mandatory)][string]$Reason)
+
+    Write-Log -Message "ERROR: $Reason"
+    Write-Log -Message "Log: $script:LogFile"
+    exit 1
+}
+
+function Invoke-FlutterToFile {
+    param([Parameter(Mandatory)][string[]]$Arguments)
+
+    # La salida de flutter va solo al archivo de log.
+    & flutter @Arguments 2>&1 | Out-File -FilePath $script:LogFile -Append
+    return $LASTEXITCODE
+}
+
+function Invoke-FlutterToConsole {
+    param([Parameter(Mandatory)][string[]]$Arguments)
+
+    # Comando interactivo (flutter run): en consola y en el log.
+    & flutter @Arguments 2>&1 | Tee-Object -FilePath $script:LogFile -Append
+    return $LASTEXITCODE
 }
 
 function Invoke-Flutter {
-    param([Parameter(Mandatory)][string[]]$Arguments)
+    param(
+        [Parameter(Mandatory)][string[]]$Arguments,
+        [switch]$ShowOutput
+    )
 
-    Write-Log -Message 'flutter' -Value "cwd=$script:ProjectRoot"
-    Write-Log -Message 'flutter' -Value "args=$($Arguments -join ' ')"
-
+    Write-LogDetail -Message "flutter cwd=$($script:ProjectRoot) args=$($Arguments -join ' ')"
     Push-Location $script:ProjectRoot
     try {
-        & flutter @Arguments
-        $code = $LASTEXITCODE
-        Write-Log -Message 'flutter' -Value "exit=$code"
+        if ($ShowOutput) {
+            $code = Invoke-FlutterToConsole -Arguments $Arguments
+        }
+        else {
+            $code = Invoke-FlutterToFile -Arguments $Arguments
+        }
+        Write-LogDetail -Message "flutter exit=$code"
         if ($code -ne 0) {
             throw "flutter $($Arguments -join ' ') falló con código $code"
         }
@@ -73,64 +124,80 @@ function Invoke-Flutter {
 }
 
 function Invoke-DependencyAdd {
-    Write-Log -Message 'Dependencias' -Value "total=$($Dependencies.Count) | values=$($Dependencies -join ', ')"
-
     foreach ($dependency in $Dependencies) {
-        Write-Log -Message 'dart pub add' -Value "dependency=$dependency | scope=dev"
+        Write-Log -Message "Añadiendo dependencia $dependency"
         Invoke-Flutter -Arguments @('pub', 'add', '--dev', $dependency)
     }
+    Write-LogDetail -Message "dependencias total=$($Dependencies.Count)"
 }
 
 function Invoke-IconGeneration {
     if ($SkipIcons) {
-        Write-Log -Message 'Iconos' -Value "skipIcons=true | se omite la generación"
+        Write-LogDetail -Message 'iconos omitidos (skipIcons)'
         return
     }
 
-    Write-Log -Message 'Iconos' -Value "skipIcons=false | command=flutter pub run flutter_launcher_icons"
+    Write-Log -Message 'Generando iconos de lanzamiento'
     Invoke-Flutter -Arguments @('pub', 'run', 'flutter_launcher_icons')
+    Write-Log -Message 'Iconos generados'
 }
 
 function Invoke-Bundle {
     if ($SkipBuild) {
-        Write-Log -Message 'Appbundle' -Value "skipBuild=true | se omite la compilación"
+        Write-LogDetail -Message 'appbundle omitido (skipBuild)'
         return
     }
 
-    Write-Log -Message 'Appbundle' -Value "mode=release | command=flutter build appbundle --release"
+    Write-Log -Message 'Compilando appbundle release'
     Invoke-Flutter -Arguments @('build', 'appbundle', '--release')
+    Write-Log -Message 'Appbundle compilado'
 }
 
 function Invoke-ApplicationRun {
     if ($SkipRun) {
-        Write-Log -Message 'Ejecución' -Value "skipRun=true | se omite flutter run"
+        Write-LogDetail -Message 'flutter run omitido (skipRun)'
         return
     }
 
     if ($DeviceId -eq '') {
         # flutter run es interactivo y aborta si hay más de un dispositivo:
         # sin dispositivo indicado no se ejecuta para no bloquear al orquestador.
-        Write-Log -Message 'Ejecución' -Value "deviceId= | omitido=true | motivo=sin-dispositivo-indicado | usa -DeviceId"
+        Write-LogDetail -Message 'flutter run omitido: sin dispositivo indicado (usa -DeviceId)'
         return
     }
 
-    Write-Log -Message 'Ejecución' -Value "deviceId=$DeviceId | args=run --debug -d $DeviceId"
-    Invoke-Flutter -Arguments @('run', '--debug', '-d', $DeviceId)
+    Write-Log -Message "Ejecutando aplicación $($script:AppName)"
+    Invoke-Flutter -Arguments @('run', '--debug', '-d', $DeviceId) -ShowOutput
+    Write-Log -Message "Aplicación $($script:AppName) detenida"
 }
 
 # Facade: una sola entrada para el componente frontend.
 function Invoke-FrontendUp {
-    Write-Log -Message 'frontend/up.ps1 inicio' -Value "projectRoot=$script:ProjectRoot"
-    Write-Log -Message 'Variables' -Value "deviceId=$DeviceId | dependencies=$($Dependencies -join ', ') | skipIcons=$SkipIcons | skipBuild=$SkipBuild | skipRun=$SkipRun"
+    Write-Log -Message "Iniciando despliegue de $($script:AppName)"
+    Write-LogDetail -Message "log=$script:LogFile"
+    Write-LogDetail -Message "projectRoot=$($script:ProjectRoot) deviceId=$DeviceId dependencies=$($Dependencies -join ', ') skipIcons=$SkipIcons skipBuild=$SkipBuild skipRun=$SkipRun"
 
+    Write-Log -Message 'Limpiando proyecto flutter'
     Invoke-Flutter -Arguments @('clean')
+    Write-Log -Message 'Proyecto limpio'
+
+    Write-Log -Message 'Descargando dependencias flutter'
     Invoke-Flutter -Arguments @('pub', 'get')
     Invoke-DependencyAdd
+    Write-Log -Message 'Dependencias descargadas'
+
     Invoke-IconGeneration
     Invoke-Bundle
     Invoke-ApplicationRun
 
-    Write-Log -Message 'frontend/up.ps1 fin' -Value "skipRun=$SkipRun"
+    Write-Log -Message 'Despliegue finalizado'
 }
 
-Invoke-FrontendUp
+Initialize-Log
+try {
+    Invoke-FrontendUp
+    exit 0
+}
+catch {
+    Stop-WithError -Reason $_.Exception.Message
+}

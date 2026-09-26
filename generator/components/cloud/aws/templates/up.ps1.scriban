@@ -6,7 +6,10 @@
     Recorre cada directorio microservicio de cloud/terraform y ejecuta
     init -> plan -> apply. El directorio modules/ se excluye porque contiene
     módulos reutilizables y no un estado propio.
-    Cada paso imprime sus valores con Write-Log.
+    Consola: solo líneas con formato [yyyy-MM-dd HH:mm:ss] [etapa] mensaje
+    (etapa 'Cloud Bootstrap' o 'Cloud Apply') y acciones como
+    'Crear ECR {ms}' o 'Crear servicios de {ms}: ECR, Lambda, ...'.
+    Archivo: logs/yyyy-MM-dd-HH-mm-ss.log con la salida real de terraform.
 .PARAMETER Environment
     Entorno a desplegar. Por defecto el entorno con el que se generó el proyecto.
 .PARAMETER AutoApprove
@@ -35,18 +38,60 @@ $ErrorActionPreference = 'Stop'
 
 $script:TerraformRoot = Join-Path $PSScriptRoot 'terraform'
 $script:TerraformFile = "terraform.$Environment.tfvars"
+$script:LogDirectory = Join-Path -Path $PSScriptRoot -ChildPath 'logs'
+$script:LogFile = Join-Path -Path $script:LogDirectory -ChildPath ("{0}.log" -f (Get-Date -Format 'yyyy-MM-dd-HH-mm-ss'))
+$script:Stage = ''
+
+# Descripción humana de cada archivo .tf para los mensajes de consola.
+$script:ResourceLabels = @{
+    'ecr.tf'                   = 'ECR'
+    'apigateway.tf'            = 'API Gateway'
+    'apigateway_lambda.tf'     = 'API Gateway -> Lambda'
+    'lambda.tf'                = 'Lambda + IAM'
+    'sqs.tf'                   = 'SQS'
+    'sns.tf'                   = 'SNS'
+    'sns_subscription.tf'      = 'SNS -> SQS'
+    'cognito.tf'               = 'Cognito'
+    'cognito_iam.tf'           = 'Cognito IAM'
+    'cognito_client.tf'        = 'Cognito clientes'
+    'cognito_google_provider.tf' = 'Cognito Google'
+}
+
+function Format-LogLine {
+    param([Parameter(Mandatory)][string]$Message)
+
+    $stamp = '[' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + ']'
+    if ($script:Stage -eq '') {
+        return "$stamp $Message"
+    }
+
+    return "$stamp [$script:Stage] $Message"
+}
 
 function Write-Log {
-    param(
-        [Parameter(Mandatory)][string]$Message,
-        [string]$Value = ''
-    )
+    param([Parameter(Mandatory)][string]$Message)
 
-    $stamp = "[$(Get-Date -Format 'HH:mm:ss')]"
-    Write-Host "$stamp $Message"
-    if ($Value -ne '') {
-        Write-Host "$stamp     $Value"
-    }
+    $line = Format-LogLine -Message $Message
+    Write-Host $line
+    Add-Content -Path $script:LogFile -Value $line
+}
+
+function Write-LogDetail {
+    param([Parameter(Mandatory)][string]$Message)
+
+    Add-Content -Path $script:LogFile -Value (Format-LogLine -Message $Message)
+}
+
+function Initialize-Log {
+    New-Item -ItemType Directory -Path $script:LogDirectory -Force | Out-Null
+}
+
+function Stop-WithError {
+    param([Parameter(Mandatory)][string]$Reason)
+
+    Write-Log -Message "ERROR: $Reason"
+    Write-Log -Message "Log: $script:LogFile"
+    exit 1
 }
 
 function Invoke-Terraform {
@@ -55,16 +100,17 @@ function Invoke-Terraform {
         [Parameter(Mandatory)][string[]]$Arguments
     )
 
-    Write-Log -Message 'terraform' -Value "cwd=$WorkingDirectory"
-    Write-Log -Message 'terraform' -Value "args=$($Arguments -join ' ')"
+    $command = "terraform $($Arguments -join ' ')"
+    Write-LogDetail -Message "terraform cwd=$WorkingDirectory cmd=$command"
 
     Push-Location $WorkingDirectory
     try {
-        & terraform @Arguments
+        # La salida real de terraform va solo al archivo de log.
+        & terraform @Arguments 2>&1 | Out-File -FilePath $script:LogFile -Append
         $code = $LASTEXITCODE
-        Write-Log -Message 'terraform' -Value "exit=$code"
+        Write-LogDetail -Message "terraform exit=$code"
         if ($code -ne 0) {
-            throw "terraform $($Arguments -join ' ') falló con código $code en $WorkingDirectory"
+            throw "$command falló con código $code en $WorkingDirectory"
         }
     }
     finally {
@@ -72,19 +118,35 @@ function Invoke-Terraform {
     }
 }
 
+function Get-ResourceLabel {
+    param([Parameter(Mandatory)][string]$FileName)
+
+    if ($script:ResourceLabels.ContainsKey($FileName)) {
+        return $script:ResourceLabels[$FileName]
+    }
+
+    return $null
+}
+
+# Encapsula la consulta de archivos .tf del directorio (R5).
+function Get-ServiceLabels {
+    param([Parameter(Mandatory)][string]$WorkingDirectory)
+
+    return @(Get-ChildItem -Path $WorkingDirectory -Filter '*.tf' -File |
+        ForEach-Object -Process { Get-ResourceLabel -FileName $_.Name } |
+        Where-Object -FilterScript { $_ } |
+        Sort-Object -Unique)
+}
+
 function Get-MicroserviceDirectory {
-    Write-Log -Message 'Descubrimiento' -Value "root=$script:TerraformRoot"
+    Write-LogDetail -Message "descubrimiento root=$script:TerraformRoot"
 
     $directories = @(Get-ChildItem -Path $script:TerraformRoot -Directory |
         Where-Object { $_.Name -ne 'modules' } |
         Sort-Object -Property Name |
         ForEach-Object -Process { $_.FullName })
 
-    foreach ($directory in $directories) {
-        Write-Log -Message 'Microservicio' -Value "path=$directory"
-    }
-    Write-Log -Message 'Descubrimiento' -Value "total=$($directories.Count) | excluido=modules"
-
+    Write-LogDetail -Message "descubrimiento total=$($directories.Count) excluido=modules"
     return $directories
 }
 
@@ -97,7 +159,6 @@ function Invoke-TerraformInit {
 function Invoke-TerraformPlan {
     param([Parameter(Mandatory)][string]$WorkingDirectory)
 
-    Write-Log -Message 'Plan' -Value "tfvars=$script:TerraformFile"
     Invoke-Terraform -WorkingDirectory $WorkingDirectory -Arguments @(
         'plan', '-input=false', '-var-file', $script:TerraformFile
     )
@@ -106,7 +167,6 @@ function Invoke-TerraformPlan {
 function Invoke-TerraformApply {
     param([Parameter(Mandatory)][string]$WorkingDirectory)
 
-    Write-Log -Message 'Apply' -Value "tfvars=$script:TerraformFile | autoApprove=true"
     Invoke-Terraform -WorkingDirectory $WorkingDirectory -Arguments @(
         'apply', '-input=false', '-auto-approve', '-var-file', $script:TerraformFile
     )
@@ -119,7 +179,7 @@ function Invoke-TerraformBootstrap {
     # que la Lambda pueda referenciarla. Rompe el ciclo ECR <-> Lambda sin
     # partir el estado de Terraform.
     $target = '-target=aws_ecr_repository.{{ MICROSERVICE_NAME }}'
-    Write-Log -Message 'Bootstrap ECR' -Value "target=$target | tfvars=$script:TerraformFile"
+    Write-LogDetail -Message "bootstrap target=$target tfvars=$script:TerraformFile"
     Invoke-Terraform -WorkingDirectory $WorkingDirectory -Arguments @(
         'apply', '-input=false', '-auto-approve', '-var-file', $script:TerraformFile, $target
     )
@@ -129,51 +189,86 @@ function Confirm-Apply {
     param([Parameter(Mandatory)][string]$Name)
 
     if ($AutoApprove) {
-        Write-Log -Message 'Confirmación' -Value "name=$Name | autoApprove=true | respuesta=forzada"
+        Write-LogDetail -Message "confirmacion name=$Name respuesta=forzada"
         return $true
     }
 
     $answer = Read-Host "Aplicar cambios de '$Name'? [s/N]"
-    Write-Log -Message 'Confirmación' -Value "name=$Name | respuesta=$answer"
+    Write-LogDetail -Message "confirmacion name=$Name respuesta=$answer"
     return ($answer -match '^[sS]')
+}
+
+function Invoke-MicroserviceBootstrap {
+    param([Parameter(Mandatory)][string]$Name, [string]$WorkingDirectory)
+
+    Write-LogDetail -Message "terraform init name=$Name"
+    Invoke-TerraformInit -WorkingDirectory $WorkingDirectory
+
+    Write-Log -Message "Creando ECR $Name"
+    Invoke-TerraformBootstrap -WorkingDirectory $WorkingDirectory
+    Write-Log -Message "Creado ECR $Name"
+}
+
+function Invoke-MicroserviceApplyPhases {
+    param([Parameter(Mandatory)][string]$Name, [string]$WorkingDirectory)
+
+    $labels = @(Get-ServiceLabels -WorkingDirectory $WorkingDirectory)
+    Write-LogDetail -Message "servicios $($labels -join ', ')"
+
+    Write-Log -Message "Generando plan de $Name"
+    Invoke-TerraformInit -WorkingDirectory $WorkingDirectory
+    Invoke-TerraformPlan -WorkingDirectory $WorkingDirectory
+    Write-Log -Message "Plan generado $Name"
+    if ($PlanOnly) {
+        Write-Log -Message "Se omite apply de $Name (PlanOnly)"
+        return
+    }
+
+    if (-not (Confirm-Apply -Name $Name)) {
+        Write-Log -Message "Aplicación omitida de $Name (confirmación rechazada)"
+        return
+    }
+
+    Write-Log -Message "Creando servicios de ${Name}: $($labels -join ', ')"
+    Invoke-TerraformApply -WorkingDirectory $WorkingDirectory
+    Write-Log -Message "Servicios creados $Name"
 }
 
 function Invoke-MicroserviceUp {
     param([Parameter(Mandatory)][string]$WorkingDirectory)
 
     $name = Split-Path -Path $WorkingDirectory -Leaf
-    Write-Log -Message 'Microservicio inicio' -Value "name=$name | phase=$Phase | planOnly=$PlanOnly"
+    Write-LogDetail -Message "microservicio name=$name phase=$Phase"
 
     if ($Phase -eq 'Bootstrap') {
-        Invoke-TerraformInit -WorkingDirectory $WorkingDirectory
-        Invoke-TerraformBootstrap -WorkingDirectory $WorkingDirectory
-        Write-Log -Message 'Microservicio fin' -Value "name=$name | phase=Bootstrap"
-        return
+        Invoke-MicroserviceBootstrap -Name $name -WorkingDirectory $WorkingDirectory
     }
-
-    Invoke-TerraformInit -WorkingDirectory $WorkingDirectory
-    Invoke-TerraformPlan -WorkingDirectory $WorkingDirectory
-    if ($PlanOnly) {
-        Write-Log -Message 'Microservicio fin' -Value "name=$name | planOnly=true, se omite apply"
-        return
+    else {
+        Invoke-MicroserviceApplyPhases -Name $name -WorkingDirectory $WorkingDirectory
     }
-    if (Confirm-Apply -Name $name) {
-        Invoke-TerraformApply -WorkingDirectory $WorkingDirectory
-    }
-    Write-Log -Message 'Microservicio fin' -Value "name=$name"
 }
 
 # Facade: una sola entrada para el componente cloud.
 function Invoke-CloudUp {
-    Write-Log -Message 'cloud/up.ps1 inicio' -Value "environment=$Environment | phase=$Phase | autoApprove=$AutoApprove | planOnly=$PlanOnly"
-    Write-Log -Message 'Variables' -Value "scriptRoot=$PSScriptRoot | terraformRoot=$script:TerraformRoot | tfvars=$script:TerraformFile"
+    $script:Stage = if ($Phase -eq 'Bootstrap') { 'Cloud Bootstrap' } else { 'Cloud Apply' }
+
+    Write-Log -Message 'Iniciando despliegue de infraestructura'
+    Write-LogDetail -Message "log=$script:LogFile"
+    Write-LogDetail -Message "environment=$Environment phase=$Phase autoApprove=$AutoApprove planOnly=$PlanOnly tfvars=$script:TerraformFile"
 
     $directories = @(Get-MicroserviceDirectory)
     foreach ($directory in $directories) {
         Invoke-MicroserviceUp -WorkingDirectory $directory
     }
 
-    Write-Log -Message 'cloud/up.ps1 fin' -Value "phase=$Phase | procesados=$($directories.Count)"
+    Write-Log -Message 'Despliegue finalizado'
 }
 
-Invoke-CloudUp
+Initialize-Log
+try {
+    Invoke-CloudUp
+    exit 0
+}
+catch {
+    Stop-WithError -Reason $_.Exception.Message
+}

@@ -5,7 +5,11 @@
 .DESCRIPTION
     Para y elimina el contenedor y la imagen local. No borra la imagen en ECR
     ni la infraestructura: eso lo hace cloud/down.ps1.
-    Cada paso imprime sus valores con Write-Log.
+    Antes de trabajar comprueba el motor de Docker: si está caído intenta
+    arrancar Docker Desktop y espera; si no levanta, sale con un mensaje
+    claro (sin stack trace) indicando qué hacer.
+    Consola: solo líneas con formato [yyyy-MM-dd HH:mm:ss] [Backend] mensaje.
+    Archivo: logs/yyyy-MM-dd-HH-mm-ss.log con la salida real de docker.
 .EXAMPLE
     ./down.ps1
 #>
@@ -15,41 +19,140 @@ param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+$script:Stage = 'Backend'
 $script:ServiceName = '{{ MICROSERVICE_NAME }}'
+$script:LogDirectory = Join-Path -Path $PSScriptRoot -ChildPath 'logs'
+$script:LogFile = Join-Path -Path $script:LogDirectory -ChildPath ("{0}.log" -f (Get-Date -Format 'yyyy-MM-dd-HH-mm-ss'))
+$script:DockerDesktopPath = Join-Path -Path $env:ProgramFiles -ChildPath 'Docker\Docker\Docker Desktop.exe'
+$script:DockerTimeoutSeconds = 60
+
+function Format-LogLine {
+    param([Parameter(Mandatory)][string]$Message)
+
+    $stamp = '[' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + ']'
+    if ($script:Stage -eq '') {
+        return "$stamp $Message"
+    }
+
+    return "$stamp [$script:Stage] $Message"
+}
 
 function Write-Log {
-    param(
-        [Parameter(Mandatory)][string]$Message,
-        [string]$Value = ''
-    )
+    param([Parameter(Mandatory)][string]$Message)
 
-    $stamp = "[$(Get-Date -Format 'HH:mm:ss')]"
-    Write-Host "$stamp $Message"
-    if ($Value -ne '') {
-        Write-Host "$stamp     $Value"
+    $line = Format-LogLine -Message $Message
+    Write-Host $line
+    Add-Content -Path $script:LogFile -Value $line
+}
+
+function Write-LogDetail {
+    param([Parameter(Mandatory)][string]$Message)
+
+    Add-Content -Path $script:LogFile -Value (Format-LogLine -Message $Message)
+}
+
+function Initialize-Log {
+    New-Item -ItemType Directory -Path $script:LogDirectory -Force | Out-Null
+}
+
+function Stop-WithError {
+    param([Parameter(Mandatory)][string]$Reason)
+
+    Write-Log -Message "ERROR: $Reason"
+    Write-Log -Message "Log: $script:LogFile"
+    exit 1
+}
+
+function Test-DockerCli {
+    return ($null -ne (Get-Command -Name 'docker' -ErrorAction SilentlyContinue))
+}
+
+function Test-DockerEngine {
+    if (-not (Test-DockerCli)) {
+        return $false
     }
+
+    & docker info *> $null
+    return ($LASTEXITCODE -eq 0)
+}
+
+function Start-DockerDesktop {
+    if (-not (Test-Path -Path $script:DockerDesktopPath)) {
+        return $false
+    }
+
+    Write-LogDetail -Message "docker arrancar path=$($script:DockerDesktopPath)"
+    Start-Process -FilePath $script:DockerDesktopPath
+    return $true
+}
+
+function Wait-DockerEngine {
+    $deadline = (Get-Date).AddSeconds($script:DockerTimeoutSeconds)
+    while ((Get-Date) -lt $deadline) {
+        if (Test-DockerEngine) {
+            return $true
+        }
+        Start-Sleep -Seconds 3
+    }
+
+    return $false
+}
+
+# Facade del chequeo de Docker: comprueba -> intenta arrancar -> espera ->
+# mensaje claro y salida limpia si el motor no responde.
+function Assert-DockerEngine {
+    if (-not (Test-DockerCli)) {
+        Stop-WithError -Reason "No se encontró el ejecutable 'docker' en el PATH. Instala Docker Desktop (https://docs.docker.com/get-docker/) y vuelve a ejecutar el script."
+    }
+
+    if (Test-DockerEngine) {
+        Write-LogDetail -Message 'docker estado=disponible'
+        return
+    }
+
+    Write-Log -Message 'Docker está caído, intentando arrancar Docker Desktop'
+    if (-not (Start-DockerDesktop)) {
+        Stop-WithError -Reason "Docker está caído y no se encontró Docker Desktop en '$script:DockerDesktopPath'. Ábrelo manualmente y vuelve a ejecutar el script."
+    }
+
+    if (Wait-DockerEngine) {
+        Write-Log -Message 'Docker disponible'
+        return
+    }
+
+    Stop-WithError -Reason "Docker está caído y Docker Desktop no levantó el motor en $($script:DockerTimeoutSeconds) s. Ábrelo manualmente, espera a que diga 'engine running' y vuelve a ejecutar el script."
 }
 
 function Remove-Container {
-    Write-Log -Message 'Docker rm' -Value "container=$script:ServiceName"
-    & docker rm -f $script:ServiceName 2>$null
-    Write-Log -Message 'Docker rm' -Value "exit=$LASTEXITCODE"
+    Write-Log -Message "Eliminando contenedor $($script:ServiceName)"
+    & docker rm -f $script:ServiceName 2>&1 | Out-File -FilePath $script:LogFile -Append
+    Write-LogDetail -Message "docker rm exit=$LASTEXITCODE"
 }
 
 function Remove-Image {
-    Write-Log -Message 'Docker rmi' -Value "image=$script:ServiceName"
-    & docker rmi $script:ServiceName 2>$null
-    Write-Log -Message 'Docker rmi' -Value "exit=$LASTEXITCODE"
+    Write-Log -Message "Eliminando imagen docker local $($script:ServiceName)"
+    & docker rmi $script:ServiceName 2>&1 | Out-File -FilePath $script:LogFile -Append
+    Write-LogDetail -Message "docker rmi exit=$LASTEXITCODE"
 }
 
 # Facade: una sola entrada para el componente backend.
 function Invoke-BackendDown {
-    Write-Log -Message 'backend/down.ps1 inicio' -Value "serviceName=$script:ServiceName"
+    Write-Log -Message "Iniciando retiro de $($script:ServiceName)"
+    Write-LogDetail -Message "log=$script:LogFile"
+
+    Assert-DockerEngine
 
     Remove-Container
     Remove-Image
 
-    Write-Log -Message 'backend/down.ps1 fin' -Value "serviceName=$script:ServiceName"
+    Write-Log -Message 'Retiro finalizado'
 }
 
-Invoke-BackendDown
+Initialize-Log
+try {
+    Invoke-BackendDown
+    exit 0
+}
+catch {
+    Stop-WithError -Reason $_.Exception.Message
+}

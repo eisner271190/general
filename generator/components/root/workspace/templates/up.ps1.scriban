@@ -10,7 +10,9 @@
     5. frontend                : clean -> pub get -> iconos -> appbundle -> run.
     El orden 2 antes de 3 es imprescindible: la Lambda no puede crearse con
     una imagen que aún no existe.
-    Cada paso imprime sus valores con Write-Log.
+    Consola: solo líneas con formato [yyyy-MM-dd HH:mm:ss] [etapa] mensaje.
+    Archivo: logs/yyyy-MM-dd-HH-mm-ss.log con la salida real de cada
+    herramienta y el detalle (rutas, argumentos, códigos de salida).
 .PARAMETER Environment
     Entorno a levantar. Por defecto el entorno con el que se generó el proyecto.
 .PARAMETER AutoApprove
@@ -39,24 +41,52 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Write-Log {
-    param(
-        [Parameter(Mandatory)][string]$Message,
-        [string]$Value = ''
-    )
+$script:LogDirectory = Join-Path -Path $PSScriptRoot -ChildPath 'logs'
+$script:LogFile = Join-Path -Path $script:LogDirectory -ChildPath ("{0}.log" -f (Get-Date -Format 'yyyy-MM-dd-HH-mm-ss'))
+$script:Stage = ''
 
-    $stamp = "[$(Get-Date -Format 'HH:mm:ss')]"
-    Write-Host "$stamp $Message"
-    if ($Value -ne '') {
-        Write-Host "$stamp     $Value"
+function Format-LogLine {
+    param([Parameter(Mandatory)][string]$Message)
+
+    $stamp = '[' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + ']'
+    if ($script:Stage -eq '') {
+        return "$stamp $Message"
     }
+
+    return "$stamp [$script:Stage] $Message"
+}
+
+function Write-Log {
+    param([Parameter(Mandatory)][string]$Message)
+
+    $line = Format-LogLine -Message $Message
+    Write-Host $line
+    Add-Content -Path $script:LogFile -Value $line
+}
+
+function Write-LogDetail {
+    param([Parameter(Mandatory)][string]$Message)
+
+    Add-Content -Path $script:LogFile -Value (Format-LogLine -Message $Message)
+}
+
+function Initialize-Log {
+    New-Item -ItemType Directory -Path $script:LogDirectory -Force | Out-Null
+}
+
+function Stop-WithError {
+    param([Parameter(Mandatory)][string]$Reason)
+
+    Write-Log -Message "ERROR: $Reason"
+    Write-Log -Message "Log: $script:LogFile"
+    exit 1
 }
 
 function Write-Arguments {
     param([Parameter(Mandatory)][hashtable]$Arguments)
 
     foreach ($key in ($Arguments.Keys | Sort-Object)) {
-        Write-Log -Message 'argumento' -Value "$key=$($Arguments[$key])"
+        Write-LogDetail -Message "argumento $key=$($Arguments[$key])"
     }
 }
 
@@ -67,13 +97,18 @@ function Invoke-ComponentScript {
     )
 
     if (-not (Test-Path -Path $Path)) {
-        throw "No se encontró el script de componente: $Path"
+        Stop-WithError -Reason "No se encontró el script de componente: $Path"
     }
 
-    Write-Log -Message 'Componente' -Value "path=$Path"
+    Write-LogDetail -Message "componente path=$Path"
     Write-Arguments -Arguments $Arguments
-    & $Path @Arguments
-    Write-Log -Message 'Componente' -Value "path=$Path | status=ok"
+    # El componente solo emite líneas amigables por consola; van al log raíz tal cual.
+    & $Path @Arguments *>&1 | Tee-Object -FilePath $script:LogFile -Append
+    $code = $LASTEXITCODE
+    Write-LogDetail -Message "componente path=$Path exit=$code"
+    if ($code -ne 0) {
+        Stop-WithError -Reason "El componente '$Path' terminó con código $code"
+    }
 }
 
 function Get-ComponentScript {
@@ -83,16 +118,16 @@ function Get-ComponentScript {
     )
 
     $root = Join-Path -Path $PSScriptRoot -ChildPath $Component
-    Write-Log -Message 'Descubrimiento' -Value "root=$root | filter=$ScriptName"
+    Write-LogDetail -Message "descubrimiento root=$root filter=$ScriptName"
 
     $scripts = @(Get-ChildItem -Path $root -Filter $ScriptName -Recurse -ErrorAction SilentlyContinue |
         Sort-Object -Property FullName |
         ForEach-Object -Process { $_.FullName })
 
     foreach ($script in $scripts) {
-        Write-Log -Message 'Script' -Value "path=$script"
+        Write-LogDetail -Message "script path=$script"
     }
-    Write-Log -Message 'Descubrimiento' -Value "total=$($scripts.Count)"
+    Write-LogDetail -Message "descubrimiento total=$($scripts.Count)"
 
     return $scripts
 }
@@ -104,14 +139,14 @@ function Invoke-CloudPhase {
     )
 
     $path = Join-Path -Path $PSScriptRoot -ChildPath 'cloud/up.ps1'
-    Write-Log -Message 'Fase cloud' -Value "phase=$Phase | path=$path"
+    Write-LogDetail -Message "paso cloud phase=$Phase path=$path"
     Invoke-ComponentScript -Path $path -Arguments ($Arguments + @{ Phase = $Phase })
 }
 
 function Invoke-BackendPhase {
     param([Parameter(Mandatory)][string]$Phase)
 
-    Write-Log -Message 'Fase backend' -Value "phase=$Phase"
+    Write-LogDetail -Message "paso backend phase=$Phase"
     foreach ($path in Get-ComponentScript -Component 'backend' -ScriptName 'up.ps1') {
         Invoke-ComponentScript -Path $path -Arguments @{ Phase = $Phase }
     }
@@ -127,30 +162,52 @@ function Invoke-Frontend {
     }
 }
 
-# Facade: una sola entrada para levantar la aplicación completa.
-function Invoke-ApplicationUp {
-    Write-Log -Message 'up.ps1 inicio' -Value "environment=$Environment | autoApprove=$AutoApprove | planOnly=$PlanOnly | skipFrontend=$SkipFrontend | deviceId=$DeviceId"
-    Write-Log -Message 'Orden' -Value "1 Bootstrap -> 2 Build -> 3 Apply -> 4 Run -> 5 Frontend"
-
-    Invoke-CloudPhase -Phase 'Bootstrap' -Arguments @{ Environment = $Environment; AutoApprove = $true }
-    Invoke-BackendPhase -Phase 'Build'
-
+function Invoke-CloudApplyStage {
+    Write-LogDetail -Message 'paso 3/5 cloud plan + apply'
     $cloudArguments = @{ Environment = $Environment; AutoApprove = [bool]$AutoApprove; PlanOnly = [bool]$PlanOnly }
     Invoke-CloudPhase -Phase 'Apply' -Arguments $cloudArguments
-    if ($PlanOnly) {
-        Write-Log -Message 'up.ps1 fin' -Value "planOnly=true | se detiene tras el plan"
+}
+
+function Invoke-FrontendStage {
+    if ($SkipFrontend) {
+        Write-LogDetail -Message 'paso 5/5 frontend omitido (skipFrontend)'
         return
     }
 
-    Invoke-BackendPhase -Phase 'Run'
-    if (-not $SkipFrontend) {
-        Invoke-Frontend
-    }
-    else {
-        Write-Log -Message 'Frontend' -Value "skipFrontend=true | se omite"
-    }
-
-    Write-Log -Message 'up.ps1 fin' -Value "environment=$Environment | planOnly=$PlanOnly"
+    Write-LogDetail -Message 'paso 5/5 frontend'
+    Invoke-Frontend
 }
 
-Invoke-ApplicationUp
+# Facade: una sola entrada para levantar la aplicación completa.
+function Invoke-ApplicationUp {
+    Write-Log -Message 'Iniciando despliegue'
+    Write-LogDetail -Message "log=$script:LogFile"
+    Write-LogDetail -Message "aplicacion={{ APPLICATION_NAME }} environment=$Environment autoApprove=$AutoApprove planOnly=$PlanOnly skipFrontend=$SkipFrontend deviceId=$DeviceId"
+
+    Write-LogDetail -Message 'paso 1/5 cloud bootstrap (crea ECR)'
+    Invoke-CloudPhase -Phase 'Bootstrap' -Arguments @{ Environment = $Environment; AutoApprove = $true }
+
+    Write-LogDetail -Message 'paso 2/5 backend build (docker build + push)'
+    Invoke-BackendPhase -Phase 'Build'
+
+    Invoke-CloudApplyStage
+    if ($PlanOnly) {
+        Write-Log -Message 'Despliegue finalizado (PlanOnly: sin apply)'
+        return
+    }
+
+    Write-LogDetail -Message 'paso 4/5 backend run (Parameter Store + docker run)'
+    Invoke-BackendPhase -Phase 'Run'
+    Invoke-FrontendStage
+
+    Write-Log -Message 'Despliegue finalizado'
+}
+
+Initialize-Log
+try {
+    Invoke-ApplicationUp
+    exit 0
+}
+catch {
+    Stop-WithError -Reason $_.Exception.Message
+}
