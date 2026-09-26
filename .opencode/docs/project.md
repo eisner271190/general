@@ -1,6 +1,6 @@
 # Project — contexto del workspace para agentes
 
-Monorepo `general`: una aplicación .NET 9 (`generator/`) produce proyectos por componente (Spring Boot + Maven, Flutter, Terraform AWS) a partir de `epc.json`.
+Monorepo `general`: una aplicación .NET 9 (`generator/`) produce proyectos por componente (Spring Boot + Maven, Flutter, Terraform AWS) a partir del JSON de configuración de cada app (`generator/target/<applicationId>/<applicationId>.json`).
 
 - **Fuente de verdad:** `generator/` — código .NET + `components/**/component.json` + plantillas Scriban.
 - **Salida:** apps en `projects/` y `generator/target/` — resultados; corregir siempre en el generador.

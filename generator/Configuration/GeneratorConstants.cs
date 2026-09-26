@@ -12,7 +12,6 @@ internal static class GeneratorConstants
     public const string OutputDirectoryName = "output";
     public const string ProjectsDirectoryName = "projects";
     public const string GenerationPlanFileName = "generation-plan.json";
-    public const string ConfigurationFileName = "epc.json";
     public const string JsonExtension = ".json";
     public const string DefaultsDirectory = "defaults";
     public const string DefaultErrorCode = "GEN000";

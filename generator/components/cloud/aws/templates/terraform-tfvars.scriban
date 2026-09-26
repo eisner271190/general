@@ -1,5 +1,5 @@
 # Generado por EPC — no editar.
-# La fuente de verdad es epc.json: region/entorno viven en variables.tf,
+# La fuente de verdad es la configuración de la aplicación: region/entorno viven en variables.tf,
 # credenciales viven en el perfil de AWS (nunca aquí).
 
 environment_variables = {{ ENVIRONMENT_VARIABLES_HCL }}

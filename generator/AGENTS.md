@@ -10,7 +10,7 @@
 - Carpetas propias: mensajes fijos en `Domain/Messages/GeneratorMessages.cs`, códigos estables en `ErrorCodes` (ej. `GEN002`); salida CLI: `<error-code>: <message>`; nombres tipo `GenerationPlanFileName`, no `"generation-plan.json"`.
 
 ## Reglas del generador
-- `epc.json` es entrada de configuración, no artefacto generado.
+- El JSON de configuración (`target/<applicationId>/<applicationId>.json`) es entrada, no artefacto generado.
 - Componentes resueltos desde los directorios configurados; `templates/` y `defaults/` dentro de cada componente.
 - Tipos de componente: `backend`, `frontend`, `cloud` y `root`. El `root` (`components/root/workspace`) es el orquestador: genera `up.ps1`/`down.ps1` en la raíz del proyecto y se renderiza una sola vez (`GenerationPlanBuilder.AddRootComponent`).
 - Un `generation-plan.json` determinista por ambiente; renderizar placeholders antes de escribir.

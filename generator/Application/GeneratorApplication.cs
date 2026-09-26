@@ -55,18 +55,8 @@ internal sealed class GeneratorApplication(
         Directory.EnumerateDirectories(targetDirectory, "*", SearchOption.TopDirectoryOnly)
             .SelectMany(appDirectory => Directory.EnumerateFiles(appDirectory, "*" + GeneratorConstants.JsonExtension, SearchOption.TopDirectoryOnly))
             .Where(path => !path.StartsWith(excludedRootDirectory + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-            .Where(IsConfigurationFile)
             .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
             .ToList();
-
-    // Entradas validas: epc.json o <nombre-carpeta>.json; el resto de JSON de la carpeta se ignora.
-    private static bool IsConfigurationFile(string path)
-    {
-        var fileName = Path.GetFileName(path);
-        var applicationDirectory = Path.GetFileName(Path.GetDirectoryName(path)!);
-        return fileName.Equals(GeneratorConstants.ConfigurationFileName, StringComparison.OrdinalIgnoreCase)
-            || fileName.Equals($"{applicationDirectory}{GeneratorConstants.JsonExtension}", StringComparison.OrdinalIgnoreCase);
-    }
 
     private static void EnsureInputs(IReadOnlyList<string> inputPaths, string targetDirectory)
     {
