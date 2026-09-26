@@ -1,12 +1,12 @@
 ﻿variable "region" {
   type        = string
-  description = "Región AWS de despliegue. La fuente de verdad es cloud.region en epc.json."
+  description = "Región AWS de despliegue. La fuente de verdad es cloud.region en la configuración de la aplicación."
   default     = "{{ CLOUD_REGION }}"
 }
 
 variable "environment" {
   type        = string
-  description = "Entorno de despliegue. La fuente de verdad es environments[].name en epc.json."
+  description = "Entorno de despliegue. La fuente de verdad es environments[].name en la configuración de la aplicación."
   default     = "{{ ENVIRONMENT }}"
 
   validation {

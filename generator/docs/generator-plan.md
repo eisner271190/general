@@ -3,13 +3,15 @@
 El generator lee la configuración inicial de la aplicación, sus ambientes y sus microservicios. Cada microservicio selecciona los componentes que necesita; los componentes definen la estructura y los templates; el ambiente define los valores; el plan contiene el resultado final.
 
 ```text
-epc.json + components/*.json + templates
+target/<app>/<app>.json + components/*.json + templates
     -> generation-plan.json
 ```
 
 Todos los paths son relativos al directorio de salida.
 
-## 1. JSON inicial: `epc.json`
+## 1. JSON inicial: configuración de la aplicación
+
+Vive en `target/<applicationId>/<applicationId>.json`. El generator escanea cada subcarpeta de `target/` y carga sus `*.json` de primer nivel (excluye `target/output/`).
 
 Define el nombre e identificador de la aplicación, sus ambientes y los microservicios que se deben crear.
 
@@ -122,7 +124,7 @@ Define el nombre e identificador de la aplicación, sus ambientes y los microser
 }
 ```
 
-### Propiedades de `epc.json`
+### Propiedades del JSON de configuración
 
 - `applicationName`: nombre de la aplicación.
 - `applicationId`: identificador único de la aplicación, por ejemplo `com.quizsmart.app`.
@@ -195,7 +197,7 @@ En este ejemplo, `templates/backend/appsettings.json` podría contener:
 
 ## 3. Transformación a `generation-plan.json`
 
-El generator procesa cada microservicio de `epc.json` y resuelve sus componentes. Para el ejemplo anterior:
+El generator procesa cada microservicio de la configuración y resuelve sus componentes. Para el ejemplo anterior:
 
 ```text
 microservice.backend = dotnet9.json
@@ -209,7 +211,7 @@ El JSON del componente aporta `directories`, `files` y `defaultFiles`. Para cada
 El flujo completo es:
 
 ```text
-epc.json
+target/<app>/<app>.json
   -> seleccionar microservicio y ambiente
   -> resolver components/backend/dotnet9.json
   -> cargar templates
@@ -219,7 +221,7 @@ epc.json
 
 ## 4. Variables del ambiente
 
-Las variables pertenecen al ambiente correspondiente dentro de `epc.json`. Se usan para resolver los placeholders de los templates. No definen carpetas ni archivos.
+Las variables pertenecen al ambiente correspondiente dentro de la configuración. Se usan para resolver los placeholders de los templates. No definen carpetas ni archivos.
 
 ```json
 [
