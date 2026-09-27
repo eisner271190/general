@@ -95,7 +95,10 @@ function Invoke-FlutterToConsole {
     param([Parameter(Mandatory)][string[]]$Arguments)
 
     # Comando interactivo (flutter run): en consola y en el log.
-    & flutter @Arguments 2>&1 | Tee-Object -FilePath $script:LogFile -Append
+    # Out-Host evita que la salida se capture en la llamada: si llega al flujo
+    # de éxito, $code recibe las líneas además del código y el if posterior
+    # lanza un falso error (y oculta la salida en vivo de flutter run).
+    & flutter @Arguments 2>&1 | Tee-Object -FilePath $script:LogFile -Append | Out-Host
     return $LASTEXITCODE
 }
 
