@@ -53,7 +53,8 @@
     "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers",
     "{{MICROSERVICE_NAME}}/src/test/resources",
     "{{MICROSERVICE_NAME}}/src/test/resources/performance",
-    "{{MICROSERVICE_NAME}}/.mvn/wrapper"
+    "{{MICROSERVICE_NAME}}/.mvn/wrapper",
+    "{{MICROSERVICE_NAME}}/postman"
   ],
   "files": [
     { "key": "{{MICROSERVICE_NAME}}/.gitignore", "value": "templates/gitignore.scriban" },
@@ -160,7 +161,8 @@
     { "key": "{{MICROSERVICE_NAME}}/sonar-scanner.properties", "value": "templates/sonar-scanner-properties.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/rest/response/ApiResponse.java", "value": "templates/api-response.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/GraalHints.java", "value": "templates/graalvm-hints.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/resources/logback.xml", "value": "templates/logback.scriban" }
+    { "key": "{{MICROSERVICE_NAME}}/src/main/resources/logback.xml", "value": "templates/logback.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/postman/{{MICROSERVICE_NAME}}.postman_collection.json", "value": "templates/postman-collection.scriban" }
   ],
   "defaultFiles": []
 }

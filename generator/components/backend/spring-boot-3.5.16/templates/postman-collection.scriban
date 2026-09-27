@@ -1,0 +1,1009 @@
+{{ open_b = "{" + "{" }}{{ close_b = "}" + "}" }}{
+  "info": {
+    "name": "{{ MicroserviceName }}",
+    "description": "Colección de endpoints del microservicio {{ MicroserviceName }}.\n\nURL BASE (API Gateway):\n  1. cd cloud/terraform/{{ MicroserviceName }}\n  2. terraform output http_api_url\n  3. Pegar el valor en la variable de colección baseUrl.\n\nAUTENTICACIÓN:\n  - Ejecutar Users > Login para guardar el token (variable token) y el usuario (variable username).\n  - Las rutas de identidad /api/v1/users/** son públicas; el resto requiere Authorization: Bearer.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('Configura baseUrl (terraform output http_api_url)', function () { pm.expect(pm.collectionVariables.get('baseUrl'), 'Falta baseUrl').to.not.be.empty; });"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "username", "value": "demo", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Hola Mundo",
+      "item": [
+        {
+          "name": "Hello",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/{{ Name }}/hello",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["{{ Name }}", "hello"]
+            },
+            "description": "Saludo del microservicio (siempre disponible)."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":{\"data\":\"Hola Mundo\"},\"message\":\"Hola Mundo\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Error",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/{{ Name }}/error",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["{{ Name }}", "error"]
+            },
+            "description": "Prueba del manejo de errores del microservicio."
+          },
+          "response": [
+            {
+              "name": "Error",
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Error interno\",\"status\":500,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SNS",
+      "item": [
+        {
+          "name": "Publish",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/sns/publish?message=Hola+Mundo",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["sns", "publish"],
+              "query": [{ "key": "message", "value": "Hola+Mundo" }]
+            },
+            "description": "Publica un mensaje en el tema SNS del microservicio."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "text",
+              "header": [{ "key": "Content-Type", "value": "text/plain" }],
+              "body": "Mensaje publicado en SNS."
+            }
+          ]
+        }
+      ]
+    }{{ if ConsumedEvents.size > 0 }},
+    {
+      "name": "SQS",
+      "item": [
+        {
+          "name": "Send",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/sqs/send?message=Hola+Mundo",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["sqs", "send"],
+              "query": [{ "key": "message", "value": "Hola+Mundo" }]
+            },
+            "description": "Envía un mensaje a la cola SQS."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "text",
+              "header": [{ "key": "Content-Type", "value": "text/plain" }],
+              "body": "Mensaje enviado a SQS."
+            }
+          ]
+        },
+        {
+          "name": "Consume",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/sqs/consume",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["sqs", "consume"]
+            },
+            "description": "Consume mensajes pendientes de la cola SQS."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "[\"Mensaje de ejemplo\"]"
+            }
+          ]
+        }
+      ]
+    }{{ end }}{{ if(Name == "security") }},
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', function () { pm.response.to.have.success; });",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('token', json.data.data.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{ open_b }}username{{ close_b }}\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/auth/token",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "auth", "token"]
+            },
+            "description": "Genera un token JWT. Requiere Authorization: Bearer."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":{\"data\":{\"accessToken\":\"eyJhbGciOi...\"}},\"message\":\"Token generado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            },
+            {
+              "name": "Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Error al generar el token\",\"status\":401,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Exchange",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', function () { pm.response.to.have.success; });",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('token', json.data.data.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"authorization-code\",\n  \"codeVerifier\": \"code-verifier\",\n  \"redirectUri\": \"https://example.com/callback\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/auth/exchange",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "auth", "exchange"]
+            },
+            "description": "Intercambia el código de autorización por tokens (PKCE)."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":{\"data\":{\"accessToken\":\"eyJhbGciOi...\",\"idToken\":\"eyJhbGciOi...\",\"refreshToken\":\"...\",\"expiresIn\":3600,\"tokenType\":\"Bearer\"}},\"message\":\"Código intercambiado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', function () { pm.response.to.have.success; });",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('token', json.data.data.accessToken);",
+                  "pm.collectionVariables.set('username', pm.collectionVariables.get('username'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{ open_b }}username{{ close_b }}\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/users/token",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "users", "token"]
+            },
+            "description": "Login: guarda accessToken en la variable token. Ruta pública."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":{\"data\":{\"accessToken\":\"eyJhbGciOi...\"}},\"message\":\"Token generado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Usuario Demo\",\n  \"email\": \"demo@example.com\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/users/register",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "users", "register"]
+            },
+            "description": "Registra un usuario. Ruta pública."
+          },
+          "response": [
+            {
+              "name": "Created",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Usuario registrado exitosamente\",\"status\":201,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Register (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Usuario Admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/users/admin/register",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "users", "admin", "register"]
+            },
+            "description": "Registra un usuario en nombre de un administrador."
+          },
+          "response": [
+            {
+              "name": "Created",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Usuario registrado exitosamente\",\"status\":201,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Confirm",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{ open_b }}username{{ close_b }}\",\n  \"confirmationCode\": \"123456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/users/confirm",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "users", "confirm"]
+            },
+            "description": "Confirma el registro con el código enviado. Ruta pública."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Usuario confirmado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Force password reset (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{ open_b }}username{{ close_b }}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/users/admin/force-password-reset",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "users", "admin", "force-password-reset"]
+            },
+            "description": "Fuerza el restablecimiento de contraseña de un usuario."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Restablecimiento forzado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Change password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accessToken\": \"{{ open_b }}token{{ close_b }}\",\n  \"oldPassword\": \"Passw0rd!\",\n  \"newPassword\": \"NewPassw0rd!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/users/change-password",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "users", "change-password"]
+            },
+            "description": "Cambia la contraseña del usuario autenticado."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Contraseña cambiada exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Recover password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"demo@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/users/recover-password",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "users", "recover-password"]
+            },
+            "description": "Envía el código de recuperación al correo. Ruta pública."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Código de recuperación enviado\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Delete (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/users/admin/delete/{{ open_b }}username{{ close_b }}",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "users", "admin", "delete", ":username"]
+            },
+            "description": "Elimina un usuario por username."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Usuario eliminado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Activate (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/users/admin/activate/{{ open_b }}username{{ close_b }}",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "users", "admin", "activate", ":username"]
+            },
+            "description": "Activa un usuario por username."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Usuario activado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Deactivate (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/users/admin/deactivate/{{ open_b }}username{{ close_b }}",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "users", "admin", "deactivate", ":username"]
+            },
+            "description": "Desactiva un usuario por username."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Usuario desactivado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Registration",
+      "item": [
+        {
+          "name": "Register (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Usuario Admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/registration/admin/users",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "registration", "admin", "users"]
+            },
+            "description": "Registra un usuario desde el área administrativa."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Usuario registrado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Signup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Usuario Demo\",\n  \"email\": \"demo@example.com\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/registration/signup",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "registration", "signup"]
+            },
+            "description": "Alta de usuario (signup)."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Usuario registrado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Confirm",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{ open_b }}username{{ close_b }}\",\n  \"confirmationCode\": \"123456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/registration/confirm",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "registration", "confirm"]
+            },
+            "description": "Confirma el alta con el código de verificación."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Usuario confirmado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin Users",
+      "item": [
+        {
+          "name": "Delete",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/admin/users/{{ open_b }}username{{ close_b }}",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "admin", "users", ":username"]
+            },
+            "description": "Elimina un usuario por username."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Usuario eliminado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Activate",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/admin/users/{{ open_b }}username{{ close_b }}/activate",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "admin", "users", ":username", "activate"]
+            },
+            "description": "Activa un usuario por username."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Usuario activado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Deactivate",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/admin/users/{{ open_b }}username{{ close_b }}/deactivate",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "admin", "users", ":username", "deactivate"]
+            },
+            "description": "Desactiva un usuario por username."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Usuario desactivado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Password",
+      "item": [
+        {
+          "name": "Force reset (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/password/admin/force-reset/{{ open_b }}username{{ close_b }}",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "password", "admin", "force-reset", ":username"]
+            },
+            "description": "Fuerza el restablecimiento de la contraseña de un usuario."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Restablecimiento forzado exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Change",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accessToken\": \"{{ open_b }}token{{ close_b }}\",\n  \"oldPassword\": \"Passw0rd!\",\n  \"newPassword\": \"NewPassw0rd!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/password/change",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "password", "change"]
+            },
+            "description": "Cambia la contraseña con el token vigente."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Contraseña cambiada exitosamente\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        },
+        {
+          "name": "Forgot",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ open_b }}token{{ close_b }}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"demo@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/password/forgot",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "password", "forgot"]
+            },
+            "description": "Envía el código de recuperación al correo."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Código de recuperación enviado\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        }
+      ]
+    }{{ end }}
+  ]
+}
