@@ -21,10 +21,9 @@
     {
       "name": "develop",
       "variables": {
-        "DATABASE_HOST": "localhost",
-        "DATABASE_NAME": "quizsmart_dev",
         "API_URL": "http://localhost:5000",
-        "DEBUG": "true"
+        "DEBUG": "true",
+        "JWT_EXPIRATION": "86400000"
       }
     }
   ],
