@@ -1,5 +1,8 @@
 # Done
 
+## General
+1. Scripts up y down
+
 ## Frontend
 1. Crear proyecto Flutter
 2. Estructura base de carpetas y archivos

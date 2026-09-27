@@ -23,7 +23,8 @@
 .PARAMETER SkipFrontend
     Omite el paso de frontend (servidores útiles en CI).
 .PARAMETER DeviceId
-    Dispositivo para `flutter run`. Si se omite, el frontend solo compila
+    Dispositivo para `flutter run`. Si se omite, el frontend usa el único
+    móvil Android conectado por adb; con cero o varios móviles solo compila
     (flutter run es interactivo y aborta con más de un dispositivo).
 .EXAMPLE
     ./up.ps1 -PlanOnly

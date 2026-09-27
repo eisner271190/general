@@ -5,9 +5,10 @@
 > Al crear el PR: marcar `- [x]` con el enlace. Al fusionar: mover a `docs/done.md`.
 
 ## MVP (Prioridad)
-- [ ] T01 — Frontend compilando y ejecutando
-- [ ] T02 — Frontend consumiendo API REST del backend
-- [ ] T03 — Backend funcionando con infraestructura AWS
+- [ ] T04 — Agregar los secretos a AWS secret manager
+- [ ] T05 — Agregar los parametros a AWS parameter store
+- [ ] T06 — Obtener los parametros y los secrets (Solo los que el ms necesite) al iniciar los ms
+- [ ] T07 — El frontend debe obtener la URL del API Gateway y consumir los servicios del backend /actuator/health
 
 ## Frontend
 - [ ] T04 — Suscripción

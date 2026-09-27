@@ -11,9 +11,10 @@
     más la salida de `flutter run` (interactivo), que también se guarda.
     Archivo: logs/yyyy-MM-dd-HH-mm-ss.log con la salida real de flutter.
 .PARAMETER DeviceId
-    Identificador del dispositivo para flutter run. Si se omite, flutter run
-    no se ejecuta: es interactivo y Flutter aborta con más de un dispositivo
-    conectado. Compilar no depende de este parámetro.
+    Id adb o nombre del móvil para flutter run. Si se omite, se usa el único
+    móvil Android conectado por adb. Con cero o varios móviles, flutter run
+    no se ejecuta y solo se compila: es interactivo y Flutter aborta con más
+    de un dispositivo conectado. Compilar no depende de este parámetro.
 .PARAMETER Dependencies
     Paquetes a añadir con `dart pub add --dev` antes de compilar.
 .PARAMETER SkipIcons
@@ -153,21 +154,55 @@ function Invoke-Bundle {
     Write-Log -Message 'Appbundle compilado'
 }
 
+function Get-ConnectedAndroidDeviceIds {
+    # Ids adb de los móviles autorizados (estado 'device'); vacío si no hay adb.
+    if ($null -eq (Get-Command -Name 'adb' -ErrorAction SilentlyContinue)) {
+        Write-LogDetail -Message 'móviles: adb no está en el PATH'
+        return @()
+    }
+
+    $output = & adb devices 2>&1
+    $deviceIds = @(
+        foreach ($line in $output) {
+            if ("$line" -match '^(\S+)\s+device\s*$') {
+                $Matches[1]
+            }
+        }
+    )
+    Write-LogDetail -Message "móviles conectados total=$($deviceIds.Count) ids=$($deviceIds -join ',')"
+    return $deviceIds
+}
+
+function Get-RunDeviceId {
+    # Id para flutter run: el indicado o el único móvil conectado; '' si no hay uno único.
+    if ($DeviceId -ne '') {
+        return $DeviceId
+    }
+
+    $connectedIds = @(Get-ConnectedAndroidDeviceIds)
+    if ($connectedIds.Count -eq 1) {
+        return $connectedIds[0]
+    }
+
+    return ''
+}
+
 function Invoke-ApplicationRun {
     if ($SkipRun) {
         Write-LogDetail -Message 'flutter run omitido (skipRun)'
         return
     }
 
-    if ($DeviceId -eq '') {
-        # flutter run es interactivo y aborta si hay más de un dispositivo:
-        # sin dispositivo indicado no se ejecuta para no bloquear al orquestador.
-        Write-LogDetail -Message 'flutter run omitido: sin dispositivo indicado (usa -DeviceId)'
+    $runDeviceId = Get-RunDeviceId
+    if ($runDeviceId -eq '') {
+        # flutter run es interactivo y aborta con más de un dispositivo:
+        # sin un móvil único no se ejecuta para no bloquear al orquestador.
+        Write-Log -Message 'flutter run omitido: hace falta un único móvil Android conectado (usa -DeviceId)'
         return
     }
 
-    Write-Log -Message "Ejecutando aplicación $($script:AppName)"
-    Invoke-Flutter -Arguments @('run', '--debug', '-d', $DeviceId) -ShowOutput
+    Write-Log -Message "Ejecutando aplicación $($script:AppName) en $runDeviceId"
+    Invoke-Flutter -Arguments @('run', '--debug', '-d', $runDeviceId) -ShowOutput
     Write-Log -Message "Aplicación $($script:AppName) detenida"
 }
 
