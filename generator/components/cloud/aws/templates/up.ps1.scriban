@@ -11,7 +11,9 @@
     'Crear ECR {ms}' o 'Crear servicios de {ms}: ECR, Lambda, ...'.
     Archivo: logs/yyyy-MM-dd-HH-mm-ss.log con la salida real de terraform.
     Tras el apply se registra la ruta del prefijo de Parameter Store del
-    microservicio (output environment_parameter_path) con sus parámetros.
+    microservicio (output environment_parameter_path) con sus parámetros y se
+    sobrescriben los parámetros cuyo valor sale de la infraestructura
+    (ARN de SNS, URL de SQS, URL de API, dominio y client id de Cognito).
 .PARAMETER Environment
     Entorno a desplegar. Por defecto el entorno con el que se generó el proyecto.
 .PARAMETER AutoApprove
@@ -59,6 +61,17 @@ $script:ResourceLabels = @{
     'cognito_client.tf'        = 'Cognito clientes'
     'cognito_google_provider.tf' = 'Cognito Google'
 }
+
+# Parámetros de Parameter Store cuyo valor sólo existe después del apply.
+# Key: nombre del parámetro; Output: output de Terraform que lo produce.
+$script:PostApplyParameters = @(
+    @{ Key = 'AWS_SNS_TOPIC_ARN'; Output = 'sns_topic_arn' }
+    @{ Key = 'AWS_SQS_URL_{{ MICROSERVICE_NAME }}'; Output = 'sqs_queue_url_{{ MICROSERVICE_NAME }}' }
+    @{ Key = 'API_BASE_URL'; Output = 'http_api_url' }
+    @{ Key = 'AUTH_BACKEND_HOST'; Output = 'http_api_url' }
+    @{ Key = 'AUTH_COGNITO_DOMAIN'; Output = 'user_pool_domain_url' }
+    @{ Key = 'AUTH_CLIENT_ID'; Output = 'user_pool_client_id' }
+)
 
 function Format-LogLine {
     param([Parameter(Mandatory)][string]$Message)
@@ -146,6 +159,51 @@ function Get-TerraformOutput {
     finally {
         Pop-Location
     }
+}
+
+# Escribe un parámetro en Parameter Store (lo crea o lo sobrescribe).
+function Set-ParameterStoreValue {
+    param(
+        [Parameter(Mandatory)][string]$ParameterName,
+        [Parameter(Mandatory)][string]$Value
+    )
+
+    $arguments = @('ssm', 'put-parameter', '--name', $ParameterName, '--value', $Value, '--type', 'String', '--overwrite')
+    Write-LogDetail -Message "aws $($arguments -join ' ')"
+
+    & aws @arguments 2>&1 | Out-File -FilePath $script:LogFile -Append
+    $code = $LASTEXITCODE
+    Write-LogDetail -Message "aws ssm put-parameter exit=$code name=$ParameterName"
+    if ($code -ne 0) {
+        throw "aws ssm put-parameter falló con código $code name=$ParameterName"
+    }
+}
+
+# Sobrescribe en Parameter Store los parámetros que dependen de la infraestructura.
+function Update-PostApplyParameters {
+    param(
+        [Parameter(Mandatory)][string]$WorkingDirectory,
+        [Parameter(Mandatory)][string]$ParameterPath
+    )
+
+    if ($null -eq (Get-Command -Name aws -ErrorAction SilentlyContinue)) {
+        Write-LogDetail -Message 'aws CLI no disponible (se omiten parámetros post-apply)'
+        return 0
+    }
+
+    $updated = 0
+    foreach ($parameter in $script:PostApplyParameters) {
+        $value = Get-TerraformOutput -WorkingDirectory $WorkingDirectory -OutputName $parameter.Output
+        if ([string]::IsNullOrWhiteSpace($value)) {
+            Write-LogDetail -Message "output vacío name=$($parameter.Output) (se omite $($parameter.Key))"
+            continue
+        }
+
+        Set-ParameterStoreValue -ParameterName ($ParameterPath + $parameter.Key) -Value $value
+        $updated++
+    }
+
+    return $updated
 }
 
 function Update-PostmanBaseUrl {
@@ -305,6 +363,15 @@ function Invoke-MicroserviceApplyPhases {
     }
     else {
         Write-Log -Message "Parámetros de $Name en Parameter Store: $parameterPath"
+
+        # Parámetros cuyo valor sale de la infraestructura recién creada.
+        $updated = Update-PostApplyParameters -WorkingDirectory $WorkingDirectory -ParameterPath $parameterPath
+        if ($updated -gt 0) {
+            Write-Log -Message "Parámetros post-apply de ${Name} actualizados: $updated"
+        }
+        else {
+            Write-LogDetail -Message "sin parámetros post-apply name=$Name"
+        }
     }
 
     # El API Gateway ya existe: propaga su URL al collection Postman del microservicio.

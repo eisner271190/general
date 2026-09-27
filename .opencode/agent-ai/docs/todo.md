@@ -5,6 +5,7 @@
 > Al crear el PR: marcar `- [x]` con el enlace. Al fusionar: mover a `docs/done.md`.
 
 ## MVP (Prioridad)
+- [ ] T01 — Separar el generador en componentes independientes: Frontend, Backend y Cloud. Cada componente debe ser un proyecto independiente, con sus propios modelos, estrategias, targets y templates, de forma que el generador sea completamente agnóstico a implementaciones concretas.
 - [ ] T04 — Agregar los secretos a AWS secret manager
 - [ ] T05 — Agregar los parametros a AWS parameter store
 - [ ] T06 — Obtener los parametros y los secrets (Solo los que el ms necesite) al iniciar los ms

@@ -21,15 +21,31 @@
     {
       "name": "develop",
       "variables": {
+        "SERVICE_MODE": "REAL",
+        "AI_SERVICE_MODE": "REAL",
+        "AUTH_SERVICE_MODE": "REAL",
+        "AD_SERVICE_MODE": "REAL",
+        "SUBSCRIPTION_SERVICE_MODE": "REAL",
+        "PROFILE": "DEV",
+        "API_URL": "https://openrouter.ai/api/v1/chat/completions",
         "JWT_EXPIRATION": "86400000",
         "AWS_REGION": "us-east-1",
         "THEME_STYLE": "CHATGPT",
-        "PROMPT": "Generate a valid JSON object with a questions array for the requested quiz.",
-        "MODEL": "MiMo-V2.6-Flash",
+        "PROMPT": "Genera un JSON válido y NÍTIDO (sin texto adicional) con la clave \"questions\" que contiene una lista de {numQuestions} preguntas sobre el tema \"{topic}\" en idioma {language}.\nCada elemento de \"questions\" debe ser un objeto con las claves exactas:\n- id: string (identificador único)\n- text: string (texto de la pregunta)\n- options: array de {optionsCount} strings (opciones de respuesta)\n- correctIndex: entero 0-based (índice de la opción correcta)\n- explanation: string (explicación de la respuesta correcta)\nEjemplo de salida esperada (mantén exactamente este formato JSON y responde SOLO con el JSON):\n{\"questions\":[{\"id\":\"q1\",\"text\":\"Texto de la pregunta 1\",\"options\":[\"A\",\"B\",\"C\",\"D\"],\"correctIndex\":2,\"explanation\":\"Porque...\"}]}",
+        "MODEL": "gpt-4o-mini",
         "REVENUECAT_PUBLIC_KEY": "REVENUECAT_PUBLIC_KEY_PLACEHOLDER",
         "ADMOB_BANNER_ID": "ADMOB_BANNER_ID_PLACEHOLDER",
         "PRIVACY_URL": "https://quiz-epc-politica-privacidad.s3.us-east-1.amazonaws.com/privacy-policy.html",
-        "TERMS_URL": "https://quiz-epc-politica-privacidad.s3.us-east-1.amazonaws.com/privacy-policy.html"
+        "TERMS_URL": "https://quiz-epc-politica-privacidad.s3.us-east-1.amazonaws.com/privacy-policy.html",
+        "AUTH_BACKEND_HOST": "http://localhost:8081",
+        "AUTH_TOKEN_EXCHANGE_PATH": "/api/v1/auth/exchange",
+        "AUTH_LOGOUT_PATH": "/auth/logout",
+        "AUTH_COGNITO_DOMAIN": "https://user-management-domain.auth.us-east-1.amazoncognito.com",
+        "AUTH_CLIENT_ID": "dndut3qo6e35b6blau4287bdl",
+        "AUTH_REDIRECT_URI": "myapp://auth/callback",
+        "AUTH_REDIRECT_URI_WEB": "http://localhost:3000/callback",
+        "AUTH_SCOPES": "openid email profile",
+        "AUTH_IDENTITY_PROVIDER": "Google"
       }
     }
   ],
