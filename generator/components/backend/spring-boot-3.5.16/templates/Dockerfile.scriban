@@ -7,5 +7,5 @@ FROM public.ecr.aws/lambda/java:17
 COPY --from=builder /app/target/classes ${LAMBDA_TASK_ROOT}
 COPY --from=builder /app/target/dependency/* ${LAMBDA_TASK_ROOT}/lib/
 
-CMD [ "{{ APPLICATION_ID }}.LambdaHandler::handleRequest" ]
+CMD [ "com.{{ Company }}.{{ Name }}.LambdaHandler::handleRequest" ]
 {{ end }}

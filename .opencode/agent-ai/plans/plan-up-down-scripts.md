@@ -540,7 +540,7 @@ Decisiones tomadas entre paréntesis:
 
 7. **¿DeviceId hardcodeado `2201117SL`?** → *Recomendación:* **parámetro con ese default**. **→ Cambiada**: parámetro **sin default**; si se omite, `flutter run` elige el dispositivo conectado. Un ID de dispositivo concreto no puede ser valor por defecto de una plantilla que se genera para cualquier proyecto.
 
-8. **¿`-AutoApprove` por defecto?** → *Recomendación:* **no**. `apply` interactivo por defecto; `-AutoApprove` explícito (evita el `-auto-approve` masivo del referente). **→ Tomada** (con salvedad: `-Phase Bootstrap` siempre usa `-auto-approve`, porque crea solo el repositorio ECR y es idempotente).
+8. **¿`-AutoApprove` por defecto?** → *Recomendación:* **no**. `apply` interactivo por defecto; `-AutoApprove` explícito (evita el `-auto-approve` masivo del referente). **→ Tomada** (con salvedad: `-Phase Bootstrap` siempre usa `-auto-approve`, porque crea solo el repositorio ECR y es idempotente). **Cambio 2026-09-27:** ahora **sí** por defecto (`[switch]$AutoApprove = $true`, confirmar con `-AutoApprove:$false`) — ver `.opencode/docs/decisions.md`.
 
 ---
 

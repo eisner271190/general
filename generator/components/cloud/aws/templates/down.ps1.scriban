@@ -11,14 +11,17 @@
 .PARAMETER Environment
     Entorno a retirar. Por defecto el entorno con el que se generó el proyecto.
 .PARAMETER AutoApprove
-    Omite la confirmación previa al destroy.
+    Omite la confirmación previa al destroy. Activado por defecto;
+    usar -AutoApprove:$false para pedir confirmación.
 .EXAMPLE
-    ./down.ps1 -AutoApprove
+    ./down.ps1
+.EXAMPLE
+    ./down.ps1 -AutoApprove:$false
 #>
 [CmdletBinding()]
 param(
     [string]$Environment = '{{ ENVIRONMENT }}',
-    [switch]$AutoApprove
+    [switch]$AutoApprove = $true
 )
 
 Set-StrictMode -Version Latest

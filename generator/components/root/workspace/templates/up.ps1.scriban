@@ -16,7 +16,8 @@
 .PARAMETER Environment
     Entorno a levantar. Por defecto el entorno con el que se generó el proyecto.
 .PARAMETER AutoApprove
-    Omite la confirmación previa al apply de Terraform.
+    Omite la confirmación previa al apply de Terraform. Activado por defecto;
+    usar -AutoApprove:$false para pedir confirmación.
 .PARAMETER PlanOnly
     Se detiene tras el plan de Terraform.
 .PARAMETER SkipFrontend
@@ -27,12 +28,12 @@
 .EXAMPLE
     ./up.ps1 -PlanOnly
 .EXAMPLE
-    ./up.ps1 -AutoApprove
+    ./up.ps1 -AutoApprove:$false
 #>
 [CmdletBinding()]
 param(
     [string]$Environment = '{{ ENVIRONMENT }}',
-    [switch]$AutoApprove,
+    [switch]$AutoApprove = $true,
     [switch]$PlanOnly,
     [switch]$SkipFrontend,
     [string]$DeviceId = ''

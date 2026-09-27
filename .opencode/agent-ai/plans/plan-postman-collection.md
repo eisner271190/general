@@ -48,7 +48,7 @@ Collection v2.1 con:
 - `info.name` = `{{ MicroserviceName }}` / `{{MICROSERVICE_NAME}}`, `schema` = `https://schema.getpostman.com/json/collection/v2.1.0/collection.json`.
 - Variables de colección: `baseUrl` (valor por defecto documentado; se llena con `terraform output http_api_url`), `token`, `username`.
 - **URL del API Gateway:** en `info.description` de la colección dejar el procedimiento:
-  `cd cloud/terraform/<microservicio> && terraform output http_api_url` → pegar el valor en la variable `baseUrl`. Salida esperada: `https://{api_id}.execute-api.{region}.amazonaws.com` (stage `$default`, sin prefijo).
+  `cd cloud/terraform/<microservicio> && terraform output http_api_url` → pegar el valor en la variable `baseUrl`. Salida esperada: `https://{api_id}.execute-api.{region}.amazonaws.com` (stage `$default`, sin prefijo). **Actualizado (2026-09-27):** `cloud/up.ps1` lo hace solo tras el `terraform apply` (escribe `baseUrl` en la colección); el procedimiento manual queda como alternativa.
 - **Escapado obligatorio:** toda variable Postman se escribe como `{{ "{{" }}baseUrl{{ "}}" }}` (el renderer usa `StrictVariables = true`; sin escapar → error `GEN011 UnresolvedPlaceholder`).
 - Carpetas por dominio, replicando las mismas condiciones de los controllers (`{{ if(Name == "security") }}...{{ end }}`) para que la colección coincida con lo realmente generado.
 - Por request: `method`, `url` (`{{baseUrl}}` + path), `header` (`Content-Type: application/json`, `Authorization: Bearer {{token}}` donde aplique), `body.raw` con JSON de ejemplo y `response` de ejemplo.

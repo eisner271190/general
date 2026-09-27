@@ -1,7 +1,7 @@
 {{ open_b = "{" + "{" }}{{ close_b = "}" + "}" }}{
   "info": {
     "name": "{{ MicroserviceName }}",
-    "description": "Colección de endpoints del microservicio {{ MicroserviceName }}.\n\nURL BASE (API Gateway):\n  1. cd cloud/terraform/{{ MicroserviceName }}\n  2. terraform output http_api_url\n  3. Pegar el valor en la variable de colección baseUrl.\n\nAUTENTICACIÓN:\n  - Ejecutar Users > Login para guardar el token (variable token) y el usuario (variable username).\n  - Las rutas de identidad /api/v1/users/** son públicas; el resto requiere Authorization: Bearer.",
+    "description": "Colección de endpoints del microservicio {{ MicroserviceName }}.\n\nURL BASE (API Gateway):\n  Se rellena sola al ejecutar cloud/up.ps1 (tras el apply escribe terraform output http_api_url en esta colección).\n  Manual: cd cloud/terraform/{{ MicroserviceName }} && terraform output http_api_url -> pegar en la variable baseUrl.\n\nAUTENTICACIÓN:\n  - Ejecutar Users > Login para guardar el token (variable token) y el usuario (variable username).\n  - Las rutas de identidad /api/v1/users/** son públicas; el resto requiere Authorization: Bearer.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "event": [

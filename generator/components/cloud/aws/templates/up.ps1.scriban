@@ -13,7 +13,8 @@
 .PARAMETER Environment
     Entorno a desplegar. Por defecto el entorno con el que se generó el proyecto.
 .PARAMETER AutoApprove
-    Omite la confirmación previa al apply.
+    Omite la confirmación previa al apply. Activado por defecto;
+    usar -AutoApprove:$false para pedir confirmación.
 .PARAMETER PlanOnly
     Se detiene tras el plan, sin aplicar.
 .PARAMETER Phase
@@ -22,12 +23,12 @@
 .EXAMPLE
     ./up.ps1 -PlanOnly
 .EXAMPLE
-    ./up.ps1 -AutoApprove
+    ./up.ps1 -AutoApprove:$false
 #>
 [CmdletBinding()]
 param(
     [string]$Environment = '{{ ENVIRONMENT }}',
-    [switch]$AutoApprove,
+    [switch]$AutoApprove = $true,
     [switch]$PlanOnly,
     [ValidateSet('Bootstrap', 'Apply')]
     [string]$Phase = 'Apply'
@@ -116,6 +117,68 @@ function Invoke-Terraform {
     finally {
         Pop-Location
     }
+}
+
+# Captura stdout de `terraform output` ( Invoke-Terraform manda todo al log ).
+function Get-TerraformOutput {
+    param(
+        [Parameter(Mandatory)][string]$WorkingDirectory,
+        [Parameter(Mandatory)][string]$OutputName
+    )
+
+    $command = "terraform output -raw $OutputName"
+    Write-LogDetail -Message "terraform cwd=$WorkingDirectory cmd=$command"
+
+    Push-Location $WorkingDirectory
+    try {
+        $value = & terraform output -raw $OutputName 2>> $script:LogFile
+        $code = $LASTEXITCODE
+        Write-LogDetail -Message "terraform output exit=$code"
+
+        if ($code -ne 0) {
+            return $null
+        }
+
+        return ((@($value) -join '').Trim())
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+function Update-PostmanBaseUrl {
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)][string]$BaseUrl
+    )
+
+    # cloud/ -> raíz -> backend/<ms>/postman/<ms>.postman_collection.json
+    $root = Split-Path -Path $PSScriptRoot -Parent
+    $collection = Join-Path -Path $root -ChildPath ("backend/{0}/postman/{0}.postman_collection.json" -f $Name)
+
+    if (-not (Test-Path -Path $collection)) {
+        Write-LogDetail -Message "postman collection no encontrada path=$collection (se omite baseUrl)"
+        return
+    }
+
+    $document = Get-Content -Path $collection -Raw | ConvertFrom-Json
+    $variables = $document.PSObject.Properties['variable']
+    if ($null -eq $variables) {
+        Write-LogDetail -Message "postman collection sin variables path=$collection (se omite baseUrl)"
+        return
+    }
+
+    $variable = @($variables.Value) | Where-Object -FilterScript { $_.key -eq 'baseUrl' } | Select-Object -First 1
+    if ($null -eq $variable) {
+        Write-LogDetail -Message "postman collection sin variable baseUrl path=$collection (se omite)"
+        return
+    }
+
+    $variable.value = $BaseUrl
+    # UTF-8 sin BOM: Postman espera JSON sin BOM.
+    $json = $document | ConvertTo-Json -Depth 100
+    [System.IO.File]::WriteAllText($collection, "$json`n", [System.Text.UTF8Encoding]::new($false))
+    Write-Log -Message "baseUrl actualizado en Postman de ${Name}: $BaseUrl"
 }
 
 function Get-ResourceLabel {
@@ -232,6 +295,15 @@ function Invoke-MicroserviceApplyPhases {
     Write-Log -Message "Creando servicios de ${Name}: $($labels -join ', ')"
     Invoke-TerraformApply -WorkingDirectory $WorkingDirectory
     Write-Log -Message "Servicios creados $Name"
+
+    # El API Gateway ya existe: propaga su URL al collection Postman del microservicio.
+    $baseUrl = Get-TerraformOutput -WorkingDirectory $WorkingDirectory -OutputName 'http_api_url'
+    if ([string]::IsNullOrWhiteSpace($baseUrl)) {
+        Write-LogDetail -Message "http_api_url vacío name=$Name (se omite baseUrl en Postman)"
+        return
+    }
+
+    Update-PostmanBaseUrl -Name $Name -BaseUrl $baseUrl
 }
 
 function Invoke-MicroserviceUp {
