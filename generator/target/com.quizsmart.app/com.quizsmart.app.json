@@ -21,9 +21,15 @@
     {
       "name": "develop",
       "variables": {
-        "API_URL": "http://localhost:5000",
-        "DEBUG": "true",
-        "JWT_EXPIRATION": "86400000"
+        "JWT_EXPIRATION": "86400000",
+        "AWS_REGION": "us-east-1",
+        "THEME_STYLE": "CHATGPT",
+        "PROMPT": "Generate a valid JSON object with a questions array for the requested quiz.",
+        "MODEL": "MiMo-V2.6-Flash",
+        "REVENUECAT_PUBLIC_KEY": "REVENUECAT_PUBLIC_KEY_PLACEHOLDER",
+        "ADMOB_BANNER_ID": "ADMOB_BANNER_ID_PLACEHOLDER",
+        "PRIVACY_URL": "https://quiz-epc-politica-privacidad.s3.us-east-1.amazonaws.com/privacy-policy.html",
+        "TERMS_URL": "https://quiz-epc-politica-privacidad.s3.us-east-1.amazonaws.com/privacy-policy.html"
       }
     }
   ],
