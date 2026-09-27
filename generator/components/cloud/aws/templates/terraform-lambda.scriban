@@ -51,6 +51,18 @@ resource "aws_lambda_function" "{{ MICROSERVICE_NAME }}" {
   timeout       = 60
   image_uri     = "${aws_ecr_repository.{{ MICROSERVICE_NAME }}.repository_url}:latest"
   environment {
-    variables = var.environment_variables
+    # AWS_REGION y las credenciales las inyecta el runtime de Lambda:
+    # configurarlas produce InvalidParameterValueException (reserved keys).
+    variables = {
+      for key, value in var.environment_variables :
+      key => value
+      if !contains([
+        "AWS_REGION",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+        "AWS_SESSION_TOKEN",
+        "AWS_PROFILE"
+      ], key)
+    }
   }
 }

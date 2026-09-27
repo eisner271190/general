@@ -24,7 +24,7 @@ Fuente de los valores: `generator/target/com.quizsmart.app/com.quizsmart.app.jso
 | MODEL | `…/quizapi/MODEL` | `.env.dev:11`, `.env.mock:22`, `ai_api_client.dart.scriban:34` | D · `gpt-4o-mini` | ✅ corregido |
 | THEME_STYLE | `…/quizapi/THEME_STYLE` | `.env.dev:13`, `.env.mock:9`, `app_config.dart.scriban:38` | D · `CHATGPT` | ✅ |
 | PROMPT | `…/quizapi/PROMPT` | `.env.dev:14`, `ai_env.dart.scriban:4,13`, `env_config.dart.scriban:19`, `strategy_factory.dart:40,59` | D · **se usa** | ✅ corregido |
-| AWS_REGION | `…/quizapi/AWS_REGION` | `application-properties.scriban:34`, `docker-compose.scriban:94`, `dynamodb/sns/sqs-config` | D · fijo antes de iniciar `us-east-1` | ✅ |
+| AWS_REGION | `…/quizapi/AWS_REGION` | `application-properties.scriban:34`, `docker-compose.scriban:94`, `dynamodb/sns/sqs-config` | D · fijo antes de iniciar `us-east-1` | ✅ (excluida del `environment` de Lambda: **reserved key**) |
 | JWT_EXPIRATION | `…/quizapi/JWT_EXPIRATION` | `application-properties.scriban:29`, `jwt-provider.scriban:20,28` | D · `86400000` | ✅ |
 | AUTH_BACKEND_HOST | `…/quizapi/AUTH_BACKEND_HOST` | `.env.dev:17`, `.env.mock:11` | D · `http://localhost:8081` → **post-apply** se sobrescribe con `http_api_url` | ✅ añadido |
 | AUTH_TOKEN_EXCHANGE_PATH | `…/quizapi/AUTH_TOKEN_EXCHANGE_PATH` | `.env.dev:18`, `.env.mock:12` | D · `/api/v1/auth/exchange` | ✅ añadido |
@@ -85,3 +85,5 @@ Fuente de los valores: `generator/target/com.quizsmart.app/com.quizsmart.app.jso
 4. `API_KEY` y `JWT_SECRET` → sembrar en Secrets Manager (T04), nunca en target.
 5. ~~Los 3 de §2 → bloque post-apply en `cloud/up.ps1`~~ ✅ implementado (§2, 6 parámetros).
 6. Prefijo frontend: todo cae en `/quizapi/` (un único `for_each` en `ssm.tf`); ¿separar `/frontend/quizsmart/`?
+
+**Nota:** `terraform-lambda.scriban` excluye del `environment` de Lambda `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` y `AWS_PROFILE` (reserved keys → `InvalidParameterValueException`); el runtime las inyecta.
