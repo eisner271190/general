@@ -17,3 +17,10 @@ resource "aws_apigatewayv2_route" "{{ MICROSERVICE_NAME }}" {
   route_key = "ANY /{{ MICROSERVICE_NAME }}/{proxy+}"
   target    = "integrations/${aws_apigatewayv2_integration.{{ MICROSERVICE_NAME }}.id}"
 }
+
+# Salud expuesta fuera del prefijo del microservicio: solo este endpoint.
+resource "aws_apigatewayv2_route" "{{ MICROSERVICE_NAME }}_health" {
+  api_id    = aws_apigatewayv2_api.http_api.id
+  route_key = "GET /actuator/health"
+  target    = "integrations/${aws_apigatewayv2_integration.{{ MICROSERVICE_NAME }}.id}"
+}

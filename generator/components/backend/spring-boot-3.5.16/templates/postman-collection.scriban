@@ -91,6 +91,46 @@
       ]
     },
     {
+      "name": "Actuator",
+      "item": [
+        {
+          "name": "Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', function () { pm.response.to.have.success; });",
+                  "pm.test('Servicio UP', function () { pm.expect(pm.response.json().status).to.eql('UP'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/actuator/health",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Salud del microservicio. Ruta fija del API Gateway (no lleva el prefijo del microservicio); pública, sin Authorization."
+          },
+          "response": [
+            {
+              "name": "UP",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"status\":\"UP\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "SNS",
       "item": [
         {
