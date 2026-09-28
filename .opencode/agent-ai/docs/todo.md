@@ -7,7 +7,6 @@
 ## MVP (Prioridad)
 - [ ] T01 — Separar el generador en componentes independientes: Frontend, Backend y Cloud. Cada componente debe ser un proyecto independiente, con sus propios modelos, estrategias, targets y templates, de forma que el generador sea completamente agnóstico a implementaciones concretas.
 - [ ] T04 — Agregar los secretos a AWS secret manager
-- [ ] T05 — Agregar los parametros a AWS parameter store
 - [ ] T06 — Obtener los parametros y los secrets (Solo los que el ms necesite) al iniciar los ms
 - [ ] T07 — El frontend debe obtener la URL del API Gateway y consumir los servicios del backend /actuator/health
 
@@ -17,6 +16,7 @@
 - [ ] T06 — Consumo de servicios REST
 
 ## Cloud
+- [ ] T17 — Separar los parametros del frontend bajo el prefijo /frontend/quizsmart/ en ssm.tf (decision de parametros.md #6)
 - [ ] T07 — Plantillas con todas las propiedades de cada servicio AWS
 - [ ] T08 — AWS ElastiCache
 

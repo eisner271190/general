@@ -26,6 +26,7 @@
         "AUTH_SERVICE_MODE": "REAL",
         "AD_SERVICE_MODE": "REAL",
         "SUBSCRIPTION_SERVICE_MODE": "REAL",
+        "HEALTH_SERVICE_MODE": "REAL",
         "PROFILE": "DEV",
         "API_URL": "https://openrouter.ai/api/v1/chat/completions",
         "JWT_EXPIRATION": "86400000",

@@ -79,11 +79,11 @@ Fuente de los valores: `generator/target/com.quizsmart.app/com.quizsmart.app.jso
 | **Total** | **37** |
 
 **Pendientes**
-1. `HEALTH_SERVICE_MODE`: está en `.env.mock` y en `service_env.dart` pero **no** en `.env.dev` ni en target → añadir `REAL`.
-2. Plantilla `.env.dev.scriban` sólo define 4 modos (`SERVICE_MODE`, `AI_`, `AUTH_`, `HEALTH_`): faltan `AD_SERVICE_MODE` y `SUBSCRIPTION_SERVICE_MODE` → corregir plantilla (fuente de verdad).
-3. `REVENUECAT_PUBLIC_KEY` y `ADMOB_BANNER_ID` = placeholder → valor real.
+1. ~~`HEALTH_SERVICE_MODE`: en `.env.mock` y `service_env.dart` pero no en `.env.dev` ni en target~~ - **hecho**: añadido a `target/*.json` (valor `REAL`).
+2. ~~Plantilla `.env.dev.scriban` sólo define 4 modos; faltan `AD_SERVICE_MODE` y `SUBSCRIPTION_SERVICE_MODE`~~ - **hecho**: corregida la plantilla (fuente de verdad).
+3. `REVENUECAT_PUBLIC_KEY` y `ADMOB_BANNER_ID` = placeholder - **buscado** en `D:\codigo\app\app\quiz_generator` y no existen: RevenueCat no aparece en ningún `.env` (el proyecto usa `in_app_purchase`); de AdMob sólo hay IDs de prueba de Google hardcodeados en `lib\features\ads\ad_service.dart:19-30`. Se mantienen placeholders hasta que haya valor real.
 4. `API_KEY` y `JWT_SECRET` → sembrar en Secrets Manager (T04), nunca en target.
 5. ~~Los 3 de §2 → bloque post-apply en `cloud/up.ps1`~~ ✅ implementado (§2, 6 parámetros).
-6. Prefijo frontend: todo cae en `/quizapi/` (un único `for_each` en `ssm.tf`); ¿separar `/frontend/quizsmart/`?
+6. Prefijo frontend: todo cae en `/quizapi/` (un único `for_each` en `ssm.tf`). **Decisión: sí, separar `/frontend/quizsmart/`** (el frontend hoy lee `assets/.env`, no SSM; queda listo para cuando lo consuma). Pendiente de implementar.
 
 **Nota:** `terraform-lambda.scriban` excluye del `environment` de Lambda `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` y `AWS_PROFILE` (reserved keys → `InvalidParameterValueException`); el runtime las inyecta.
