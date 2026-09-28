@@ -4,6 +4,7 @@
   "directories": [
     "cloud",
     "cloud/terraform",
+    "cloud/terraform/app",
     "cloud/terraform/{{MICROSERVICE_NAME}}",
     "cloud/terraform/modules",
     "cloud/terraform/modules/secrets-manager",
@@ -13,6 +14,10 @@
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/provider.tf", "value": "templates/terraform-provider.scriban" },
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/variables.tf", "value": "templates/terraform-variables.scriban" },
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/terraform.{{ENVIRONMENT}}.tfvars", "value": "templates/terraform-tfvars.scriban" },
+    { "key": "cloud/terraform/app/provider.tf", "value": "templates/terraform-provider.scriban" },
+    { "key": "cloud/terraform/app/variables.tf", "value": "templates/terraform-variables.scriban" },
+    { "key": "cloud/terraform/app/terraform.{{ENVIRONMENT}}.tfvars", "value": "templates/terraform-tfvars.scriban" },
+    { "key": "cloud/terraform/app/secrets.tf", "value": "templates/terraform-secrets.scriban" },
     { "key": "cloud/up.ps1", "value": "templates/up.ps1.scriban" },
     { "key": "cloud/down.ps1", "value": "templates/down.ps1.scriban" },
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/apigateway.tf", "value": "templates/terraform-apigateway.scriban" },

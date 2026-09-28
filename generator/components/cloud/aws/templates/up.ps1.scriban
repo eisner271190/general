@@ -60,6 +60,7 @@ $script:ResourceLabels = @{
     'cognito_iam.tf'           = 'Cognito IAM'
     'cognito_client.tf'        = 'Cognito clientes'
     'cognito_google_provider.tf' = 'Cognito Google'
+    'secrets.tf'              = 'Secrets Manager'
 }
 
 # Parámetros de Parameter Store cuyo valor sólo existe después del apply.
