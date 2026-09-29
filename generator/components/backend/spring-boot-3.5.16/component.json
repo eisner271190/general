@@ -68,6 +68,7 @@
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/Application.java", "value": "templates/application-java.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/LambdaHandler.java", "value": "templates/LambdaHandler.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/resources/application.properties", "value": "templates/application-properties.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/resources/application-cloud.properties", "value": "templates/application-cloud-properties.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/resources/META-INF/native-image/native-image.properties", "value": "templates/native-image-properties.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/HexagonalArchitectureTest.java", "value": "templates/hexagonal-architecture-test.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/test/resources/performance/performance.jmx", "value": "templates/performance.scriban" },

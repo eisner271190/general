@@ -1,0 +1,6 @@
+# Solo con el perfil "cloud" (Lambda): carga los parametros SSM de este microservicio
+# y las claves del secreto de la aplicacion en el Environment de Spring.
+# SSM exige barra final (sin ella la clave queda ".CLAVE"); Secrets Manager usa el
+# nombre literal del secreto, sin barra inicial. El import es requerido: falla al
+# arrancar si SSM o el secreto no estan disponibles.
+spring.config.import=aws-parameterstore:/{{ ENVIRONMENT }}/{{ APPLICATION_ID }}/{{ MICROSERVICE_NAME }}/,aws-secretsmanager:{{ ENVIRONMENT }}/{{ APPLICATION_ID }}

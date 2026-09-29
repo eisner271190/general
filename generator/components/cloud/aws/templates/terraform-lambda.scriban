@@ -43,6 +43,11 @@ resource "aws_iam_role_policy" "{{ MICROSERVICE_NAME }}" {
         Effect   = "Allow",
         Action   = ["secretsmanager:GetSecretValue"],
         Resource = ["arn:aws:secretsmanager:*:*:secret:{{ ENVIRONMENT }}/{{ APPLICATION_ID }}-*"]
+      },
+      {
+        Effect   = "Allow",
+        Action   = ["ssm:GetParametersByPath"],
+        Resource = ["arn:aws:ssm:*:*:parameter/{{ ENVIRONMENT }}/{{ APPLICATION_ID }}/{{ MICROSERVICE_NAME }}/*"]
       }
     ]
   })
@@ -58,16 +63,20 @@ resource "aws_lambda_function" "{{ MICROSERVICE_NAME }}" {
   environment {
     # AWS_REGION y las credenciales las inyecta el runtime de Lambda:
     # configurarlas produce InvalidParameterValueException (reserved keys).
-    variables = {
-      for key, value in var.environment_variables :
-      key => value
-      if !contains([
-        "AWS_REGION",
-        "AWS_ACCESS_KEY_ID",
-        "AWS_SECRET_ACCESS_KEY",
-        "AWS_SESSION_TOKEN",
-        "AWS_PROFILE"
-      ], key)
-    }
+    variables = merge(
+      {
+        for key, value in var.environment_variables :
+        key => value
+        if !contains([
+          "AWS_REGION",
+          "AWS_ACCESS_KEY_ID",
+          "AWS_SECRET_ACCESS_KEY",
+          "AWS_SESSION_TOKEN",
+          "AWS_PROFILE"
+        ], key)
+      },
+      # El perfil "cloud" activa spring.config.import (SSM + Secrets Manager) al iniciar.
+      { SPRING_PROFILES_ACTIVE = "cloud" }
+    )
   }
 }
