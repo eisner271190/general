@@ -40,11 +40,3 @@ aws.sqs.url=${AWS_SQS_URL_{{ Name }}}
 aws.region=${AWS_REGION}
 aws.profile=${AWS_PROFILE}
 aws.sns.arn=${AWS_SNS_TOPIC_ARN:}
-
-# Parametros publicos que el frontend consulta en GET /api/v1/parameters.
-# Solo claves NO sensibles: los secretos van por variables de entorno o Secrets
-# Manager y este endpoint jamas los expone (ademas omite claves con apariencia
-# sensible: secret, password, token, credential, api-key, auth, ...).
-# parameter.public-config.api-url=https://api.openrouter.ai/api/v1/chat/completions
-# parameter.public-config.model=gpt-4o-mini
-# parameter.public-config.admob-banner-id=ca-app-pub-0000000000000000/0000000000

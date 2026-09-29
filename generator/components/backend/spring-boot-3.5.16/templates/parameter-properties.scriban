@@ -1,65 +1,64 @@
 package com.{{ Company }}.{{ Name }}.infrastructure.configuration;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Pattern;
+import java.util.Set;
 
 /**
  * Parametros publicos que el frontend consulta en GET /api/v1/parameters.
  *
- * <p>Solo bindea {@code parameter.public-config.*}: los secretos (API_KEY, tokens,
- * credenciales) viven en variables de entorno o en Secrets Manager y no se
- * referencian en esta clase, de modo que no pueden filtrarse desde aqui.
+ * <p>Lee todas las variables de entorno de la Lambda y devuelve todas excepto
+ * las definidas en {@link #EXCLUDED}: secretos, credenciales AWS e internos
+ * de Lambda/X-Ray. Cualquier variable nueva debe agregarse a esa lista.
  */
 @Component
-@ConfigurationProperties(prefix = "parameter")
 public class ParameterProperties {
 
-  private static final Logger log = LoggerFactory.getLogger(ParameterProperties.class);
+  private static final Set<String> EXCLUDED = Set.of(
+      "_AWS_XRAY_DAEMON_ADDRESS",
+      "_AWS_XRAY_DAEMON_PORT",
+      "_HANDLER",
+      "ADMOB_BANNER_ID",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_ACCOUNT_ID",
+      "AWS_DEFAULT_REGION",
+      "AWS_EXECUTION_ENV",
+      "AWS_LAMBDA_FUNCTION_MEMORY_SIZE",
+      "AWS_LAMBDA_FUNCTION_NAME",
+      "AWS_LAMBDA_FUNCTION_VERSION",
+      "AWS_LAMBDA_INITIALIZATION_TYPE",
+      "AWS_LAMBDA_LOG_GROUP_NAME",
+      "AWS_LAMBDA_LOG_STREAM_NAME",
+      "AWS_LAMBDA_METADATA_API",
+      "AWS_LAMBDA_METADATA_TOKEN",
+      "AWS_LAMBDA_RUNTIME_API",
+      "AWS_REGION",
+      "AWS_SECRET_ACCESS_KEY",
+      "AWS_SESSION_TOKEN",
+      "AWS_XRAY_CONTEXT_MISSING",
+      "AWS_XRAY_DAEMON_ADDRESS",
+      "HANDLER",
+      "LANG",
+      "LAMBDA_RUNTIME_DIR",
+      "LAMBDA_TASK_ROOT",
+      "LD_LIBRARY_PATH",
+      "PATH",
+      "REVENUECAT_PUBLIC_KEY",
+      "SHLVL",
+      "SPRING_PROFILES_ACTIVE",
+      "TZ"
+  );
 
-  private static final Pattern SENSITIVE_KEY =
-      Pattern.compile("secret|password|passwd|token|credential|api-key|apikey|private-key|auth");
-
-  private Map<String, String> publicConfig = new LinkedHashMap<>();
-
-  public Map<String, String> getPublicConfig() {
-    return publicConfig;
-  }
-
-  public void setPublicConfig(Map<String, String> publicConfig) {
-    this.publicConfig = publicConfig;
-  }
-
-  /** Copia apta para el cliente: mismas claves, sin las de apariencia sensible. */
+  /** Variables de entorno aptas para el cliente: todas menos las excluidas. */
   public Map<String, String> getPublicParameters() {
-    Map<String, String> parameters = createPublishableMap();
-    publicConfig.entrySet().forEach(entry -> copyIfPublishable(parameters, entry));
+    Map<String, String> parameters = new LinkedHashMap<>();
+    System.getenv().forEach((key, value) -> {
+      if (!EXCLUDED.contains(key)) {
+        parameters.put(key, value);
+      }
+    });
     return parameters;
-  }
-
-  private Map<String, String> createPublishableMap() {
-    return new LinkedHashMap<>();
-  }
-
-  private void copyIfPublishable(Map<String, String> parameters, Map.Entry<String, String> entry) {
-    if (isSensitiveKey(entry.getKey())) {
-      logSensitiveOmission(entry.getKey());
-      return;
-    }
-    parameters.put(entry.getKey(), entry.getValue());
-  }
-
-  private void logSensitiveOmission(String key) {
-    log.warn("Parametro publico '{}' omitido en la respuesta: marcador sensible", key);
-  }
-
-  private boolean isSensitiveKey(String key) {
-    return SENSITIVE_KEY.matcher(key.toLowerCase(Locale.ROOT)).find();
   }
 }
