@@ -1,0 +1,149 @@
+<# 
+.SYNOPSIS
+    Actualiza esta Lambda (ECR) sin hacer terraform apply.
+    Uso: .\update-ms.ps1 [-Tag latest] [-PublishVersion]
+#>
+
+[CmdletBinding()]
+param(
+    [string]$Tag = "latest",
+
+    [string]$Environment = "{{ ENVIRONMENT }}",
+
+    [string]$Region = "{{ AWS_REGION }}",
+
+    [switch]$PublishVersion,
+
+    [switch]$SkipBuild,
+
+    [switch]$WhatIf
+)
+
+# --- Configuración ---
+$ApplicationId = "{{ APPLICATION_ID }}"
+$MicroserviceName = "{{ MICROSERVICE_NAME }}"
+$EcrRepoName = "$MicroserviceName"
+$LambdaName = "$MicroserviceName"
+
+# Resolver account ID y URI de ECR
+$Sts = aws sts get-caller-identity --query Account --output text 2>$null
+if (-not $Sts) {
+    Write-Error "No se pudo obtener Account ID. Verifica credenciales AWS."
+    exit 1
+}
+$AccountId = $Sts.Trim()
+$EcrUri = "$AccountId.dkr.ecr.$Region.amazonaws.com/$EcrRepoName"
+$ImageUri = "${EcrUri}:$Tag"
+
+Write-Host "=== Actualizando Lambda: $LambdaName ===" -ForegroundColor Cyan
+Write-Host "Microservicio: $MicroserviceName" -ForegroundColor Gray
+Write-Host "Tag: $Tag" -ForegroundColor Gray
+Write-Host "Imagen: $ImageUri" -ForegroundColor Gray
+
+if ($WhatIf) {
+    Write-Host "=== MODO WHATIF - No se ejecutan cambios ===" -ForegroundColor Yellow
+}
+
+# --- 1. Build imagen (si no SkipBuild) ---
+if (-not $SkipBuild) {
+    if (-not $WhatIf) {
+        $DockerfilePath = "Dockerfile"
+        if (-not (Test-Path $DockerfilePath)) {
+            Write-Error "No se encuentra $DockerfilePath en el directorio actual"
+            exit 1
+        }
+    }
+
+    Write-Host "`n[1/5] Building imagen Docker..." -ForegroundColor Green
+    if (-not $WhatIf) {
+        $env:DOCKER_BUILDKIT = "0"
+        $result = docker build --platform linux/amd64 -t "${EcrUri}:$Tag" -f "$DockerfilePath" .
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "docker build falló"
+            exit $LASTEXITCODE
+        }
+    } else {
+        Write-Host "  docker build --platform linux/amd64 -t ${EcrUri}:$Tag -f $DockerfilePath ." -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "`n[1/5] Saltando build (--SkipBuild)" -ForegroundColor Yellow
+}
+
+# --- 2. ECR Login ---
+Write-Host "`n[2/5] Login en ECR..." -ForegroundColor Green
+if (-not $WhatIf) {
+    $loginCmd = "aws ecr get-login-password --region $Region | docker login --username AWS --password-stdin $AccountId.dkr.ecr.$Region.amazonaws.com"
+    $result = Invoke-Expression $loginCmd
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "ECR login falló"
+        exit 1
+    }
+} else {
+    Write-Host "  $loginCmd" -ForegroundColor Yellow
+}
+
+# --- 3. Push imagen ---
+Write-Host "`n[3/5] Push a ECR..." -ForegroundColor Green
+if (-not $WhatIf) {
+    $result = docker push "$ImageUri"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "docker push falló"
+        exit 1
+    }
+} else {
+    Write-Host "  docker push $ImageUri" -ForegroundColor Yellow
+}
+
+# --- 4. Update Lambda ---
+Write-Host "`n[4/5] Actualizando Lambda ($LambdaName)..." -ForegroundColor Green
+if (-not $WhatIf) {
+    $result = aws lambda update-function-code `
+        --function-name "$LambdaName" `
+        --image-uri "$ImageUri" `
+        --region $Region `
+        --output json
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "update-function-code falló"
+        exit 1
+    }
+
+    # Wait for update to complete
+    Write-Host "  Esperando a que la actualización complete..." -ForegroundColor Gray
+    $waitResult = aws lambda wait function-updated `
+        --function-name "$LambdaName" `
+        --region $Region
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "wait function-updated falló"
+        exit 1
+    }
+} else {
+    Write-Host "  aws lambda update-function-code --function-name $LambdaName --image-uri $ImageUri --region $Region" -ForegroundColor Yellow
+    Write-Host "  aws lambda wait function-updated --function-name $LambdaName --region $Region" -ForegroundColor Yellow
+}
+
+# --- 5. Publicar versión (opcional) ---
+if ($PublishVersion) {
+    Write-Host "`n[5/5] Publicando versión inmutable..." -ForegroundColor Green
+    if (-not $WhatIf) {
+        $pubResult = aws lambda publish-version `
+            --function-name "$LambdaName" `
+            --region $Region `
+            --output json
+        if ($LASTEXITCODE -eq 0) {
+            $version = ($pubResult | ConvertFrom-Json).Version
+            Write-Host "  Versión publicada: $version" -ForegroundColor Cyan
+        } else {
+            Write-Warning "publish-version falló (la actualización sí se aplicó)"
+        }
+    } else {
+        Write-Host "  aws lambda publish-version --function-name $LambdaName --region $Region" -ForegroundColor Yellow
+    }
+}
+
+Write-Host "`n=== COMPLETADO ===" -ForegroundColor Cyan
+Write-Host "Lambda: $LambdaName" -ForegroundColor Gray
+Write-Host "Imagen: $ImageUri" -ForegroundColor Gray
+if ($PublishVersion) {
+    Write-Host "Versión publicada: ver output anterior" -ForegroundColor Gray
+}

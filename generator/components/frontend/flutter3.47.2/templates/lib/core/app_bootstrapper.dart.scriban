@@ -6,8 +6,8 @@ import '../providers/ads/admob_provider.dart';
 import 'app_initializers_impl.dart';
 import '../ui/my_app.dart';
 import 'app_initialization_orchestrator.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'monetization_initializer.dart' show MonetizationInitializer;
+import 'parameters_initializer.dart';
 
 class AppBootstrapper {
   static Future<void> start() async {
@@ -15,8 +15,6 @@ class AppBootstrapper {
     debugPrint('[AppBootstrapper] start() called');
     WidgetsFlutterBinding.ensureInitialized();
     debugPrint('[AppBootstrapper] WidgetsFlutterBinding initialized');
-    await dotenv.load(fileName: 'assets/.env');
-    debugPrint('[AppBootstrapper] dotenv loaded');
     MonetizationEnv.validateAndLog();
     debugPrint('[AppBootstrapper] MonetizationEnv validated');
     final monetization = MonetizationModule(
@@ -24,14 +22,16 @@ class AppBootstrapper {
       adsProvider: AdmobProvider(),
     );
     debugPrint('[AppBootstrapper] MonetizationModule created');
+    final parametersInitializer = ParametersInitializer();
     final orchestrator = AppInitializationOrchestrator([
       EnvInitializer(),
+      parametersInitializer,
       MonetizationInitializer(monetization),
     ]);
     debugPrint('[AppBootstrapper] Orchestrator created');
     await orchestrator.runPreUi();
     debugPrint('[AppBootstrapper] runPreUi finished');
-    runApp(MyApp(monetization: monetization, orchestrator: orchestrator));
+    runApp(MyApp(monetization: monetization, orchestrator: orchestrator, parametersInitializer: parametersInitializer));
     final elapsed = DateTime.now().difference(start);
     debugPrint(
       '[AppBootstrapper] Tiempo de carga inicial: \u001b[32m${elapsed.inMilliseconds} ms\u001b[0m',

@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import '../monetization_module.dart';
 import '../core/app_initialization_orchestrator.dart';
+import '../core/parameters_initializer.dart';
 import 'paywall_widget.dart';
 
 class MyApp extends StatelessWidget {
   final MonetizationModule monetization;
   final AppInitializationOrchestrator orchestrator;
+  final ParametersInitializer parametersInitializer;
   const MyApp({
     super.key,
     required this.monetization,
     required this.orchestrator,
+    required this.parametersInitializer,
   });
 
   @override

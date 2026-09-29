@@ -1,24 +1,30 @@
 ﻿import 'package:{{ FRONTEND_NAME }}/core/service_mode.dart';
 import 'package:{{ FRONTEND_NAME }}/core/service_env.dart';
-import 'package:{{ FRONTEND_NAME }}/shared/helper/env_helper.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/env/env_config.dart';
 import 'package:{{ FRONTEND_NAME }}/features/quiz/domain/ai_strategy.dart';
 import 'package:{{ FRONTEND_NAME }}/features/quiz/data/real_ai_strategy.dart';
 import 'package:{{ FRONTEND_NAME }}/features/quiz/data/mock_ai_strategy.dart';
 import 'package:{{ FRONTEND_NAME }}/features/quiz/data/openai_api_client.dart';
+import 'package:{{ FRONTEND_NAME }}/core/parameters_initializer.dart';
 import 'strategy_config.dart';
 
 abstract final class StrategyFactory {
   StrategyFactory._();
 
   static ServiceMode _getGlobalMode() {
-    final value = EnvHelper.getEnv(ServiceEnv.keyGlobalMode);
+    final value = ParametersInitializer.instance!.getParameterOrDefault(
+      ServiceEnv.keyGlobalMode,
+      'none',
+    );
     return ServiceMode.fromString(value);
   }
 
   static ServiceMode _getAiMode() {
-    final value = EnvHelper.getEnv(ServiceEnv.keyAiMode);
+    final value = ParametersInitializer.instance!.getParameterOrDefault(
+      ServiceEnv.keyAiMode,
+      'none',
+    );
     return ServiceMode.fromString(value);
   }
 

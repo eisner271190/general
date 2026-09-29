@@ -1,0 +1,25 @@
+import 'package:flutter/widgets.dart';
+
+import '../monetization_module.dart';
+import 'app_initializer.dart';
+
+/// Inicializador que configura la monetización (RevenueCat + AdMob).
+class MonetizationInitializer implements AppInitializer {
+  final MonetizationModule _monetization;
+
+  MonetizationInitializer(this._monetization);
+
+  @override
+  Future<void> preUi() async {
+    debugPrint('[MonetizationInitializer] preUi() called');
+    await _monetization.provider.initialize();
+    await _monetization.adsProvider.initialize();
+    debugPrint('[MonetizationInitializer] preUi() finished');
+  }
+
+  @override
+  Future<void> postUi(BuildContext context) async {
+    debugPrint('[MonetizationInitializer] postUi() called');
+    debugPrint('[MonetizationInitializer] postUi() finished');
+  }
+}

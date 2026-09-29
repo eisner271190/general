@@ -1,8 +1,9 @@
-﻿import '../helper/shared_env.dart';
+import '../helper/shared_env.dart';
 import '../helper/env_helper.dart';
 import '../env/env_logger.dart';
 import '../../features/auth/config/auth_env.dart';
 import '../../features/quiz/config/ai_env.dart';
+import '../../core/parameters_initializer.dart';
 
 abstract final class EnvConfig {
   EnvConfig._();
@@ -16,36 +17,33 @@ abstract final class EnvConfig {
   }
 
   static String get promptTemplate {
-    return EnvHelper.getEnv(AiEnv.keyPrompt);
+    return ParametersInitializer.instance!.getParameterOrDefault(
+      AiEnv.keyPrompt,
+      '',
+    );
   }
 
   static String? get apiKey {
-    try {
-      return EnvHelper.getEnv(AiEnv.keyApiKey);
-    } catch (e) {
-      return null;
-    }
+    return ParametersInitializer.instance!.getParameter(AiEnv.keyApiKey);
   }
 
   static String get apiUrl {
-    try {
-      return EnvHelper.getEnv(AiEnv.keyApiUrl);
-    } catch (e) {
-      return AiEnv.defaultApiUrl;
-    }
+    return ParametersInitializer.instance!.getParameterOrDefault(
+      AiEnv.keyApiUrl,
+      AiEnv.defaultApiUrl,
+    );
   }
 
   static String get model {
-    try {
-      return EnvHelper.getEnv(AiEnv.keyModel);
-    } catch (e) {
-      return AiEnv.defaultModel;
-    }
+    return ParametersInitializer.instance!.getParameterOrDefault(
+      AiEnv.keyModel,
+      AiEnv.defaultModel,
+    );
   }
 
   static String get themeStyle {
     try {
-      return EnvHelper.getEnv(SharedEnv.keyThemeStyle);
+      return ParametersInitializer.instance!.getParameterOrDefault(SharedEnv.keyThemeStyle, SharedEnv.defaultThemeStyle);
     } catch (e) {
       return SharedEnv.defaultThemeStyle;
     }

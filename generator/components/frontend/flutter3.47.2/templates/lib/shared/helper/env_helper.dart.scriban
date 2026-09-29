@@ -1,32 +1,29 @@
-﻿import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'validator.dart';
+import '../../core/parameters_initializer.dart';
 
-/// Obtiene y valida variables de entorno
-/// LINEAMIENTO: Usar SOLO getEnv() para obtener variables de entorno
-/// Si la variable no existe, lanza una excepciÃ³n
+/// Valida parámetros obtenidos del backend vía /api/v1/parameters.
 abstract final class EnvHelper {
   EnvHelper._();
 
   static final _validator = Validator();
 
-  /// Obtiene una variable de entorno
-  /// Este es el ÃšNICO mÃ©todo que debe usarse para obtener variables de entorno
-  /// Lanza excepciÃ³n si la variable no existe o estÃ¡ vacÃ­a
+  /// Obtiene un parámetro del backend.
+  /// Lanza excepción si el parámetro no existe o está vacío.
   static String getEnv(String key) {
-    final value = dotenv.env[key];
+    final value = ParametersInitializer.instance!.getParameter(key);
     _validator.notEmptyAndNotNull(
       value,
-      'Variable de entorno no encontrada: $key',
+      'Parámetro no encontrado en el backend: ',
     );
     return value!;
   }
 
-  /// Valida que todas las variables requeridas estÃ©n presentes
+  /// Valida que todos los parámetros requeridos estén presentes.
   static void validate(List<String> requiredKeys) {
     final missing = <String>[];
 
     for (final key in requiredKeys) {
-      final value = dotenv.env[key];
+      final value = ParametersInitializer.instance!.getParameter(key);
       if (value == null || value.isEmpty) {
         missing.add(key);
       }
@@ -34,7 +31,7 @@ abstract final class EnvHelper {
 
     _validator.validate(
       missing.isEmpty,
-      'Variables de entorno faltantes: ${missing.join(", ")}',
+      'Parámetros faltantes en el backend: ',
     );
   }
 }

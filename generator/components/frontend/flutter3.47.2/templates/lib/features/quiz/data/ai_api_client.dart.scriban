@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/consume/i_http_client.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/consume/http_client_impl.dart';
-import 'package:{{ FRONTEND_NAME }}/shared/helper/env_helper.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/helper/validator.dart';
 import 'package:{{ FRONTEND_NAME }}/features/quiz/config/ai_env.dart';
+import 'package:{{ FRONTEND_NAME }}/core/parameters_initializer.dart';
 import 'i_api_client.dart';
 
 /// Cliente para interactuar con OpenAI API
@@ -19,22 +19,21 @@ class OpenAiApiClient implements IApiClient {
   static const int _apiTimeoutSeconds = 30;
   static const String _defaultModel = 'gpt-4o-mini';
 
-  static String get _apiKey => EnvHelper.getEnv('API_KEY');
+  static String? get _apiKey =>
+      ParametersInitializer.instance!.getParameter('API_KEY');
 
   static String get _apiUrl {
-    try {
-      return EnvHelper.getEnv('API_URL');
-    } catch (e) {
-      return AiEnv.defaultApiUrl;
-    }
+    return ParametersInitializer.instance!.getParameterOrDefault(
+      'API_URL',
+      AiEnv.defaultApiUrl,
+    );
   }
 
   static String get _model {
-    try {
-      return EnvHelper.getEnv('MODEL');
-    } catch (e) {
-      return _defaultModel;
-    }
+    return ParametersInitializer.instance!.getParameterOrDefault(
+      'MODEL',
+      _defaultModel,
+    );
   }
 
   @override

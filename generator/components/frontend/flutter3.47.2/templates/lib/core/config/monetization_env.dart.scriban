@@ -1,0 +1,39 @@
+import 'package:{{ FRONTEND_NAME }}/core/parameters_initializer.dart';
+
+/// Configuración de monetización obtenida del backend vía /api/v1/parameters.
+abstract final class MonetizationEnv {
+  MonetizationEnv._();
+
+  /// Validar y loguear la configuración de monetización.
+  static void validateAndLog() {
+    // Los parámetros se validan en el backend
+  }
+
+  /// Clave pública de RevenueCat.
+  static String get revenueCatKey =>
+      ParametersInitializer.instance!.getParameterOrDefault(
+        'REVENUECAT_PUBLIC_KEY',
+        '',
+      );
+
+  /// ID del banner de AdMob.
+  static String get admobBannerId =>
+      ParametersInitializer.instance!.getParameterOrDefault(
+        'ADMOB_BANNER_ID',
+        '',
+      );
+
+  /// URL de política de privacidad.
+  static String get privacyUrl =>
+      ParametersInitializer.instance!.getParameterOrDefault(
+        'PRIVACY_URL',
+        '',
+      );
+
+  /// URL de términos y condiciones.
+  static String get termsUrl =>
+      ParametersInitializer.instance!.getParameterOrDefault(
+        'TERMS_URL',
+        '',
+      );
+}

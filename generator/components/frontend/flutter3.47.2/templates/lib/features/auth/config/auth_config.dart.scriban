@@ -1,48 +1,78 @@
-﻿import '../../../shared/helper/env_helper.dart';
-import '../../../shared/log/logger.dart';
+﻿import '../../../shared/log/logger.dart';
 import '../../../shared/env/env_logger.dart';
+import '../../../core/parameters_initializer.dart';
 import 'auth_env.dart';
 
-/// ConfiguraciÃ³n de autenticaciÃ³n con Cognito.
-/// Los valores se leen de assets/.env
+/// Configuración de autenticación con Cognito.
+/// Los valores se obtienen del backend vía /api/v1/parameters.
 abstract final class AuthConfig {
   AuthConfig._();
 
-  /// Valida que todas las variables crÃ­ticas estÃ©n configuradas
+  /// Valida que todas las variables críticas estén configuradas
   static void validate() {
-    EnvHelper.validate(AuthEnv.requiredKeys);
+    // Los parámetros se validan en el backend
   }
 
-  /// Imprime las variables de entorno de autenticaciÃ³n
+  /// Imprime las variables de entorno de autenticación
   static void logEnvironmentVariables([String? envFile]) {
     EnvLogger.logEnvironmentVariables(AuthEnv.allKeys, envFile);
   }
 
   /// Host del backend
-  static String get backendHost => EnvHelper.getEnv(AuthEnv.keyBackendHost);
+  static String get backendHost =>
+      ParametersInitializer.instance!.getParameterOrDefault(
+        AuthEnv.keyBackendHost,
+        '',
+      );
 
-  /// Path para intercambio de cÃ³digo por tokens
+  /// Path para intercambio de código por tokens
   static String get tokenExchangePath =>
-      EnvHelper.getEnv(AuthEnv.keyTokenExchangePath);
+      ParametersInitializer.instance!.getParameterOrDefault(
+        AuthEnv.keyTokenExchangePath,
+        AuthEnv.defaultTokenExchangePath,
+      );
 
   /// Path para logout
-  static String get logoutPath => EnvHelper.getEnv(AuthEnv.keyLogoutPath);
+  static String get logoutPath =>
+      ParametersInitializer.instance!.getParameterOrDefault(
+        AuthEnv.keyLogoutPath,
+        AuthEnv.defaultLogoutPath,
+      );
 
   /// Domain de Cognito Hosted UI
-  static String get cognitoDomain => EnvHelper.getEnv(AuthEnv.keyCognitoDomain);
+  static String get cognitoDomain =>
+      ParametersInitializer.instance!.getParameterOrDefault(
+        AuthEnv.keyCognitoDomain,
+        '',
+      );
 
   /// Client ID de tu app en Cognito
-  static String get clientId => EnvHelper.getEnv(AuthEnv.keyClientId);
+  static String get clientId =>
+      ParametersInitializer.instance!.getParameterOrDefault(
+        AuthEnv.keyClientId,
+        '',
+      );
 
   /// Redirect URI
-  static String get redirectUri => EnvHelper.getEnv(AuthEnv.keyRedirectUri);
+  static String get redirectUri =>
+      ParametersInitializer.instance!.getParameterOrDefault(
+        AuthEnv.keyRedirectUri,
+        AuthEnv.defaultRedirectUriMobile,
+      );
 
   /// Scopes solicitados
-  static String get scopes => EnvHelper.getEnv(AuthEnv.keyScopes);
+  static String get scopes =>
+      ParametersInitializer.instance!.getParameterOrDefault(
+        AuthEnv.keyScopes,
+        AuthEnv.defaultScopes,
+      );
 
   /// Identity Provider (Google por defecto)
   static String get identityProvider =>
-      EnvHelper.getEnv(AuthEnv.keyIdentityProvider);
+      ParametersInitializer.instance!.getParameterOrDefault(
+        AuthEnv.keyIdentityProvider,
+        AuthEnv.defaultIdentityProvider,
+      );
 
   /// URL completa para intercambio de tokens
   static String get tokenExchangeUrl {
@@ -54,7 +84,7 @@ abstract final class AuthConfig {
     return '$backendHost$logoutPath';
   }
 
-  /// URL de autorizaciÃ³n de Cognito (forzando Google)
+  /// URL de autorización de Cognito (forzando Google)
   static String getAuthorizeUrl({
     required String codeChallenge,
     required String state,

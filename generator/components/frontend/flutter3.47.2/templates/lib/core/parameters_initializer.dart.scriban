@@ -1,0 +1,47 @@
+import 'package:flutter/widgets.dart';
+
+import '../features/parameters/data/api_parameters_repository.dart';
+import '../features/parameters/domain/i_parameters_repository.dart';
+import '../features/parameters/domain/parameter_response.dart';
+import 'app_initializer.dart';
+
+/// Inicializador que obtiene los parámetros públicos del backend antes de UI.
+class ParametersInitializer implements AppInitializer {
+  final IParametersRepository _repository;
+  ParameterResponse? _parameters;
+
+  /// Referencia estática para acceso desde clases de configuración.
+  static ParametersInitializer? instance;
+
+  ParametersInitializer({IParametersRepository? repository})
+      : _repository = repository ?? ApiParametersRepository() {
+    instance = this;
+  }
+
+  /// Obtener un parámetro por clave después de la inicialización.
+  String? getParameter(String key) => _parameters?.getValue(key);
+
+  /// Obtener un parámetro con valor por defecto.
+  String getParameterOrDefault(String key, String defaultValue) =>
+      _parameters?.getValue(key) ?? defaultValue;
+
+  /// Verificar si un parámetro existe.
+  bool hasParameter(String key) => _parameters?.hasKey(key) ?? false;
+
+  /// Obtener todos los parámetros como mapa.
+  Map<String, String> get allParameters =>
+      _parameters?.data.map((k, v) => MapEntry(k, v.toString())) ?? {};
+
+  @override
+  Future<void> preUi() async {
+    debugPrint('[ParametersInitializer] preUi() called');
+    _parameters = await _repository.fetchParameters();
+    debugPrint('[ParametersInitializer] preUi() finished');
+  }
+
+  @override
+  Future<void> postUi(BuildContext context) async {
+    debugPrint('[ParametersInitializer] postUi() called');
+    debugPrint('[ParametersInitializer] postUi() finished');
+  }
+}

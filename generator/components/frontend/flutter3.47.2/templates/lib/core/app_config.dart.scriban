@@ -1,11 +1,11 @@
-﻿import 'package:{{ FRONTEND_NAME }}/shared/helper/env_helper.dart';
+import 'package:{{ FRONTEND_NAME }}/core/parameters_initializer.dart';
 
 /// ConfiguraciÃ³n central de la aplicaciÃ³n.
 /// Encapsula el acceso a variables de entorno siguiendo SOLID.
 /// Single Responsibility: Gestionar configuraciÃ³n de la app.
 ///
 /// LINEAMIENTO: Para obtener valores de variables de entorno usar SOLO
-/// EnvHelper.getEnv() - NO usar getOptional() ni getRequired().
+/// Los valores se obtienen del backend vía /api/v1/parameters.
 abstract final class AppConfig {
   AppConfig._();
 
@@ -20,7 +20,7 @@ abstract final class AppConfig {
   /// Obtener el perfil actual (MOCK o DEV)
   static String get profile {
     try {
-      return EnvHelper.getEnv('PROFILE').toUpperCase();
+      return ParametersInitializer.instance!.getParameterOrDefault('PROFILE', devProfile).toUpperCase();
     } catch (e) {
       return devProfile;
     }
@@ -35,7 +35,7 @@ abstract final class AppConfig {
   /// Obtener el estilo de tema actual (CHATGPT o MD3)
   static String get themeStyle {
     try {
-      return EnvHelper.getEnv('THEME_STYLE').toUpperCase();
+      return ParametersInitializer.instance!.getParameterOrDefault('THEME_STYLE', chatGptTheme).toUpperCase();
     } catch (e) {
       return chatGptTheme;
     }

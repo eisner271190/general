@@ -1,5 +1,5 @@
-﻿import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../log/logger.dart';
+import '../../core/parameters_initializer.dart';
 
 abstract final class EnvLogger {
   EnvLogger._();
@@ -8,7 +8,7 @@ abstract final class EnvLogger {
     _logEnvironmentVariablesHeader(envFile);
 
     for (final key in keys) {
-      final value = dotenv.env[key];
+      final value = ParametersInitializer.instance!.getParameter(key);
       final displayValue = value != null && value.isNotEmpty
           ? _maskSensitiveValue(key, value)
           : '<not configured>';

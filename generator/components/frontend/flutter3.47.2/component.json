@@ -1,4 +1,4 @@
-﻿{
+{
     "name":  "flutter3.47.2",
     "type":  "frontend",
     "directories":  [
@@ -100,6 +100,9 @@
                         "frontend/{{ FRONTEND_NAME }}/lib/features/health/data",
                         "frontend/{{ FRONTEND_NAME }}/lib/features/health/domain",
                         "frontend/{{ FRONTEND_NAME }}/lib/features/health/presentation",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/parameters",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/parameters/data",
+                        "frontend/{{ FRONTEND_NAME }}/lib/features/parameters/domain",
                         "frontend/{{ FRONTEND_NAME }}/lib/features/monetization",
                         "frontend/{{ FRONTEND_NAME }}/lib/features/monetization/domain",
                         "frontend/{{ FRONTEND_NAME }}/lib/providers/ads",
@@ -226,9 +229,33 @@
                       "value":  "templates/lib/core/app_initializer.dart.scriban"
                   },
                   {
-                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/app_initializers_impl.dart",
-                      "value":  "templates/lib/core/app_initializers_impl.dart.scriban"
-                  },
+                       "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/app_initializers_impl.dart",
+                       "value":  "templates/lib/core/app_initializers_impl.dart.scriban"
+                   },
+                  {
+                       "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/parameters_initializer.dart",
+                       "value":  "templates/lib/core/parameters_initializer.dart.scriban"
+                   },
+                  {
+                       "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/parameters/domain/parameter_response.dart",
+                       "value":  "templates/lib/features/parameters/domain/parameter_response.dart.scriban"
+                   },
+                  {
+                       "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/parameters/domain/i_parameters_repository.dart",
+                       "value":  "templates/lib/features/parameters/domain/i_parameters_repository.dart.scriban"
+                   },
+                  {
+                       "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/parameters/data/api_parameters_repository.dart",
+                       "value":  "templates/lib/features/parameters/data/api_parameters_repository.dart.scriban"
+                   },
+                  {
+                       "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/config/monetization_env.dart",
+                       "value":  "templates/lib/core/config/monetization_env.dart.scriban"
+                   },
+                  {
+                       "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/monetization_initializer.dart",
+                       "value":  "templates/lib/core/monetization_initializer.dart.scriban"
+                   },
                   {
                       "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/errors/monetization_exception.dart",
                       "value":  "templates/lib/core/errors/monetization_exception.dart.scriban"

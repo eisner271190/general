@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/consume/i_http_client.dart';

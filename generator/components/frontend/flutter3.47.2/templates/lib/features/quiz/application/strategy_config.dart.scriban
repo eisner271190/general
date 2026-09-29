@@ -1,4 +1,4 @@
-﻿import 'package:{{ FRONTEND_NAME }}/shared/helper/env_helper.dart';
+﻿import 'package:{{ FRONTEND_NAME }}/core/parameters_initializer.dart';
 
 class StrategyConfig {
   final String? apiKey;
@@ -8,7 +8,7 @@ class StrategyConfig {
 
   factory StrategyConfig.load({required String promptTemplate}) {
     return StrategyConfig(
-      apiKey: EnvHelper.getEnv('API_KEY'),
+      apiKey: ParametersInitializer.instance!.getParameter('API_KEY'),
       promptTemplate: promptTemplate,
     );
   }

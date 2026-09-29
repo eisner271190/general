@@ -74,4 +74,5 @@
 16. API Response.
 17. Autenticación JWT.
 18. /api/v1/parameters
+19. Actualizar las lambdas de los microservicios cuando se haga un cambio en el código fuente
 

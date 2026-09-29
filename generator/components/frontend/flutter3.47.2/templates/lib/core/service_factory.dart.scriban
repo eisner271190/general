@@ -1,6 +1,5 @@
 ﻿import 'package:{{ FRONTEND_NAME }}/core/service_mode.dart';
 import 'package:{{ FRONTEND_NAME }}/core/service_env.dart';
-import 'package:{{ FRONTEND_NAME }}/shared/helper/env_helper.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
 import 'package:{{ FRONTEND_NAME }}/features/auth/domain/i_auth_service.dart';
 import 'package:{{ FRONTEND_NAME }}/features/auth/data/auth_service.dart';
@@ -8,19 +7,26 @@ import 'package:{{ FRONTEND_NAME }}/features/auth/data/mock_auth_service.dart';
 import 'package:{{ FRONTEND_NAME }}/features/health/domain/i_health_repository.dart';
 import 'package:{{ FRONTEND_NAME }}/features/health/data/api_health_repository.dart';
 import 'package:{{ FRONTEND_NAME }}/features/health/data/mock_health_repository.dart';
+import 'package:{{ FRONTEND_NAME }}/core/parameters_initializer.dart';
 
 class ServiceFactory {
   ServiceFactory._();
 
   static ServiceMode _getGlobalMode() {
-    final value = EnvHelper.getEnv(ServiceEnv.keyGlobalMode);
+    final value = ParametersInitializer.instance!.getParameterOrDefault(
+      ServiceEnv.keyGlobalMode,
+      'none',
+    );
     final mode = ServiceMode.fromString(value);
     Logger.info('[SERVICE_FACTORY] Global mode', data: {'mode': mode.name});
     return mode;
   }
 
   static ServiceMode _getIndividualMode(String key) {
-    final value = EnvHelper.getEnv(key);
+    final value = ParametersInitializer.instance!.getParameterOrDefault(
+      key,
+      'none',
+    );
     final mode = ServiceMode.fromString(value);
     return mode;
   }

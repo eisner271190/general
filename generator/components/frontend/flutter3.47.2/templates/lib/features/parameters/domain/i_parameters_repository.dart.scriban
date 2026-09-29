@@ -1,0 +1,6 @@
+import 'parameter_response.dart';
+
+/// Contrato para obtener parámetros públicos del backend.
+abstract interface class IParametersRepository {
+  Future<ParameterResponse> fetchParameters();
+}

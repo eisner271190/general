@@ -1,0 +1,60 @@
+import 'dart:convert';
+
+import 'package:{{ FRONTEND_NAME }}/shared/consume/http_client_impl.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/consume/i_http_client.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import 'package:{{ FRONTEND_NAME }}/core/parameters_initializer.dart';
+
+import '../domain/i_parameters_repository.dart';
+import '../domain/parameter_response.dart';
+
+/// Consumo real del endpoint /api/v1/parameters del backend.
+class ApiParametersRepository implements IParametersRepository {
+  static const String _parametersPath = '/api/v1/parameters';
+  static const Duration _timeout = Duration(seconds: 5);
+
+  final IHttpClient _httpClient;
+
+  ApiParametersRepository({IHttpClient? httpClient})
+      : _httpClient = httpClient ?? HttpClientImpl();
+
+  @override
+  Future<ParameterResponse> fetchParameters() async {
+    try {
+      final baseUrl = ParametersInitializer.instance!.getParameterOrDefault(
+        'API_BASE_URL',
+        '',
+      );
+      final response = await _httpClient
+          .get('$baseUrl$_parametersPath')
+          .timeout(_timeout);
+
+      if (response.statusCode != 200) {
+        Logger.warning('[PARAMETERS] Unexpected status code', data: {
+          'statusCode': response.statusCode,
+        });
+        return const ParameterResponse(
+          data: {},
+          message: 'Error fetching parameters',
+          status: 0,
+        );
+      }
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final parameterResponse = ParameterResponse.fromJson(body);
+
+      Logger.info('[PARAMETERS] Fetched successfully', data: {
+        'count': parameterResponse.data.length,
+      });
+
+      return parameterResponse;
+    } catch (error) {
+      Logger.warning('[PARAMETERS] Fetch failed', data: {'error': '$error'});
+      return const ParameterResponse(
+        data: {},
+        message: 'Failed to fetch parameters',
+        status: 0,
+      );
+    }
+  }
+}

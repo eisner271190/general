@@ -1,0 +1,29 @@
+/// Respuesta del endpoint GET /api/v1/parameters.
+class ParameterResponse {
+  final Map<String, dynamic> data;
+  final String message;
+  final int status;
+
+  const ParameterResponse({
+    required this.data,
+    required this.message,
+    required this.status,
+  });
+
+  factory ParameterResponse.fromJson(Map<String, dynamic> json) {
+    return ParameterResponse(
+      data: json['data'] as Map<String, dynamic>? ?? {},
+      message: json['message'] as String? ?? '',
+      status: json['status'] as int? ?? 0,
+    );
+  }
+
+  /// Obtener un valor de parámetro por clave.
+  String? getValue(String key) {
+    final value = data[key];
+    return value?.toString();
+  }
+
+  /// Verificar si un parámetro existe.
+  bool hasKey(String key) => data.containsKey(key);
+}

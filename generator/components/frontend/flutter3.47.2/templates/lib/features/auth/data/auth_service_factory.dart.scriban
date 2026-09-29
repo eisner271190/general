@@ -1,4 +1,4 @@
-﻿import '../domain/i_auth_service.dart';
+import '../domain/i_auth_service.dart';
 import 'auth_service.dart';
 import 'mock_auth_service.dart';
 import '../../../core/app_config.dart';

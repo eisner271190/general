@@ -1,7 +1,7 @@
 import 'package:{{ FRONTEND_NAME }}/shared/consume/http_client_impl.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/consume/i_http_client.dart';
-import 'package:{{ FRONTEND_NAME }}/shared/helper/env_helper.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import 'package:{{ FRONTEND_NAME }}/core/parameters_initializer.dart';
 import '../domain/health_status.dart';
 import '../domain/i_health_repository.dart';
 
@@ -18,7 +18,10 @@ class ApiHealthRepository implements IHealthRepository {
   @override
   Future<HealthStatus> check() async {
     try {
-      final baseUrl = EnvHelper.getEnv('API_BASE_URL');
+      final baseUrl = ParametersInitializer.instance!.getParameterOrDefault(
+        'API_BASE_URL',
+        '',
+      );
       final response = await _httpClient
           .get('$baseUrl$_healthPath')
           .timeout(_timeout);
