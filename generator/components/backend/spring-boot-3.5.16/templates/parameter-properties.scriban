@@ -1,0 +1,65 @@
+package com.{{ Company }}.{{ Name }}.infrastructure.configuration;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Pattern;
+
+/**
+ * Parametros publicos que el frontend consulta en GET /api/v1/parameters.
+ *
+ * <p>Solo bindea {@code parameter.public-config.*}: los secretos (API_KEY, tokens,
+ * credenciales) viven en variables de entorno o en Secrets Manager y no se
+ * referencian en esta clase, de modo que no pueden filtrarse desde aqui.
+ */
+@Component
+@ConfigurationProperties(prefix = "parameter")
+public class ParameterProperties {
+
+  private static final Logger log = LoggerFactory.getLogger(ParameterProperties.class);
+
+  private static final Pattern SENSITIVE_KEY =
+      Pattern.compile("secret|password|passwd|token|credential|api-key|apikey|private-key|auth");
+
+  private Map<String, String> publicConfig = new LinkedHashMap<>();
+
+  public Map<String, String> getPublicConfig() {
+    return publicConfig;
+  }
+
+  public void setPublicConfig(Map<String, String> publicConfig) {
+    this.publicConfig = publicConfig;
+  }
+
+  /** Copia apta para el cliente: mismas claves, sin las de apariencia sensible. */
+  public Map<String, String> getPublicParameters() {
+    Map<String, String> parameters = createPublishableMap();
+    publicConfig.entrySet().forEach(entry -> copyIfPublishable(parameters, entry));
+    return parameters;
+  }
+
+  private Map<String, String> createPublishableMap() {
+    return new LinkedHashMap<>();
+  }
+
+  private void copyIfPublishable(Map<String, String> parameters, Map.Entry<String, String> entry) {
+    if (isSensitiveKey(entry.getKey())) {
+      logSensitiveOmission(entry.getKey());
+      return;
+    }
+    parameters.put(entry.getKey(), entry.getValue());
+  }
+
+  private void logSensitiveOmission(String key) {
+    log.warn("Parametro publico '{}' omitido en la respuesta: marcador sensible", key);
+  }
+
+  private boolean isSensitiveKey(String key) {
+    return SENSITIVE_KEY.matcher(key.toLowerCase(Locale.ROOT)).find();
+  }
+}
