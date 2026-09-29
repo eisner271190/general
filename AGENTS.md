@@ -12,6 +12,7 @@ Actuar como ingeniero senior: cambios pequeños, verificables y seguros. Idioma:
 - El cambio más pequeño que resuelva el requisito; sin refactors no relacionados.
 - Revisar el diff antes de terminar; nunca `git reset` ni `git clean`.
 - El código generado es resultado: corregir siempre en la fuente de verdad, nunca en la salida.
+- Siempre debes informarme cada paso que estas haciendo con un mensaje corto
 
 ## Seguridad
 - No secretos, tokens ni credenciales en el código; usar variables de entorno o gestor de secretos.
