@@ -2,7 +2,7 @@
 server.port={{ Port }}
 
 management.endpoint.health.show-details=always
-management.endpoints.web.exposure.include=*
+management.endpoints.web.exposure.include=health,info,prometheus
 management.endpoint.prometheus.enabled=true
 management.metrics.export.prometheus.enabled=true
 management.endpoint.metrics.content-type=application/json
@@ -38,6 +38,3 @@ aws.sqs.url=${AWS_SQS_URL_{{ Name }}}
 aws.region=${AWS_REGION}
 aws.profile=${AWS_PROFILE}
 aws.sns.arn=${AWS_SNS_TOPIC_ARN:}
-
-cloud.aws.credentials.access-key=${AWS_ACCESS_KEY_ID}
-cloud.aws.credentials.secret-key=${AWS_SECRET_ACCESS_KEY}

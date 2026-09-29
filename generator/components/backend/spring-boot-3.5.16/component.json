@@ -71,6 +71,7 @@
     { "key": "{{MICROSERVICE_NAME}}/src/main/resources/application-cloud.properties", "value": "templates/application-cloud-properties.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/resources/META-INF/native-image/native-image.properties", "value": "templates/native-image-properties.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/HexagonalArchitectureTest.java", "value": "templates/hexagonal-architecture-test.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/ApplicationContextTest.java", "value": "templates/application-context-test.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/test/resources/performance/performance.jmx", "value": "templates/performance.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model/ChangePassword.java", "value": "templates/change-password.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/mappers/ChangePasswordMapperDto.java", "value": "templates/change-password-mapper-dto.scriban" },

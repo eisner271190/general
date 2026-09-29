@@ -1,0 +1,80 @@
+package com.{{ Company }}.{{ Name }};
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.PropertySource;
+import org.springframework.mock.env.MockEnvironment;
+import org.springframework.util.PropertyPlaceholderHelper;
+
+/**
+ * Arranque sin el perfil "cloud": la aplicacion no debe leer nada de AWS ni depender de credenciales.
+ *
+ * <p>Se arranca sin servidor y sin {@code ServerlessAutoConfiguration} (arranque de Lambda), porque ambos
+ * exigen un contexto con servidor web y aqui solo se comprueba la configuracion.
+ */
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.NONE,
+    properties = {
+      "spring.main.web-application-type=none",
+      "spring.autoconfigure.exclude="
+          + "org.springframework.cloud.function.serverless.web.ServerlessAutoConfiguration",
+      "AWS_REGION=us-east-1",
+      "spring.cloud.aws.region.static=us-east-1"{{ if ConsumedEvents.size > 0 }},
+      "AWS_SQS_URL_{{ Name }}=http://localhost:4566"{{ end }}
+    })
+class ApplicationContextTest {
+
+  private static final PropertyPlaceholderHelper PLACEHOLDERS =
+      new PropertyPlaceholderHelper("${", "}", ":", null, true);
+
+  @Autowired private ConfigurableEnvironment environment;
+
+  @Test
+  void contextLoadsWithoutCloudProfileOrAwsPropertySources() {
+    assertThat(environment.getActiveProfiles()).noneMatch("cloud"::equals);
+    assertThat(environment.getPropertySources()).noneMatch(this::isAwsPropertySource);
+  }
+
+  @Test
+  void jwtSecretIsResolvedFromEnvironmentVariable() throws IOException {
+    MockEnvironment env = new MockEnvironment().withProperty("JWT_SECRET", "valor-de-prueba");
+    assertThat(resolveJwtSecret(env)).isEqualTo("valor-de-prueba");
+  }
+
+  @Test
+  void jwtSecretFallsBackToApplicationSecretKey() throws IOException {
+    MockEnvironment env = new MockEnvironment().withProperty("jwt-secret", "clave-del-secreto");
+    assertThat(resolveJwtSecret(env)).isEqualTo("clave-del-secreto");
+  }
+
+  private String resolveJwtSecret(Environment source) throws IOException {
+    String expression = applicationProperties().getProperty("jwt.secret");
+    return PLACEHOLDERS.replacePlaceholders(expression, source::getProperty);
+  }
+
+  private boolean isAwsPropertySource(PropertySource<?> propertySource) {
+    String name = propertySource.getName();
+    String type = propertySource.getClass().getSimpleName();
+    return name.startsWith("aws-parameterstore:")
+        || name.startsWith("aws-secretsmanager:")
+        || type.contains("ParameterStore")
+        || type.contains("SecretsManager");
+  }
+
+  private Properties applicationProperties() throws IOException {
+    Properties properties = new Properties();
+    try (InputStream stream = getClass().getResourceAsStream("/application.properties")) {
+      assertThat(stream).as("application.properties debe estar en el classpath").isNotNull();
+      properties.load(stream);
+    }
+    return properties;
+  }
+}
