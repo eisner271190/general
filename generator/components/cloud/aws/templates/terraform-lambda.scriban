@@ -38,6 +38,11 @@ resource "aws_iam_role_policy" "{{ MICROSERVICE_NAME }}" {
           "dynamodb:Query"
         ],
         Resource = ["*"]
+      },
+      {
+        Effect   = "Allow",
+        Action   = ["secretsmanager:GetSecretValue"],
+        Resource = ["arn:aws:secretsmanager:*:*:secret:{{ ENVIRONMENT }}/{{ APPLICATION_ID }}-*"]
       }
     ]
   })

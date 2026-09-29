@@ -5,6 +5,10 @@
 .DESCRIPTION
     Ejecuta terraform destroy en cada directorio microservicio, en orden
     inverso al de up.ps1. El directorio modules/ se excluye.
+    Antes del destroy borra el secreto de la aplicación sin ventana de
+    recuperación (si quedara programado para borrado, up.ps1 no podría volver
+    a crearlo) y después del destroy elimina de Parameter Store los parámetros
+    del microservicio.
     Consola: solo líneas con formato [yyyy-MM-dd HH:mm:ss] [etapa] mensaje
     (etapa 'Cloud Destroy').
     Archivo: logs/yyyy-MM-dd-HH-mm-ss.log con la salida real de terraform.
@@ -94,6 +98,31 @@ function Invoke-Terraform {
     }
 }
 
+# Captura stdout de `terraform output` ( Invoke-Terraform manda todo al log ).
+function Get-TerraformOutput {
+    param(
+        [Parameter(Mandatory)][string]$WorkingDirectory,
+        [Parameter(Mandatory)][string]$OutputName
+    )
+
+    Write-LogDetail -Message "terraform cwd=$WorkingDirectory cmd=terraform output -raw $OutputName"
+
+    Push-Location $WorkingDirectory
+    try {
+        $value = & terraform output -raw $OutputName 2>> $script:LogFile
+        $code = $LASTEXITCODE
+        Write-LogDetail -Message "terraform output exit=$code"
+        if ($code -ne 0) {
+            return ''
+        }
+
+        return ((@($value) -join '').Trim())
+    }
+    finally {
+        Pop-Location
+    }
+}
+
 function Get-MicroserviceDirectory {
     Write-LogDetail -Message "descubrimiento root=$script:TerraformRoot"
 
@@ -112,6 +141,151 @@ function Invoke-TerraformDestroy {
     Invoke-Terraform -WorkingDirectory $WorkingDirectory -Arguments @(
         'destroy', '-input=false', '-auto-approve', '-var-file', $script:TerraformFile
     )
+}
+
+# AWS CLI: devuelve el código de salida junto al texto (salida y error) sin
+# abortar el flujo, para que el llamado decida qué hacer con el fallo.
+function Invoke-AwsCli {
+    param(
+        [Parameter(Mandatory)][string]$Operation,
+        [Parameter(Mandatory)][string[]]$Arguments
+    )
+
+    Write-LogDetail -Message "aws $Operation"
+    $output = (& aws @Arguments 2>&1 | Out-String)
+    $code = $LASTEXITCODE
+    Write-LogDetail -Message "aws $Operation exit=$code"
+
+    return [pscustomobject]@{
+        ExitCode = $code
+        Output   = $output
+    }
+}
+
+# Secreto único de la aplicación: nombre <environment>/<applicationId>.
+function Get-ApplicationSecretName {
+    return "$Environment/{{ APPLICATION_ID }}"
+}
+
+# Estado del secreto: 'missing' (no existe), 'scheduled' (borrado pendiente,
+# bloquea la recreación) o 'active'.
+function Get-ApplicationSecretState {
+    param([Parameter(Mandatory)][string]$SecretName)
+
+    $result = Invoke-AwsCli -Operation 'describe-secret' -Arguments @(
+        'secretsmanager', 'describe-secret', '--secret-id', $SecretName, '--query', 'DeletedDate', '--output', 'text'
+    )
+    if ($result.ExitCode -ne 0) {
+        if ($result.Output -match 'ResourceNotFoundException') {
+            return 'missing'
+        }
+
+        throw "aws secretsmanager describe-secret falló con código $($result.ExitCode) name=$SecretName"
+    }
+
+    if (([string]$result.Output).Trim() -ne 'None') {
+        return 'scheduled'
+    }
+
+    return 'active'
+}
+
+# Cancela el borrado pendiente: sólo así admite un delete-secret inmediato.
+function Restore-ScheduledSecret {
+    param([Parameter(Mandatory)][string]$SecretName)
+
+    $result = Invoke-AwsCli -Operation 'restore-secret' -Arguments @(
+        'secretsmanager', 'restore-secret', '--secret-id', $SecretName
+    )
+    if ($result.ExitCode -ne 0) {
+        throw "aws secretsmanager restore-secret falló con código $($result.ExitCode) name=$SecretName"
+    }
+
+    Write-Log -Message "Borrado programado cancelado en $SecretName"
+}
+
+# Borra el secreto sin ventana de recuperación para que el siguiente up.ps1
+# pueda crearlo; se hace antes del destroy para que Terraform no encuentre un
+# secreto ya programado para borrado.
+function Remove-ApplicationSecret {
+    param([Parameter(Mandatory)][string]$SecretName)
+
+    $state = Get-ApplicationSecretState -SecretName $SecretName
+    if ($state -eq 'missing') {
+        Write-LogDetail -Message "secreto ya eliminado name=$SecretName"
+        return
+    }
+
+    if ($state -eq 'scheduled') {
+        Restore-ScheduledSecret -SecretName $SecretName
+    }
+
+    $result = Invoke-AwsCli -Operation 'delete-secret' -Arguments @(
+        'secretsmanager', 'delete-secret', '--secret-id', $SecretName, '--force-delete-without-recovery'
+    )
+    if ($result.ExitCode -ne 0) {
+        throw "aws secretsmanager delete-secret falló con código $($result.ExitCode) name=$SecretName"
+    }
+
+    Write-Log -Message "Secreto eliminado sin ventana de recuperación: $SecretName"
+}
+
+# El secreto de la aplicación vive en el microservicio con secrets.tf (igual
+# que el repositorio ECR vive en el que tiene ecr.tf).
+function Test-SecretDirectory {
+    param([Parameter(Mandatory)][string]$WorkingDirectory)
+
+    return (Test-Path -Path (Join-Path -Path $WorkingDirectory -ChildPath 'secrets.tf'))
+}
+
+# Nombres de los parámetros bajo una ruta (AWS CLI pagina la respuesta solo).
+function Get-ParameterNamesByPath {
+    param([Parameter(Mandatory)][string]$ParameterPath)
+
+    $result = Invoke-AwsCli -Operation 'get-parameters-by-path' -Arguments @(
+        'ssm', 'get-parameters-by-path', '--path', $ParameterPath, '--recursive', '--query', 'Parameters[].Name', '--output', 'text'
+    )
+    if ($result.ExitCode -ne 0) {
+        throw "aws ssm get-parameters-by-path falló con código $($result.ExitCode) path=$ParameterPath"
+    }
+
+    $text = ([string]$result.Output).Trim()
+    if ($text -eq '' -or $text -eq 'None') {
+        return @()
+    }
+
+    return @($text -split '\s+' | Where-Object -FilterScript { $_ })
+}
+
+# Borra por lotes: delete-parameters admite un máximo de 10 nombres por llamada.
+function Remove-Parameters {
+    param([Parameter(Mandatory)][string[]]$Names)
+
+    for ($index = 0; $index -lt $Names.Count; $index += 10) {
+        $last = [Math]::Min($index + 9, $Names.Count - 1)
+        $batch = @($Names[$index..$last])
+        $result = Invoke-AwsCli -Operation 'delete-parameters' -Arguments (@('ssm', 'delete-parameters', '--names') + $batch)
+        if ($result.ExitCode -ne 0) {
+            throw "aws ssm delete-parameters falló con código $($result.ExitCode)"
+        }
+
+        Write-LogDetail -Message "aws ssm delete-parameters lote total=$($batch.Count)"
+    }
+}
+
+# Tras el destroy sólo sobreviven los parámetros que escribió up.ps1 fuera del
+# estado de Terraform: se borra todo lo que haya bajo la ruta del microservicio.
+function Remove-ParameterStorePath {
+    param([Parameter(Mandatory)][string]$ParameterPath)
+
+    $names = @(Get-ParameterNamesByPath -ParameterPath $ParameterPath)
+    if ($names.Count -eq 0) {
+        Write-LogDetail -Message "sin parámetros path=$ParameterPath"
+        return
+    }
+
+    Remove-Parameters -Names $names
+    Write-Log -Message "Parámetros eliminados de ${ParameterPath}: $($names.Count)"
 }
 
 function Confirm-Destroy {
@@ -138,9 +312,23 @@ function Invoke-MicroserviceDown {
         return
     }
 
+    if (Test-SecretDirectory -WorkingDirectory $WorkingDirectory) {
+        Remove-ApplicationSecret -SecretName (Get-ApplicationSecretName)
+    }
+
+    # La ruta se lee antes del destroy: con el estado vacío el output ya no existe.
+    $parameterPath = Get-TerraformOutput -WorkingDirectory $WorkingDirectory -OutputName 'environment_parameter_path'
+
     Write-Log -Message "Destruyendo infraestructura de $name"
     Invoke-TerraformDestroy -WorkingDirectory $WorkingDirectory
     Write-Log -Message "Infraestructura destruida $name"
+
+    if ([string]::IsNullOrWhiteSpace($parameterPath)) {
+        Write-LogDetail -Message "environment_parameter_path vacío name=$name (sin parámetros que borrar)"
+        return
+    }
+
+    Remove-ParameterStorePath -ParameterPath $parameterPath
 }
 
 # Facade: una sola entrada para el componente cloud, en orden inverso a up.ps1.
@@ -150,6 +338,10 @@ function Invoke-CloudDown {
     Write-Log -Message 'Iniciando retiro de infraestructura'
     Write-LogDetail -Message "log=$script:LogFile"
     Write-LogDetail -Message "environment=$Environment autoApprove=$AutoApprove tfvars=$script:TerraformFile"
+
+    if ($null -eq (Get-Command -Name aws -ErrorAction SilentlyContinue)) {
+        Stop-WithError -Reason 'aws CLI no disponible: no se puede limpiar el secreto ni los parámetros'
+    }
 
     $directories = @(Get-MicroserviceDirectory)
     [array]::Reverse($directories)

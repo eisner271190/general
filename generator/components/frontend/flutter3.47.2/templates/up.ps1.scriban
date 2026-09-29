@@ -3,10 +3,17 @@
 .SYNOPSIS
     Compila y ejecuta la app Flutter del componente frontend.
 .DESCRIPTION
-    Secuencia: clean -> pub get -> (dart pub add) -> regenerar iconos ->
-    appbundle release -> flutter run.
+    Secuencia: prerrequisitos -> clean -> pub get -> (dart pub add) ->
+    regenerar iconos -> firma Android -> appbundle release -> flutter run.
     dart pub add solo se ejecuta si se indican dependencias: pubspec.yaml
     ya declara flutter_launcher_icons.
+    La firma sale del secreto único de la aplicación
+    <environment>/<applicationId> (AWS Secrets Manager): siempre se lee el
+    bloque android-signing y, si todavía no existe, se genera el keystore y se
+    guarda en el secreto (también sin -Sign). El secreto nunca se crea aquí:
+    con -Sign su ausencia es un error de secuencia y se aborta; sin -Sign se
+    avisa y se continúa.
+    Sin -Sign se borran los archivos de firma y el .aab sale sin firmar.
     Consola: solo líneas con formato [yyyy-MM-dd HH:mm:ss] [Frontend] mensaje,
     más la salida de `flutter run` (interactivo), que también se guarda.
     Archivo: logs/yyyy-MM-dd-HH-mm-ss.log con la salida real de flutter.
@@ -17,6 +24,15 @@
     de un dispositivo conectado. Compilar no depende de este parámetro.
 .PARAMETER Dependencies
     Paquetes a añadir con `dart pub add --dev` antes de compilar.
+.PARAMETER Environment
+    Entorno cuyo secreto se usa para firmar. Por defecto el entorno con el que
+    se generó el proyecto; la variable de entorno ENVIRONMENT (pipeline) lo
+    puede sobrescribir.
+.PARAMETER Sign
+    Compila el .aab firmado a partir del secreto de AWS Secrets Manager.
+    Sin él se eliminan los archivos de firma y se compila sin firmar.
+    El bloque android-signing se garantiza en el secreto con o sin él.
+    Es el modo que usa el pipeline de CI.
 .PARAMETER SkipIcons
     Omite la regeneración de los iconos de lanzamiento.
 .PARAMETER SkipBuild
@@ -27,11 +43,15 @@
     ./up.ps1 -SkipRun
 .EXAMPLE
     ./up.ps1 -DeviceId 2201117SL
+.EXAMPLE
+    ./up.ps1 -Sign
 #>
 [CmdletBinding()]
 param(
     [string]$DeviceId = '',
     [string[]]$Dependencies = @(),
+    [string]$Environment = $(if ([string]::IsNullOrWhiteSpace($env:ENVIRONMENT)) { '{{ ENVIRONMENT }}' } else { $env:ENVIRONMENT }),
+    [switch]$Sign,
     [switch]$SkipIcons,
     [switch]$SkipBuild,
     [switch]$SkipRun
@@ -43,6 +63,7 @@ $ErrorActionPreference = 'Stop'
 $script:Stage = 'Frontend'
 $script:ProjectRoot = $PSScriptRoot
 $script:AppName = '{{ FRONTEND_NAME }}'
+$script:AndroidDirectory = Join-Path -Path $PSScriptRoot -ChildPath 'android'
 $script:LogDirectory = Join-Path -Path $PSScriptRoot -ChildPath 'logs'
 $script:LogFile = Join-Path -Path $script:LogDirectory -ChildPath ("{0}.log" -f (Get-Date -Format 'yyyy-MM-dd-HH-mm-ss'))
 
@@ -81,6 +102,299 @@ function Stop-WithError {
     Write-Log -Message "ERROR: $Reason"
     Write-Log -Message "Log: $script:LogFile"
     exit 1
+}
+
+# Herramienta obligatoria: si falta, se aborta con su nombre exacto.
+function Assert-Tool {
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [string]$Hint = ''
+    )
+
+    if ($null -eq (Get-Command -Name $Name -ErrorAction SilentlyContinue)) {
+        Stop-WithError -Reason ("Herramienta obligatoria '{0}' no encontrada en el PATH. {1}" -f $Name, $Hint).Trim()
+    }
+
+    Write-LogDetail -Message "prerequisito name=$Name estado=ok"
+}
+
+# flutter siempre; aws y keytool sólo hacen falta para firmar.
+function Ensure-Prerequisites {
+    Write-Log -Message 'Comprobando prerrequisitos'
+    Assert-Tool -Name 'flutter' -Hint 'Instala el SDK de Flutter y añádelo al PATH.'
+    if ($Sign) {
+        Assert-Tool -Name 'aws' -Hint 'Se usa para leer el secreto de la aplicación.'
+        Assert-Tool -Name 'keytool' -Hint 'Se usa para generar el keystore de Android (JDK 17).'
+    }
+}
+
+# Secreto único de la aplicación: <environment>/<applicationId>.
+function Get-ApplicationSecretName {
+    return "$Environment/{{ APPLICATION_ID }}"
+}
+
+# Texto del secreto -> hashtable. Sin valor se trata como JSON vacío.
+function ConvertTo-SecretHashtable {
+    param([AllowNull()][string]$SecretString)
+
+    if ([string]::IsNullOrWhiteSpace($SecretString)) {
+        return @{}
+    }
+
+    return ($SecretString | ConvertFrom-Json -AsHashtable)
+}
+
+# Invoca AWS CLI y devuelve el código de salida junto al texto (salida y error).
+function Invoke-AwsSecretsManager {
+    param(
+        [Parameter(Mandatory)][string]$Operation,
+        [Parameter(Mandatory)][string[]]$Arguments
+    )
+
+    Write-LogDetail -Message "aws secretsmanager $Operation"
+    $output = (& aws @Arguments 2>&1 | Out-String)
+    $code = $LASTEXITCODE
+    Write-LogDetail -Message "aws secretsmanager $Operation exit=$code"
+
+    return [pscustomobject]@{
+        ExitCode = $code
+        Output   = $output
+    }
+}
+
+# El secreto lo crea Terraform (componente cloud): aquí nunca se crea.
+function Test-ApplicationSecretExists {
+    param([Parameter(Mandatory)][string]$SecretName)
+
+    $result = Invoke-AwsSecretsManager -Operation 'describe-secret' -Arguments @(
+        'secretsmanager', 'describe-secret', '--secret-id', $SecretName, '--query', 'Name', '--output', 'text'
+    )
+    if ($result.ExitCode -eq 0) {
+        return $true
+    }
+
+    if ($result.Output -match 'ResourceNotFoundException') {
+        return $false
+    }
+
+    throw "aws secretsmanager describe-secret falló con código $($result.ExitCode) name=$SecretName"
+}
+
+# No existe -> error de secuencia; existe sin valor -> '' (Terraform sólo crea
+# el contenedor); cualquier otro fallo -> error, para no arriesgarse a
+# regenerar la firma sobre una lectura fallida.
+function Get-ApplicationSecretString {
+    param([Parameter(Mandatory)][string]$SecretName)
+
+    if (-not (Test-ApplicationSecretExists -SecretName $SecretName)) {
+        throw "El secreto $SecretName no existe: despliega antes el componente cloud (cloud/up.ps1 -Phase Apply)."
+    }
+
+    $result = Invoke-AwsSecretsManager -Operation 'get-secret-value' -Arguments @(
+        'secretsmanager', 'get-secret-value', '--secret-id', $SecretName, '--query', 'SecretString', '--output', 'text'
+    )
+    if ($result.ExitCode -ne 0) {
+        if ($result.Output -match 'ResourceNotFoundException') {
+            Write-LogDetail -Message "secreto sin valor name=$SecretName (JSON vacío)"
+            return ''
+        }
+
+        throw "aws secretsmanager get-secret-value falló con código $($result.ExitCode) name=$SecretName"
+    }
+
+    $value = ([string]$result.Output).Trim()
+    if ($value -eq 'None') {
+        return ''
+    }
+
+    return $value
+}
+
+function Get-ApplicationSecret {
+    $secretName = Get-ApplicationSecretName
+    $secret = ConvertTo-SecretHashtable -SecretString (Get-ApplicationSecretString -SecretName $SecretName)
+    Write-LogDetail -Message "secreto name=$secretName claves=$(@($secret.Keys) -join ', ')"
+    return $secret
+}
+
+# Escritura: sólo del bloque de firma, y nunca registra el valor en el log.
+function Set-ApplicationSecretString {
+    param(
+        [Parameter(Mandatory)][string]$SecretName,
+        [Parameter(Mandatory)][System.Collections.IDictionary]$Secret
+    )
+
+    $json = $Secret | ConvertTo-Json -Depth 16 -Compress
+    Write-LogDetail -Message "aws secretsmanager put-secret-value --secret-id $SecretName (valor omitido del log)"
+
+    $result = Invoke-AwsSecretsManager -Operation 'put-secret-value' -Arguments @(
+        'secretsmanager', 'put-secret-value', '--secret-id', $SecretName, '--secret-string', $json
+    )
+    if ($result.ExitCode -ne 0) {
+        Add-Content -Path $script:LogFile -Value ([string]$result.Output)
+        throw "aws secretsmanager put-secret-value falló con código $($result.ExitCode) name=$SecretName"
+    }
+
+    Write-LogDetail -Message "secreto escrito name=$SecretName (valor omitido del log)"
+}
+
+# Contraseña para keystore/key: base64 sin /+= para poder usarla tal cual.
+function New-PasswordValue {
+    param([Parameter(Mandatory)][int]$ByteLength = 24)
+
+    $bytes = [byte[]]::new($ByteLength)
+    [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+    return (([Convert]::ToBase64String($bytes)) -replace '[/+=]', '')
+}
+
+function New-AndroidSigningMaterial {
+    $password = New-PasswordValue -ByteLength 24
+    $tempKeystore = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("{0}.jks" -f ([guid]::NewGuid().ToString('N')))
+
+    try {
+        $arguments = @(
+            '-genkeypair', '-alias', '{{ APPLICATION_ID }}', '-keyalg', 'RSA', '-keysize', '2048',
+            '-validity', '10000', '-storetype', 'JKS', '-keystore', $tempKeystore,
+            '-storepass', $password, '-keypass', $password, '-dname', 'CN={{ APPLICATION_ID }}'
+        )
+        Write-LogDetail -Message 'keytool -genkeypair (credenciales omitidas del log)'
+        & keytool @arguments 2>&1 | Out-File -FilePath $script:LogFile -Append
+        $code = $LASTEXITCODE
+        Write-LogDetail -Message "keytool exit=$code"
+        if ($code -ne 0) {
+            throw "keytool falló con código $code"
+        }
+
+        $base64 = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($tempKeystore))
+    }
+    finally {
+        Remove-Item -Path $tempKeystore -Force -ErrorAction SilentlyContinue
+    }
+
+    return [ordered]@{
+        'key-alias'       = '{{ APPLICATION_ID }}'
+        'store-password'  = $password
+        'key-password'    = $password
+        'keystore-base64' = $base64
+    }
+}
+
+# Devuelve el material de firma del secreto; lo crea y guarda sólo si falta.
+function Get-OrCreateAndroidSigning {
+    param(
+        [Parameter(Mandatory)][System.Collections.IDictionary]$Secret,
+        [Parameter(Mandatory)][string]$SecretName
+    )
+
+    if ($Secret.ContainsKey('android-signing')) {
+        Write-Log -Message "Firma Android leída de $SecretName (sólo lectura)"
+        return $Secret['android-signing']
+    }
+
+    Write-Log -Message "Generando keystore de Android: falta android-signing en $SecretName"
+    $signing = New-AndroidSigningMaterial
+    $Secret['android-signing'] = $signing
+    Set-ApplicationSecretString -SecretName $SecretName -Secret $Secret
+    Write-Log -Message "Firma Android añadida a $SecretName"
+    return $signing
+}
+
+# Escribe el keystore y el key.properties que Gradle usa para release.
+function Write-AndroidSigningArtifacts {
+    param([Parameter(Mandatory)][System.Collections.IDictionary]$Signing)
+
+    $keystorePath = Join-Path -Path $script:AndroidDirectory -ChildPath 'upload-keystore.jks'
+    $propertiesPath = Join-Path -Path $script:AndroidDirectory -ChildPath 'key.properties'
+
+    [System.IO.File]::WriteAllBytes($keystorePath, [Convert]::FromBase64String([string]$Signing['keystore-base64']))
+    $properties = @(
+        "storePassword=$([string]$Signing['store-password'])",
+        "keyPassword=$([string]$Signing['key-password'])",
+        "keyAlias=$([string]$Signing['key-alias'])",
+        'storeFile=upload-keystore.jks'
+    )
+    Set-Content -Path $propertiesPath -Value $properties
+
+    Write-Log -Message "Firma Android escrita en $($script:AndroidDirectory)"
+}
+
+function Remove-AndroidSigningArtifacts {
+    $names = @('key.properties', 'upload-keystore.jks')
+    foreach ($name in $names) {
+        $path = Join-Path -Path $script:AndroidDirectory -ChildPath $name
+        if (Test-Path -Path $path) {
+            Remove-Item -Path $path -Force
+            Write-LogDetail -Message "archivo de firma eliminado name=$name"
+        }
+    }
+}
+
+# Garantiza el bloque android-signing en el secreto, con o sin -Sign (el
+# secreto no se crea aquí: lo hace Terraform). Devuelve el material de firma,
+# o $null si el secreto no existe y se ejecuta sin -Sign.
+function Sync-AndroidSigningSecret {
+    $secretName = Get-ApplicationSecretName
+    if (-not $Sign -and -not (Test-ApplicationSecretExists -SecretName $secretName)) {
+        Write-Log -Message "Secreto $secretName no existe: se omite android-signing (despliega el componente cloud)"
+        return $null
+    }
+
+    # Con -Sign el secreto es obligatorio: Get-ApplicationSecret lanza el error.
+    $secret = Get-ApplicationSecret
+    return (Get-OrCreateAndroidSigning -Secret $secret -SecretName $secretName)
+}
+
+function Get-FlutterSdkPath {
+    try {
+        $json = & flutter --version --machine 2>&1 | Out-String
+        return [string]($json | ConvertFrom-Json).flutterRoot
+    }
+    catch {
+        Write-LogDetail -Message "SDK de Flutter no detectado: $($_.Exception.Message)"
+        return ''
+    }
+}
+
+# local.properties: en un checkout limpio de CI no existe y hay que crearlo.
+function Write-AndroidLocalProperties {
+    $path = Join-Path -Path $script:AndroidDirectory -ChildPath 'local.properties'
+    if (Test-Path -Path $path) {
+        Write-LogDetail -Message 'local.properties ya existe (no se toca)'
+        return
+    }
+
+    $androidSdk = $env:ANDROID_HOME
+    $flutterSdk = Get-FlutterSdkPath
+    if ([string]::IsNullOrWhiteSpace($androidSdk) -or [string]::IsNullOrWhiteSpace($flutterSdk)) {
+        Write-LogDetail -Message "local.properties omitido androidSdk=[$androidSdk] flutterSdk=[$flutterSdk]"
+        return
+    }
+
+    $properties = @(
+        "sdk.dir=$androidSdk",
+        "flutter.sdk=$flutterSdk",
+        'flutter.buildMode=release',
+        'flutter.versionName=1.0.0',
+        'flutter.versionCode=1'
+    )
+    Set-Content -Path $path -Value $properties
+    Write-Log -Message 'local.properties creado'
+}
+
+# En Linux el checkout de git puede perder el bit de ejecución de gradlew.
+function Ensure-GradleWrapperExecutable {
+    if ($IsWindows) {
+        return
+    }
+
+    $gradlew = Join-Path -Path $script:AndroidDirectory -ChildPath 'gradlew'
+    if (-not (Test-Path -Path $gradlew)) {
+        Write-LogDetail -Message 'gradlew no encontrado (se omite chmod)'
+        return
+    }
+
+    & chmod +x $gradlew
+    Write-LogDetail -Message "chmod +x gradlew exit=$LASTEXITCODE"
 }
 
 function Invoke-FlutterToFile {
@@ -213,7 +527,9 @@ function Invoke-ApplicationRun {
 function Invoke-FrontendUp {
     Write-Log -Message "Iniciando despliegue de $($script:AppName)"
     Write-LogDetail -Message "log=$script:LogFile"
-    Write-LogDetail -Message "projectRoot=$($script:ProjectRoot) deviceId=$DeviceId dependencies=$($Dependencies -join ', ') skipIcons=$SkipIcons skipBuild=$SkipBuild skipRun=$SkipRun"
+    Write-LogDetail -Message "projectRoot=$($script:ProjectRoot) environment=$Environment sign=$Sign deviceId=$DeviceId dependencies=$($Dependencies -join ', ') skipIcons=$SkipIcons skipBuild=$SkipBuild skipRun=$SkipRun"
+
+    Ensure-Prerequisites
 
     Write-Log -Message 'Limpiando proyecto flutter'
     Invoke-Flutter -Arguments @('clean')
@@ -225,7 +541,26 @@ function Invoke-FrontendUp {
     Write-Log -Message 'Dependencias descargadas'
 
     Invoke-IconGeneration
+
+    # El secreto queda siempre con android-signing; los archivos locales sólo
+    # se escriben con -Sign y se borran al terminar la compilación.
+    $signing = Sync-AndroidSigningSecret
+    if ($Sign) {
+        Write-AndroidSigningArtifacts -Signing $signing
+    }
+    else {
+        Remove-AndroidSigningArtifacts
+    }
+
+    Ensure-GradleWrapperExecutable
+    Write-AndroidLocalProperties
     Invoke-Bundle
+
+    # Tras compilar no queda ningún archivo de firma en la máquina.
+    if ($Sign) {
+        Remove-AndroidSigningArtifacts
+    }
+
     Invoke-ApplicationRun
 
     Write-Log -Message 'Despliegue finalizado'

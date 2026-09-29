@@ -5,6 +5,7 @@
     "cloud",
     "cloud/terraform",
     "cloud/terraform/{{MICROSERVICE_NAME}}",
+    "cloud/terraform/app",
     "cloud/terraform/modules",
     "cloud/terraform/modules/secrets-manager",
     "cloud/terraform/modules/pipeline"
@@ -27,6 +28,10 @@
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/cognito_google_provider.tf", "value": "templates/terraform-cognito-google-provider.scriban" },
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/lambda.tf", "value": "templates/terraform-lambda.scriban" },
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/ssm.tf", "value": "templates/terraform-ssm.scriban" },
+    { "key": "cloud/terraform/app/provider.tf", "value": "templates/terraform-provider.scriban" },
+    { "key": "cloud/terraform/app/variables.tf", "value": "templates/terraform-variables.scriban" },
+    { "key": "cloud/terraform/app/terraform.{{ENVIRONMENT}}.tfvars", "value": "templates/terraform-tfvars.scriban" },
+    { "key": "cloud/terraform/app/secrets.tf", "value": "templates/terraform-secrets.scriban" },
     { "key": "cloud/terraform/modules/secrets-manager/main.tf", "value": "templates/terraform-secrets-manager.scriban" },
     { "key": "cloud/terraform/modules/secrets-manager/variables.tf", "value": "templates/terraform-secrets-manager-variables.scriban" },
     { "key": "cloud/terraform/modules/pipeline/main.tf", "value": "templates/terraform-pipeline.scriban" },
