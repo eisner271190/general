@@ -25,7 +25,7 @@ spring.h2.console.path=/h2-console
 spring.r2dbc.pool.initial-size=5
 spring.r2dbc.pool.max-size=20
 
-jwt.secret=${JWT_SECRET}
+jwt.secret=${JWT_SECRET:${jwt-secret:}}
 jwt.expiration=${JWT_EXPIRATION}
 
 spring.main.web-application-type=reactive

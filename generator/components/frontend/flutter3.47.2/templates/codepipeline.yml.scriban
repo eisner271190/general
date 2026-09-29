@@ -6,6 +6,10 @@ Parameters:
     Type: String
     Default: '{{ APPLICATION_ID }}'
     Description: Application identifier for secret paths
+  Environment:
+    Type: String
+    Default: 'develop'
+    Description: Deployment environment that owns the application secret
   GitHubOwner:
     Type: String
     Description: GitHub repository owner
@@ -54,8 +58,8 @@ Resources:
                 Action:
                   - secretsmanager:GetSecretValue
                   - secretsmanager:DescribeSecret
-                  - secretsmanager:CreateSecret
-                Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/epc/${ApplicationId}/android-signing-*'
+                  - secretsmanager:PutSecretValue
+                Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${Environment}/${ApplicationId}-*'
         - PolicyName: S3ArtifactsAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -95,6 +99,8 @@ Resources:
         EnvironmentVariables:
           - Name: APPLICATION_ID
             Value: !Ref ApplicationId
+          - Name: ENVIRONMENT
+            Value: !Ref Environment
           - Name: AWS_REGION
             Value: !Ref AWS::Region
       Source:

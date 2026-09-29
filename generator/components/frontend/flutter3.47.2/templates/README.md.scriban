@@ -18,12 +18,35 @@ samples, guidance on mobile development, and a full API reference.
 
 ## Android signing
 
-The `.aab` signed for release is produced **only in the CI pipeline**; the
-keystore lives only in AWS Secrets Manager (secret
-`/epc/{applicationId}/android-signing`, single JSON). On its first run the
-pipeline generates the keystore if the secret does not exist yet, and stores
-it for all later runs. Nothing signing-related is written to the repository
-or to developer machines.
+The signed release `.aab` is produced **only in the CI pipeline** (`up.ps1 -Sign`);
+locally `up.ps1` deletes any signing file and builds **unsigned**.
+
+Signing material lives in a single AWS Secrets Manager secret named
+`{environment}/{applicationId}` (e.g. `develop/com.quizsmart.app`) with a single
+JSON document:
+
+```json
+{
+  "android-signing": {
+    "key-alias": "{applicationId}",
+    "store-password": "...",
+    "key-password": "...",
+    "keystore-base64": "..."
+  },
+  "jwt-secret": "...",
+  "api-key": "..."
+}
+```
+
+- The secret is created by **Terraform** in the cloud component; the frontend
+  only reads it. With `-Sign` a missing secret aborts the build with an explicit
+  message; without `-Sign` it just logs a warning and continues.
+- The script generates the keystore the first time it needs it (with or without
+  `-Sign`) and adds the `android-signing` key (the other keys are never
+  overwritten).
+- Nothing signing-related is written to the repository or kept on developer
+  machines: `android/key.properties` and `android/upload-keystore.jks` are
+  removed right after the bundle is built.
 
 ## CI/CD Pipeline (AWS CodePipeline)
 
@@ -41,8 +64,9 @@ The CodeBuild IAM role needs access to:
 
 ```
 secretsmanager:GetSecretValue
-secretsmanager:CreateSecret
-Resource: arn:aws:secretsmanager:{region}:{account}:secret:/epc/{applicationId}/android-signing-*
+secretsmanager:DescribeSecret
+secretsmanager:PutSecretValue
+Resource: arn:aws:secretsmanager:{region}:{account}:secret:{environment}/{applicationId}-*
 ```
 
 ### Required variables
@@ -50,6 +74,7 @@ Resource: arn:aws:secretsmanager:{region}:{account}:secret:/epc/{applicationId}/
 | Variable | Description |
 |----------|-------------|
 | `APPLICATION_ID` | Application identifier (e.g., `com.quizsmart.app`) |
+| `ENVIRONMENT` | Deployment environment that owns the secret (e.g., `develop`) |
 | `AWS_REGION` | AWS region for Secrets Manager |
 
 ### Setup
@@ -60,8 +85,12 @@ Resource: arn:aws:secretsmanager:{region}:{account}:secret:/epc/{applicationId}/
 
 ### Local build
 
-Release builds are not signed locally — Gradle fails with an explicit message.
-For local testing use a debug build:
+```powershell
+./up.ps1          # without -Sign: any signing file is removed and the bundle is built unsigned
+./up.ps1 -Sign    # reads the AWS secret and produces the signed .aab
+```
+
+For quick testing on a device use a debug build:
 
 ```bash
 flutter build apk --debug

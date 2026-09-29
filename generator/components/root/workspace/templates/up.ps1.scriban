@@ -8,6 +8,8 @@
     3. cloud  -Phase Apply     : plan + apply de toda la infraestructura.
     4. backend -Phase Run      : lee Parameter Store y arranca cada contenedor.
     5. frontend                : clean -> pub get -> iconos -> appbundle -> run.
+       Con -Fast el frontend se limita a clean + pub get + iconos: sin
+       compilar el .aab y sin ejecutar flutter run.
     El orden 2 antes de 3 es imprescindible: la Lambda no puede crearse con
     una imagen que aún no existe.
     Consola: solo líneas con formato [yyyy-MM-dd HH:mm:ss] [etapa] mensaje.
@@ -22,12 +24,17 @@
     Se detiene tras el plan de Terraform.
 .PARAMETER SkipFrontend
     Omite el paso de frontend (servidores útiles en CI).
+.PARAMETER Fast
+    Modo rápido: el frontend se ejecuta con -SkipBuild -SkipRun, así que no se
+    compila el .aab ni se lanza flutter run.
 .PARAMETER DeviceId
     Dispositivo para `flutter run`. Si se omite, el frontend usa el único
     móvil Android conectado por adb; con cero o varios móviles solo compila
     (flutter run es interactivo y aborta con más de un dispositivo).
 .EXAMPLE
     ./up.ps1 -PlanOnly
+.EXAMPLE
+    ./up.ps1 -Fast
 .EXAMPLE
     ./up.ps1 -AutoApprove:$false
 #>
@@ -37,6 +44,7 @@ param(
     [switch]$AutoApprove = $true,
     [switch]$PlanOnly,
     [switch]$SkipFrontend,
+    [switch]$Fast,
     [string]$DeviceId = ''
 )
 
@@ -160,6 +168,10 @@ function Invoke-Frontend {
         if ($DeviceId -ne '') {
             $arguments['DeviceId'] = $DeviceId
         }
+        if ($Fast) {
+            $arguments['SkipBuild'] = $true
+            $arguments['SkipRun'] = $true
+        }
         Invoke-ComponentScript -Path $path -Arguments $arguments
     }
 }
@@ -184,7 +196,7 @@ function Invoke-FrontendStage {
 function Invoke-ApplicationUp {
     Write-Log -Message 'Iniciando despliegue'
     Write-LogDetail -Message "log=$script:LogFile"
-    Write-LogDetail -Message "aplicacion={{ APPLICATION_NAME }} environment=$Environment autoApprove=$AutoApprove planOnly=$PlanOnly skipFrontend=$SkipFrontend deviceId=$DeviceId"
+    Write-LogDetail -Message "aplicacion={{ APPLICATION_NAME }} environment=$Environment autoApprove=$AutoApprove planOnly=$PlanOnly skipFrontend=$SkipFrontend fast=$Fast deviceId=$DeviceId"
 
     Write-LogDetail -Message 'paso 1/5 cloud bootstrap (crea ECR)'
     Invoke-CloudPhase -Phase 'Bootstrap' -Arguments @{ Environment = $Environment; AutoApprove = $true }

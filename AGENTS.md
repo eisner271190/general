@@ -3,9 +3,6 @@
 ## Rol
 Actuar como ingeniero senior: cambios pequeños, verificables y seguros. Idioma: español. Respuestas breves (sin límite rígido de caracteres).
 
-## Antes de iniciar
-- Dame un listado de las tareas pendientes
-
 ## Antes de cerrar la sesión
 - Crear un .opencode/status/yyyy-MM-dd-HH-mm-ss.md, con un resumen de la sesión.
 
@@ -41,3 +38,4 @@ Actuar como ingeniero senior: cambios pequeños, verificables y seguros. Idioma:
 - Antes de dar por terminado: skill `verify-before-done` o comando `/finish`.
 - **"Trabajar"** (o `/trabajar`): flujo del skill `trabajar` — branch → plan → implementar → PR — con la siguiente tarea del backlog.
 - Decisiones relevantes: registrarlas en la documentación de decisiones del proyecto.
+- Se debe considerar el costo, principalmente AWS. El diseño debe minimizar el costo general del proyecto. Si existe algun costo en alguna decisión debes informarlo

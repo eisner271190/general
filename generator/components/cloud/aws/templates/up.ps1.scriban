@@ -14,6 +14,10 @@
     microservicio (output environment_parameter_path) con sus parámetros y se
     sobrescriben los parámetros cuyo valor sale de la infraestructura
     (ARN de SNS, URL de SQS, URL de API, dominio y client id de Cognito).
+    Al finalizar la fase Apply siembra el secreto único de la aplicación
+    <environment>/<applicationId> con las claves que falten (jwt-secret y
+    api-key). Esos valores son temporales: cámbialos a mano en AWS.
+    Terraform sólo crea el contenedor, así que el secreto debe existir ya.
 .PARAMETER Environment
     Entorno a desplegar. Por defecto el entorno con el que se generó el proyecto.
 .PARAMETER AutoApprove
@@ -60,6 +64,7 @@ $script:ResourceLabels = @{
     'cognito_iam.tf'           = 'Cognito IAM'
     'cognito_client.tf'        = 'Cognito clientes'
     'cognito_google_provider.tf' = 'Cognito Google'
+    'secrets.tf'               = 'Secreto de la aplicación'
 }
 
 # Parámetros de Parameter Store cuyo valor sólo existe después del apply.
@@ -241,6 +246,170 @@ function Update-PostmanBaseUrl {
     Write-Log -Message "baseUrl actualizado en Postman de ${Name}: $BaseUrl"
 }
 
+# Secreto único de la aplicación: nombre <environment>/<applicationId>.
+function Get-ApplicationSecretName {
+    return "$Environment/{{ APPLICATION_ID }}"
+}
+
+function New-RandomSecretValue {
+    param([Parameter(Mandatory)][int]$ByteLength = 48)
+
+    $bytes = [byte[]]::new($ByteLength)
+    [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+    return [Convert]::ToBase64String($bytes)
+}
+
+# Valores por defecto de las claves que siembra cloud (temporales: el usuario
+# los sustituye a mano en AWS al terminar el despliegue).
+function New-ApplicationSecretDefault {
+    param([Parameter(Mandatory)][string]$Key)
+
+    if ($Key -eq 'jwt-secret') {
+        return New-RandomSecretValue -ByteLength 48
+    }
+
+    if ($Key -eq 'api-key') {
+        return 'PLACEHOLDER_CAMBIAR_EN_AWS'
+    }
+
+    throw "Sin valor por defecto para la clave $Key"
+}
+
+function Get-MissingApplicationSecretKey {
+    param([Parameter(Mandatory)][System.Collections.IDictionary]$Secret)
+
+    $seededKeys = @('jwt-secret', 'api-key')
+    return ($seededKeys | Where-Object -FilterScript { -not $Secret.ContainsKey($_) })
+}
+
+function Add-ApplicationSecretDefaults {
+    param([Parameter(Mandatory)][System.Collections.IDictionary]$Secret)
+
+    $missing = @(Get-MissingApplicationSecretKey -Secret $Secret)
+    foreach ($key in $missing) {
+        $Secret[$key] = New-ApplicationSecretDefault -Key $key
+    }
+
+    return $missing.Count
+}
+
+# Texto del secreto -> hashtable. Sin valor se trata como JSON vacío.
+function ConvertTo-SecretHashtable {
+    param([AllowNull()][string]$SecretString)
+
+    if ([string]::IsNullOrWhiteSpace($SecretString)) {
+        return @{}
+    }
+
+    return ($SecretString | ConvertFrom-Json -AsHashtable)
+}
+
+# Invoca AWS CLI y devuelve el código de salida junto al texto (salida y error).
+function Invoke-AwsSecretsManager {
+    param(
+        [Parameter(Mandatory)][string]$Operation,
+        [Parameter(Mandatory)][string[]]$Arguments
+    )
+
+    Write-LogDetail -Message "aws secretsmanager $Operation"
+    $output = (& aws @Arguments 2>&1 | Out-String)
+    $code = $LASTEXITCODE
+    Write-LogDetail -Message "aws secretsmanager $Operation exit=$code"
+
+    return [pscustomobject]@{
+        ExitCode = $code
+        Output   = $output
+    }
+}
+
+# El secreto lo crea Terraform: si no existe, es un error de secuencia.
+function Test-ApplicationSecretExists {
+    param([Parameter(Mandatory)][string]$SecretName)
+
+    $result = Invoke-AwsSecretsManager -Operation 'describe-secret' -Arguments @(
+        'secretsmanager', 'describe-secret', '--secret-id', $SecretName, '--query', 'Name', '--output', 'text'
+    )
+    if ($result.ExitCode -eq 0) {
+        return $true
+    }
+
+    if ($result.Output -match 'ResourceNotFoundException') {
+        return $false
+    }
+
+    throw "aws secretsmanager describe-secret falló con código $($result.ExitCode) name=$SecretName"
+}
+
+# No existe -> error de secuencia; existe sin valor -> '' (Terraform sólo crea
+# el contenedor y aún no hay put-secret-value); cualquier otro fallo -> error,
+# para no arriesgarse a pisar valores existentes con una lectura fallida.
+function Get-ApplicationSecretString {
+    param([Parameter(Mandatory)][string]$SecretName)
+
+    if (-not (Test-ApplicationSecretExists -SecretName $SecretName)) {
+        throw "El secreto $SecretName no existe: despliega antes el componente cloud (Terraform crea el contenedor)."
+    }
+
+    $result = Invoke-AwsSecretsManager -Operation 'get-secret-value' -Arguments @(
+        'secretsmanager', 'get-secret-value', '--secret-id', $SecretName, '--query', 'SecretString', '--output', 'text'
+    )
+    if ($result.ExitCode -ne 0) {
+        if ($result.Output -match 'ResourceNotFoundException') {
+            Write-LogDetail -Message "secreto sin valor name=$SecretName (JSON vacío)"
+            return ''
+        }
+
+        throw "aws secretsmanager get-secret-value falló con código $($result.ExitCode) name=$SecretName"
+    }
+
+    $value = ([string]$result.Output).Trim()
+    if ($value -eq 'None') {
+        return ''
+    }
+
+    return $value
+}
+
+# Escritura: nunca registra el valor en el log.
+function Set-ApplicationSecretString {
+    param(
+        [Parameter(Mandatory)][string]$SecretName,
+        [Parameter(Mandatory)][System.Collections.IDictionary]$Secret
+    )
+
+    $json = $Secret | ConvertTo-Json -Depth 16 -Compress
+    Write-LogDetail -Message "aws secretsmanager put-secret-value --secret-id $SecretName (valor omitido del log)"
+
+    $result = Invoke-AwsSecretsManager -Operation 'put-secret-value' -Arguments @(
+        'secretsmanager', 'put-secret-value', '--secret-id', $SecretName, '--secret-string', $json
+    )
+    if ($result.ExitCode -ne 0) {
+        Add-Content -Path $script:LogFile -Value ([string]$result.Output)
+        throw "aws secretsmanager put-secret-value falló con código $($result.ExitCode) name=$SecretName"
+    }
+
+    Write-LogDetail -Message "secreto escrito name=$SecretName (valor omitido del log)"
+}
+
+# Siembra sólo las claves que faltan: nunca sobrescribe valores existentes.
+function Update-ApplicationSecret {
+    $secretName = Get-ApplicationSecretName
+    if ($null -eq (Get-Command -Name aws -ErrorAction SilentlyContinue)) {
+        Stop-WithError -Reason 'aws CLI no disponible: no se puede siembrar el secreto de la aplicación'
+    }
+
+    $secret = ConvertTo-SecretHashtable -SecretString (Get-ApplicationSecretString -SecretName $secretName)
+    $added = Add-ApplicationSecretDefaults -Secret $secret
+
+    if ($added -eq 0) {
+        Write-Log -Message "Secreto $secretName con todos los valores (no se sobrescriben)"
+        return
+    }
+
+    Set-ApplicationSecretString -SecretName $secretName -Secret $secret
+    Write-Log -Message "Secreto $secretName sembrado con $added valor(es) nuevo(s)"
+}
+
 function Get-ResourceLabel {
     param([Parameter(Mandatory)][string]$FileName)
 
@@ -384,6 +553,14 @@ function Invoke-MicroserviceApplyPhases {
     Update-PostmanBaseUrl -Name $Name -BaseUrl $baseUrl
 }
 
+# El bootstrap sólo tiene sentido donde hay repositorio ECR: el directorio
+# app/ sólo contiene el secreto de la aplicación y su -target no existiría.
+function Test-BootstrapDirectory {
+    param([Parameter(Mandatory)][string]$WorkingDirectory)
+
+    return (Test-Path -Path (Join-Path -Path $WorkingDirectory -ChildPath 'ecr.tf'))
+}
+
 function Invoke-MicroserviceUp {
     param([Parameter(Mandatory)][string]$WorkingDirectory)
 
@@ -391,6 +568,11 @@ function Invoke-MicroserviceUp {
     Write-LogDetail -Message "microservicio name=$name phase=$Phase"
 
     if ($Phase -eq 'Bootstrap') {
+        if (-not (Test-BootstrapDirectory -WorkingDirectory $WorkingDirectory)) {
+            Write-LogDetail -Message "bootstrap omitido name=$name (sin ecr.tf)"
+            return
+        }
+
         Invoke-MicroserviceBootstrap -Name $name -WorkingDirectory $WorkingDirectory
     }
     else {
@@ -409,6 +591,11 @@ function Invoke-CloudUp {
     $directories = @(Get-MicroserviceDirectory)
     foreach ($directory in $directories) {
         Invoke-MicroserviceUp -WorkingDirectory $directory
+    }
+
+    # Tras el apply el contenedor ya existe: sólo se siembran las claves que faltan.
+    if ($Phase -eq 'Apply' -and -not $PlanOnly) {
+        Update-ApplicationSecret
     }
 
     Write-Log -Message 'Despliegue finalizado'
