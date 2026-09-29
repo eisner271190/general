@@ -24,6 +24,7 @@
 9. AWS Cognito.
 10. Mover proyecto Terraform a la carpeta `cloud`, fuera de `backend`.
 11. AWS Parameter Store (T05): parametros desde target y post-apply via `cloud/up.ps1` - PR #3, #4.
+12. Agregar los secretos a AWS secret manager
 
 ## DevSecOps
 1. Ejecutar sonar automaticamente.
@@ -72,4 +73,5 @@
 15. Global Handling Exceptions.
 16. API Response.
 17. Autenticación JWT.
+18. /api/v1/parameters
 

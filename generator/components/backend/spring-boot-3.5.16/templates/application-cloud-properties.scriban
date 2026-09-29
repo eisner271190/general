@@ -1,2 +1,0 @@
-# Las variables de entorno ya estan configuradas en la Lambda via Terraform.
-# No es necesario spring.config.import: Spring Boot las lee nativamente.
