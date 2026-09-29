@@ -1,0 +1,87 @@
+package com.{{ Company }}.{{ Name }}.infrastructure.controllers;
+
+import com.{{ Company }}.{{ Name }}.infrastructure.configuration.ParameterProperties;
+import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ApiResponse;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.web.reactive.server.WebTestClient;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class ParameterControllerTest {
+
+  private WebTestClient webTestClient;
+  private ParameterProperties parameterProperties;
+
+  @BeforeEach
+  public void setup() {
+    parameterProperties = new ParameterProperties();
+    webTestClient = createWebTestClient();
+  }
+
+  @Test
+  public void testGetParameters_ReturnsPublicParameters() {
+    parameterProperties.setPublicConfig(
+        Map.of("api-url", "https://api.openrouter.ai/api/v1", "model", "gpt-4o-mini"));
+
+    webTestClient.get()
+        .uri("/api/v1/parameters")
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody(ApiResponse.class)
+        .value(response -> {
+          assertEquals("Parameters retrieved successfully", response.getMessage());
+          assertEquals(HttpStatus.OK.value(), response.getStatus());
+
+          Map<String, Object> data = response.getData();
+          assertEquals("https://api.openrouter.ai/api/v1", data.get("api-url"));
+          assertEquals("gpt-4o-mini", data.get("model"));
+        });
+  }
+
+  @Test
+  public void testGetParameters_OmitsSensitiveParameter() {
+    parameterProperties.setPublicConfig(sensitiveAndPublicConfig());
+
+    webTestClient.get()
+        .uri("/api/v1/parameters")
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody(ApiResponse.class)
+        .value(response -> {
+          Map<String, Object> data = response.getData();
+          assertEquals("gpt-4o-mini", data.get("model"));
+          assertFalse(data.containsKey("api-key"));
+          assertFalse(data.containsKey("jwt-secret"));
+        });
+  }
+
+  @Test
+  public void testGetParameters_EmptyConfigReturnsEmptyMap() {
+    webTestClient.get()
+        .uri("/api/v1/parameters")
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody(ApiResponse.class)
+        .value(response -> assertTrue(response.getData().isEmpty()));
+  }
+
+  private WebTestClient createWebTestClient() {
+    return WebTestClient.bindToController(new ParameterController(parameterProperties)).build();
+  }
+
+  private Map<String, String> sensitiveAndPublicConfig() {
+    Map<String, String> config = new LinkedHashMap<>();
+    config.put("model", "gpt-4o-mini");
+    config.put("api-key", "sk-no-debe-filtrarse");
+    config.put("jwt-secret", "no-debe-filtrarse");
+    return config;
+  }
+}

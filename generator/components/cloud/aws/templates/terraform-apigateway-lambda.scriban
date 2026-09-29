@@ -18,6 +18,15 @@ resource "aws_apigatewayv2_route" "{{ MICROSERVICE_NAME }}" {
   target    = "integrations/${aws_apigatewayv2_integration.{{ MICROSERVICE_NAME }}.id}"
 }
 
+# Catch-all: permite rutas sin prefijo explicito (p. ej. /api/v1/**, /sns/**).
+# No pisa lo anterior: API Gateway elige la coincidencia mas especifica, asi que
+# /<microservicio>/{proxy+} y GET /actuator/health siguen teniendo prioridad.
+resource "aws_apigatewayv2_route" "{{ MICROSERVICE_NAME }}_proxy" {
+  api_id    = aws_apigatewayv2_api.http_api.id
+  route_key = "ANY /{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.{{ MICROSERVICE_NAME }}.id}"
+}
+
 # Salud expuesta fuera del prefijo del microservicio: solo este endpoint.
 resource "aws_apigatewayv2_route" "{{ MICROSERVICE_NAME }}_health" {
   api_id    = aws_apigatewayv2_api.http_api.id

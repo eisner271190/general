@@ -2,7 +2,9 @@
 server.port={{ Port }}
 
 management.endpoint.health.show-details=always
-management.endpoints.web.exposure.include=health,info,prometheus
+# Con la ruta catch-all del API Gateway, exponer info/prometheus dejaria
+# /actuator/** publico via baseUrl: solo health (continua la decision T06).
+management.endpoints.web.exposure.include=health
 management.endpoint.prometheus.enabled=true
 management.metrics.export.prometheus.enabled=true
 management.endpoint.metrics.content-type=application/json

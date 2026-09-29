@@ -1,7 +1,7 @@
 {{ open_b = "{" + "{" }}{{ close_b = "}" + "}" }}{
   "info": {
     "name": "{{ MicroserviceName }}",
-    "description": "Colección de endpoints del microservicio {{ MicroserviceName }}.\n\nURL BASE (API Gateway):\n  Se rellena sola al ejecutar cloud/up.ps1 (tras el apply escribe terraform output http_api_url en esta colección).\n  Manual: cd cloud/terraform/{{ MicroserviceName }} && terraform output http_api_url -> pegar en la variable baseUrl.\n\nAUTENTICACIÓN:\n  - Ejecutar Users > Login para guardar el token (variable token) y el usuario (variable username).\n  - Las rutas de identidad /api/v1/users/** son públicas; el resto requiere Authorization: Bearer.",
+    "description": "Colección de endpoints del microservicio {{ MicroserviceName }}.\n\nURL BASE (API Gateway):\n  Se rellena sola al ejecutar cloud/up.ps1 (tras el apply escribe terraform output http_api_url en esta colección).\n  Manual: cd cloud/terraform/{{ MicroserviceName }} && terraform output http_api_url -> pegar en la variable baseUrl.\n\nAUTENTICACIÓN:\n  - Ejecutar Users > Login para guardar el token (variable token) y el usuario (variable username).\n  - Rutas públicas (sin token): /api/v1/users/**, /api/v1/parameters y /actuator/health. El resto requiere Authorization: Bearer.\n\nPARÁMETROS:\n  - GET /api/v1/parameters devuelve la configuración pública que necesita el frontend; nunca secretos.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "event": [
@@ -85,6 +85,46 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }],
               "body": "{\"data\":null,\"message\":\"Error interno\",\"status\":500,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Parameters",
+      "item": [
+        {
+          "name": "Get",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', function () { pm.response.to.have.success; });",
+                  "pm.test('Sin secretos', function () { pm.expect(JSON.stringify(pm.response.json())).to.not.match(/api-key|apikey|secret|password|credential/i); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/parameters",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "parameters"]
+            },
+            "description": "Parametros publicos que el frontend necesita para arrancar (URLs, modelos, identificadores, textos). Ruta pública, sin Authorization; nunca devuelve secretos: las claves con apariencia sensible se omiten en el servidor."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":{\"api-url\":\"https://api.openrouter.ai/api/v1/chat/completions\",\"model\":\"gpt-4o-mini\"},\"message\":\"Parameters retrieved successfully\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
             }
           ]
         }

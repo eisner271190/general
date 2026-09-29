@@ -1,0 +1,43 @@
+package com.{{ Company }}.{{ Name }}.infrastructure.controllers;
+
+import com.{{ Company }}.{{ Name }}.infrastructure.configuration.ParameterProperties;
+import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ApiResponse;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/v1/parameters")
+public class ParameterController {
+
+  private final ParameterProperties parameterProperties;
+
+  public ParameterController(ParameterProperties parameterProperties) {
+    this.parameterProperties = parameterProperties;
+  }
+
+  /**
+   * Parametros publicos que el frontend necesita para arrancar: URLs, modelos,
+   * identificadores y textos. Nunca incluye secretos.
+   */
+  @GetMapping
+  public ResponseEntity<ApiResponse> getParameters() {
+    return buildResponse(buildParametersData());
+  }
+
+  private Map<String, Object> buildParametersData() {
+    return new HashMap<>(parameterProperties.getPublicParameters());
+  }
+
+  private ResponseEntity<ApiResponse> buildResponse(Map<String, Object> data) {
+    ApiResponse response =
+        new ApiResponse(data, "Parameters retrieved successfully", HttpStatus.OK.value());
+    return ResponseEntity.ok(response);
+  }
+}
