@@ -6,8 +6,7 @@
 
 ## MVP (Prioridad)
 - [ ] T01 — Separar el generador en componentes independientes: Frontend, Backend y Cloud. Cada componente debe ser un proyecto independiente, con sus propios modelos, estrategias, targets y templates, de forma que el generador sea completamente agnóstico a implementaciones concretas.
-- [ ] T04 — Agregar los secretos a AWS secret manager
-- [ ] T06 — Obtener los parametros y los secrets (Solo los que el ms necesite) al iniciar los ms
+- [ ] El frontend debe obtener los parametros consumiendo un servicio del backend
 - [ ] T07 — El frontend debe obtener la URL del API Gateway y consumir los servicios del backend /actuator/health
 
 ## Frontend
