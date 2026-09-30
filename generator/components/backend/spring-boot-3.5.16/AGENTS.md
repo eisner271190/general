@@ -7,6 +7,10 @@ Plantillas Scriban que generan el microservicio en `<proyecto>/<MICROSERVICE_NAM
 - Build: `./mvnw -q compile` (Maven wrapper, Java 17; Spring Boot parent 3.4.0).
 - Tests, cobertura y calidad: ver skill `java`.
 
+## Despliegue
+- `up.ps1 -Fast` (raíz del proyecto) NO refresca la imagen `:latest` de la Lambda si solo cambió código (Terraform no ve cambio en `image_uri`).
+- Para desplegar cambios de código a la Lambda: ejecutar `<proyecto>/backend/update-all.ps1` (todos los ms) o `<proyecto>/backend/<ms>/update-ms.ps1` (uno), que llaman `aws lambda update-function-code` + `wait function-updated`. No hacer `update-function-code` manual.
+
 ## Convenciones
 - Cargar el skill `java` antes de editar: arquitectura hexagonal, Google Java Style, validación/errores, naming.
 
