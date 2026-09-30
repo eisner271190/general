@@ -1,6 +1,6 @@
-{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.application.services;
+{{ if(Name == "security") }}package {{ PACKAGE }}.application.services;
 
-import com.{{ Company }}.{{ Name }}.domain.servicePorts.AdminUserServicePort;
+import {{ PACKAGE }}.domain.servicePorts.AdminUserServicePort;
 
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

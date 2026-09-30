@@ -1,7 +1,7 @@
-﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.application.mappers;
+{{ if(Name == "security") }}package {{ PACKAGE }}.application.mappers;
 
-import com.{{ Company }}.{{ Name }}.application.dto.TokenResponseDTO;
-import com.{{ Company }}.{{ Name }}.domain.model.TokenResponse;
+import {{ PACKAGE }}.application.dto.TokenResponseDTO;
+import {{ PACKAGE }}.domain.model.TokenResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 

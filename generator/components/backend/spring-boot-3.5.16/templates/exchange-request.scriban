@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.domain.model;
+{{ if(Name == "security") }}package {{ PACKAGE }}.domain.model;
 
 public class ExchangeRequest {
     private String code;

@@ -1,6 +1,6 @@
-﻿package com.{{ Company }}.{{ MicroserviceName }}.domain.ports;
+package {{ PACKAGE }}.domain.ports;
 
-import com.{{ Company }}.{{ MicroserviceName }}.domain.model.{{ EntityCapital }};
+import {{ PACKAGE }}.domain.model.{{ EntityCapital }};
 
 import reactor.core.publisher.Mono;
 

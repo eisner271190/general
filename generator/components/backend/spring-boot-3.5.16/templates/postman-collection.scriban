@@ -1,7 +1,7 @@
 {{ open_b = "{" + "{" }}{{ close_b = "}" + "}" }}{
   "info": {
-    "name": "{{ MicroserviceName }}",
-    "description": "Colección de endpoints del microservicio {{ MicroserviceName }}.\n\nURL BASE (API Gateway):\n  Se rellena sola al ejecutar cloud/up.ps1 (tras el apply escribe terraform output http_api_url en esta colección).\n  Manual: cd cloud/terraform/{{ MicroserviceName }} && terraform output http_api_url -> pegar en la variable baseUrl.\n\nAUTENTICACIÓN:\n  - Ejecutar Users > Login para guardar el token (variable token) y el usuario (variable username).\n  - Rutas públicas (sin token): /api/v1/users/**, /api/v1/parameters y /actuator/health. El resto requiere Authorization: Bearer.\n\nPARÁMETROS:\n  - GET /api/v1/parameters devuelve la configuración pública que necesita el frontend; nunca secretos.",
+    "name": "{{ Name }}",
+    "description": "Colección de endpoints del microservicio {{ Name }}.\n\nURL BASE (API Gateway):\n  Se rellena sola al ejecutar cloud/up.ps1 (tras el apply escribe terraform output http_api_url en esta colección).\n  Manual: cd cloud/terraform/{{ Name }} && terraform output http_api_url -> pegar en la variable baseUrl.\n\nAUTENTICACIÓN:\n  - Ejecutar Users > Login para guardar el token (variable token) y el usuario (variable username).\n  - Rutas públicas (sin token): /api/v1/users/**, /api/v1/parameters y /actuator/health. El resto requiere Authorization: Bearer.\n\nPARÁMETROS:\n  - GET /api/v1/parameters devuelve la configuración pública que necesita el frontend; nunca secretos.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "event": [
@@ -1080,6 +1080,112 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }],
               "body": "{\"data\":null,\"message\":\"Código de recuperación enviado\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            }
+          ]
+        }
+      ]
+    }{{ end }}{{ if(Name == "quizapi") }},
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "Get Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-User-Id", "value": "user-123" }],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/subscriptions/status",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "subscriptions", "status"]
+            },
+            "description": "Obtiene el estado de suscripción del usuario."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":{\"isActive\":true,\"productId\":\"premium_monthly\",\"expirationAtMs\":1730278400000},\"message\":\"Status retrieved\",\"statusCode\":200}"
+            }
+          ]
+        },
+        {
+          "name": "Sync",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "X-User-Id", "value": "user-123" }],
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/subscriptions/sync",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "subscriptions", "sync"]
+            },
+            "description": "Sincroniza el estado de suscripción con RevenueCat (tras compra)."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":{\"isActive\":true,\"productId\":\"premium_monthly\",\"expirationAtMs\":1730278400000},\"message\":\"Sync completed\",\"statusCode\":200}"
+            }
+          ]
+        },
+        {
+          "name": "Webhook",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 2xx', function () { pm.response.to.have.success; });"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"evt_abc123\",\n  \"type\": \"RENEWAL\",\n  \"userId\": \"user-123\",\n  \"productId\": \"premium_monthly\",\n  \"store\": \"PLAY_STORE\",\n  \"purchasedAtMs\": 1727600000000,\n  \"expirationAtMs\": 1730278400000\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/subscriptions/webhook",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "subscriptions", "webhook"]
+            },
+            "description": "Recibe webhooks de RevenueCat (renovaciones, cancelaciones, reembolsos)."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Webhook processed\",\"statusCode\":200}"
             }
           ]
         }

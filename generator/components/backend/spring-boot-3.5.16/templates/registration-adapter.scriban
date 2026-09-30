@@ -1,8 +1,8 @@
-{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.infrastructure.adapters;
+{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.adapters;
 
-import com.{{ Company }}.{{ Name }}.domain.ports.RegistrationPort;
-import com.{{ Company }}.{{ Name }}.infrastructure.configuration.cloud.aws.CognitoClient;
-import com.{{ Company }}.{{ Name }}.domain.model.*;
+import {{ PACKAGE }}.domain.ports.RegistrationPort;
+import {{ PACKAGE }}.infrastructure.configuration.cloud.aws.CognitoClient;
+import {{ PACKAGE }}.domain.model.*;
 
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;

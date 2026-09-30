@@ -1,4 +1,4 @@
-﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.application.dto;
+{{ if(Name == "security") }}package {{ PACKAGE }}.application.dto;
 
 public class TokenRequestDTO {
     private String username;

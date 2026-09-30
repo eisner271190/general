@@ -1,6 +1,6 @@
-﻿package com.{{ Company }}.{{ Name }}.infrastructure.controllers;
-import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ApiResponse;
-import com.{{ Company }}.{{ Name }}.infrastructure.configuration.GeneralException;
+package {{ PACKAGE }}.infrastructure.controllers;
+import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
+import {{ PACKAGE }}.infrastructure.configuration.GeneralException;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

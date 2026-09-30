@@ -1,6 +1,6 @@
-﻿{{- if ConsumedEvents.size > 0 }}package com.{{ Company }}.{{ Name }}.infrastructure.controllers;
+{{- if ConsumedEvents.size > 0 }}package {{ PACKAGE }}.infrastructure.controllers;
 
-import com.{{ Company }}.{{ Name }}.infrastructure.configuration.cloud.aws.SqsReceiver;
+import {{ PACKAGE }}.infrastructure.configuration.cloud.aws.SqsReceiver;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 

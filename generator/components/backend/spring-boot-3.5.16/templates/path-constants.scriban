@@ -1,4 +1,4 @@
-﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.infrastructure.configuration.authentication.jwt;
+{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.configuration.authentication.jwt;
 
 import java.util.Arrays;
 import java.util.HashSet;

@@ -1,0 +1,41 @@
+package {{ PACKAGE }}.infrastructure.controllers;
+
+import {{ PACKAGE }}.application.dto.SubscriptionStatusResponseDTO;
+import {{ PACKAGE }}.application.dto.WebhookEventDTO;
+import {{ PACKAGE }}.domain.servicePorts.ISubscriptionServicePort;
+import {{ PACKAGE }}.domain.servicePorts.IWebhookServicePort;
+import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequestMapping("/api/v1/subscriptions")
+public class SubscriptionController {
+
+    private final ISubscriptionServicePort subscriptionService;
+    private final IWebhookServicePort webhookService;
+
+    public SubscriptionController(ISubscriptionServicePort subscriptionService, IWebhookServicePort webhookService) {
+        this.subscriptionService = subscriptionService;
+        this.webhookService = webhookService;
+    }
+
+    @PostMapping("/webhook")
+    public Mono<ResponseEntity<ApiResponse>> handleWebhook(@RequestBody WebhookEventDTO event) {
+        return webhookService.processWebhook(event)
+            .then(Mono.just(ResponseEntity.ok(new ApiResponse(null, "Webhook processed", 200))));
+    }
+
+    @GetMapping("/status")
+    public Mono<ResponseEntity<ApiResponse>> getStatus(@RequestHeader("X-User-Id") String userId) {
+        return subscriptionService.getStatus(userId)
+            .map(response -> ResponseEntity.ok(new ApiResponse(response, "Status retrieved", 200)));
+    }
+
+    @PostMapping("/sync")
+    public Mono<ResponseEntity<ApiResponse>> sync(@RequestHeader("X-User-Id") String userId) {
+        return subscriptionService.syncFromRevenueCat(userId)
+            .map(response -> ResponseEntity.ok(new ApiResponse(response, "Sync completed", 200)));
+    }
+}

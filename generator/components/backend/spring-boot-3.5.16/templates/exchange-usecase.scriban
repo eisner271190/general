@@ -1,8 +1,8 @@
-{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.domain.usecase;
+{{ if(Name == "security") }}package {{ PACKAGE }}.domain.usecase;
 
-import com.{{ Company }}.{{ Name }}.domain.servicePorts.ExchangeServicePort;
-import com.{{ Company }}.{{ Name }}.domain.ports.ExchangePort;
-import com.{{ Company }}.{{ Name }}.domain.model.*;
+import {{ PACKAGE }}.domain.servicePorts.ExchangeServicePort;
+import {{ PACKAGE }}.domain.ports.ExchangePort;
+import {{ PACKAGE }}.domain.model.*;
 
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

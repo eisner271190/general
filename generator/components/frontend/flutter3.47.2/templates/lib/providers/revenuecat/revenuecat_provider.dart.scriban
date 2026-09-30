@@ -1,201 +1,65 @@
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../core/config/monetization_env.dart';
 import '../../core/interfaces/monetization_provider.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/models/user_entitlement.dart';
 
 class RevenueCatProvider implements MonetizationProvider {
-  String _elapsed(Stopwatch sw) => '[${sw.elapsedMilliseconds}ms]';
-  Offerings? _offerings;
+  final _secureStorage = const FlutterSecureStorage();
   final _entitlementController = StreamController<UserEntitlement>.broadcast();
-  static const _plansKey = 'revenuecat_plans_cache';
-  static const _entitlementKey = 'revenuecat_entitlement_cache';
+  static const _entitlementCacheKey = 'subscription_status_cache';
+  static const _entitlementCacheTimestampKey = 'subscription_status_timestamp';
 
   @override
   Future<void> initialize() async {
-    final sw = Stopwatch()..start();
-    debugPrint(
-      '[RevenueCatProvider] Inicializando RevenueCat... ${_elapsed(sw)}',
-    );
-    if (kIsWeb) {
-      debugPrint(
-        '[RevenueCatProvider] Web detectado, no se inicializa RevenueCat. ${_elapsed(sw)}',
-      );
-      return;
-    }
+    if (kIsWeb) return;
     try {
       await Purchases.setLogLevel(LogLevel.debug);
-      debugPrint('[RevenueCatProvider] LogLevel configurado. ${_elapsed(sw)}');
       await Purchases.configure(
         PurchasesConfiguration(MonetizationEnv.revenueCatKey),
       );
-      debugPrint('[RevenueCatProvider] Purchases configurado. ${_elapsed(sw)}');
-      _offerings = await Purchases.getOfferings();
-      debugPrint('[RevenueCatProvider] Offerings obtenidos. ${_elapsed(sw)}');
-      await Purchases.getCustomerInfo();
-      debugPrint('[RevenueCatProvider] CustomerInfo obtenido. ${_elapsed(sw)}');
-      debugPrint(
-        '[RevenueCatProvider] RevenueCat inicializado correctamente. ${_elapsed(sw)}',
-      );
-      _emitEntitlement();
+      await _syncFromBackend();
     } catch (e) {
-      debugPrint(
-        '[RevenueCatProvider] Error al inicializar RevenueCat: $e ${_elapsed(sw)}',
-      );
+      debugPrint('[RevenueCatProvider] Error initializing: $e');
       rethrow;
     }
   }
 
   @override
   Future<List<SubscriptionPlan>> getPlans() async {
-    final sw = Stopwatch()..start();
-    debugPrint(
-      '[RevenueCatProvider] Obteniendo planes de suscripción... ${_elapsed(sw)}',
-    );
-    final prefs = await SharedPreferences.getInstance();
-    debugPrint(
-      '[RevenueCatProvider] SharedPreferences obtenido. ${_elapsed(sw)}',
-    );
-    final cached = prefs.getString(_plansKey);
-    if (cached != null) {
-      try {
-        final decoded = jsonDecode(cached) as List;
-        final cachedPlans = decoded
-            .map(
-              (e) => SubscriptionPlan(
-                id: e['id'],
-                name: e['name'],
-                price: e['price'],
-                period: e['period'],
-              ),
-            )
-            .toList();
-        debugPrint(
-          '[RevenueCatProvider] Planes obtenidos desde caché. ${_elapsed(sw)}',
-        );
-        // Devuelve el caché mientras se actualiza en background
-        _updatePlansCache();
-        return cachedPlans;
-      } catch (e) {
-        debugPrint(
-          '[RevenueCatProvider] Error al leer planes desde caché: $e ${_elapsed(sw)}',
-        );
-      }
-    }
-    debugPrint(
-      '[RevenueCatProvider] No hay caché, obteniendo planes desde RevenueCat. ${_elapsed(sw)}',
-    );
-    return await _updatePlansCache();
-  }
-
-  Future<List<SubscriptionPlan>> _updatePlansCache() async {
-    final sw = Stopwatch()..start();
-    debugPrint(
-      '[RevenueCatProvider] Actualizando caché de planes... ${_elapsed(sw)}',
-    );
-    final plans = <SubscriptionPlan>[];
-    if (_offerings?.current != null) {
-      for (final package in _offerings!.current!.availablePackages) {
-        plans.add(
-          SubscriptionPlan(
-            id: package.identifier,
-            name: package.storeProduct.title,
-            price: package.storeProduct.price.toString(),
-            period: package.storeProduct.subscriptionPeriod ?? '',
-          ),
-        );
-      }
-    }
-    final prefs = await SharedPreferences.getInstance();
-    debugPrint(
-      '[RevenueCatProvider] SharedPreferences obtenido. ${_elapsed(sw)}',
-    );
-    try {
-      prefs.setString(
-        _plansKey,
-        jsonEncode(
-          plans
-              .map(
-                (e) => {
-                  'id': e.id,
-                  'name': e.name,
-                  'price': e.price,
-                  'period': e.period,
-                },
-              )
-              .toList(),
-        ),
+    final offerings = await Purchases.getOfferings();
+    if (offerings.current == null) return [];
+    return offerings.current!.availablePackages.map((package) {
+      return SubscriptionPlan(
+        id: package.identifier,
+        name: package.storeProduct.title,
+        price: package.storeProduct.price.toString(),
+        period: package.storeProduct.subscriptionPeriod ?? '',
       );
-      debugPrint(
-        '[RevenueCatProvider] Caché de planes actualizado. ${_elapsed(sw)}',
-      );
-    } catch (e) {
-      debugPrint(
-        '[RevenueCatProvider] Error al actualizar caché de planes: $e ${_elapsed(sw)}',
-      );
-    }
-    return plans;
+    }).toList();
   }
 
   @override
   Future<void> purchase(String planId) async {
-    final sw = Stopwatch()..start();
-    debugPrint(
-      '[RevenueCatProvider] Intentando comprar plan: $planId ${_elapsed(sw)}',
-    );
-    final packages = _offerings?.current?.availablePackages;
-    final package = packages?.firstWhereOrNull((p) => p.identifier == planId);
-    if (package != null) {
-      try {
-        final params = PurchaseParams.package(package);
-        await Purchases.purchase(params);
-        debugPrint(
-          '[RevenueCatProvider] purchase() completado. ${_elapsed(sw)}',
-        );
-        await Purchases.getCustomerInfo();
-        debugPrint('[RevenueCatProvider] CustomerInfo actualizado. ${_elapsed(sw)}');
-        debugPrint(
-          '[RevenueCatProvider] Compra exitosa para plan: $planId ${_elapsed(sw)}',
-        );
-        _emitEntitlement();
-      } catch (e) {
-        debugPrint(
-          '[RevenueCatProvider] Error al comprar plan $planId: $e ${_elapsed(sw)}',
-        );
-        rethrow;
-      }
-    } else {
-      debugPrint(
-        '[RevenueCatProvider] Plan $planId no encontrado entre los paquetes disponibles. ${_elapsed(sw)}',
-      );
+    final offerings = await Purchases.getOfferings();
+    final package = offerings.current?.availablePackages
+        .firstWhereOrNull((p) => p.identifier == planId);
+    if (package == null) {
+      throw Exception('Plan $planId not found');
     }
+    await Purchases.purchase(PurchaseParams.package(package));
+    await _syncFromBackend();
   }
 
   @override
   Future<void> restore() async {
-    final sw = Stopwatch()..start();
-    debugPrint('[RevenueCatProvider] Restaurando compras... ${_elapsed(sw)}');
-    try {
-      await Purchases.restorePurchases();
-      debugPrint(
-        '[RevenueCatProvider] restorePurchases() completado. ${_elapsed(sw)}',
-      );
-      await Purchases.getCustomerInfo();
-      debugPrint('[RevenueCatProvider] CustomerInfo actualizado. ${_elapsed(sw)}');
-      debugPrint(
-        '[RevenueCatProvider] Compras restauradas correctamente. ${_elapsed(sw)}',
-      );
-      _emitEntitlement();
-    } catch (e) {
-      debugPrint(
-        '[RevenueCatProvider] Error al restaurar compras: $e ${_elapsed(sw)}',
-      );
-      rethrow;
-    }
+    await Purchases.restorePurchases();
+    await _syncFromBackend();
   }
 
   @override
@@ -203,54 +67,52 @@ class RevenueCatProvider implements MonetizationProvider {
     return _entitlementController.stream;
   }
 
-  void _emitEntitlement() async {
-    final sw = Stopwatch()..start();
-    debugPrint(
-      '[RevenueCatProvider] Emisión de entitlement... ${_elapsed(sw)}',
-    );
-    final prefs = await SharedPreferences.getInstance();
-    debugPrint('[RevenueCatProvider] SharedPreferences obtenido. ${_elapsed(sw)}');
+  Future<void> _syncFromBackend() async {
     try {
-      final info = await Purchases.getCustomerInfo();
-      debugPrint('[RevenueCatProvider] CustomerInfo obtenido. ${_elapsed(sw)}');
-      final entitlements = info.entitlements.active.values;
-      if (entitlements.isNotEmpty) {
-        final planId = entitlements.first.identifier;
-        final ent = UserEntitlement(isActive: true, planId: planId);
-        _entitlementController.add(ent);
-        prefs.setString(
-          _entitlementKey,
-          jsonEncode({'isActive': true, 'planId': planId}),
-        );
-        debugPrint(
-          '[RevenueCatProvider] Entitlement activo emitido y guardado en caché. ${_elapsed(sw)}',
-        );
-      } else {
-        _entitlementController.add(UserEntitlement(isActive: false));
-        prefs.setString(_entitlementKey, jsonEncode({'isActive': false}));
-        debugPrint(
-          '[RevenueCatProvider] No hay entitlement activo, se guardó estado inactivo. ${_elapsed(sw)}',
-        );
+      final response = await http.get(
+        Uri.parse('${MonetizationEnv.apiBaseUrl}/api/v1/subscriptions/status'),
+        headers: await _buildAuthHeaders(),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body)['data'];
+        final isActive = data['isActive'] as bool;
+        final planId = data['productId'] as String? ?? '';
+        final entitlement = UserEntitlement(isActive: isActive, planId: planId);
+        _entitlementController.add(entitlement);
+        await _cacheEntitlement(entitlement);
       }
     } catch (e) {
-      debugPrint(
-        '[RevenueCatProvider] Error al emitir entitlement: $e ${_elapsed(sw)}',
-      );
-      // Si falla, intenta emitir el caché
-      final cached = prefs.getString(_entitlementKey);
+      debugPrint('[RevenueCatProvider] Sync failed, using cache: $e');
+      final cached = await _getCachedEntitlement();
       if (cached != null) {
-        final data = jsonDecode(cached);
-        _entitlementController.add(
-          UserEntitlement(
-            isActive: data['isActive'] ?? false,
-            planId: data['planId'],
-          ),
-        );
-        debugPrint(
-          '[RevenueCatProvider] Entitlement emitido desde caché. ${_elapsed(sw)}',
-        );
+        _entitlementController.add(cached);
       }
     }
   }
-}
 
+  Future<Map<String, String>> _buildAuthHeaders() async {
+    final token = await _secureStorage.read(key: 'jwt_token');
+    return token != null ? {'Authorization': 'Bearer $token'} : {};
+  }
+
+  Future<void> _cacheEntitlement(UserEntitlement entitlement) async {
+    await _secureStorage.write(
+      key: _entitlementCacheKey,
+      value: jsonEncode({'isActive': entitlement.isActive, 'planId': entitlement.planId}),
+    );
+    await _secureStorage.write(
+      key: _entitlementCacheTimestampKey,
+      value: DateTime.now().millisecondsSinceEpoch.toString(),
+    );
+  }
+
+  Future<UserEntitlement?> _getCachedEntitlement() async {
+    final cached = await _secureStorage.read(key: _entitlementCacheKey);
+    if (cached == null) return null;
+    final data = jsonDecode(cached);
+    return UserEntitlement(
+      isActive: data['isActive'] ?? false,
+      planId: data['planId'],
+    );
+  }
+}

@@ -1,0 +1,58 @@
+package {{ PACKAGE }}.domain.usecase;
+
+import {{ PACKAGE }}.application.dto.SubscriptionStatusResponseDTO;
+import {{ PACKAGE }}.domain.model.Subscription;
+import {{ PACKAGE }}.domain.ports.SubscriptionPort;
+import {{ PACKAGE }}.domain.servicePorts.ISubscriptionServicePort;
+import {{ PACKAGE }}.infrastructure.adapters.RevenueCatAdapter;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+@Service
+public class SubscriptionUseCase implements ISubscriptionServicePort {
+
+    private final SubscriptionPort subscriptionPort;
+    private final RevenueCatAdapter revenueCatAdapter;
+
+    public SubscriptionUseCase(SubscriptionPort subscriptionPort, RevenueCatAdapter revenueCatAdapter) {
+        this.subscriptionPort = subscriptionPort;
+        this.revenueCatAdapter = revenueCatAdapter;
+    }
+
+    @Override
+    public Mono<SubscriptionStatusResponseDTO> getStatus(String userId) {
+        return subscriptionPort.findActiveSubscription(userId)
+            .switchIfEmpty(fetchAndCacheFromRevenueCat(userId))
+            .map(this::toResponse);
+    }
+
+    @Override
+    public Mono<SubscriptionStatusResponseDTO> syncFromRevenueCat(String userId) {
+        return revenueCatAdapter.fetchCustomerInfo(userId)
+            .flatMap(this::saveAndMap)
+            .switchIfEmpty(createInactiveSubscription(userId));
+    }
+
+    private Mono<Subscription> fetchAndCacheFromRevenueCat(String userId) {
+        return revenueCatAdapter.fetchCustomerInfo(userId)
+            .flatMap(subscriptionPort::saveSubscription);
+    }
+
+    private Mono<SubscriptionStatusResponseDTO> saveAndMap(Subscription subscription) {
+        return subscriptionPort.saveSubscription(subscription)
+            .map(this::toResponse);
+    }
+
+    private Mono<SubscriptionStatusResponseDTO> createInactiveSubscription(String userId) {
+        return subscriptionPort.saveSubscription(Subscription.inactive(userId))
+            .map(this::toResponse);
+    }
+
+    private SubscriptionStatusResponseDTO toResponse(Subscription subscription) {
+        return new SubscriptionStatusResponseDTO(
+            subscription.isActive(),
+            subscription.getProductId(),
+            subscription.getExpirationAtMs()
+        );
+    }
+}

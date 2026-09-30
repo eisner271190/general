@@ -1,10 +1,12 @@
-package com.{{ Company }}.{{ Name }}.infrastructure.controllers;
+package {{ PACKAGE }}.infrastructure.controllers;
 
-import com.{{ Company }}.{{ Name }}.infrastructure.configuration.ParameterProperties;
-import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ApiResponse;
+import {{ PACKAGE }}.infrastructure.configuration.ParameterProperties;
+import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -14,22 +16,25 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 public class ParameterControllerTest {
 
-  private WebTestClient webTestClient;
+  @Mock
   private ParameterProperties parameterProperties;
+
+  private WebTestClient webTestClient;
 
   @BeforeEach
   public void setup() {
-    parameterProperties = new ParameterProperties();
+    MockitoAnnotations.openMocks(this);
     webTestClient = createWebTestClient();
   }
 
   @Test
   public void testGetParameters_ReturnsPublicParameters() {
-    parameterProperties.setPublicConfig(
-        Map.of("api-url", "https://api.openrouter.ai/api/v1", "model", "gpt-4o-mini"));
+    when(parameterProperties.getPublicParameters())
+        .thenReturn(Map.of("api-url", "https://api.openrouter.ai/api/v1", "model", "gpt-4o-mini"));
 
     webTestClient.get()
         .uri("/api/v1/parameters")
@@ -48,7 +53,11 @@ public class ParameterControllerTest {
 
   @Test
   public void testGetParameters_OmitsSensitiveParameter() {
-    parameterProperties.setPublicConfig(sensitiveAndPublicConfig());
+    Map<String, String> config = new LinkedHashMap<>();
+    config.put("model", "gpt-4o-mini");
+    config.put("api-key", "sk-no-debe-filtrarse");
+    config.put("jwt-secret", "no-debe-filtrarse");
+    when(parameterProperties.getPublicParameters()).thenReturn(config);
 
     webTestClient.get()
         .uri("/api/v1/parameters")
@@ -65,6 +74,8 @@ public class ParameterControllerTest {
 
   @Test
   public void testGetParameters_EmptyConfigReturnsEmptyMap() {
+    when(parameterProperties.getPublicParameters()).thenReturn(Map.of());
+
     webTestClient.get()
         .uri("/api/v1/parameters")
         .exchange()
@@ -75,13 +86,5 @@ public class ParameterControllerTest {
 
   private WebTestClient createWebTestClient() {
     return WebTestClient.bindToController(new ParameterController(parameterProperties)).build();
-  }
-
-  private Map<String, String> sensitiveAndPublicConfig() {
-    Map<String, String> config = new LinkedHashMap<>();
-    config.put("model", "gpt-4o-mini");
-    config.put("api-key", "sk-no-debe-filtrarse");
-    config.put("jwt-secret", "no-debe-filtrarse");
-    return config;
   }
 }

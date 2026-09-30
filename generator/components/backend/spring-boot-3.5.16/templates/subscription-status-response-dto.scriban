@@ -1,0 +1,7 @@
+package {{ PACKAGE }}.application.dto;
+
+public record SubscriptionStatusResponseDTO(
+    Boolean isActive,
+    String productId,
+    Long expirationAtMs
+) {}

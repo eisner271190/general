@@ -1,0 +1,29 @@
+package {{ PACKAGE }}.domain.usecase;
+
+import {{ PACKAGE }}.application.dto.WebhookEventDTO;
+import {{ PACKAGE }}.domain.servicePorts.IWebhookServicePort;
+import {{ PACKAGE }}.domain.usecase.strategies.UnknownEventStrategy;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+import java.util.Map;
+
+@Service
+public class WebhookUseCase implements IWebhookServicePort {
+
+    private final Map<String, IWebhookStrategy> strategies;
+
+    public WebhookUseCase(Map<String, IWebhookStrategy> strategies) {
+        this.strategies = strategies;
+    }
+
+    @Override
+    public Mono<Void> processWebhook(WebhookEventDTO event) {
+        return findStrategy(event.getType())
+            .handle(event);
+    }
+
+    private IWebhookStrategy findStrategy(String eventType) {
+        return strategies.getOrDefault(eventType, new UnknownEventStrategy());
+    }
+}

@@ -1,4 +1,4 @@
-﻿{{- if ConsumedEvents.size > 0 }}package com.{{ Company }}.{{ Name }}.infrastructure.configuration.cloud.aws;
+{{- if ConsumedEvents.size > 0 }}package {{ PACKAGE }}.infrastructure.configuration.cloud.aws;
 
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;

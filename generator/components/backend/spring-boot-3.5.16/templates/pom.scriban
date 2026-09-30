@@ -1,4 +1,4 @@
-﻿<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
@@ -293,7 +293,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
-          <mainClass>com.{{ Company }}.{{ Name }}.Application</mainClass>
+          <mainClass>{{ PACKAGE }}.Application</mainClass>
           <excludes>
             <exclude>
               <groupId>org.projectlombok</groupId>
@@ -340,23 +340,23 @@
         <artifactId>pitest-maven</artifactId>
         <version>1.17.2</version>
         <configuration>
-          <targetClasses>com.{{ Company }}.{{ Name }}.*</targetClasses>
-          <targetTests>com.{{ Company }}.{{ Name }}.*Test</targetTests>
+          <targetClasses>{{ PACKAGE }}.*</targetClasses>
+          <targetTests>{{ PACKAGE }}.*Test</targetTests>
           <jvmArgs>
             <jvmArg>--add-opens=java.base/java.util=ALL-UNNAMED</jvmArg>
             <jvmArg>--add-opens=java.base/java.lang=ALL-UNNAMED</jvmArg>
           </jvmArgs>
           <excludedClasses>
-            com.{{ Company }}.{{ Name }}.application.dto.*,
-            com.{{ Company }}.{{ Name }}.application.mappers.*,
-            com.{{ Company }}.{{ Name }}.domain.model.*,
-            com.{{ Company }}.{{ Name }}.domain.ports.*,
-            com.{{ Company }}.{{ Name }}.domain.servicePorts.*,
-            com.{{ Company }}.{{ Name }}.infrastructure.configuration.*,
-            com.{{ Company }}.{{ Name }}.infrastructure.entities.*,
-            com.{{ Company }}.{{ Name }}.infrastructure.mappers.*,
-            com.{{ Company }}.{{ Name }}.infrastructure.repositories.*,
-            com.{{ Company }}.{{ Name }}.infrastructure.rest.*
+            {{ PACKAGE }}.application.dto.*,
+            {{ PACKAGE }}.application.mappers.*,
+            {{ PACKAGE }}.domain.model.*,
+            {{ PACKAGE }}.domain.ports.*,
+            {{ PACKAGE }}.domain.servicePorts.*,
+            {{ PACKAGE }}.infrastructure.configuration.*,
+            {{ PACKAGE }}.infrastructure.entities.*,
+            {{ PACKAGE }}.infrastructure.mappers.*,
+            {{ PACKAGE }}.infrastructure.repositories.*,
+            {{ PACKAGE }}.infrastructure.rest.*
           </excludedClasses>
           <features>+CLASSLIMIT(limit[3])</features>
           <threads>2</threads>

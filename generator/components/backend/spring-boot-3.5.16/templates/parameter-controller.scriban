@@ -1,7 +1,7 @@
-package com.{{ Company }}.{{ Name }}.infrastructure.controllers;
+package {{ PACKAGE }}.infrastructure.controllers;
 
-import com.{{ Company }}.{{ Name }}.infrastructure.configuration.ParameterProperties;
-import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ApiResponse;
+import {{ PACKAGE }}.infrastructure.configuration.ParameterProperties;
+import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

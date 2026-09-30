@@ -1,6 +1,6 @@
-﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.repositories;
+package {{ PACKAGE }}.infrastructure.persistence.repositories;
 
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.entities.{{ EntityCapital }}Entity;
+import {{ PACKAGE }}.infrastructure.persistence.entities.{{ EntityCapital }}Entity;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 

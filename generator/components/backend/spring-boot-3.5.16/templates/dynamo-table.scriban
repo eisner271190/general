@@ -1,4 +1,4 @@
-﻿package com.{{ Company }}.{{ Name }}.infrastructure.persistence.providers.dynamodb;
+package {{ PACKAGE }}.infrastructure.persistence.providers.dynamodb;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

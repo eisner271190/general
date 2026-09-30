@@ -1,7 +1,7 @@
-{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.application.mappers;
+{{ if(Name == "security") }}package {{ PACKAGE }}.application.mappers;
 
-import com.{{ Company }}.{{ Name }}.application.dto.ExchangeResponseDTO;
-import com.{{ Company }}.{{ Name }}.domain.model.ExchangeResponse;
+import {{ PACKAGE }}.application.dto.ExchangeResponseDTO;
+import {{ PACKAGE }}.domain.model.ExchangeResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 

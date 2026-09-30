@@ -1,8 +1,8 @@
-﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.mappers.dynamos;
+package {{ PACKAGE }}.infrastructure.persistence.mappers.dynamos;
 
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.dynamos.{{ EntityCapital }}Dynamo;
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.models.{{ EntityCapital }}PersistenceModel;
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.providers.dynamodb.IMapperDynamo;
+import {{ PACKAGE }}.infrastructure.persistence.dynamos.{{ EntityCapital }}Dynamo;
+import {{ PACKAGE }}.infrastructure.persistence.models.{{ EntityCapital }}PersistenceModel;
+import {{ PACKAGE }}.infrastructure.persistence.providers.dynamodb.IMapperDynamo;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

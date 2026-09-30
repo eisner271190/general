@@ -1,6 +1,6 @@
-﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.infrastructure.configuration.cloud.aws;
+{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.configuration.cloud.aws;
 
-import com.{{ Company }}.{{ Name }}.domain.model.*;
+import {{ PACKAGE }}.domain.model.*;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.extern.slf4j.Slf4j;

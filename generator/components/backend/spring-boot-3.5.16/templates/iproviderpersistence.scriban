@@ -1,4 +1,4 @@
-﻿package com.{{ Company }}.{{ Name }}.infrastructure.persistence.providers;
+package {{ PACKAGE }}.infrastructure.persistence.providers;
 
 import reactor.core.publisher.Mono;
 

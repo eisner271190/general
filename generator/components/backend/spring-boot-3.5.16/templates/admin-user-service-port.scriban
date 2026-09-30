@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.domain.servicePorts;
+{{ if(Name == "security") }}package {{ PACKAGE }}.domain.servicePorts;
 
 import reactor.core.publisher.Mono;
 

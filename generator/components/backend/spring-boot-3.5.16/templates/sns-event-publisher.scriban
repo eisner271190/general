@@ -1,4 +1,4 @@
-﻿package com.{{ Company }}.{{ Name }}.infrastructure.configuration.cloud.aws;
+package {{ PACKAGE }}.infrastructure.configuration.cloud.aws;
 
 import com.google.gson.Gson;
 import org.springframework.stereotype.Service;

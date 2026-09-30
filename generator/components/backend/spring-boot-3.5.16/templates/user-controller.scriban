@@ -1,7 +1,7 @@
-﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.infrastructure.controllers;
+{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.controllers;
 
-import com.{{ Company }}.{{ Name }}.application.services.IUserService;
-import com.{{ Company }}.{{ Name }}.application.dto.*;
+import {{ PACKAGE }}.application.services.IUserService;
+import {{ PACKAGE }}.application.dto.*;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

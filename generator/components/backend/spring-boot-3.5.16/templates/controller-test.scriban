@@ -1,8 +1,8 @@
-﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.controllers;
+package {{ PACKAGE }}.infrastructure.controllers;
 
-import com.{{ Company }}.{{ MicroserviceName }}.application.dto.{{ EntityCapital }}DTO;
-import com.{{ Company }}.{{ MicroserviceName }}.application.services.I{{ EntityCapital }}Service;
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.rest.response.ApiResponse;
+import {{ PACKAGE }}.application.dto.{{ EntityCapital }}DTO;
+import {{ PACKAGE }}.application.services.I{{ EntityCapital }}Service;
+import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

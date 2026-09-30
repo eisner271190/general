@@ -1,7 +1,7 @@
-﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.mappers.models;
+package {{ PACKAGE }}.infrastructure.persistence.mappers.models;
 
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.models.{{ EntityCapital }}PersistenceModel;
-import com.{{ Company }}.{{ MicroserviceName }}.domain.model.{{ EntityCapital }};
+import {{ PACKAGE }}.infrastructure.persistence.models.{{ EntityCapital }}PersistenceModel;
+import {{ PACKAGE }}.domain.model.{{ EntityCapital }};
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 

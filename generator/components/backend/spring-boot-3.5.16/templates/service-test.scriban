@@ -1,8 +1,8 @@
-﻿package com.{{ Company }}.{{ MicroserviceName }}.application.services;
+package {{ PACKAGE }}.application.services;
 
-import com.{{ Company }}.{{ MicroserviceName }}.application.dto.{{ EntityCapital }}DTO;
-import com.{{ Company }}.{{ MicroserviceName }}.domain.model.{{ EntityCapital }};
-import com.{{ Company }}.{{ MicroserviceName }}.domain.servicePorts.{{ EntityCapital }}ServicePort;
+import {{ PACKAGE }}.application.dto.{{ EntityCapital }}DTO;
+import {{ PACKAGE }}.domain.model.{{ EntityCapital }};
+import {{ PACKAGE }}.domain.servicePorts.{{ EntityCapital }}ServicePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;

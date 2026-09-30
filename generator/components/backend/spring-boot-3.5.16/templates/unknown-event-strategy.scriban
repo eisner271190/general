@@ -1,0 +1,25 @@
+package {{ PACKAGE }}.domain.usecase.strategies;
+
+import {{ PACKAGE }}.application.dto.WebhookEventDTO;
+import {{ PACKAGE }}.domain.usecase.IWebhookStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+
+@Component
+public class UnknownEventStrategy implements IWebhookStrategy {
+
+    private static final Logger log = LoggerFactory.getLogger(UnknownEventStrategy.class);
+
+    @Override
+    public String eventType() {
+        return "UNKNOWN";
+    }
+
+    @Override
+    public Mono<Void> handle(WebhookEventDTO event) {
+        log.warn("Unknown webhook event type: {}", event.type());
+        return Mono.empty();
+    }
+}

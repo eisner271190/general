@@ -1,8 +1,8 @@
-﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.adapters;
+package {{ PACKAGE }}.infrastructure.adapters;
 
-import com.{{ Company }}.{{ MicroserviceName }}.domain.model.{{ EntityCapital }};
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.models.{{ EntityCapital }}PersistenceModel;
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.providers.IProviderPersistence;
+import {{ PACKAGE }}.domain.model.{{ EntityCapital }};
+import {{ PACKAGE }}.infrastructure.persistence.models.{{ EntityCapital }}PersistenceModel;
+import {{ PACKAGE }}.infrastructure.persistence.providers.IProviderPersistence;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

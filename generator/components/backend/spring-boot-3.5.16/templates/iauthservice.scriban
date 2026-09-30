@@ -1,7 +1,7 @@
-﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.infrastructure.configuration.authentication;
+{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.configuration.authentication;
 
-import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ApiResponse;
-import com.{{ Company }}.{{ Name }}.application.dto.AuthRequestDTO;
+import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
+import {{ PACKAGE }}.application.dto.AuthRequestDTO;
 import reactor.core.publisher.Mono;
 
 public interface IAuthService {

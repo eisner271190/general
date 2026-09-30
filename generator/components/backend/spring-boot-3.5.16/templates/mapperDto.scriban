@@ -1,7 +1,7 @@
-﻿package com.{{ Company }}.{{ MicroserviceName }}.application.mappers;
+package {{ PACKAGE }}.application.mappers;
 
-import com.{{ Company }}.{{ MicroserviceName }}.application.dto.{{ EntityCapital }}DTO;
-import com.{{ Company }}.{{ MicroserviceName }}.domain.model.{{ EntityCapital }};
+import {{ PACKAGE }}.application.dto.{{ EntityCapital }}DTO;
+import {{ PACKAGE }}.domain.model.{{ EntityCapital }};
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 

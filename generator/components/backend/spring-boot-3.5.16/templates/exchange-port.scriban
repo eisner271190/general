@@ -1,6 +1,6 @@
-{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.domain.ports;
+{{ if(Name == "security") }}package {{ PACKAGE }}.domain.ports;
 
-import com.{{ Company }}.{{ Name }}.domain.model.*;
+import {{ PACKAGE }}.domain.model.*;
 
 import reactor.core.publisher.Mono;
 

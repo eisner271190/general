@@ -20,6 +20,7 @@ internal static class GeneratorConstants
     public const string ApplicationNameVariable = "APPLICATION_NAME";
     public const string ApplicationIdVariable = "APPLICATION_ID";
     public const string ApplicationPackageVariable = "APPLICATION_PACKAGE";
+    public const string PackageVariable = "PACKAGE";
     public const string EnvironmentVariable = "ENVIRONMENT";
     public const string EnvironmentVariablesHclVariable = "ENVIRONMENT_VARIABLES_HCL";
     public const string MicroserviceNameVariable = "MICROSERVICE_NAME";

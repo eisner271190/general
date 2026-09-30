@@ -1,4 +1,4 @@
-﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.models;
+package {{ PACKAGE }}.infrastructure.persistence.models;
 
 public class {{ EntityCapital }}PersistenceModel {
     private Long id;

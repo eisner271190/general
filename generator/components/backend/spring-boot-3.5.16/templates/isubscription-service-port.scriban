@@ -1,0 +1,9 @@
+package {{ PACKAGE }}.domain.servicePorts;
+
+import {{ PACKAGE }}.application.dto.SubscriptionStatusResponseDTO;
+import reactor.core.publisher.Mono;
+
+public interface ISubscriptionServicePort {
+    Mono<SubscriptionStatusResponseDTO> getStatus(String userId);
+    Mono<SubscriptionStatusResponseDTO> syncFromRevenueCat(String userId);
+}

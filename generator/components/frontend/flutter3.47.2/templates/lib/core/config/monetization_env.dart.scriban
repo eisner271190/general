@@ -36,4 +36,11 @@ abstract final class MonetizationEnv {
         'TERMS_URL',
         '',
       );
+
+  /// URL base del backend API.
+  static String get apiBaseUrl =>
+      ParametersInitializer.instance!.getParameterOrDefault(
+        'API_BASE_URL',
+        '',
+      );
 }

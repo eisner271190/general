@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.application.services;
+{{ if(Name == "security") }}package {{ PACKAGE }}.application.services;
 
 import reactor.core.publisher.Mono;
 

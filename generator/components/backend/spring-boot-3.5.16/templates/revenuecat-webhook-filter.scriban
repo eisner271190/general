@@ -1,0 +1,88 @@
+package {{ PACKAGE }}.infrastructure.configuration.webfilters;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
+import reactor.core.publisher.Mono;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HexFormat;
+
+@Component
+public class RevenueCatWebhookFilter implements WebFilter {
+
+    private static final String HMAC_ALGORITHM = "HmacSHA256";
+    private static final long MAX_TIMESTAMP_DIFF_MS = 5 * 60 * 1000;
+
+    @Value("${revenuecat.webhook-secret}")
+    private String webhookSecret;
+
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        if (!isWebhookRequest(exchange)) {
+            return chain.filter(exchange);
+        }
+        return readRawBody(exchange)
+            .flatMap(rawBody -> verifyHmac(rawBody, exchange))
+            .flatMap(isValid -> isValid
+                ? chain.filter(exchange)
+                : unauthorized(exchange));
+    }
+
+    private boolean isWebhookRequest(ServerWebExchange exchange) {
+        return exchange.getRequest().getPath().value().contains("/subscriptions/webhook");
+    }
+
+    private Mono<String> readRawBody(ServerWebExchange exchange) {
+        return exchange.getRequest().getBody()
+            .map(DataBuffer::toByteBuffer)
+            .map(buffer -> StandardCharsets.UTF_8.decode(buffer).toString())
+            .reduce(String::concat);
+    }
+
+    private Mono<Boolean> verifyHmac(String rawBody, ServerWebExchange exchange) {
+        return Mono.fromCallable(() -> {
+            String signatureHeader = exchange.getRequest().getHeaders().getFirst("X-RevenueCat-Webhook-Signature");
+            if (signatureHeader == null) {
+                return false;
+            }
+            String[] parts = signatureHeader.split(",");
+            long timestamp = Long.parseLong(parts[0].split("=")[1]);
+            String expectedHmac = parts[1].split("=")[1];
+            if (Math.abs(System.currentTimeMillis() - timestamp) > MAX_TIMESTAMP_DIFF_MS) {
+                return false;
+            }
+            String computedHmac = computeHmac(timestamp, rawBody);
+            return MessageDigest.isEqual(
+                computedHmac.getBytes(StandardCharsets.UTF_8),
+                expectedHmac.getBytes(StandardCharsets.UTF_8)
+            );
+        });
+    }
+
+    private String computeHmac(long timestamp, String rawBody) {
+        try {
+            Mac mac = Mac.getInstance(HMAC_ALGORITHM);
+            SecretKeySpec secretKey = new SecretKeySpec(webhookSecret.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM);
+            mac.init(secretKey);
+            String data = timestamp + "." + rawBody;
+            byte[] hash = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to compute HMAC", e);
+        }
+    }
+
+    private Mono<Void> unauthorized(ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+        return exchange.getResponse().setComplete();
+    }
+}

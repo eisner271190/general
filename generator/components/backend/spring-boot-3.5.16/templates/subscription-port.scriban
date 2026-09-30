@@ -1,0 +1,10 @@
+package {{ PACKAGE }}.domain.ports;
+
+import {{ PACKAGE }}.domain.model.Subscription;
+import reactor.core.publisher.Mono;
+
+public interface SubscriptionPort {
+    Mono<Subscription> findActiveSubscription(String userId);
+    Mono<Subscription> saveSubscription(Subscription subscription);
+    Mono<Subscription> updateStatus(String userId, String status);
+}

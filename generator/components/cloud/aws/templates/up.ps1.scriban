@@ -272,13 +272,21 @@ function New-ApplicationSecretDefault {
         return 'PLACEHOLDER_CAMBIAR_EN_AWS'
     }
 
+    if ($Key -eq 'revenuecat-secret-key') {
+        return 'REVENUECAT_SECRET_KEY_PLACEHOLDER'
+    }
+
+    if ($Key -eq 'revenuecat-webhook-secret') {
+        return 'REVENUECAT_WEBHOOK_SECRET_PLACEHOLDER'
+    }
+
     throw "Sin valor por defecto para la clave $Key"
 }
 
 function Get-MissingApplicationSecretKey {
     param([Parameter(Mandatory)][System.Collections.IDictionary]$Secret)
 
-    $seededKeys = @('jwt-secret', 'api-key')
+    $seededKeys = @('jwt-secret', 'api-key', 'revenuecat-secret-key', 'revenuecat-webhook-secret')
     return ($seededKeys | Where-Object -FilterScript { -not $Secret.ContainsKey($_) })
 }
 

@@ -1,4 +1,4 @@
-﻿package com.{{ Company }}.{{ MicroserviceName }}.domain.model;
+package {{ PACKAGE }}.domain.model;
 
 import lombok.Builder;
 

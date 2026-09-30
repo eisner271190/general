@@ -1,14 +1,14 @@
-﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.beans;
+package {{ PACKAGE }}.infrastructure.beans;
 
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.configuration.MapperInfo;
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.dynamos.tableschema.{{ EntityCapital }}Schema;
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.models.{{ EntityCapital }}PersistenceModel;
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.providers.IProviderPersistence;
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.providers.dynamodb.DynamoDbGenericPersistence;
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.configuration.MapperClass;
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.dynamos.{{ EntityCapital }}Dynamo;
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.mappers.dynamos.{{ EntityCapital }}MapperDynamo;
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.mappers.entities.{{ EntityCapital }}MapperEntity;
+import {{ PACKAGE }}.infrastructure.configuration.MapperInfo;
+import {{ PACKAGE }}.infrastructure.persistence.dynamos.tableschema.{{ EntityCapital }}Schema;
+import {{ PACKAGE }}.infrastructure.persistence.models.{{ EntityCapital }}PersistenceModel;
+import {{ PACKAGE }}.infrastructure.persistence.providers.IProviderPersistence;
+import {{ PACKAGE }}.infrastructure.persistence.providers.dynamodb.DynamoDbGenericPersistence;
+import {{ PACKAGE }}.infrastructure.configuration.MapperClass;
+import {{ PACKAGE }}.infrastructure.persistence.dynamos.{{ EntityCapital }}Dynamo;
+import {{ PACKAGE }}.infrastructure.persistence.mappers.dynamos.{{ EntityCapital }}MapperDynamo;
+import {{ PACKAGE }}.infrastructure.persistence.mappers.entities.{{ EntityCapital }}MapperEntity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;

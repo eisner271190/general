@@ -1,7 +1,7 @@
-﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.controllers;
+package {{ PACKAGE }}.infrastructure.controllers;
 
-import com.{{ Company }}.{{ MicroserviceName }}.application.services.I{{ EntityCapital }}Service;
-import com.{{ Company }}.{{ MicroserviceName }}.infrastructure.rest.response.ApiResponse;
+import {{ PACKAGE }}.application.services.I{{ EntityCapital }}Service;
+import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

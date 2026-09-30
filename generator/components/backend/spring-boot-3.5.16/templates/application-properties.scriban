@@ -40,3 +40,8 @@ aws.sqs.url=${AWS_SQS_URL_{{ Name }}}
 aws.region=${AWS_REGION}
 aws.profile=${AWS_PROFILE}
 aws.sns.arn=${AWS_SNS_TOPIC_ARN:}
+
+# RevenueCat
+revenuecat.secret-key=${REVENUECAT_SECRET_KEY:}
+revenuecat.webhook-secret=${REVENUECAT_WEBHOOK_SECRET:}
+revenuecat.api-base-url=https://api.revenuecat.com

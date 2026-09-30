@@ -1,0 +1,15 @@
+package {{ PACKAGE }}.application.dto;
+
+public record WebhookEventDTO(
+    String eventId,
+    String type,
+    String userId,
+    String productId,
+    String store,
+    Long purchasedAtMs,
+    Long expirationAtMs
+) {
+    public String getType() {
+        return type;
+    }
+}

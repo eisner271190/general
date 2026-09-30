@@ -1,0 +1,91 @@
+package {{ PACKAGE }}.infrastructure.persistence.entities;
+
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+
+@DynamoDbBean
+public class SubscriptionEntity {
+
+    private String userId;
+    private String productId;
+    private String status;
+    private String store;
+    private String originalTransactionId;
+    private Long purchasedAtMs;
+    private Long expirationAtMs;
+    private Long expirationTTL;
+    private Long updatedAtMs;
+
+    @DynamoDbPartitionKey
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getProductId() {
+        return productId;
+    }
+
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getStore() {
+        return store;
+    }
+
+    public void setStore(String store) {
+        this.store = store;
+    }
+
+    public String getOriginalTransactionId() {
+        return originalTransactionId;
+    }
+
+    public void setOriginalTransactionId(String originalTransactionId) {
+        this.originalTransactionId = originalTransactionId;
+    }
+
+    public Long getPurchasedAtMs() {
+        return purchasedAtMs;
+    }
+
+    public void setPurchasedAtMs(Long purchasedAtMs) {
+        this.purchasedAtMs = purchasedAtMs;
+    }
+
+    public Long getExpirationAtMs() {
+        return expirationAtMs;
+    }
+
+    public void setExpirationAtMs(Long expirationAtMs) {
+        this.expirationAtMs = expirationAtMs;
+    }
+
+    public Long getExpirationTTL() {
+        return expirationTTL;
+    }
+
+    public void setExpirationTTL(Long expirationTTL) {
+        this.expirationTTL = expirationTTL;
+    }
+
+    public Long getUpdatedAtMs() {
+        return updatedAtMs;
+    }
+
+    public void setUpdatedAtMs(Long updatedAtMs) {
+        this.updatedAtMs = updatedAtMs;
+    }
+}

@@ -1,10 +1,10 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="RunManager">
     <configuration name="Application" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
       <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UnknownPolicyInFreeMode" />
       <module name="{{ Name }}" />
-      <option name="SPRING_BOOT_MAIN_CLASS" value="com.{{ Company }}.{{ Name }}.Application" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="{{ PACKAGE }}.Application" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>

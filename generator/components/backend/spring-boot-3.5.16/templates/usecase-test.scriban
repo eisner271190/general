@@ -1,7 +1,7 @@
-﻿package com.{{ Company }}.{{ MicroserviceName }}.domain.usecase;
+package {{ PACKAGE }}.domain.usecase;
 
-import com.{{ Company }}.{{ MicroserviceName }}.domain.model.{{ EntityCapital }};
-import com.{{ Company }}.{{ MicroserviceName }}.domain.ports.{{ EntityCapital }}Port;
+import {{ PACKAGE }}.domain.model.{{ EntityCapital }};
+import {{ PACKAGE }}.domain.ports.{{ EntityCapital }}Port;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

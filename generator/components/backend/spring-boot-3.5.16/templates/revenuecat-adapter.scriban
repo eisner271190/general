@@ -1,0 +1,30 @@
+package {{ PACKAGE }}.infrastructure.adapters;
+
+import {{ PACKAGE }}.domain.model.Subscription;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+@Component
+public class RevenueCatAdapter {
+
+    private final WebClient webClient;
+    private final String secretApiKey;
+
+    public RevenueCatAdapter(
+            WebClient.Builder webClientBuilder,
+            @Value("${revenuecat.api-base-url}") String apiBaseUrl,
+            @Value("${revenuecat.secret-key}") String secretApiKey) {
+        this.webClient = webClientBuilder.baseUrl(apiBaseUrl).build();
+        this.secretApiKey = secretApiKey;
+    }
+
+    public Mono<Subscription> fetchCustomerInfo(String appUserId) {
+        return webClient.get()
+            .uri("/v1/subscribers/{appUserId}", appUserId)
+            .header("Authorization", "Bearer " + secretApiKey)
+            .retrieve()
+            .bodyToMono(Subscription.class);
+    }
+}

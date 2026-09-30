@@ -1,4 +1,4 @@
-﻿package com.{{ Company }}.{{ MicroserviceName }}.infrastructure.persistence.dynamos;
+package {{ PACKAGE }}.infrastructure.persistence.dynamos;
 
 import lombok.Data;
 import lombok.Builder;

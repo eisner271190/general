@@ -1,7 +1,7 @@
-﻿{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.application.mappers;
+{{ if(Name == "security") }}package {{ PACKAGE }}.application.mappers;
 
-import com.{{ Company }}.{{ Name }}.application.dto.ConfirmUserRequestDTO;
-import com.{{ Company }}.{{ Name }}.domain.model.ConfirmUser;
+import {{ PACKAGE }}.application.dto.ConfirmUserRequestDTO;
+import {{ PACKAGE }}.domain.model.ConfirmUser;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 

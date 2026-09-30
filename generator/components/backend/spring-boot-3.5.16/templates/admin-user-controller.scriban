@@ -1,8 +1,8 @@
-{{ if(Name == "security") }}package com.{{ Company }}.{{ Name }}.infrastructure.controllers;
+{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.controllers;
 
-import com.{{ Company }}.{{ Name }}.application.services.IAdminUserService;
-import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ApiResponse;
-import com.{{ Company }}.{{ Name }}.infrastructure.rest.response.ErrorApiResponse;
+import {{ PACKAGE }}.application.services.IAdminUserService;
+import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
+import {{ PACKAGE }}.infrastructure.rest.response.ErrorApiResponse;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

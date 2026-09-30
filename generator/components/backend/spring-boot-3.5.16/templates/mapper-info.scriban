@@ -1,7 +1,7 @@
-﻿package com.{{ Company }}.{{ Name }}.infrastructure.configuration;
+package {{ PACKAGE }}.infrastructure.configuration;
 
-import com.{{ Company }}.{{ Name }}.infrastructure.persistence.providers.dynamodb.IMapperDynamo;
-import com.{{ Company }}.{{ Name }}.infrastructure.persistence.providers.dynamodb.IMapperEntity;
+import {{ PACKAGE }}.infrastructure.persistence.providers.dynamodb.IMapperDynamo;
+import {{ PACKAGE }}.infrastructure.persistence.providers.dynamodb.IMapperEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -83,6 +83,7 @@ internal sealed class GenerationPlanBuilder(
             [GeneratorConstants.ApplicationNameVariable] = configuration.ApplicationName,
             [GeneratorConstants.ApplicationIdVariable] = configuration.ApplicationId,
             [GeneratorConstants.ApplicationPackageVariable] = configuration.ApplicationId.Replace('.', Path.DirectorySeparatorChar),
+            [GeneratorConstants.PackageVariable] = configuration.ApplicationId,
             [GeneratorConstants.EnvironmentVariable] = environment.Name
         };
     }

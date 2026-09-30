@@ -1,7 +1,7 @@
-﻿package com.{{ Company }}.{{ Name }}.infrastructure.persistence.providers.dynamodb;
+package {{ PACKAGE }}.infrastructure.persistence.providers.dynamodb;
 
-import com.{{ Company }}.{{ Name }}.infrastructure.persistence.providers.IProviderPersistence;
-import com.{{ Company }}.{{ Name }}.infrastructure.configuration.MapperClass;
+import {{ PACKAGE }}.infrastructure.persistence.providers.IProviderPersistence;
+import {{ PACKAGE }}.infrastructure.configuration.MapperClass;
 import reactor.core.scheduler.Schedulers;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
