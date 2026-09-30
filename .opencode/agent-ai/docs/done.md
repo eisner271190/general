@@ -2,6 +2,7 @@
 
 ## General
 1. Scripts up y down
+2. Skill para crear plan con objetivo, contexto, restricciones, alcance, criterios de aceptación, fuera del alcance
 
 ## Frontend
 1. Crear proyecto Flutter

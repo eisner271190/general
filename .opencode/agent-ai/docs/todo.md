@@ -4,9 +4,6 @@
 > branch `feature/<plan>` → generar plan → implementar → pull request.
 > Al crear el PR: marcar `- [x]` con el enlace. Al fusionar: mover a `docs/done.md`.
 
-
-- Crear skill para crear prompt con objetivo, contexto, restricciones, alcance, criterios de aceptación, fuera del alcance
-
 ## MVP (Prioridad)
 - Separar el generador en componentes independientes: Frontend, Backend y Cloud. Cada componente debe ser un proyecto independiente, con sus propios modelos, estrategias, targets y templates, de forma que el generador sea completamente agnóstico a implementaciones concretas.
 
