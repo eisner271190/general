@@ -29,8 +29,6 @@
 - Diagrama de componentes
 
 ## Backend
-- Obtener los parametros del parameter store, no de la lambda.
-- Quitar los parametros de la lambda
 - Poder actualizar el arquetipo
 - Supabase: login y registro
 - API Suscripcion

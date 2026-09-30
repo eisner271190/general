@@ -77,3 +77,5 @@
 17. Autenticación JWT.
 18. /api/v1/parameters
 19. Script para actualizar las lambdas de los microservicios cuando se haga un cambio en el código fuente
+20. Obtener los parametros del parameter store, no de la lambda.
+21. Quitar los parametros de la lambda

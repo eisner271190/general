@@ -1,0 +1,1 @@
+spring.config.import=aws-parameterstore:/{{ ENVIRONMENT }}/{{ APPLICATION_ID }}/{{ MICROSERVICE_NAME }}/,aws-secretsmanager:{{ ENVIRONMENT }}/{{ APPLICATION_ID }}
