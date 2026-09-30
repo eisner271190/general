@@ -59,7 +59,6 @@ internal sealed class PlanExecutor(string outputDirectory, string workingDirecto
     {
         var fileTargets = ResolveFileTargets(plan);
         var directoryTargets = ResolveDirectoryTargets(plan);
-        EnsureNoDuplicateTargets(fileTargets);
         EnsureNoPathConflicts(fileTargets, directoryTargets);
     }
 

@@ -12,13 +12,11 @@ internal sealed class PlanState
 
     public void AddDirectory(string target)
     {
-        EnsureUniquePath(target, "directorio");
         Directories.Add(target);
     }
 
     public void AddFile(string target, string content)
     {
-        EnsureUniquePath(target, "archivo");
         Files.Add(new PlanFile(target, content));
     }
 
