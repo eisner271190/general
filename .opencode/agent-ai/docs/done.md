@@ -10,7 +10,7 @@
 4. Reducir la cantidad de llamadas a secret manager.
     Buscar primero los secret en las variables de entorno y localmente. 
     Si no existe, entonces buscarlas en aws secret manager.
-5. Crear solo un secret por app.
+5. El frontend debe consumir /api/v1/parameters para obtener los parametros
 
 ## Cloud
 1. AWS DynamoDB.
@@ -25,6 +25,7 @@
 10. Mover proyecto Terraform a la carpeta `cloud`, fuera de `backend`.
 11. AWS Parameter Store (T05): parametros desde target y post-apply via `cloud/up.ps1` - PR #3, #4.
 12. Agregar los secretos a AWS secret manager
+13. Crear solo un secret por app.
 
 ## DevSecOps
 1. Ejecutar sonar automaticamente.
@@ -74,5 +75,4 @@
 16. API Response.
 17. Autenticación JWT.
 18. /api/v1/parameters
-19. Actualizar las lambdas de los microservicios cuando se haga un cambio en el código fuente
-
+19. Script para actualizar las lambdas de los microservicios cuando se haga un cambio en el código fuente
