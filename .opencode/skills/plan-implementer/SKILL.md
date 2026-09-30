@@ -1,5 +1,5 @@
 ---
-name: Plan Workflow
+name: Plan Implementer
 description: Crea planes de implementación en .opencode/agent-ai/plans/ siguiendo el lineamiento del workspace (referencias web, tareas, archivos, costos)
 ---
 
@@ -24,4 +24,4 @@ description: Crea planes de implementación en .opencode/agent-ai/plans/ siguien
 11. Siempre mostrar la estructura completa de los todos los JSON, explicando que es cada campo. 
 
 ## Plantilla
-Usar `.opencode/docs/templates/plan.md` como estructura base: Descripción · Objetivo · Actual vs nuevo · Referencias · Tareas · Flujo de datos · Archivos a crear/modificar · Preguntas · Decisiones · Costos · Fuera de alcance.
+Usar `.opencode/docs/templates/plan.md` como estructura base: Descripción · Objetivo · Actual vs nuevo · Referencia · Tareas · Flujo de datos · Archivos a crear/modificar · Preguntas · Decisiones · Costos · Fuera de alcance.

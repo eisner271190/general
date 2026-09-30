@@ -13,8 +13,8 @@ El usuario dice "Trabajar". Procesar UNA tarea por ciclo: la siguiente pendiente
 
 1. **Branch** — `git checkout -b feature/<slug>` donde `<slug>` = nombre del plan sin `.md` (ej. plan `plan-auth-login.md` → branch `feature/plan-auth-login`).
    - Si el branch ya existe → retomar el flujo en el paso que falte (idempotente; no repetir pasos hechos).
-2. **Plan** — si no existe `.opencode/agent-ai/plans/plan-<slug>.md`, aplicar el skill `plan-workflow` para esa tarea. El plan se congela al implementar: cambios de alcance ⇒ actualizar plan antes de continuar.
-   - **Tarea grande o de riesgo alto:** el criterio canónico vive en el skill `plan-workflow`. Si aplica, el plan se genera **primero** (antes del branch/paso 1) y se descompone en features más pequeños; una rama/PR por feature.
+2. **Plan** — si no existe `.opencode/agent-ai/plans/plan-<slug>.md`, aplicar el skill `plan-implementer` para esa tarea. El plan se congela al implementar: cambios de alcance ⇒ actualizar plan antes de continuar.
+   - **Tarea grande o de riesgo alto:** el criterio canónico vive en el skill `plan-implementer`. Si aplica, el plan se genera **primero** (antes del branch/paso 1) y se descompone en features más pequeños; una rama/PR por feature.
 3. **Implementar** — ejecutar el plan con cambios pequeños y verificables. Aplicar `verify-before-done` antes del paso 4. Los prompts de permisos (build/test) son la autorización: si se deniegan, detener y reportar.
 4. **Pull request**
    - `git add` solo archivos del alcance → `git commit` (mensaje: `plan-<slug>: <resumen>`) → `git push -u origin feature/<slug>` (permiso `ask`).

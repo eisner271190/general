@@ -1,0 +1,26 @@
+package {{ PACKAGE }}.infrastructure.adapters;
+
+import {{ PACKAGE }}.domain.model.Subscription;
+import {{ PACKAGE }}.domain.ports.SubscriptionPort;
+
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+
+@Component
+public class SubscriptionAdapter implements SubscriptionPort {
+
+    @Override
+    public Mono<Subscription> findActiveSubscription(String userId) {
+        return Mono.empty();
+    }
+
+    @Override
+    public Mono<Subscription> saveSubscription(Subscription subscription) {
+        return Mono.just(subscription);
+    }
+
+    @Override
+    public Mono<Subscription> updateStatus(String userId, String status) {
+        return Mono.empty();
+    }
+}

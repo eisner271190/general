@@ -35,7 +35,7 @@ Actuar como ingeniero senior: cambios pequeños, verificables y seguros. Idioma:
 - Identificadores en inglés. PascalCase en clases/métodos/propiedades públicas; interfaces con prefijo `I`; verbos en métodos.
 
 ## Planes y verificación
-- Para planificar: skill `plan-workflow` o comando `/plan` (salida en la carpeta de planes del workspace).
+- Para planificar: skill `plan-implementer` o comando `/plan` (salida en la carpeta de planes del workspace).
 - Antes de dar por terminado: skill `verify-before-done` o comando `/finish`.
 - **"Trabajar"** (o `/trabajar`): flujo del skill `trabajar` — branch → plan → implementar → PR — con la siguiente tarea del backlog.
 - Decisiones relevantes: registrarlas en la documentación de decisiones del proyecto.

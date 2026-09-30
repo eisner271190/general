@@ -191,6 +191,7 @@
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/SubscriptionStatusResponseDTO.java", "value": "templates/subscription-status-response-dto.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/WebhookEventDTO.java", "value": "templates/webhook-event-dto.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/RevenueCatAdapter.java", "value": "templates/revenuecat-adapter.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/SubscriptionAdapter.java", "value": "templates/subscription-adapter.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/webfilters/RevenueCatWebhookFilter.java", "value": "templates/revenuecat-webhook-filter.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/SubscriptionController.java", "value": "templates/subscription-controller.scriban" }
   ],
