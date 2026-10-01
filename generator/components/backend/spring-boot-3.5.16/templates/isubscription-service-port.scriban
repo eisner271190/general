@@ -1,6 +1,6 @@
 package {{ PACKAGE }}.domain.servicePorts;
 
-import {{ PACKAGE }}.application.dto.SubscriptionStatusResponseDTO;
+import {{ PACKAGE }}.domain.dto.SubscriptionStatusResponseDTO;
 import reactor.core.publisher.Mono;
 
 public interface ISubscriptionServicePort {

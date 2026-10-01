@@ -1,6 +1,6 @@
 package {{ PACKAGE }}.domain.usecase.strategies;
 
-import {{ PACKAGE }}.application.dto.WebhookEventDTO;
+import {{ PACKAGE }}.domain.dto.WebhookEventDTO;
 import {{ PACKAGE }}.domain.model.Subscription;
 import {{ PACKAGE }}.domain.ports.SubscriptionPort;
 import {{ PACKAGE }}.domain.usecase.IWebhookStrategy;

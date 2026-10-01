@@ -1,6 +1,6 @@
 package {{ PACKAGE }}.infrastructure.controllers;
 
-import {{ PACKAGE }}.application.dto.SubscriptionStatusResponseDTO;
+import {{ PACKAGE }}.domain.dto.SubscriptionStatusResponseDTO;
 import {{ PACKAGE }}.domain.servicePorts.ISubscriptionServicePort;
 import {{ PACKAGE }}.domain.servicePorts.IWebhookServicePort;
 import {{ PACKAGE }}.infrastructure.adapters.RevenueCatWebhookPayload;

@@ -1,6 +1,6 @@
 package {{ PACKAGE }}.domain.usecase.strategies;
 
-import {{ PACKAGE }}.application.dto.WebhookEventDTO;
+import {{ PACKAGE }}.domain.dto.WebhookEventDTO;
 import {{ PACKAGE }}.domain.usecase.IWebhookStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,4 +1,4 @@
-package {{ PACKAGE }}.application.dto;
+package {{ PACKAGE }}.domain.dto;
 
 public record SubscriptionStatusResponseDTO(
     Boolean isActive,

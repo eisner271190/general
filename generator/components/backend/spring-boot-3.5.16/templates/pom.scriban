@@ -349,6 +349,7 @@
           <excludedClasses>
             {{ PACKAGE }}.application.dto.*,
             {{ PACKAGE }}.application.mappers.*,
+            {{ PACKAGE }}.domain.dto.*,
             {{ PACKAGE }}.domain.model.*,
             {{ PACKAGE }}.domain.ports.*,
             {{ PACKAGE }}.domain.servicePorts.*,

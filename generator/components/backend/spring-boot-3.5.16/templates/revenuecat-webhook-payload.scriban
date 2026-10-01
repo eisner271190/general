@@ -1,6 +1,6 @@
 package {{ PACKAGE }}.infrastructure.adapters;
 
-import {{ PACKAGE }}.application.dto.WebhookEventDTO;
+import {{ PACKAGE }}.domain.dto.WebhookEventDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

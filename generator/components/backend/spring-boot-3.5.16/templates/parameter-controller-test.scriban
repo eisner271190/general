@@ -7,6 +7,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -28,7 +31,7 @@ public class ParameterControllerTest {
   @BeforeEach
   public void setup() {
     MockitoAnnotations.openMocks(this);
-    webTestClient = createWebTestClient();
+    webTestClient = createWebTestClient(new ParameterController(parameterProperties));
   }
 
   @Test
@@ -53,13 +56,23 @@ public class ParameterControllerTest {
 
   @Test
   public void testGetParameters_OmitsSensitiveParameter() {
-    Map<String, String> config = new LinkedHashMap<>();
-    config.put("model", "gpt-4o-mini");
-    config.put("api-key", "sk-no-debe-filtrarse");
-    config.put("jwt-secret", "no-debe-filtrarse");
-    when(parameterProperties.getPublicParameters()).thenReturn(config);
+    // El controller NO filtra: devuelve tal cual getPublicParameters(). El filtro real
+    // vive en ParameterProperties.EXCLUDED sobre las fuentes de Parameter Store, por lo
+    // que aqui se usa la instancia real y no el mock (con el mock el controller devolveria
+    // las claves sensibles tal cual y el test fallaria).
+    ConfigurableEnvironment environment = new StandardEnvironment();
+    Map<String, Object> store = new LinkedHashMap<>();
+    store.put("model", "gpt-4o-mini");
+    store.put("SUBSCRIPTION_API_BASE_URL", "https://api.revenuecat.com/v1/");
+    store.put("AWS_SECRET_ACCESS_KEY", "no-debe-exponerse");
+    store.put("PATH", "/usr/bin");
+    environment.getPropertySources()
+        .addFirst(new MapPropertySource("/develop/com.quizsmart.app/quizapi/", store));
 
-    webTestClient.get()
+    WebTestClient client =
+        createWebTestClient(new ParameterController(new ParameterProperties(environment)));
+
+    client.get()
         .uri("/api/v1/parameters")
         .exchange()
         .expectStatus().isOk()
@@ -67,8 +80,9 @@ public class ParameterControllerTest {
         .value(response -> {
           Map<String, Object> data = response.getData();
           assertEquals("gpt-4o-mini", data.get("model"));
-          assertFalse(data.containsKey("api-key"));
-          assertFalse(data.containsKey("jwt-secret"));
+          assertEquals("https://api.revenuecat.com/v1/", data.get("SUBSCRIPTION_API_BASE_URL"));
+          assertFalse(data.containsKey("AWS_SECRET_ACCESS_KEY"));
+          assertFalse(data.containsKey("PATH"));
         });
   }
 
@@ -84,7 +98,7 @@ public class ParameterControllerTest {
         .value(response -> assertTrue(response.getData().isEmpty()));
   }
 
-  private WebTestClient createWebTestClient() {
-    return WebTestClient.bindToController(new ParameterController(parameterProperties)).build();
+  private WebTestClient createWebTestClient(ParameterController controller) {
+    return WebTestClient.bindToController(controller).build();
   }
 }

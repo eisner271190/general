@@ -1,6 +1,6 @@
 package {{ PACKAGE }}.domain.usecase;
 
-import {{ PACKAGE }}.application.dto.SubscriptionStatusResponseDTO;
+import {{ PACKAGE }}.domain.dto.SubscriptionStatusResponseDTO;
 import {{ PACKAGE }}.domain.model.Subscription;
 import {{ PACKAGE }}.domain.ports.ISubscriptionProviderPort;
 import {{ PACKAGE }}.domain.ports.SubscriptionPort;

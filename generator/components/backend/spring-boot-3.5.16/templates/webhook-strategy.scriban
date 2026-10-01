@@ -1,6 +1,6 @@
 package {{ PACKAGE }}.domain.usecase;
 
-import {{ PACKAGE }}.application.dto.WebhookEventDTO;
+import {{ PACKAGE }}.domain.dto.WebhookEventDTO;
 import reactor.core.publisher.Mono;
 
 public interface IWebhookStrategy {

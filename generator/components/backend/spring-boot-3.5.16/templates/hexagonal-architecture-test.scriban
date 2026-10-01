@@ -4,8 +4,8 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 @AnalyzeClasses(packages = "{{ PACKAGE }}")
 public class HexagonalArchitectureTest {
@@ -15,17 +15,24 @@ public class HexagonalArchitectureTest {
         .that().resideInAPackage("..domain..")
         .should().dependOnClassesThat().resideInAnyPackage("..application..", "..infrastructure..");
 
+    /**
+     * {@code application} puede quedar sin clases cuando no se generan las plantillas
+     * opcionales (auth/CRUD). Sin {@code allowEmptyShould} ArchUnit falla por «empty should»
+     * en cuanto la capa queda vacía.
+     */
     @ArchTest
     static final ArchRule applicationNoInfrastructureDependency = noClasses()
         .that().resideInAPackage("..application..")
-        .should().dependOnClassesThat().resideInAPackage("..infrastructure..");
+        .should().dependOnClassesThat().resideInAPackage("..infrastructure..")
+        .allowEmptyShould(true);
 
-    //@ArchTest
-    //static final ArchRule infrastructureDependsOnApplication = classes()
-    //    .that().resideInAPackage("..infrastructure..")
-    //    .should().onlyDependOnClassesThat().resideInAnyPackage("..application..", "..domain..", "java..");
-
+    /**
+     * Detecta ciclos de dependencia entre capas (p. ej. {@code domain} -> {@code application}
+     * -> {@code domain}). La regla anterior solo comprobaba que nadie dependiera de esta
+     * propia clase de test, por lo que pasaba siempre y no aportaba nada.
+     */
     @ArchTest
-    static final ArchRule noCircularDependencies = noClasses()
-            .should().dependOnClassesThat().areAnnotatedWith(AnalyzeClasses.class);
+    static final ArchRule noCircularDependencies = slices()
+        .matching("{{ PACKAGE }}.(*)..")
+        .should().beFreeOfCycles();
 }
