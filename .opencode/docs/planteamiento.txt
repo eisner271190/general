@@ -1,2 +1,89 @@
-ADMOB_BANNER_ID
-REVENUECAT_PUBLIC_KEY
+Flujo completo con entregables
+Yo → Define el objetivo.
+planner-builder crea objectives/objetivo-001.md
+Researcher → Investiga el problema.
+deliverables/objetivo-001/research-001.md
+Si tiene dudas → questions/questions-001.md
+Architect → Diseña la solución.
+deliverables/objetivo-001/architecture-001.md
+Si recibe observaciones → actualiza architecture-001.md.
+
+Reviewer-plan → Revisa la arquitectura.
+
+deliverables/objetivo-001/plan-review-001.md
+
+Si no hay observaciones:
+→ pasa a Developer.
+
+Si hay observaciones:
+→ vuelve a Architect.
+
+Developer → Implementa.
+
+Código fuente.
+deliverables/objetivo-001/implementation-001.md
+
+Si el problema requiere cambio de arquitectura:
+→ vuelve a Architect.
+
+Tester → Prueba la implementación.
+
+deliverables/objetivo-001/test-report-001.md
+
+Si las pruebas pasan:
+→ finaliza.
+
+Si falla por implementación:
+→ vuelve a Developer.
+
+Si falla por arquitectura/requisito:
+→ vuelve a Architect.
+
+
+
+Aplica el skill `plan-builder` y genera el plan para: Objetivo: API AI. Actualmente el frontend consume el api de openrouter. Se debe crear un endpoint para consumir los servicios de ia generativa. debe ser un proveedor de ia, es decir, debe ser agnostico al proveedor de servicios de ia. se debe consumir este endpoint en el frontend, se debe eliminar el consumo directo de openrouter en el frontend. se debe almacenar en aws secret manager api key y datos sensible, y en parameter store datos publicos. Tener en cuenta los parametros que ya existen. Recuerda que todo esto se implementa en el generador
+
+
+Creación de skils, commands, agents con viñetas y corto
+
+
+# Todo (priorizado)
+
+> **Flujo:** di **"Trabajar"** (o `/trabajar TXX`) → por cada tarea:
+> branch `feature/<plan>` → generar plan → implementar → pull request.
+> Al crear el PR: marcar `- [x]` con el enlace. Al fusionar: mover a `docs/done.md`.
+
+## MVP (Prioridad)
+- Separar el generador en componentes independientes: Frontend, Backend y Cloud. Cada componente debe ser un proyecto independiente, con sus propios modelos, estrategias, targets y templates, de forma que el generador sea completamente agnóstico a implementaciones concretas.
+
+## Frontend
+- Optimizar carga inicial de la app, debe demorar máximo 1 segundo
+- Suscripción
+- AdMob
+- Consumo de servicios REST
+
+## Cloud
+- Separar los parametros del frontend bajo el prefijo /frontend/quizsmart/ en ssm.tf (decision de parametros.md #6)
+- Plantillas con todas las propiedades de cada servicio AWS
+- AWS ElastiCache
+
+## DevSecOps
+- SonarQube
+- Trivy
+- Dependency Check
+- Observabilidad
+
+## Documentación
+- Diagram as Code
+- Diagrama de componentes
+
+## Backend
+- Poder actualizar el arquetipo
+- Supabase: login y registro
+- API Suscripcion
+    -> Actualmente en el frontend, se tiene una implementación sobre una suscripcion basada en revenueCat. Al tenerla en el frontend, se exponer API-Key y otros datos sensibles. Diseña una solución donde se extraiga el consumo de esa API en el backend.
+- API Ad
+- API Notifications
+- API Parameters
+- API Identity
+- API AI

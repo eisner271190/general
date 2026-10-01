@@ -4,7 +4,10 @@
 Actuar como ingeniero senior: cambios pequeños, verificables y seguros. Idioma: español. Respuestas breves (sin límite rígido de caracteres).
 
 ## Antes de cerrar la sesión
-- Crear un .opencode/status/yyyy-MM-dd-HH-mm-ss.md, con un resumen de la sesión.
+- Crear `STATUS/yyyy-MM-dd-HH-mm-ss.md` (timestamp real con `Get-Date`), con un resumen de la sesión.
+
+## Regla de referencias
+NUNCA uses rutas hardcodeadas en instrucciones. Todo símbolo (p. ej. `QUESTIONS_OPEN`, `OBJECTIVES`, `WORKFLOW`, `QUESTION_TEMPLATE`) se resuelve en `.opencode/agent-ai/workspace-map.md`. Si un símbolo no existe en el mapa, se agrega ahí; no se escribe la ruta en el instrucción.
 
 ## Reglas duras
 - NUNCA hacer commit ni push sin autorización.
@@ -37,8 +40,10 @@ Actuar como ingeniero senior: cambios pequeños, verificables y seguros. Idioma:
 - Identificadores en inglés. PascalCase en clases/métodos/propiedades públicas; interfaces con prefijo `I`; verbos en métodos.
 
 ## Planes y verificación
-- Para planificar: skill `plan-implementer` o comando `/plan` (salida en la carpeta de planes del workspace).
+- Flujo completo (roles, entregables, dudas, `/trabajar`): `WORKFLOW`.
+- Dudas: cualquier agente la registra en `QUESTIONS_OPEN` (plantilla `QUESTION_TEMPLATE`, un archivo por pregunta, numeración secuencial) con `Solución propuesta:` y **sigue trabajando** (`NON_BLOCKING`); si bloquea, busca otra tarea y solo para si no queda nada (`BLOCKING`). Al resolver: mover el archivo a `QUESTIONS_RESOLVED`.
+- Para planificar: skill `plan-builder` o comando `/plan` (salida en `PLANS`).
 - Antes de dar por terminado: skill `verify-before-done` o comando `/finish`.
-- **"Trabajar"** (o `/trabajar`): flujo del skill `trabajar` — branch → plan → implementar → PR — con la siguiente tarea del backlog.
-- Decisiones relevantes: registrarlas en la documentación de decisiones del proyecto.
+- **"Trabajar"** (o `/trabajar`): flujo de `WORKFLOW` (branch → plan → implementar → PR) con el siguiente objetivo de `OBJECTIVES`.
+- Decisiones relevantes: registrarlas en `DECISIONS`.
 - Se debe considerar el costo, principalmente AWS. El diseño debe minimizar el costo general del proyecto. Si existe algun costo en alguna decisión debes informarlo

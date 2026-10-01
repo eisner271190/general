@@ -1,0 +1,6 @@
+# Question NNN
+
+- [ ] [agente] Pregunta
+  - Contexto: ...
+  - Tarea: NNN
+  - Solución propuesta: ...

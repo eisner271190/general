@@ -1,6 +1,6 @@
 # Plan: <título>
 
-**Tarea del TODO:** <ítem de .opencode/agent-ai/docs/todo.md o "N/A — solicitado directamente">
+**Tarea del objetivo:** <código NNN y archivo de OBJECTIVES o "N/A — solicitado directamente">
 **Fecha:** <YYYY-MM-DD>
 
 ## 1. Descripción

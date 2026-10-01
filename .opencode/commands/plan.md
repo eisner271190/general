@@ -1,6 +1,6 @@
 ---
-description: Crea un plan de implementación en agent-ai/plans/
+description: Crea un plan de implementación en PLANS
 agent: plan
 ---
 
-Aplica el skill `plan-implementer` y crea el plan para: $ARGUMENTS
+Usa `PLAN_TEMPLATE` como estructura base y crea el plan en `PLANS` para: $ARGUMENTS

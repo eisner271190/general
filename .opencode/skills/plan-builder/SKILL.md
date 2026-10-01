@@ -26,3 +26,6 @@ description: Genera un plan estructurado con 6 secciones: objetivo, contexto, re
 
 ## Formato de salida
 Texto plano, sin markdown. Cada sección claramente delimitada con su nombre seguido de dos puntos y el contenido.
+
+## Resultado
+Crear el archivo `OBJECTIVES/objetivo-<NNN>.md` con el plan completo, usando el template `OBJECTIVE_TEMPLATE`.

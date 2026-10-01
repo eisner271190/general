@@ -4,6 +4,6 @@ Monorepo `general`: una aplicación .NET 9 (`generator/`) produce proyectos por 
 
 - **Fuente de verdad:** `generator/` — código .NET + `components/**/component.json` + plantillas Scriban.
 - **Salida:** apps en `projects/` y `generator/target/` — resultados; corregir siempre en el generador.
-- **Backlog:** `.opencode/agent-ai/docs/todo.md`. **Planes:** `.opencode/agent-ai/plans/plan-*.md`.
+- **Backlog:** `OBJECTIVES`. **Terminados:** `OBJECTIVES_DONE`. **Dudas:** `QUESTIONS_OPEN` / `QUESTIONS_RESOLVED`. **Entregables:** `DELIVERABLES`. **Planes:** `PLANS`. **Rutas y símbolos:** `workspace-map.md`.
 - **Instrucciones de agente:** `AGENTS.md` (raíz y por componente). Skills en `.opencode/skills/`, comandos en `.opencode/commands/`.
 - **Referencias:** `.opencode/knowledge/{architecture,domain,api}` registradas en `.opencode/opencode.json`.

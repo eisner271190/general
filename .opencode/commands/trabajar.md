@@ -1,5 +1,5 @@
 ---
-description: Ejecuta el flujo Trabajar (branch → plan → implementar → PR) para una tarea
+description: Ejecuta el flujo Trabajar (branch → plan → implementar → PR) para un objetivo
 ---
 
-Aplica el skill `trabajar` con esta tarea: $ARGUMENTS. Si está vacío, usa la siguiente tarea pendiente de `.opencode/agent-ai/docs/todo.md`.
+Aplica el skill `trabajar` con esta tarea: $ARGUMENTS. Si está vacío, usa el siguiente objetivo abierto de `OBJECTIVES`. El flujo completo está en `WORKFLOW` (símbolos: `workspace-map.md`).

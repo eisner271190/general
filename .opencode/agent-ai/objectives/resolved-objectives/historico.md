@@ -1,4 +1,6 @@
-# Done
+# Resolved — histórico (previo a `objectives/`)
+
+Tareas terminadas antes de introducir los objetivos con código. Los nuevos van en archivos `objetivo-<NNN>.md` de esta carpeta.
 
 ## General
 1. Scripts up y down
@@ -9,7 +11,7 @@
 2. Estructura base de carpetas y archivos
 3. Generar el .aab firmado.
 4. Reducir la cantidad de llamadas a secret manager.
-    Buscar primero los secret en las variables de entorno y localmente. 
+    Buscar primero los secret en las variables de entorno y localmente.
     Si no existe, entonces buscarlas en aws secret manager.
 5. El frontend debe consumir /api/v1/parameters para obtener los parametros
 

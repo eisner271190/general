@@ -11,4 +11,4 @@ Decisiones estructurales del workspace: capas del generador (.NET), arquitectura
 
 También disponible: `backend/<ms>/update-ms.ps1` para un solo microservicio.
 
-Referencia registrada en `.opencode/opencode.json` (alias `architecture`). Aquí van diagramas y ADRs extensos; decisiones puntuales → `.opencode/docs/decisions.md`.
+Referencia registrada en `opencode.json` (alias `architecture`). Aquí van diagramas y ADRs extensos; decisiones puntuales → `DECISIONS`. Símbolos de rutas → `workspace-map.md`.
