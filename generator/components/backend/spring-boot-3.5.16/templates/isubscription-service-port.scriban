@@ -5,5 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface ISubscriptionServicePort {
     Mono<SubscriptionStatusResponseDTO> getStatus(String userId);
-    Mono<SubscriptionStatusResponseDTO> syncFromRevenueCat(String userId);
+    Mono<SubscriptionStatusResponseDTO> syncFromProvider(String userId);
 }

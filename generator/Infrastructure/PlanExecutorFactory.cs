@@ -1,5 +1,4 @@
 using Generator.Application;
-using Generator.Domain.Validation;
 
 namespace Generator.Infrastructure;
 

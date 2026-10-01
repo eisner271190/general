@@ -8,6 +8,7 @@ namespace Generator.Application;
 
 internal sealed class GenerationPlanBuilder(
     string workingDirectory,
+    IFileSystem fileSystem,
     IJsonFileReader jsonReader,
     IPathValidator pathValidator,
     IConfigurationValidator configurationValidator,
@@ -68,21 +69,21 @@ internal sealed class GenerationPlanBuilder(
     private static EnvironmentConfiguration? FindEnvironment(EpcConfiguration configuration, string requestedEnvironment) =>
         configuration.Environments.FirstOrDefault(item => item.Name.Equals(requestedEnvironment, StringComparison.OrdinalIgnoreCase));
 
-    private static Dictionary<string, object?> BuildVariables(EpcConfiguration configuration, EnvironmentConfiguration environment)
+    private Dictionary<string, object?> BuildVariables(EpcConfiguration configuration, EnvironmentConfiguration environment)
     {
         var variables = MergeEnvironmentVariables(configuration, environment);
         variables[GeneratorConstants.EnvironmentVariablesHclVariable] = SerializeEnvironmentVariables(variables);
         return variables;
     }
 
-    private static Dictionary<string, object?> MergeEnvironmentVariables(EpcConfiguration configuration, EnvironmentConfiguration environment)
+    private Dictionary<string, object?> MergeEnvironmentVariables(EpcConfiguration configuration, EnvironmentConfiguration environment)
     {
         var environmentVariables = environment.Variables.ToDictionary(item => item.Key, item => (object?)item.Value, StringComparer.OrdinalIgnoreCase);
         return new Dictionary<string, object?>(environmentVariables, StringComparer.OrdinalIgnoreCase)
         {
             [GeneratorConstants.ApplicationNameVariable] = configuration.ApplicationName,
             [GeneratorConstants.ApplicationIdVariable] = configuration.ApplicationId,
-            [GeneratorConstants.ApplicationPackageVariable] = configuration.ApplicationId.Replace('.', Path.DirectorySeparatorChar),
+            [GeneratorConstants.ApplicationPackageVariable] = configuration.ApplicationId.Replace('.', fileSystem.DirectorySeparator),
             [GeneratorConstants.PackageVariable] = configuration.ApplicationId,
             [GeneratorConstants.EnvironmentVariable] = environment.Name
         };
@@ -147,7 +148,7 @@ internal sealed class GenerationPlanBuilder(
         var componentContext = context with
         {
             Component = CreateComponentRef(GeneratorConstants.FrontendComponentType, frontend.Framework),
-            DefaultFilePrefix = Path.Combine("frontend", frontend.Name),
+            DefaultFilePrefix = fileSystem.Combine("frontend", frontend.Name),
             Variables = CreateFrontendVariables(frontend, context)
         };
         ProcessComponent(componentContext);
@@ -156,7 +157,7 @@ internal sealed class GenerationPlanBuilder(
 
     private Dictionary<string, object?> CreateFrontendVariables(FrontendConfiguration frontend, PlanContext context)
     {
-        var hasAppIcon = File.Exists(AppIconPath(context));
+        var hasAppIcon = fileSystem.Exists(AppIconPath(context));
         return new Dictionary<string, object?>(context.Variables, StringComparer.OrdinalIgnoreCase)
         {
             [GeneratorConstants.TemplateNameVariable] = frontend.Name,
@@ -171,15 +172,15 @@ internal sealed class GenerationPlanBuilder(
     private void AddAppIcon(FrontendConfiguration frontend, PlanContext context)
     {
         var appIconPath = AppIconPath(context);
-        if (File.Exists(appIconPath))
+        if (fileSystem.Exists(appIconPath))
             context.State.AddDefaultFile(AppIconTarget(frontend), appIconPath);
     }
 
     private string AppIconPath(PlanContext context) =>
-        Path.Combine(Path.GetDirectoryName(context.InputPath) ?? workingDirectory, "app_icon.png");
+        fileSystem.Combine(fileSystem.GetDirectoryName(context.InputPath) ?? workingDirectory, "app_icon.png");
 
-    private static string AppIconTarget(FrontendConfiguration frontend) =>
-        Path.Combine("frontend", frontend.Name, "assets", "icon", "app_icon.png");
+    private string AppIconTarget(FrontendConfiguration frontend) =>
+        fileSystem.Combine("frontend", frontend.Name, "assets", "icon", "app_icon.png");
 
     private void AddCloudComponents(PlanContext context)
     {
@@ -230,14 +231,14 @@ internal sealed class GenerationPlanBuilder(
     private void ProcessComponent(PlanContext context)
     {
         var component = context.Component!;
-        var componentPath = ResolveSource(Path.Combine(
+        var componentPath = ResolveSource(fileSystem.Combine(
             GeneratorConstants.ComponentsDirectory,
             component.Type,
             component.Name,
             "component.json"));
         var definition = jsonReader.Read<ComponentDefinition>(componentPath);
         GeneratorLogger.Info($"Componente '{component.Type}' seleccionado: {component.Name}");
-        var componentContext = context with { ComponentDirectory = Path.GetDirectoryName(componentPath)! };
+        var componentContext = context with { ComponentDirectory = fileSystem.GetDirectoryName(componentPath)! };
 
         AddDirectories(definition, componentContext);
         AddFiles(definition, componentContext);
@@ -272,7 +273,7 @@ internal sealed class GenerationPlanBuilder(
     private string RenderFile(ComponentFile file, PlanContext context)
     {
         var templatePath = ResolveComponentSource(file.Value, context);
-        var source = CreateTemplateSource(File.ReadAllText(templatePath), templatePath);
+        var source = CreateTemplateSource(fileSystem.ReadAllText(templatePath), templatePath);
         return templateRenderer.Render(source, context.Variables);
     }
 
@@ -291,45 +292,45 @@ internal sealed class GenerationPlanBuilder(
     {
         var source = ResolveComponentSource(defaultFile, context);
         var target = ResolveDefaultTarget(defaultFile, context);
-        context.State.AddDefaultFile(target, Path.GetRelativePath(workingDirectory, source));
+        context.State.AddDefaultFile(target, fileSystem.GetRelativePath(workingDirectory, source));
     }
 
     private string ResolveDefaultTarget(string defaultFile, PlanContext context)
     {
         var prefix = context.DefaultFilePrefix ?? context.OutputPrefix;
         var normalized = pathValidator.DefaultOutputPath(defaultFile);
-        return prefix is not null ? Path.Combine(prefix, normalized) : normalized;
+        return prefix is not null ? fileSystem.Combine(prefix, normalized) : normalized;
     }
 
     private string ResolveTarget(string key, PlanContext context) =>
         context.OutputPrefix is not null
-            ? RenderPath(Path.Combine(context.OutputPrefix, key), context.Variables)
+            ? RenderPath(fileSystem.Combine(context.OutputPrefix, key), context.Variables)
             : RenderPath(key, context.Variables);
 
     private string ResolveSource(string relativePath)
     {
-        var path = Path.GetFullPath(pathValidator.NormalizeRelative(relativePath), workingDirectory);
+        var path = fileSystem.GetFullPath(pathValidator.NormalizeRelative(relativePath), workingDirectory);
         EnsureSourceExists(path, relativePath);
         return path;
     }
 
-    private static void EnsureSourceExists(string path, string relativePath)
+    private void EnsureSourceExists(string path, string relativePath)
     {
-        if (!File.Exists(path))
+        if (!fileSystem.Exists(path))
             throw new FileNotFoundException(GeneratorMessages.MissingSourceFile(relativePath), path);
     }
 
     private string ResolveComponentSource(string relativePath, PlanContext context)
     {
         // El directorio del componente se define en ProcessComponent antes de resolver sus archivos.
-        var path = Path.GetFullPath(pathValidator.NormalizeRelative(relativePath), context.ComponentDirectory!);
+        var path = fileSystem.GetFullPath(pathValidator.NormalizeRelative(relativePath), context.ComponentDirectory!);
         EnsureComponentSourceExists(path, relativePath);
         return path;
     }
 
-    private static void EnsureComponentSourceExists(string path, string relativePath)
+    private void EnsureComponentSourceExists(string path, string relativePath)
     {
-        if (!File.Exists(path))
+        if (!fileSystem.Exists(path))
             throw new FileNotFoundException(GeneratorMessages.MissingComponentFile(relativePath), path);
     }
 

@@ -8,6 +8,7 @@ Actuar como ingeniero senior: cambios pequeños, verificables y seguros. Idioma:
 
 ## Reglas duras
 - NUNCA hacer commit ni push sin autorización.
+- **NUNCA crear ni modificar unit tests** (ni tests de ningún tipo): los escribe y gestiona el usuario. Si un test queda rojo, informar y esperar instrucciones; no "arreglar" el test ni crear uno nuevo.
 - Pedir aclaración ante requisitos ambiguos.
 - El cambio más pequeño que resuelva el requisito; sin refactors no relacionados.
 - Revisar el diff antes de terminar; nunca `git reset` ni `git clean`.
@@ -20,7 +21,8 @@ Actuar como ingeniero senior: cambios pequeños, verificables y seguros. Idioma:
 - `terraform apply` y `terraform destroy` están denegados para el agente.
 
 ## Comandos
-- Ejecutar solo los comandos propios del stack del proyecto (build, analyze/lint, test, validate); compilar requiere autorización.
+- **Al agente: SOLO compilar y ejecutar.** Nada más.
+- **Prohibido ejecutar tests** (`mvn test`, `dotnet test`, `flutter test`, etc.): los ejecuta el usuario.
 - Terraform: `terraform fmt -check` y `terraform validate` (no tocan infra remota).
 
 ## Arquitectura

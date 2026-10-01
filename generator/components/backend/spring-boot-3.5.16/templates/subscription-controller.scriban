@@ -1,9 +1,9 @@
 package {{ PACKAGE }}.infrastructure.controllers;
 
 import {{ PACKAGE }}.application.dto.SubscriptionStatusResponseDTO;
-import {{ PACKAGE }}.application.dto.WebhookEventDTO;
 import {{ PACKAGE }}.domain.servicePorts.ISubscriptionServicePort;
 import {{ PACKAGE }}.domain.servicePorts.IWebhookServicePort;
+import {{ PACKAGE }}.infrastructure.adapters.RevenueCatWebhookPayload;
 import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,8 +22,8 @@ public class SubscriptionController {
     }
 
     @PostMapping("/webhook")
-    public Mono<ResponseEntity<ApiResponse>> handleWebhook(@RequestBody WebhookEventDTO event) {
-        return webhookService.processWebhook(event)
+    public Mono<ResponseEntity<ApiResponse>> handleWebhook(@RequestBody RevenueCatWebhookPayload payload) {
+        return webhookService.processWebhook(payload.toWebhookEvent())
             .then(Mono.just(ResponseEntity.ok(new ApiResponse(null, "Webhook processed", 200))));
     }
 
@@ -35,7 +35,7 @@ public class SubscriptionController {
 
     @PostMapping("/sync")
     public Mono<ResponseEntity<ApiResponse>> sync(@RequestHeader("X-User-Id") String userId) {
-        return subscriptionService.syncFromRevenueCat(userId)
+        return subscriptionService.syncFromProvider(userId)
             .map(response -> ResponseEntity.ok(new ApiResponse(response, "Sync completed", 200)));
     }
 }

@@ -23,6 +23,28 @@ public class Subscription {
         return subscription;
     }
 
+    /**
+     * Suscripcion creada o modificada por un evento de compra (INITIAL_PURCHASE,
+     * NON_RENEWING_PURCHASE, PRODUCT_CHANGE). El evento trae todos los datos, de modo
+     * que se sobrescribe la fila entera sin necesidad de localizar la anterior.
+     */
+    public static Subscription active(
+            String userId,
+            String productId,
+            String store,
+            Long purchasedAtMs,
+            Long expirationAtMs) {
+        Subscription subscription = new Subscription();
+        subscription.userId = userId;
+        subscription.productId = productId;
+        subscription.status = "ACTIVE";
+        subscription.store = store;
+        subscription.purchasedAtMs = purchasedAtMs;
+        subscription.expirationAtMs = expirationAtMs;
+        subscription.updatedAtMs = System.currentTimeMillis();
+        return subscription;
+    }
+
     public boolean isActive() {
         return "ACTIVE".equals(status) || "GRACE_PERIOD".equals(status);
     }

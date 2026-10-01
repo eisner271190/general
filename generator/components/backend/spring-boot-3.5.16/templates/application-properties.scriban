@@ -41,7 +41,8 @@ aws.region=${AWS_REGION}
 aws.profile=${AWS_PROFILE}
 aws.sns.arn=${AWS_SNS_TOPIC_ARN:}
 
-# RevenueCat
-revenuecat.secret-key=${REVENUECAT_SECRET_KEY:}
-revenuecat.webhook-secret=${REVENUECAT_WEBHOOK_SECRET:}
-revenuecat.api-base-url=https://api.revenuecat.com
+# Suscripcion (proveedor actual: RevenueCat). Claves genericas para poder
+# cambiar de proveedor sin tocar esta propiedad.
+subscription.secret-key=${SUBSCRIPTION_SECRET_KEY:${subscription-secret-key:}}
+subscription.webhook-secret=${SUBSCRIPTION_WEBHOOK_SECRET:${subscription-webhook-secret:}}
+subscription.api-base-url=${SUBSCRIPTION_API_BASE_URL:https://api.revenuecat.com}

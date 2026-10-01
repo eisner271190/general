@@ -1,30 +1,115 @@
 package {{ PACKAGE }}.infrastructure.adapters;
 
 import {{ PACKAGE }}.domain.model.Subscription;
+import {{ PACKAGE }}.domain.ports.ISubscriptionProviderPort;
+import {{ PACKAGE }}.infrastructure.adapters.RevenueCatSubscriberResponse.SubscriptionInfo;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Cliente REST de RevenueCat. La respuesta del proveedor no encaja con el modelo de
+ * dominio: se traduce aqui para que {@code ISubscriptionProviderPort} siga siendo agnostico.
+ */
 @Component
-public class RevenueCatAdapter {
+public class RevenueCatAdapter implements ISubscriptionProviderPort {
+
+    private static final String STATUS_ACTIVE = "ACTIVE";
+    private static final String STATUS_GRACE_PERIOD = "GRACE_PERIOD";
+    private static final String STATUS_EXPIRED = "EXPIRED";
 
     private final WebClient webClient;
     private final String secretApiKey;
 
     public RevenueCatAdapter(
             WebClient.Builder webClientBuilder,
-            @Value("${revenuecat.api-base-url}") String apiBaseUrl,
-            @Value("${revenuecat.secret-key}") String secretApiKey) {
+            @Value("${subscription.api-base-url}") String apiBaseUrl,
+            @Value("${subscription.secret-key}") String secretApiKey) {
         this.webClient = webClientBuilder.baseUrl(apiBaseUrl).build();
         this.secretApiKey = secretApiKey;
     }
 
-    public Mono<Subscription> fetchCustomerInfo(String appUserId) {
+    /** Devuelve vacio cuando el usuario no tiene ninguna suscripcion registrada. */
+    @Override
+    public Mono<Subscription> fetchSubscription(String appUserId) {
         return webClient.get()
             .uri("/v1/subscribers/{appUserId}", appUserId)
             .header("Authorization", "Bearer " + secretApiKey)
             .retrieve()
-            .bodyToMono(Subscription.class);
+            .bodyToMono(RevenueCatSubscriberResponse.class)
+            .flatMap(response -> toDomain(appUserId, response));
+    }
+
+    private Mono<Subscription> toDomain(String appUserId, RevenueCatSubscriberResponse response) {
+        return Mono.justOrEmpty(pickSubscription(response))
+            .map(entry -> build(appUserId, entry));
+    }
+
+    /** Se queda con la suscripcion de expiracion mas lejana: la vigente entre varias. */
+    private Optional<Map.Entry<String, SubscriptionInfo>> pickSubscription(
+            RevenueCatSubscriberResponse response) {
+        return subscriptionsOf(response).entrySet().stream()
+            .max(Comparator.comparingLong(
+                (Map.Entry<String, SubscriptionInfo> entry) -> expirationOf(entry.getValue())));
+    }
+
+    private Map<String, SubscriptionInfo> subscriptionsOf(RevenueCatSubscriberResponse response) {
+        if (response == null || response.subscriber() == null
+                || response.subscriber().subscriptions() == null) {
+            return Map.of();
+        }
+        return response.subscriber().subscriptions();
+    }
+
+    private Subscription build(String appUserId, Map.Entry<String, SubscriptionInfo> entry) {
+        SubscriptionInfo info = entry.getValue();
+        Subscription subscription = new Subscription();
+        subscription.setUserId(appUserId);
+        subscription.setProductId(entry.getKey());
+        subscription.setStatus(resolveStatus(info));
+        subscription.setStore(normalizeStore(info.store()));
+        subscription.setOriginalTransactionId(info.originalTransactionId());
+        subscription.setPurchasedAtMs(parseMs(info.purchaseDate()));
+        subscription.setExpirationAtMs(parseMs(info.expiresDate()));
+        subscription.setUpdatedAtMs(System.currentTimeMillis());
+        return subscription;
+    }
+
+    private String resolveStatus(SubscriptionInfo info) {
+        if (expirationOf(info) >= System.currentTimeMillis()) {
+            return STATUS_ACTIVE;
+        }
+        return isWithinGrace(info) ? STATUS_GRACE_PERIOD : STATUS_EXPIRED;
+    }
+
+    private boolean isWithinGrace(SubscriptionInfo info) {
+        Long grace = parseMs(info.gracePeriodExpiresDate());
+        return grace != null && grace >= System.currentTimeMillis();
+    }
+
+    /** Epoch ms de expiracion; {@code Long.MAX_VALUE} cuando no expira (sin fecha). */
+    private long expirationOf(SubscriptionInfo info) {
+        Long expiration = parseMs(info.expiresDate());
+        return expiration == null ? Long.MAX_VALUE : expiration;
+    }
+
+    private Long parseMs(String isoDate) {
+        if (isoDate == null || isoDate.isBlank()) {
+            return null;
+        }
+        return Instant.parse(isoDate).toEpochMilli();
+    }
+
+    /** RevenueCat devuelve minusculas (app_store) y el webhook mayusculas (APP_STORE). */
+    private String normalizeStore(String store) {
+        return store == null ? null : store.toUpperCase(Locale.ROOT);
     }
 }

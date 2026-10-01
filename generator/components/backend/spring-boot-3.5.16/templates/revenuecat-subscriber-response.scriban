@@ -1,0 +1,30 @@
+package {{ PACKAGE }}.infrastructure.adapters;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+/**
+ * Respuesta real de GET /v1/subscribers/{appUserId} de RevenueCat.
+ *
+ * <p>El dominio no la conoce: solo la traduce {@code RevenueCatAdapter}. Se declaran
+ * unicamente los campos consumidos; el resto se ignoran.
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record RevenueCatSubscriberResponse(
+    @JsonProperty("subscriber") Subscriber subscriber
+) {
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record Subscriber(
+        @JsonProperty("subscriptions") java.util.Map<String, SubscriptionInfo> subscriptions
+    ) {}
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record SubscriptionInfo(
+        @JsonProperty("expires_date") String expiresDate,
+        @JsonProperty("grace_period_expires_date") String gracePeriodExpiresDate,
+        @JsonProperty("purchase_date") String purchaseDate,
+        @JsonProperty("original_transaction_id") String originalTransactionId,
+        @JsonProperty("store") String store
+    ) {}
+}

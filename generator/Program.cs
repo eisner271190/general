@@ -7,13 +7,14 @@ using Generator.Infrastructure;
 try
 {
     var workingDirectory = ResolveWorkingDirectory();
+    var fileSystem = CreateFileSystem();
     var jsonReader = CreateJsonReader();
     var pathValidator = CreatePathValidator();
     var inverseStrategies = CreateInverseStrategies();
     var validationRules = CreateValidationRules(inverseStrategies);
     var configurationValidator = CreateConfigurationValidator(validationRules);
     var templateRenderer = CreateTemplateRenderer();
-    var planBuilder = CreatePlanBuilder(workingDirectory, jsonReader, pathValidator, configurationValidator, templateRenderer);
+    var planBuilder = CreatePlanBuilder(workingDirectory, fileSystem, jsonReader, pathValidator, configurationValidator, templateRenderer);
     var planExecutorFactory = CreatePlanExecutorFactory(workingDirectory, jsonReader, pathValidator);
     var application = CreateApplication(workingDirectory, planBuilder, pathValidator, planExecutorFactory);
     application.Run();
@@ -29,6 +30,8 @@ catch (Exception exception)
 static string ResolveWorkingDirectory() => new ProjectDirectoryResolver().Resolve();
 
 static IJsonFileReader CreateJsonReader() => new JsonFileReader();
+
+static IFileSystem CreateFileSystem() => new PhysicalFileSystem();
 
 static IPathValidator CreatePathValidator() => new PathValidator();
 
@@ -54,11 +57,12 @@ static ITemplateRenderer CreateTemplateRenderer() => new TemplateRenderer();
 
 static GenerationPlanBuilder CreatePlanBuilder(
     string workingDirectory,
+    IFileSystem fileSystem,
     IJsonFileReader jsonReader,
     IPathValidator pathValidator,
     IConfigurationValidator configurationValidator,
     ITemplateRenderer templateRenderer) =>
-    new GenerationPlanBuilder(workingDirectory, jsonReader, pathValidator, configurationValidator, templateRenderer);
+    new GenerationPlanBuilder(workingDirectory, fileSystem, jsonReader, pathValidator, configurationValidator, templateRenderer);
 
 static IPlanExecutorFactory CreatePlanExecutorFactory(
     string workingDirectory,

@@ -2,9 +2,9 @@ package {{ PACKAGE }}.domain.usecase;
 
 import {{ PACKAGE }}.application.dto.SubscriptionStatusResponseDTO;
 import {{ PACKAGE }}.domain.model.Subscription;
+import {{ PACKAGE }}.domain.ports.ISubscriptionProviderPort;
 import {{ PACKAGE }}.domain.ports.SubscriptionPort;
 import {{ PACKAGE }}.domain.servicePorts.ISubscriptionServicePort;
-import {{ PACKAGE }}.infrastructure.adapters.RevenueCatAdapter;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -12,30 +12,44 @@ import reactor.core.publisher.Mono;
 public class SubscriptionUseCase implements ISubscriptionServicePort {
 
     private final SubscriptionPort subscriptionPort;
-    private final RevenueCatAdapter revenueCatAdapter;
+    private final ISubscriptionProviderPort subscriptionProvider;
 
-    public SubscriptionUseCase(SubscriptionPort subscriptionPort, RevenueCatAdapter revenueCatAdapter) {
+    public SubscriptionUseCase(SubscriptionPort subscriptionPort, ISubscriptionProviderPort subscriptionProvider) {
         this.subscriptionPort = subscriptionPort;
-        this.revenueCatAdapter = revenueCatAdapter;
+        this.subscriptionProvider = subscriptionProvider;
     }
 
+    /**
+     * Solo sirve de caché la suscripcion que da acceso. Un registro INACTIVE (guardado en una
+     * consulta anterior) no enmiende: si no, una compra posterior quedaria enmascarada hasta que
+     * un webhook la corrigiera.
+     */
     @Override
     public Mono<SubscriptionStatusResponseDTO> getStatus(String userId) {
         return subscriptionPort.findActiveSubscription(userId)
-            .switchIfEmpty(fetchAndCacheFromRevenueCat(userId))
+            .filter(Subscription::isActive)
+            .switchIfEmpty(fetchAndCacheFromProvider(userId))
             .map(this::toResponse);
     }
 
     @Override
-    public Mono<SubscriptionStatusResponseDTO> syncFromRevenueCat(String userId) {
-        return revenueCatAdapter.fetchCustomerInfo(userId)
+    public Mono<SubscriptionStatusResponseDTO> syncFromProvider(String userId) {
+        return subscriptionProvider.fetchSubscription(userId)
             .flatMap(this::saveAndMap)
-            .switchIfEmpty(createInactiveSubscription(userId));
+            .switchIfEmpty(saveInactive(userId).map(this::toResponse));
     }
 
-    private Mono<Subscription> fetchAndCacheFromRevenueCat(String userId) {
-        return revenueCatAdapter.fetchCustomerInfo(userId)
-            .flatMap(subscriptionPort::saveSubscription);
+    /**
+     * Cachea lo que diga el proveedor. Si no hay suscripcion, deja INACTIVE en almacenamiento
+     * para que las siguientes consultas no vuelvan a llamar a la API (plan 5.4).
+     *
+     * <p>Sin este ultimo {@code switchIfEmpty} el Mono quedaba vacio y el controller respondia
+     * sin {@code data} en lugar de {@code isActive:false}.
+     */
+    private Mono<Subscription> fetchAndCacheFromProvider(String userId) {
+        return subscriptionProvider.fetchSubscription(userId)
+            .flatMap(subscriptionPort::saveSubscription)
+            .switchIfEmpty(saveInactive(userId));
     }
 
     private Mono<SubscriptionStatusResponseDTO> saveAndMap(Subscription subscription) {
@@ -43,9 +57,8 @@ public class SubscriptionUseCase implements ISubscriptionServicePort {
             .map(this::toResponse);
     }
 
-    private Mono<SubscriptionStatusResponseDTO> createInactiveSubscription(String userId) {
-        return subscriptionPort.saveSubscription(Subscription.inactive(userId))
-            .map(this::toResponse);
+    private Mono<Subscription> saveInactive(String userId) {
+        return subscriptionPort.saveSubscription(Subscription.inactive(userId));
     }
 
     private SubscriptionStatusResponseDTO toResponse(Subscription subscription) {

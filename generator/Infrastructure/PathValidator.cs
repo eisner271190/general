@@ -1,7 +1,8 @@
+using Generator.Application;
 using Generator.Domain.Messages;
 using Generator.Configuration;
 
-namespace Generator.Domain.Validation;
+namespace Generator.Infrastructure;
 
 internal sealed class PathValidator : IPathValidator
 {

@@ -178,6 +178,7 @@
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/dynamos/tableschema/WebhookEventTableSchema.java", "value": "templates/webhook-event-table-schema.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model/Subscription.java", "value": "templates/subscription-model.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/ports/SubscriptionPort.java", "value": "templates/subscription-port.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/ports/ISubscriptionProviderPort.java", "value": "templates/isubscription-provider-port.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/servicePorts/ISubscriptionServicePort.java", "value": "templates/isubscription-service-port.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/servicePorts/IWebhookServicePort.java", "value": "templates/iwebhook-service-port.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/SubscriptionUseCase.java", "value": "templates/subscription-usecase.scriban" },
@@ -192,6 +193,8 @@
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/SubscriptionStatusResponseDTO.java", "value": "templates/subscription-status-response-dto.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/WebhookEventDTO.java", "value": "templates/webhook-event-dto.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/RevenueCatAdapter.java", "value": "templates/revenuecat-adapter.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/RevenueCatWebhookPayload.java", "value": "templates/revenuecat-webhook-payload.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/RevenueCatSubscriberResponse.java", "value": "templates/revenuecat-subscriber-response.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/SubscriptionAdapter.java", "value": "templates/subscription-adapter.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/webfilters/RevenueCatWebhookFilter.java", "value": "templates/revenuecat-webhook-filter.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/SubscriptionController.java", "value": "templates/subscription-controller.scriban" }

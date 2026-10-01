@@ -15,8 +15,9 @@
     sobrescriben los parámetros cuyo valor sale de la infraestructura
     (ARN de SNS, URL de SQS, URL de API, dominio y client id de Cognito).
     Al finalizar la fase Apply siembra el secreto único de la aplicación
-    <environment>/<applicationId> con las claves que falten (jwt-secret y
-    api-key). Esos valores son temporales: cámbialos a mano en AWS.
+    <environment>/<applicationId> con las claves que falten (jwt-secret,
+    api-key, subscription-secret-key y subscription-webhook-secret). Esos
+    valores son temporales: cámbialos a mano en AWS.
     Terraform sólo crea el contenedor, así que el secreto debe existir ya.
 .PARAMETER Environment
     Entorno a desplegar. Por defecto el entorno con el que se generó el proyecto.
@@ -272,12 +273,12 @@ function New-ApplicationSecretDefault {
         return 'PLACEHOLDER_CAMBIAR_EN_AWS'
     }
 
-    if ($Key -eq 'revenuecat-secret-key') {
-        return 'REVENUECAT_SECRET_KEY_PLACEHOLDER'
+    if ($Key -eq 'subscription-secret-key') {
+        return 'SUBSCRIPTION_SECRET_KEY_PLACEHOLDER'
     }
 
-    if ($Key -eq 'revenuecat-webhook-secret') {
-        return 'REVENUECAT_WEBHOOK_SECRET_PLACEHOLDER'
+    if ($Key -eq 'subscription-webhook-secret') {
+        return 'SUBSCRIPTION_WEBHOOK_SECRET_PLACEHOLDER'
     }
 
     throw "Sin valor por defecto para la clave $Key"
@@ -286,7 +287,7 @@ function New-ApplicationSecretDefault {
 function Get-MissingApplicationSecretKey {
     param([Parameter(Mandatory)][System.Collections.IDictionary]$Secret)
 
-    $seededKeys = @('jwt-secret', 'api-key', 'revenuecat-secret-key', 'revenuecat-webhook-secret')
+    $seededKeys = @('jwt-secret', 'api-key', 'subscription-secret-key', 'subscription-webhook-secret')
     return ($seededKeys | Where-Object -FilterScript { -not $Secret.ContainsKey($_) })
 }
 

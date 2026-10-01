@@ -24,8 +24,8 @@
 
 ## Estructura de carpetas
 - `Program.cs` composición/exit codes (capa de presentación; aquí se ensambla todo).
-- `Application/` casos de uso: `GeneratorApplication`, `GenerationPlanBuilder`, estado del plan (`PlanRequest`, `PlanContext`, `PlanState`, `PlannedGeneration`), logger y puertos (`IJsonFileReader`, `ITemplateRenderer`, `IPlanExecutor`, `IPlanExecutorFactory`).
-- `Domain/` sin dependencias de Application/Infrastructure: `Domain/Models/` (configuración y plan), `Domain/Validation/` (reglas, estrategias de inversas, `PathValidator`), `Domain/Messages/` (`ErrorCodes`, `GeneratorMessages`, `GeneratorException`).
-- `Infrastructure/` implementa los puertos de Application: `JsonFileReader`, `TemplateRenderer`, `PlanExecutor`, `PlanExecutorFactory`, `ProjectDirectoryResolver`.
+- `Application/` casos de uso: `GeneratorApplication`, `GenerationPlanBuilder`, estado del plan (`PlanRequest`, `PlanContext`, `PlanState`, `PlannedGeneration`), logger y puertos (`IJsonFileReader`, `ITemplateRenderer`, `IPlanExecutor`, `IPlanExecutorFactory`, `IFileSystem`, `IPathValidator`). La capa Application nunca toca `File.*`/`Path.*`/`Directory.*`: siempre vía puertos.
+- `Domain/` sin dependencias de Application/Infrastructure: `Domain/Models/` (configuración y plan), `Domain/Validation/` (reglas y estrategias de inversas), `Domain/Messages/` (`ErrorCodes`, `GeneratorMessages`, `GeneratorException`). Sin `System.IO`.
+- `Infrastructure/` implementa los puertos de Application: `JsonFileReader`, `TemplateRenderer`, `PlanExecutor`, `PlanExecutorFactory`, `PhysicalFileSystem`, `PathValidator`, `ProjectDirectoryResolver`.
 - `Configuration/` constantes técnicas (`GeneratorConstants`); `components/` y `target/` son datos, no código; `docs/` planes y decisiones del generador.
 - Regla de dependencia: Infrastructure → Application (puertos) y ambos → Domain; nunca al revés.

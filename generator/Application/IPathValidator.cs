@@ -1,4 +1,4 @@
-namespace Generator.Domain.Validation;
+namespace Generator.Application;
 
 internal interface IPathValidator
 {

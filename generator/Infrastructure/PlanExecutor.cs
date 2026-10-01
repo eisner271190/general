@@ -1,7 +1,6 @@
 using Generator.Application;
 using Generator.Domain.Models;
 using Generator.Domain.Messages;
-using Generator.Domain.Validation;
 using Generator.Configuration;
 
 namespace Generator.Infrastructure;

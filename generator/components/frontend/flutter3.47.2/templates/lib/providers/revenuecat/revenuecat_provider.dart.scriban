@@ -8,26 +8,36 @@ import '../../core/config/monetization_env.dart';
 import '../../core/interfaces/monetization_provider.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/models/user_entitlement.dart';
+import '../../features/auth/data/auth_service_factory.dart';
+import '../../features/auth/domain/auth_user.dart';
 
 class RevenueCatProvider implements MonetizationProvider {
   final _secureStorage = const FlutterSecureStorage();
   final _entitlementController = StreamController<UserEntitlement>.broadcast();
   static const _entitlementCacheKey = 'subscription_status_cache';
   static const _entitlementCacheTimestampKey = 'subscription_status_timestamp';
+  StreamSubscription<AuthUser?>? _authSubscription;
+  String? _identifiedAppUserId;
 
   @override
   Future<void> initialize() async {
     if (kIsWeb) return;
     try {
-      await Purchases.setLogLevel(LogLevel.debug);
-      await Purchases.configure(
-        PurchasesConfiguration(MonetizationEnv.revenueCatKey),
-      );
+      await _configureSdk();
+      await _identifyWithAuthState();
       await _syncFromBackend();
     } catch (e) {
       debugPrint('[RevenueCatProvider] Error initializing: $e');
       rethrow;
     }
+  }
+
+  /// Configura el SDK con la clave pública; antes de `logIn` el id es anónimo.
+  Future<void> _configureSdk() async {
+    await Purchases.setLogLevel(LogLevel.debug);
+    await Purchases.configure(
+      PurchasesConfiguration(MonetizationEnv.revenueCatKey),
+    );
   }
 
   @override
@@ -65,6 +75,44 @@ class RevenueCatProvider implements MonetizationProvider {
   @override
   Stream<UserEntitlement> entitlementStream() {
     return _entitlementController.stream;
+  }
+
+  /// Mantiene a RevenueCat identificado con el mismo id que usa el backend.
+  ///
+  /// Se suscribe antes de leer `currentUser` para no perder cambios de sesión.
+  Future<void> _identifyWithAuthState() async {
+    await _authSubscription?.cancel();
+    final authService = AuthServiceFactory.create();
+    _authSubscription = authService.authStateChanges.listen(
+      _syncIdentity,
+      onError: (Object error) =>
+          debugPrint('[RevenueCatProvider] Stream de sesión: $error'),
+    );
+    await _syncIdentity(authService.currentUser);
+  }
+
+  /// Identifica al usuario en RevenueCat, o cierra esa identificación al salir.
+  ///
+  /// Solo actúa si la identidad cambia respecto a la de esta sesión, para no
+  /// pisar la identidad anónima que el SDK restaura al arrancar.
+  Future<void> _syncIdentity(AuthUser? user) async {
+    final nextAppUserId = user?.id;
+    if (nextAppUserId == _identifiedAppUserId) return;
+    try {
+      if (nextAppUserId == null) {
+        await Purchases.logOut();
+      } else {
+        await Purchases.logIn(nextAppUserId);
+      }
+      _identifiedAppUserId = nextAppUserId;
+      debugPrint(
+        '[RevenueCatProvider] appUserId=${nextAppUserId ?? "anonymous"}',
+      );
+    } catch (e) {
+      debugPrint(
+        '[RevenueCatProvider] No se pudo identificar en RevenueCat: $e',
+      );
+    }
   }
 
   Future<void> _syncFromBackend() async {
