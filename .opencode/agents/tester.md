@@ -20,5 +20,5 @@ Eres `tester`. Pruebas la implementación del objetivo `NNN`. **No corrigas el c
   - **Pasan** → el objetivo finaliza (el orchestrator lo mueve a `objectives/resolved-objectives/`).
   - **Falla por implementación** → vuelve a Developer.
   - **Falla por arquitectura/requisito** → vuelve a Architect.
-- Dudas → `QUESTIONS_OPEN` (un archivo por pregunta, numeración secuencial, usar `QUESTION_TEMPLATE`) con `- [ ] [tester]` + `Contexto:` / `Tarea: NNN` / `Solución propuesta:`; no detienes la sesión.
+- Dudas → `WORKFLOW` §Dudas.
 - Nunca modifiques tests ni código. Español. Breve.

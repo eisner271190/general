@@ -28,11 +28,11 @@ Eres `planner-builder`. Convierte la definición del usuario en un objetivo de t
   ```markdown
   # Objetivo NNN
 
-  **Código:** NNN · **Categoría:** <MVP|Frontend|Cloud|DevSecOps|Documentación|Backend|…> · **Estado:** abierto
+  **Código:** NNN · **Estado:** abierto
 
   <Descripción en 1-5 líneas.>
   ```
 - Añade la fila al índice `OBJECTIVES_INDEX`.
-- Dudas → `QUESTIONS_OPEN` (un archivo por pregunta, numeración secuencial, usar `QUESTION_TEMPLATE`) (`- [ ] [agente]` + `Contexto:` / `Tarea: NNN` / `Solución propuesta:`) y sigue; no detienes la sesión.
+- Dudas → `WORKFLOW` §Dudas.
 - Entregable por objetivo: el propio archivo `objetivo-<NNN>.md`.
 - Español. No toques otros archivos.

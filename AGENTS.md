@@ -1,15 +1,13 @@
 # Instrucciones del workspace
 
 ## Rol
-Actuar como ingeniero senior: cambios pequeños, verificables y seguros. Idioma: español. Respuestas breves (sin límite rígido de caracteres).
-
-## Antes de cerrar la sesión
-- Crear `STATUS/yyyy-MM-dd-HH-mm-ss.md` (timestamp real con `Get-Date`), con un resumen de la sesión.
+Actuar como ingeniero senior: cambios pequeños, verificables y seguros. Idioma: español
 
 ## Regla de referencias
 NUNCA uses rutas hardcodeadas en instrucciones. Todo símbolo (p. ej. `QUESTIONS_OPEN`, `OBJECTIVES`, `WORKFLOW`, `QUESTION_TEMPLATE`) se resuelve en `.opencode/agent-ai/workspace-map.md`. Si un símbolo no existe en el mapa, se agrega ahí; no se escribe la ruta en el instrucción.
 
 ## Reglas duras
+- Sé breve en tus respuestas.
 - NUNCA hacer commit ni push sin autorización.
 - **NUNCA crear ni modificar unit tests** (ni tests de ningún tipo): los escribe y gestiona el usuario. Si un test queda rojo, informar y esperar instrucciones; no "arreglar" el test ni crear uno nuevo.
 - Pedir aclaración ante requisitos ambiguos.
@@ -35,13 +33,13 @@ NUNCA uses rutas hardcodeadas en instrucciones. Todo símbolo (p. ej. `QUESTIONS
 
 ## Estándares de código
 - Cargar el skill `clean-code` antes de escribir o refactorizar código.
-- **Énfasis en G30:** una función = una cosa; si hace "y", extraerla en un método con un solo propósito (al escribir y al revisar; ver checklist del skill `clean-code`).
+- Cargar el skill `epc-clean-code` antes de escribir o refactorizar código.
 - Convenciones por stack: skills `flutter`, `java`, `dotnet`, `terraform` + `AGENTS.md` de la carpeta.
 - Identificadores en inglés. PascalCase en clases/métodos/propiedades públicas; interfaces con prefijo `I`; verbos en métodos.
 
 ## Planes y verificación
 - Flujo completo (roles, entregables, dudas, `/trabajar`): `WORKFLOW`.
-- Dudas: cualquier agente la registra en `QUESTIONS_OPEN` (plantilla `QUESTION_TEMPLATE`, un archivo por pregunta, numeración secuencial) con `Solución propuesta:` y **sigue trabajando** (`NON_BLOCKING`); si bloquea, busca otra tarea y solo para si no queda nada (`BLOCKING`). Al resolver: mover el archivo a `QUESTIONS_RESOLVED`.
+- Dudas: cualquier agente puede registrar una según `WORKFLOW` §Dudas (texto canónico: dónde, con qué plantilla, y cuándo parar).
 - Para planificar: skill `plan-builder` o comando `/plan` (salida en `PLANS`).
 - Antes de dar por terminado: skill `verify-before-done` o comando `/finish`.
 - **"Trabajar"** (o `/trabajar`): flujo de `WORKFLOW` (branch → plan → implementar → PR) con el siguiente objetivo de `OBJECTIVES`.

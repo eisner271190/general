@@ -48,18 +48,3 @@ NUNCA uses rutas hardcodeadas en instrucciones. Consulta este archivo para resol
 | PLAN_REVIEW_TEMPLATE | `docs/templates/plan-review.md` |
 | TEST_REPORT_TEMPLATE | `docs/templates/test-report.md` |
 | REPORT_TEMPLATE | `docs/templates/report.md` |
-
-## Nomenclatura de entregables
-
-| Rol | Archivo |
-|-----|---------|
-| researcher | `research-<NNN>.md` |
-| architect | `architecture-<NNN>.md` |
-| reviewer-plan | `plan-review-<NNN>.md` |
-| developer | `implementation-<NNN>.md` |
-| tester | `test-report-<NNN>.md` |
-
-## Nomenclatura de archivos de revisión
-
-- `REVIEWS/code-review-yyyy-MM-dd-HH-mm-ss.md` (timestamp real, obtained con `Get-Date`).
-- `STATUS/yyyy-MM-dd-HH-mm-ss.md` al cerrar sesión.

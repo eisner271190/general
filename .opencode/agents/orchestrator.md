@@ -48,5 +48,5 @@ Reglas:
 - Aplica las reglas duras del `AGENTS.md` raíz: nunca compilar/commit/push sin autorización.
 - Sintetiza los resultados de los subagentes en un res breve en español, hallazgos por severidad con `ruta:línea`.
 - Tú no edites archivos cuando delegas; solo integras y respondes.
-- **Dudas:** cualquier agente la registra en `QUESTIONS_OPEN` (un archivo por pregunta, numeración secuencial, usar `QUESTION_TEMPLATE`) con `Solución propuesta:`; `NON_BLOCKING` → registrar y continuar, `BLOCKING` → registrar, buscar otra tarea y solo parar si no queda nada. Revisa las abiertas al inicio de cada fase y muéstralas al cerrar.
+- **Dudas:** cualquier agente la registra según `WORKFLOW` §Dudas; `NON_BLOCKING` → registrar y continuar, `BLOCKING` → registrar, buscar otra tarea y solo parar si no queda nada. Revisa las abiertas al inicio de cada fase y muéstralas al cerrar.
 - Si falta información, haz preguntas en lugar de suponer.

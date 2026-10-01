@@ -42,7 +42,9 @@ Referencia en `AGENTS.md`. Los símbolos (`OBJECTIVES`, `QUESTIONS_OPEN`, `WORKF
 
 ## Dudas (cualquier agente puede crear una)
 
-- Registrar en `QUESTIONS_OPEN` (un archivo por pregunta, numeración secuencial, plantilla `QUESTION_TEMPLATE`): `- [ ] [agente] Pregunta` + `Contexto:` / `Tarea: NNN` / `Solución propuesta:`.
+Texto canónico: los agentes con línea `Dudas → WORKFLOW §Dudas` obedecen esto.
+
+- Registrar en `QUESTIONS_OPEN` (plantilla `QUESTION_TEMPLATE`): `- [ ] [agente] Pregunta` + `Contexto:` / `Tarea: NNN` / `Solución propuesta:`.
 - Al resolver: **mover** el archivo a `QUESTIONS_RESOLVED` con `- [x]` + `Respuesta:` + fecha.
 - `NON_BLOCKING`: duda → registrar → continuar con la siguiente tarea.
 - `BLOCKING`: duda → registrar → buscar otra tarea ejecutable → continuar; **solo detener si no queda trabajo posible**.
