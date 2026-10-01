@@ -1,15 +1,10 @@
 import 'package:flutter/widgets.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../monetization_module.dart';
 import 'app_initializer.dart';
-import 'config/monetization_env.dart';
 
 /// Inicializador que configura la monetización (RevenueCat + AdMob).
 class MonetizationInitializer implements AppInitializer {
   final MonetizationModule _monetization;
-  final _secureStorage = const FlutterSecureStorage();
 
   MonetizationInitializer(this._monetization);
 
@@ -25,26 +20,5 @@ class MonetizationInitializer implements AppInitializer {
   Future<void> postUi(BuildContext context) async {
     debugPrint('[MonetizationInitializer] postUi() called');
     debugPrint('[MonetizationInitializer] postUi() finished');
-  }
-
-  /// Sincroniza el estado de suscripción con el backend tras una compra.
-  Future<void> syncAfterPurchase() async {
-    try {
-      final token = await _secureStorage.read(key: 'jwt_token');
-      if (token == null) return;
-      final response = await http.post(
-        Uri.parse('${MonetizationEnv.apiBaseUrl}/api/v1/subscriptions/sync'),
-        headers: {'Authorization': 'Bearer $token'},
-      );
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body)['data'];
-        final isActive = data['isActive'] as bool;
-        final planId = data['productId'] as String? ?? '';
-        // Notificar a los listeners del cambio de estado
-        _monetization.provider.entitlementStream().listen((_) {});
-      }
-    } catch (e) {
-      debugPrint('[MonetizationInitializer] Sync after purchase failed: $e');
-    }
   }
 }

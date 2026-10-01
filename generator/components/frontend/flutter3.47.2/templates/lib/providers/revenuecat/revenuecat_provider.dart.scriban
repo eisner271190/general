@@ -63,7 +63,7 @@ class RevenueCatProvider implements MonetizationProvider {
       throw Exception('Plan $planId not found');
     }
     await Purchases.purchase(PurchaseParams.package(package));
-    await _syncFromBackend();
+    await _syncAfterPurchase();
   }
 
   @override
@@ -115,26 +115,49 @@ class RevenueCatProvider implements MonetizationProvider {
     }
   }
 
+  /// Estado del backend sin mas: GET /status aprovecha la cache del servidor.
   Future<void> _syncFromBackend() async {
     try {
       final response = await http.get(
         Uri.parse('${MonetizationEnv.apiBaseUrl}/api/v1/subscriptions/status'),
         headers: await _buildAuthHeaders(),
       );
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body)['data'];
-        final isActive = data['isActive'] as bool;
-        final planId = data['productId'] as String? ?? '';
-        final entitlement = UserEntitlement(isActive: isActive, planId: planId);
-        _entitlementController.add(entitlement);
-        await _cacheEntitlement(entitlement);
-      }
+      await _applyStatusResponse(response);
     } catch (e) {
-      debugPrint('[RevenueCatProvider] Sync failed, using cache: $e');
-      final cached = await _getCachedEntitlement();
-      if (cached != null) {
-        _entitlementController.add(cached);
-      }
+      await _fallbackToCachedEntitlement(e);
+    }
+  }
+
+  /// Justo despues de una compra el backend debe reconsultar al proveedor:
+  /// POST /sync ignora su cache, mientras que GET /status devolveria el estado anterior.
+  Future<void> _syncAfterPurchase() async {
+    try {
+      final response = await http.post(
+        Uri.parse('${MonetizationEnv.apiBaseUrl}/api/v1/subscriptions/sync'),
+        headers: await _buildAuthHeaders(),
+      );
+      await _applyStatusResponse(response);
+    } catch (e) {
+      await _fallbackToCachedEntitlement(e);
+    }
+  }
+
+  Future<void> _applyStatusResponse(http.Response response) async {
+    if (response.statusCode != 200) return;
+    final data = jsonDecode(response.body)['data'];
+    final entitlement = UserEntitlement(
+      isActive: data['isActive'] as bool,
+      planId: data['productId'] as String? ?? '',
+    );
+    _entitlementController.add(entitlement);
+    await _cacheEntitlement(entitlement);
+  }
+
+  Future<void> _fallbackToCachedEntitlement(Object error) async {
+    debugPrint('[RevenueCatProvider] Sync failed, using cache: $error');
+    final cached = await _getCachedEntitlement();
+    if (cached != null) {
+      _entitlementController.add(cached);
     }
   }
 

@@ -26,7 +26,7 @@ public class SubscriptionAdapter implements SubscriptionPort {
      * suscripcion inactiva (UNCANCELLATION, RENEWAL tras EXPIRATION) para mutarla.
      */
     @Override
-    public Mono<Subscription> findActiveSubscription(String userId) {
+    public Mono<Subscription> findSubscriptionByUserId(String userId) {
         return Mono.fromCallable(() -> table.getItem(keyFor(userId)))
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(this::toDomain);
@@ -41,7 +41,7 @@ public class SubscriptionAdapter implements SubscriptionPort {
 
     @Override
     public Mono<Subscription> updateStatus(String userId, String status) {
-        return findActiveSubscription(userId)
+        return findSubscriptionByUserId(userId)
                 .map(subscription -> subscription.withStatus(status))
                 .flatMap(this::saveSubscription);
     }

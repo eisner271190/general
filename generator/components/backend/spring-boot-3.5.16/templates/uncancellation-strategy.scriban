@@ -23,7 +23,7 @@ public class UncancellationStrategy implements IWebhookStrategy {
 
     @Override
     public Mono<Void> handle(WebhookEventDTO event) {
-        return subscriptionPort.findActiveSubscription(event.userId())
+        return subscriptionPort.findSubscriptionByUserId(event.userId())
             .flatMap(subscription -> subscriptionPort.saveSubscription(
                 subscription.withStatus("ACTIVE")
             ))

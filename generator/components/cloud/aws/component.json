@@ -27,6 +27,7 @@
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/cognito_client.tf", "value": "templates/terraform-cognito-client.scriban" },
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/cognito_google_provider.tf", "value": "templates/terraform-cognito-google-provider.scriban" },
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/lambda.tf", "value": "templates/terraform-lambda.scriban" },
+    { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/dynamodb.tf", "value": "templates/terraform-dynamodb.scriban" },
     { "key": "cloud/terraform/{{MICROSERVICE_NAME}}/ssm.tf", "value": "templates/terraform-ssm.scriban" },
     { "key": "cloud/terraform/app/provider.tf", "value": "templates/terraform-provider.scriban" },
     { "key": "cloud/terraform/app/variables.tf", "value": "templates/terraform-variables.scriban" },

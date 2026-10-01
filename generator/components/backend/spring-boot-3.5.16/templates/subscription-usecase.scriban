@@ -26,7 +26,7 @@ public class SubscriptionUseCase implements ISubscriptionServicePort {
      */
     @Override
     public Mono<SubscriptionStatusResponseDTO> getStatus(String userId) {
-        return subscriptionPort.findActiveSubscription(userId)
+        return subscriptionPort.findSubscriptionByUserId(userId)
             .filter(Subscription::isActive)
             .switchIfEmpty(fetchAndCacheFromProvider(userId))
             .map(this::toResponse);

@@ -4,7 +4,12 @@ import {{ PACKAGE }}.domain.model.Subscription;
 import reactor.core.publisher.Mono;
 
 public interface SubscriptionPort {
-    Mono<Subscription> findActiveSubscription(String userId);
+    /**
+     * Devuelve la suscripcion registrada del usuario, sea cual sea su estado.
+     * No filtra: las estrategias de webhook deben localizar la fila inactiva
+     * (UNCANCELLATION, RENEWAL tras EXPIRATION) para mutarla.
+     */
+    Mono<Subscription> findSubscriptionByUserId(String userId);
     Mono<Subscription> saveSubscription(Subscription subscription);
     Mono<Subscription> updateStatus(String userId, String status);
 }

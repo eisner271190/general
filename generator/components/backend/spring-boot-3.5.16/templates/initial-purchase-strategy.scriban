@@ -1,0 +1,37 @@
+package {{ PACKAGE }}.domain.usecase.strategies;
+
+import {{ PACKAGE }}.application.dto.WebhookEventDTO;
+import {{ PACKAGE }}.domain.model.Subscription;
+import {{ PACKAGE }}.domain.ports.SubscriptionPort;
+import {{ PACKAGE }}.domain.usecase.IWebhookStrategy;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+
+@Component
+public class InitialPurchaseStrategy implements IWebhookStrategy {
+
+    private final SubscriptionPort subscriptionPort;
+
+    public InitialPurchaseStrategy(SubscriptionPort subscriptionPort) {
+        this.subscriptionPort = subscriptionPort;
+    }
+
+    @Override
+    public String eventType() {
+        return "INITIAL_PURCHASE";
+    }
+
+    /**
+     * Primera compra: el evento da de alta la suscripcion. Sin esta estrategia el evento
+     * caia en {@link UnknownEventStrategy} y solo se registraba un aviso, sin persistir.
+     */
+    @Override
+    public Mono<Void> handle(WebhookEventDTO event) {
+        return subscriptionPort.saveSubscription(toSubscription(event)).then();
+    }
+
+    private Subscription toSubscription(WebhookEventDTO event) {
+        return Subscription.active(event.userId(), event.productId(), event.store(),
+            event.purchasedAtMs(), event.expirationAtMs());
+    }
+}
