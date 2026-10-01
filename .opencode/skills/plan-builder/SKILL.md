@@ -8,6 +8,7 @@ description: Genera un plan estructurado con 6 secciones: objetivo, contexto, re
 - Preguntar al usuario si necesita ayuda para llenar cada sección.
 - Generar el plan final en texto plano, con las secciones completadas.
 - Idioma: español.
+- Debe ser basado en el generador. No en el código generado.
 
 ## Secciones del plan
 
