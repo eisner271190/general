@@ -1,5 +1,8 @@
 package {{ PACKAGE }}.infrastructure.configuration.webfilters;
 
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -20,6 +23,7 @@ import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,14 +43,48 @@ public class RevenueCatWebhookFilter implements WebFilter {
     private static final String SIGNATURE_KEY = "v1";
     private static final long MAX_TIMESTAMP_DIFF_SECONDS = 5 * 60;
 
+    private static final Logger log = LoggerFactory.getLogger(RevenueCatWebhookFilter.class);
+
     @Value("${subscription.webhook-secret}")
     private String webhookSecret;
+
+    /**
+     * Diagnostico al arrancar: confirma desde que fuente se resolvio el secreto.
+     * Solo se imprimen longitud y prefijo; nunca el valor completo.
+     */
+    @PostConstruct
+    void logResolvedSecret() {
+        log.info(
+            "[WH] secreto resuelto len={} pref={}",
+            secretLength(),
+            abbreviate(webhookSecret, 4));
+    }
+
+    private int secretLength() {
+        return webhookSecret == null ? -1 : webhookSecret.length();
+    }
+
+    private static String abbreviate(String value, int max) {
+        if (value == null) {
+            return "-";
+        }
+        return value.substring(0, Math.min(value.length(), max));
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         if (!isWebhookRequest(exchange)) {
             return chain.filter(exchange);
         }
+        String header = signatureHeader(exchange);
+        log.info(
+            "[WH] peticion webhook path={} valoresCabecera={} longitudes={} headerLen={} "
+                + "secretLen={}",
+            exchange.getRequest().getPath().value(),
+            signatureValues(exchange).size(),
+            signatureValues(exchange).stream().map(String::length).toList(),
+            header == null ? 0 : header.length(),
+            secretLength());
         return readRawBody(exchange)
             .flatMap(rawBody -> verifyHmac(rawBody, exchange)
                 .flatMap(isValid -> isValid
@@ -87,11 +125,78 @@ public class RevenueCatWebhookFilter implements WebFilter {
 
     private Mono<Boolean> verifyHmac(byte[] rawBody, ServerWebExchange exchange) {
         return Mono.fromCallable(() -> {
-            Signature signature = parseSignature(
-                exchange.getRequest().getHeaders().getFirst(SIGNATURE_HEADER));
-            return signature != null && isWithinTolerance(signature.timestamp())
+            String header = signatureHeader(exchange);
+            Signature signature = parseSignature(header);
+            boolean valid = signature != null && isWithinTolerance(signature.timestamp())
                 && matches(signature, rawBody);
+            logDiagnosis(header, signature, rawBody, valid);
+            return valid;
         });
+    }
+
+    /**
+     * Diagnostico de la validacion: no imprime el secreto, solo longitudes, prefijos
+     * de las firmas y el motivo exacto que hizo fallar (o pasar) la comprobacion.
+     */
+    private void logDiagnosis(
+        String header, Signature signature, byte[] rawBody, boolean valid) {
+        long nowSeconds = System.currentTimeMillis() / 1000;
+        if (valid) {
+            log.info(
+                "[WH] firma VALIDA rawBodyLen={} secretLen={}", rawBody.length, secretLength());
+            return;
+        }
+        log.warn(
+            "[WH] firma RECHAZADA motivo={} headerPresent={} headerLen={} rawBodyLen={} "
+                + "secretLen={} secretPref={} t={} tAhora={} diffSeg={} v1Len={} "
+                + "v1Pref={} computedPref={}",
+            rejectReason(header, signature),
+            header != null,
+            header == null ? 0 : header.length(),
+            rawBody.length,
+            secretLength(),
+            abbreviate(webhookSecret, 4),
+            signature == null ? -1 : signature.timestamp(),
+            nowSeconds,
+            signature == null ? -1 : nowSeconds - signature.timestamp(),
+            signature == null ? -1 : signature.value().length(),
+            signature == null ? "-" : abbreviate(signature.value(), 16),
+            signature == null ? "-" : computedPrefix(signature, rawBody));
+    }
+
+    /** Motivo legible del rechazo, en orden de evaluacion. */
+    private String rejectReason(String header, Signature signature) {
+        if (signature == null) {
+            return header == null ? "HEADER_AUSENTE" : "HEADER_MALFORMADO";
+        }
+        return isWithinTolerance(signature.timestamp())
+            ? "FIRMA_NO_COINCIDE"
+            : "FUERA_DE_TOLERANCIA";
+    }
+
+    /** Prefijo de la firma calculada; nunca lanza, para no tumbar la peticion al registrar. */
+    private String computedPrefix(Signature signature, byte[] rawBody) {
+        try {
+            return abbreviate(
+                HexFormat.of().formatHex(computeHmac(signature.timestamp(), rawBody)), 16);
+        } catch (RuntimeException ex) {
+            return "ERROR_" + ex.getClass().getSimpleName();
+        }
+    }
+
+    /**
+     * Valores de la cabecera de firma. Algunos intermediarios (API Gateway / adaptador
+     * de Lambda) dividen el valor en varias entradas cada vez que encuentran una coma,
+     * por lo que {@code getFirst()} solo devolveria {@code t=<timestamp>}.
+     */
+    private List<String> signatureValues(ServerWebExchange exchange) {
+        return exchange.getRequest().getHeaders().getValuesAsList(SIGNATURE_HEADER);
+    }
+
+    /** Cabecera completa {@code t=...,v1=...} reconstruida a partir de todas sus entradas. */
+    private String signatureHeader(ServerWebExchange exchange) {
+        List<String> values = signatureValues(exchange);
+        return values.isEmpty() ? null : String.join(",", values);
     }
 
     /** Devuelve {@code null} si la cabecera falta o esta malformada: se rechaza con 401. */
