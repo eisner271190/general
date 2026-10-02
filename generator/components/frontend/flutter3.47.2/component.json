@@ -249,6 +249,10 @@
                        "value":  "templates/lib/features/parameters/data/api_parameters_repository.dart.scriban"
                    },
                   {
+                       "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/config/api_env.dart",
+                       "value":  "templates/lib/core/config/api_env.dart.scriban"
+                   },
+                   {
                        "key":  "frontend/{{ FRONTEND_NAME }}/lib/core/config/monetization_env.dart",
                        "value":  "templates/lib/core/config/monetization_env.dart.scriban"
                    },
@@ -845,10 +849,6 @@
                       "value":  "templates/lib/features/quiz/application/start_quiz_use_case.dart.scriban"
                   },
                   {
-                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/application/strategy_config.dart",
-                      "value":  "templates/lib/features/quiz/application/strategy_config.dart.scriban"
-                  },
-                  {
                       "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/application/strategy_factory.dart",
                       "value":  "templates/lib/features/quiz/application/strategy_factory.dart.scriban"
                   },
@@ -861,8 +861,8 @@
                       "value":  "templates/lib/features/quiz/config/ai_env_validator.dart.scriban"
                   },
                   {
-                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/ai_api_client.dart",
-                      "value":  "templates/lib/features/quiz/data/ai_api_client.dart.scriban"
+                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/backend_ai_api_client.dart",
+                      "value":  "templates/lib/features/quiz/data/backend_ai_api_client.dart.scriban"
                   },
                   {
                       "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/i_api_client.dart",
@@ -871,34 +871,6 @@
                   {
                       "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/mock_ai_strategy.dart",
                       "value":  "templates/lib/features/quiz/data/mock_ai_strategy.dart.scriban"
-                  },
-                  {
-                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/openai_api_client.dart",
-                      "value":  "templates/lib/features/quiz/data/openai_api_client.dart.scriban"
-                  },
-                  {
-                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/openai_message.dart",
-                      "value":  "templates/lib/features/quiz/data/openai_message.dart.scriban"
-                  },
-                  {
-                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/openai_message.freezed.dart",
-                      "value":  "templates/lib/features/quiz/data/openai_message.freezed.dart.scriban"
-                  },
-                  {
-                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/openai_message.g.dart",
-                      "value":  "templates/lib/features/quiz/data/openai_message.g.dart.scriban"
-                  },
-                  {
-                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/openai_payload.dart",
-                      "value":  "templates/lib/features/quiz/data/openai_payload.dart.scriban"
-                  },
-                  {
-                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/openai_payload.freezed.dart",
-                      "value":  "templates/lib/features/quiz/data/openai_payload.freezed.dart.scriban"
-                  },
-                  {
-                      "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/openai_payload.g.dart",
-                      "value":  "templates/lib/features/quiz/data/openai_payload.g.dart.scriban"
                   },
                   {
                       "key":  "frontend/{{ FRONTEND_NAME }}/lib/features/quiz/data/real_ai_strategy.dart",

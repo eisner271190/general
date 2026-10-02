@@ -1,101 +1,72 @@
-﻿import 'package:{{ FRONTEND_NAME }}/core/service_mode.dart';
+import 'package:{{ FRONTEND_NAME }}/core/service_mode.dart';
 import 'package:{{ FRONTEND_NAME }}/core/service_env.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/env/env_config.dart';
 import 'package:{{ FRONTEND_NAME }}/features/quiz/domain/ai_strategy.dart';
 import 'package:{{ FRONTEND_NAME }}/features/quiz/data/real_ai_strategy.dart';
 import 'package:{{ FRONTEND_NAME }}/features/quiz/data/mock_ai_strategy.dart';
-import 'package:{{ FRONTEND_NAME }}/features/quiz/data/openai_api_client.dart';
+import 'package:{{ FRONTEND_NAME }}/features/quiz/data/backend_ai_api_client.dart';
 import 'package:{{ FRONTEND_NAME }}/core/parameters_initializer.dart';
-import 'strategy_config.dart';
 
+/// Resuelve la estrategia de IA según el modo configurado.
+///
+/// Cada variante de la operación es una entrada del mapa: añadir un proveedor es
+/// registrar su constructor, no añadir otro `if`.
 abstract final class StrategyFactory {
   StrategyFactory._();
 
-  static ServiceMode _getGlobalMode() {
-    final value = ParametersInitializer.instance!.getParameterOrDefault(
-      ServiceEnv.keyGlobalMode,
-      'none',
-    );
-    return ServiceMode.fromString(value);
-  }
+  static const String _defaultMode = 'none';
 
-  static ServiceMode _getAiMode() {
-    final value = ParametersInitializer.instance!.getParameterOrDefault(
-      ServiceEnv.keyAiMode,
-      'none',
-    );
-    return ServiceMode.fromString(value);
-  }
-
-  static ServiceMode _resolveMode() {
-    final globalMode = _getGlobalMode();
-
-    if (globalMode == ServiceMode.none) {
-      final individualMode = _getAiMode();
-      _logUsingIndividualMode(individualMode.name);
-      return individualMode;
-    }
-
-    _logUsingGlobalMode(globalMode.name);
-    return globalMode;
-  }
+  static final Map<ServiceMode, AIStrategy Function(String)> _builders = {
+    ServiceMode.mock: (promptTemplate) => MockAIStrategy(),
+    // La API key la resuelve el backend; aquí solo decide el modo.
+    ServiceMode.real: (promptTemplate) =>
+        RealAIStrategy(BackendAiApiClient(), promptTemplate),
+  };
 
   static AIStrategy createStrategy() {
-    final config = StrategyConfig.load(
-      promptTemplate: EnvConfig.promptTemplate,
-    );
-    final strategy = _determineStrategy(config);
-    _logStrategyCreated(strategy.runtimeType.toString());
+    final promptTemplate = EnvConfig.promptTemplate;
+    final mode = _resolveMode();
+    final strategy = _builderFor(mode).call(promptTemplate);
+
+    Logger.info('FACTORY AI Strategy created', data: {
+      'mode': mode.name,
+      'type': strategy.runtimeType.toString(),
+    });
+
     return strategy;
   }
 
-  static AIStrategy _determineStrategy(StrategyConfig config) {
-    final mode = _resolveMode();
-
-    if (mode == ServiceMode.mock) {
-      _logUsingMockStrategy();
-      return MockAIStrategy();
+  /// Modo global si está definido; si no, el modo individual de IA.
+  static ServiceMode _resolveMode() {
+    final globalMode = _parameterMode(ServiceEnv.keyGlobalMode);
+    if (globalMode != ServiceMode.none) {
+      Logger.info('[STRATEGY_FACTORY] Using global mode for AI', data: {
+        'mode': globalMode.name,
+      });
+      return globalMode;
     }
 
-    if (mode == ServiceMode.real &&
-        config.apiKey != null &&
-        config.apiKey!.isNotEmpty) {
-      _logUsingRealStrategy();
-      return RealAIStrategy(OpenAiApiClient(), config.promptTemplate);
+    final individualMode = _parameterMode(ServiceEnv.keyAiMode);
+    Logger.info('[STRATEGY_FACTORY] Using individual AI mode', data: {
+      'mode': individualMode.name,
+    });
+    return individualMode;
+  }
+
+  static ServiceMode _parameterMode(String key) {
+    final value =
+        ParametersInitializer.instance!.getParameterOrDefault(key, _defaultMode);
+    return ServiceMode.fromString(value);
+  }
+
+  /// Sin modo resoluble se cae a mock, que no depende de la red.
+  static AIStrategy Function(String) _builderFor(ServiceMode mode) {
+    final builder = _builders[mode];
+    if (builder != null) {
+      return builder;
     }
-
-    _logFallbackToMockStrategy();
-    return MockAIStrategy();
-  }
-
-  static void _logUsingIndividualMode(String modeName) {
-    Logger.info(
-      '[STRATEGY_FACTORY] Using individual AI mode',
-      data: {'mode': modeName},
-    );
-  }
-
-  static void _logUsingGlobalMode(String modeName) {
-    Logger.info(
-      '[STRATEGY_FACTORY] Using global mode for AI',
-      data: {'mode': modeName},
-    );
-  }
-
-  static void _logStrategyCreated(String type) {
-    Logger.info('FACTORY AI Strategy created', data: {'type': type});
-  }
-
-  static void _logUsingMockStrategy() {
-    Logger.info('FACTORY Using MockAIStrategy (mock mode)');
-  }
-
-  static void _logUsingRealStrategy() {
-    Logger.info('FACTORY Using RealAIStrategy (real mode with API key)');
-  }
-
-  static void _logFallbackToMockStrategy() {
     Logger.info('FACTORY Fallback to MockAIStrategy (no valid config)');
+    return _builders[ServiceMode.mock]!;
   }
 }

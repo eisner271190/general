@@ -4,11 +4,15 @@ import {{ PACKAGE }}.domain.dto.WebhookEventDTO;
 import {{ PACKAGE }}.domain.model.Subscription;
 import {{ PACKAGE }}.domain.ports.SubscriptionPort;
 import {{ PACKAGE }}.domain.usecase.IWebhookStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
 public class ProductChangeStrategy implements IWebhookStrategy {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ProductChangeStrategy.class);
 
     private final SubscriptionPort subscriptionPort;
 
@@ -27,7 +31,11 @@ public class ProductChangeStrategy implements IWebhookStrategy {
      */
     @Override
     public Mono<Void> handle(WebhookEventDTO event) {
-        return subscriptionPort.saveSubscription(toSubscription(event)).then();
+        LOG.info("Procesando evento {}", eventType());
+        LOG.debug("userId={}", event.userId());
+        return subscriptionPort.saveSubscription(toSubscription(event)).then()
+            .doOnSuccess(done ->
+                LOG.debug("Evento {} aplicado a userId={}", eventType(), event.userId()));
     }
 
     private Subscription toSubscription(WebhookEventDTO event) {

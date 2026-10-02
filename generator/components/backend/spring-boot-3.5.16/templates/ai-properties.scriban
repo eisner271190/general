@@ -1,0 +1,123 @@
+package {{ PACKAGE }}.infrastructure.configuration;
+
+import jakarta.annotation.PostConstruct;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+/**
+ * Configuracion del proveedor de IA, leida de {@code ai.*}.
+ *
+ * <p>Los campos se declaran como texto a proposito: Parameter Store puede devolver
+ * parametros vacios y {@code @ConfigurationProperties} sobre {@code Double} abortaria el
+ * arranque de la Lambda al convertirlos. El parseo tolerante ocurre una sola vez en
+ * {@link #resolve()}, y todo valor ausente, vacio o ilegible cae en el default de
+ * {@link AiConstants}; el proceso nunca falla por esto.
+ *
+ * <p>La API key llega desde Secrets Manager y solo se usa como cabecera Authorization:
+ * nunca se registra ni se expone.
+ */
+@Component
+@ConfigurationProperties(prefix = "ai")
+public class AiProperties {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AiProperties.class);
+
+    private String apiKey = "";
+    private String apiBaseUrl = AiConstants.DEFAULT_API_BASE_URL;
+    private String model = AiConstants.DEFAULT_MODEL;
+    private String temperature = "";
+    private String maxTokens = "";
+
+    private Double resolvedTemperature;
+    private Integer resolvedMaxTokens;
+
+    @PostConstruct
+    void resolve() {
+        resolvedTemperature = parseDecimal(temperature);
+        resolvedMaxTokens = parseInteger(maxTokens);
+        if (isApiKeyMissing()) {
+            LOG.warn(AiMessages.MISSING_API_KEY_WARNING);
+        }
+        LOG.debug("Configuracion de IA resuelta: model={}, temperature={}, maxTokens={}, "
+                + "apiBaseUrl={}, timeout={}s",
+                model, resolvedTemperature, resolvedMaxTokens,
+                apiBaseUrl, AiConstants.PROVIDER_TIMEOUT_SECONDS);
+    }
+
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
+
+    public String getApiBaseUrl() {
+        return apiBaseUrl;
+    }
+
+    public void setApiBaseUrl(String apiBaseUrl) {
+        this.apiBaseUrl = isBlank(apiBaseUrl) ? AiConstants.DEFAULT_API_BASE_URL : apiBaseUrl;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = isBlank(model) ? AiConstants.DEFAULT_MODEL : model;
+    }
+
+    /** Nunca nulo: si el parametro falta o no es un decimal, devuelve el default. */
+    public Double getTemperature() {
+        return resolvedTemperature;
+    }
+
+    public void setTemperature(String temperature) {
+        this.temperature = temperature;
+    }
+
+    /** Nunca nulo: si el parametro falta o no es un entero, devuelve el default. */
+    public Integer getMaxTokens() {
+        return resolvedMaxTokens;
+    }
+
+    public void setMaxTokens(String maxTokens) {
+        this.maxTokens = maxTokens;
+    }
+
+    public boolean isApiKeyMissing() {
+        return isBlank(apiKey);
+    }
+
+    private Double parseDecimal(String value) {
+        if (isBlank(value)) {
+            return AiConstants.DEFAULT_TEMPERATURE;
+        }
+        try {
+            return Double.valueOf(value.trim());
+        } catch (NumberFormatException ex) {
+            LOG.warn(AiMessages.INVALID_SETTING, AiConstants.KEY_TEMPERATURE, value);
+            return AiConstants.DEFAULT_TEMPERATURE;
+        }
+    }
+
+    private Integer parseInteger(String value) {
+        if (isBlank(value)) {
+            return AiConstants.DEFAULT_MAX_TOKENS;
+        }
+        try {
+            return Integer.valueOf(value.trim());
+        } catch (NumberFormatException ex) {
+            LOG.warn(AiMessages.INVALID_SETTING, AiConstants.KEY_MAX_TOKENS, value);
+            return AiConstants.DEFAULT_MAX_TOKENS;
+        }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+}

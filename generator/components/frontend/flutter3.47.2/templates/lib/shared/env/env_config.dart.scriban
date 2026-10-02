@@ -23,27 +23,14 @@ abstract final class EnvConfig {
     );
   }
 
-  static String? get apiKey {
-    return ParametersInitializer.instance!.getParameter(AiEnv.keyApiKey);
-  }
-
-  static String get apiUrl {
-    return ParametersInitializer.instance!.getParameterOrDefault(
-      AiEnv.keyApiUrl,
-      AiEnv.defaultApiUrl,
-    );
-  }
-
-  static String get model {
-    return ParametersInitializer.instance!.getParameterOrDefault(
-      AiEnv.keyModel,
-      AiEnv.defaultModel,
-    );
-  }
-
+  /// El tema nunca debe romper el arranque: si el backend aún no respondió,
+  /// se devuelve el valor por defecto.
   static String get themeStyle {
     try {
-      return ParametersInitializer.instance!.getParameterOrDefault(SharedEnv.keyThemeStyle, SharedEnv.defaultThemeStyle);
+      return ParametersInitializer.instance!.getParameterOrDefault(
+        SharedEnv.keyThemeStyle,
+        SharedEnv.defaultThemeStyle,
+      );
     } catch (e) {
       return SharedEnv.defaultThemeStyle;
     }

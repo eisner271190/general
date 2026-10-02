@@ -26,6 +26,12 @@ public class ParameterProperties {
       "_AWS_XRAY_DAEMON_ADDRESS",
       "_AWS_XRAY_DAEMON_PORT",
       "_HANDLER",
+      // Configuracion interna del proveedor de IA: no es secreta, pero el cliente no la
+      // usa y publicarla revelaria proveedor y modelo en un endpoint publico sin auth.
+      "AI_API_BASE_URL",
+      "AI_MAX_TOKENS",
+      "AI_MODEL",
+      "AI_TEMPERATURE",
       "AWS_ACCESS_KEY_ID",
       "AWS_ACCOUNT_ID",
       "AWS_DEFAULT_REGION",
@@ -85,6 +91,11 @@ public class ParameterProperties {
   /**
    * La fuente de Parameter Store lleva la ruta absoluta del import como nombre
    * (/entorno/applicationId/microservicio/); el instanceof cubre el nombre del tipo.
+   *
+   * <p>El prefijo {@code /} es una heuristica, no una garantia: hoy no filtra secretos porque
+   * el secreto de la app se llama {@code environment/applicationId} (sin {@code /} inicial)
+   * y no es un ParameterStorePropertySource. Si alguna vez el secreto empezara por {@code /},
+   * hay que comprobar el tipo de clase antes que el nombre.
    */
   private static boolean isParameterStoreSource(PropertySource<?> source) {
     return source instanceof ParameterStorePropertySource || source.getName().startsWith("/");

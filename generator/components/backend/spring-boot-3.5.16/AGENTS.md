@@ -18,3 +18,4 @@ Plantillas Scriban que generan el microservicio en `<proyecto>/<MICROSERVICE_NAM
 - Plantillas nuevas/renombradas: actualizar `component.json` en el mismo cambio (una plantilla no listada NO se genera).
 - Las plantillas `terraform-*` se registran SOLO en el componente cloud; no registrarlas aquí.
 - Tras editar una plantilla, revisar que no queden placeholders `{{ ... }}` sin resolver.
+- **Endpoint agregado, modificado o eliminado → actualizar `postman-collection.scriban` en el MISMO cambio**: item con request real y ejemplos de response (éxito + error). Sin esa entrada el endpoint no se puede probar a mano y el trabajo está incompleto. Si el endpoint es público, no le añadas `Authorization: Bearer`. Tras editarla, parsear el JSON para confirmar que sigue siendo válido.

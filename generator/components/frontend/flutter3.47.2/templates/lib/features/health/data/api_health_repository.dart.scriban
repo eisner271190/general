@@ -1,13 +1,14 @@
 import 'package:{{ FRONTEND_NAME }}/shared/consume/http_client_impl.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/consume/i_http_client.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
-import 'package:{{ FRONTEND_NAME }}/core/parameters_initializer.dart';
+import 'package:{{ FRONTEND_NAME }}/core/config/api_env.dart';
 import '../domain/health_status.dart';
 import '../domain/i_health_repository.dart';
 
 /// Consumo real del endpoint /actuator/health del backend.
 class ApiHealthRepository implements IHealthRepository {
   static const String _healthPath = '/actuator/health';
+  static const String _statusUpToken = '"status":"UP"';
   static const Duration _timeout = Duration(seconds: 3);
 
   final IHttpClient _httpClient;
@@ -18,16 +19,12 @@ class ApiHealthRepository implements IHealthRepository {
   @override
   Future<HealthStatus> check() async {
     try {
-      final baseUrl = ParametersInitializer.instance!.getParameterOrDefault(
-        'API_BASE_URL',
-        '',
-      );
+      final baseUrl = ApiEnv.baseUrl;
       final response = await _httpClient
           .get('$baseUrl$_healthPath')
           .timeout(_timeout);
 
-      final available = response.statusCode == 200 &&
-          response.body.toString().contains('"status":"UP"');
+      final available = _isAvailable(response);
 
       Logger.info('[HEALTH] Backend check', data: {
         'statusCode': response.statusCode,
@@ -39,5 +36,10 @@ class ApiHealthRepository implements IHealthRepository {
       Logger.warning('[HEALTH] Backend check failed', data: {'error': '$error'});
       return HealthStatus.unavailable;
     }
+  }
+
+  bool _isAvailable(HttpResponse response) {
+    return response.statusCode == 200 &&
+        response.body.toString().contains(_statusUpToken);
   }
 }

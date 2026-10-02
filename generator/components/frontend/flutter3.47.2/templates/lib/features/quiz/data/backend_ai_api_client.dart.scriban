@@ -1,0 +1,90 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/consume/i_http_client.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/consume/http_client_impl.dart';
+import 'package:{{ FRONTEND_NAME }}/shared/helper/validator.dart';
+import 'package:{{ FRONTEND_NAME }}/core/config/api_env.dart';
+import 'i_api_client.dart';
+
+/// Cliente del endpoint de IA del backend (POST /api/v1/ai/generate).
+///
+/// Agnóstico al proveedor: modelo, temperatura y credenciales los resuelve el backend.
+/// Devuelve `data` del ApiResponse (cuerpo crudo del proveedor) para que RealAIStrategy
+/// siga leyendo choices[0].message.content sin cambios.
+class BackendAiApiClient implements IApiClient {
+  static const String _generatePath = '/api/v1/ai/generate';
+  static const int _apiTimeoutSeconds = 30;
+  static const String _messageEmptyPrompt = 'Prompt cannot be empty';
+  static const String _messageMissingBaseUrl =
+      'API_BASE_URL no configurada (GET /api/v1/parameters)';
+  static const String _messageMissingData =
+      'La respuesta del backend de IA no contiene data';
+
+  final IHttpClient _httpClient;
+  final Validator _validator = Validator();
+
+  BackendAiApiClient({IHttpClient? httpClient})
+      : _httpClient = httpClient ?? HttpClientImpl();
+
+  @override
+  Future<Map<String, dynamic>> callApi(String prompt) async {
+    _validator.notEmptyAndNotNull(prompt, _messageEmptyPrompt);
+    // Fuera del try: un fallo de configuracion no es un error inesperado de la llamada.
+    final url = _generateUrl();
+    try {
+      final response = await _httpClient
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: {'prompt': prompt},
+          )
+          .timeout(
+            Duration(seconds: _apiTimeoutSeconds),
+            onTimeout: _handleTimeout,
+          );
+      return _parseResponse(response);
+    } on TimeoutException catch (e) {
+      Logger.error('[AI] Timeout calling backend AI', error: e);
+      rethrow;
+    } catch (e) {
+      Logger.error('[AI] Unexpected error calling backend AI', error: e);
+      rethrow;
+    }
+  }
+
+  /// API_BASE_URL llega por GET /api/v1/parameters (ver [ApiEnv.baseUrl]).
+  String _generateUrl() {
+    final baseUrl = ApiEnv.baseUrl;
+    if (baseUrl.isEmpty) {
+      throw Exception(_messageMissingBaseUrl);
+    }
+    return '$baseUrl$_generatePath';
+  }
+
+  Never _handleTimeout() {
+    throw TimeoutException(
+      'Backend AI request timed out after $_apiTimeoutSeconds seconds',
+    );
+  }
+
+  Map<String, dynamic> _parseResponse(HttpResponse response) {
+    if (response.statusCode != 200) {
+      _throwApiError(response.statusCode, response.body);
+    }
+    final body = json.decode(response.body) as Map<String, dynamic>;
+    final data = body['data'];
+    if (data is! Map<String, dynamic>) {
+      throw Exception(_messageMissingData);
+    }
+    return data;
+  }
+
+  Never _throwApiError(int statusCode, dynamic body) {
+    Logger.error('[AI] Error en llamada al backend de IA', data: {
+      'statusCode': statusCode,
+      'body': body,
+    });
+    throw Exception('Error en la API de IA: $statusCode');
+  }
+}

@@ -3,11 +3,15 @@
 import {{ PACKAGE }}.domain.ports.AdminUserPort;
 import {{ PACKAGE }}.infrastructure.configuration.cloud.aws.CognitoClient;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
 public class AdminUserAdapter implements AdminUserPort {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AdminUserAdapter.class);
 
     private final CognitoClient cognitoClient;
 
@@ -17,17 +21,23 @@ public class AdminUserAdapter implements AdminUserPort {
 
     @Override
     public Mono<Void> deleteUser(String username) {
-        return cognitoClient.deleteUser(username);
+        LOG.info("Eliminando usuario {} en Cognito", username);
+        return cognitoClient.deleteUser(username)
+            .doOnSuccess(done -> LOG.debug("Usuario {} eliminado", username));
     }
 
     @Override
     public Mono<Void> activateUser(String username) {
-        return cognitoClient.updateUserStatus(username, true);
+        LOG.info("Activando usuario {} en Cognito", username);
+        return cognitoClient.updateUserStatus(username, true)
+            .doOnSuccess(done -> LOG.debug("Usuario {} activado", username));
     }
 
     @Override
     public Mono<Void> deactivateUser(String username) {
-        return cognitoClient.updateUserStatus(username, false);
+        LOG.info("Desactivando usuario {} en Cognito", username);
+        return cognitoClient.updateUserStatus(username, false)
+            .doOnSuccess(done -> LOG.debug("Usuario {} desactivado", username));
     }
 }
 {{ end }}

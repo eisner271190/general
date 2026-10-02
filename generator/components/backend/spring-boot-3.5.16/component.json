@@ -201,7 +201,18 @@
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/RevenueCatSubscriberResponse.java", "value": "templates/revenuecat-subscriber-response.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/SubscriptionAdapter.java", "value": "templates/subscription-adapter.scriban" },
     { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/webfilters/RevenueCatWebhookFilter.java", "value": "templates/revenuecat-webhook-filter.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/SubscriptionController.java", "value": "templates/subscription-controller.scriban" }
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/SubscriptionController.java", "value": "templates/subscription-controller.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model/AiGeneration.java", "value": "templates/ai-generation.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/ports/IAProviderPort.java", "value": "templates/ia-provider-port.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/servicePorts/IAiServicePort.java", "value": "templates/iai-service-port.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/AiUseCase.java", "value": "templates/ai-usecase.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/AiGenerateRequestDTO.java", "value": "templates/ai-generate-request-dto.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/OpenRouterAdapter.java", "value": "templates/openrouter-adapter.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/OpenRouterChatRequest.java", "value": "templates/openrouter-chat-request.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/AiController.java", "value": "templates/ai-controller.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/AiConstants.java", "value": "templates/ai-constants.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/AiMessages.java", "value": "templates/ai-messages.scriban" },
+    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/AiProperties.java", "value": "templates/ai-properties.scriban" }
   ],
   "defaultFiles": []
 }

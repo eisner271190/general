@@ -1,0 +1,18 @@
+package {{ PACKAGE }}.domain.ports;
+
+import {{ PACKAGE }}.domain.model.AiGeneration;
+
+import reactor.core.publisher.Mono;
+
+/**
+ * Puerto agnóstico al proveedor de IA generativa (OpenRouter u otro).
+ *
+ * <p>El dominio solo conoce este contrato; el adaptador concreto (p. ej. OpenRouterAdapter)
+ * vive en infrastructure/adapters y lo implementa. Cambiar de proveedor no toca este
+ * archivo ni los casos de uso.
+ */
+public interface IAProviderPort {
+
+    /** Genera texto con el proveedor configurado a partir del prompt recibido. */
+    Mono<AiGeneration> generate(String prompt);
+}

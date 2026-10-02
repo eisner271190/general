@@ -3,17 +3,25 @@
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.logging.Logger;
 
+/**
+ * Emision y verificacion de JWT.
+ *
+ * <p>El token y el secreto jamas se registran: la traza lleva usuario y resultado, no el
+ * contenido de la cabecera.
+ */
 @Component
 public class JwtProvider {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JwtProvider.class);
 
     @Value("${jwt.secret}")
     private String secret;
@@ -21,16 +29,21 @@ public class JwtProvider {
     private Integer expiration;
 
     public String generateToken(UserDetails userDetails) {
-        return Jwts.builder()
+        LOG.info("Generando token para {}", userDetails.getUsername());
+        LOG.debug("Authorities: {}", userDetails.getAuthorities());
+        String token = Jwts.builder()
                 .subject(userDetails.getUsername())
                 .claim("roles", userDetails.getAuthorities())
                 .issuedAt(new Date())
                 .expiration(new Date(new Date().getTime() + expiration))
                 .signWith(getKey(secret))
                 .compact();
+        LOG.debug("Token generado para {}", userDetails.getUsername());
+        return token;
     }
 
     public Claims getClaims(String token) {
+        LOG.debug("Extrayendo claims del token");
         return Jwts.parser()
                 .verifyWith(getKey(secret))
                 .build()
@@ -39,6 +52,7 @@ public class JwtProvider {
     }
 
     public String getSubject(String token) {
+        LOG.debug("Extrayendo subject del token");
         return Jwts.parser()
                 .verifyWith(getKey(secret))
                 .build()
@@ -47,7 +61,8 @@ public class JwtProvider {
                 .getSubject();
     }
 
-    public boolean validate(String token){
+    public boolean validate(String token) {
+        LOG.debug("Validando token");
         try {
             Jwts.parser()
                     .verifyWith(getKey(secret))
@@ -55,11 +70,14 @@ public class JwtProvider {
                     .parseSignedClaims(token)
                     .getPayload()
                     .getSubject();
+            LOG.debug("Token valido");
             return true;
         } catch (Exception e) {
-            
+            // Motivo de fallo: expiracion, firma invalida o formato. No se propaga porque
+            // quien llama solo necesita el booleano; el motivo queda en la traza.
+            LOG.debug("Token invalido: {}", e.getMessage());
+            return false;
         }
-        return false;
     }
 
     private SecretKey getKey(String secret) {

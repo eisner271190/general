@@ -1,5 +1,7 @@
 {{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.configuration.authentication.jwt;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
@@ -11,25 +13,40 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Extrae el token Bearer y lo deja en los atributos del exchange.
+ *
+ * <p>El token nunca se registra: solo se anota si estaba presente y su longitud, para poder
+ * diagnosticar una cabecera mal formada sin exponer la credencial.
+ */
 @Component
 public class JwtAuthenticationFilter implements WebFilter {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getPath().value();
 
-        if (PathConstants.COMMON_PATHS.contains(path) || path.contains(PathConstants.AUTH))
+        if (PathConstants.COMMON_PATHS.contains(path) || path.contains(PathConstants.AUTH)) {
+            LOG.debug("Ruta publica, sin filtro: {}", path);
             return chain.filter(exchange);
+        }
 
         String auth = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        if(auth == null)
+        if (auth == null) {
+            LOG.warn("Peticion sin cabecera Authorization: {}", path);
             return Mono.error(new Throwable("no token was found"));
+        }
 
-        if(!auth.startsWith("Bearer "))
+        if (!auth.startsWith("Bearer ")) {
+            LOG.warn("Cabecera Authorization sin prefijo Bearer: {}", path);
             return Mono.error(new Throwable("invalid auth"));
+        }
 
         String token = auth.replace("Bearer ", "");
+        LOG.debug("Token presente en {} ({} caracteres)", path, token.length());
 
         exchange.getAttributes().put("token", token);
 

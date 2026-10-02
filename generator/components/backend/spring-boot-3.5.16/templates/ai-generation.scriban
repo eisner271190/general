@@ -1,0 +1,15 @@
+package {{ PACKAGE }}.domain.model;
+
+import java.util.Map;
+
+/**
+ * Resultado de una generación de IA ya traducido al contrato agnóstico.
+ *
+ * @param model           modelo que respondió el proveedor (informativo)
+ * @param content         texto plano generado
+ * @param providerPayload cuerpo crudo del proveedor. Se reenvía tal cual en la respuesta HTTP
+ *                        para que el cliente no dependa del proveedor; acoplamiento deliberado
+ *                        y documentado.
+ */
+public record AiGeneration(String model, String content, Map<String, Object> providerPayload) {
+}

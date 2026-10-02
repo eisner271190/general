@@ -46,3 +46,11 @@ aws.sns.arn=${AWS_SNS_TOPIC_ARN:}
 subscription.secret-key=${SUBSCRIPTION_SECRET_KEY:${subscription-secret-key:}}
 subscription.webhook-secret=${SUBSCRIPTION_WEBHOOK_SECRET:${subscription-webhook-secret:}}
 subscription.api-base-url=${SUBSCRIPTION_API_BASE_URL:https://api.revenuecat.com}
+
+# IA generativa (proveedor actual: OpenRouter). Claves genericas para poder
+# cambiar de proveedor sin tocar el codigo. La API key NUNCA va aqui en claro.
+ai.api-key=${AI_API_KEY:${ai-api-key:}}
+ai.api-base-url=${AI_API_BASE_URL:https://openrouter.ai/api/v1}
+ai.model=${AI_MODEL:gpt-4o-mini}
+ai.temperature=${AI_TEMPERATURE:0.7}
+ai.max-tokens=${AI_MAX_TOKENS:1000}

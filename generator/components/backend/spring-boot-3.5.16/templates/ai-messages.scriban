@@ -1,0 +1,28 @@
+package {{ PACKAGE }}.infrastructure.configuration;
+
+/**
+ * Mensajes fijos del contrato de IA generativa.
+ *
+ * <p>Centralizarlos evita que el mismo texto cambie entre el endpoint, el caso de uso y el
+ * adaptador, y permite revisarlos de un vistazo. Ningun mensaje de este archivo debe incluir
+ * datos de infraestructura: lo que sale al cliente se decide en AiController.
+ */
+public final class AiMessages {
+
+    private AiMessages() {
+    }
+
+    public static final String PROMPT_INVALID =
+        "prompt is required and must be at most " + AiConstants.MAX_PROMPT_LENGTH + " characters";
+    public static final String GENERATED = "Text generated";
+    public static final String GENERATION_ERROR = "Error generating text";
+
+    public static final String MISSING_API_KEY =
+        "Falta la API key del proveedor de IA (ai.api-key)";
+    public static final String MISSING_API_KEY_WARNING =
+        "ai.api-key vacio: /api/v1/ai/generate respondera error hasta sembrar el secreto";
+    public static final String EMPTY_CONTENT =
+        "El proveedor de IA no devolvio contenido utilizable";
+    public static final String TIMEOUT = "El proveedor de IA no respondio en ";
+    public static final String INVALID_SETTING = "{} invalido, se omite: {}";
+}

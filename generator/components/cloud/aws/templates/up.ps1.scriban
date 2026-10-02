@@ -281,13 +281,17 @@ function New-ApplicationSecretDefault {
         return 'SUBSCRIPTION_WEBHOOK_SECRET_PLACEHOLDER'
     }
 
+    if ($Key -eq 'ai-api-key') {
+        return 'AI_API_KEY_PLACEHOLDER'
+    }
+
     throw "Sin valor por defecto para la clave $Key"
 }
 
 function Get-MissingApplicationSecretKey {
     param([Parameter(Mandatory)][System.Collections.IDictionary]$Secret)
 
-    $seededKeys = @('jwt-secret', 'api-key', 'subscription-secret-key', 'subscription-webhook-secret')
+    $seededKeys = @('jwt-secret', 'api-key', 'subscription-secret-key', 'subscription-webhook-secret', 'ai-api-key')
     return ($seededKeys | Where-Object -FilterScript { -not $Secret.ContainsKey($_) })
 }
 

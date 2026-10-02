@@ -1,7 +1,7 @@
 {{ open_b = "{" + "{" }}{{ close_b = "}" + "}" }}{
   "info": {
     "name": "{{ Name }}",
-    "description": "Colección de endpoints del microservicio {{ Name }}.\n\nURL BASE (API Gateway):\n  Se rellena sola al ejecutar cloud/up.ps1 (tras el apply escribe terraform output http_api_url en esta colección).\n  Manual: cd cloud/terraform/{{ Name }} && terraform output http_api_url -> pegar en la variable baseUrl.\n\nAUTENTICACIÓN:\n  - Ejecutar Users > Login para guardar el token (variable token) y el usuario (variable username).\n  - Rutas públicas (sin token): /api/v1/users/**, /api/v1/parameters y /actuator/health. El resto requiere Authorization: Bearer.\n\nPARÁMETROS:\n  - GET /api/v1/parameters devuelve la configuración pública que necesita el frontend; nunca secretos.",
+    "description": "Colección de endpoints del microservicio {{ Name }}.\n\nURL BASE (API Gateway):\n  Se rellena sola al ejecutar cloud/up.ps1 (tras el apply escribe terraform output http_api_url en esta colección).\n  Manual: cd cloud/terraform/{{ Name }} && terraform output http_api_url -> pegar en la variable baseUrl.\n\nAUTENTICACIÓN:\n  - Ejecutar Users > Login para guardar el token (variable token) y el usuario (variable username).\n  - Rutas públicas (sin token): /api/v1/users/**, /api/v1/parameters, /api/v1/ai/** y /actuator/health. El resto requiere Authorization: Bearer.\n\nPARÁMETROS:\n  - GET /api/v1/parameters devuelve la configuración pública que necesita el frontend; nunca secretos.\n\nIA GENERATIVA (POST /api/v1/ai/generate):\n  - Ruta pública sin token (decisión question-003): el proveedor, el modelo y las credenciales los resuelve el backend.\n  - Requiere la clave ai-api-key sembrada en el secreto de la aplicación ({{ ENVIRONMENT }}/{{ APPLICATION_ID }}); mientras siga siendo el placeholder responde 500.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "event": [
@@ -115,7 +115,7 @@
               "host": ["{{ open_b }}baseUrl{{ close_b }}"],
               "path": ["api", "v1", "parameters"]
             },
-            "description": "Parametros publicos que el frontend necesita para arrancar (URLs, modelos, identificadores, textos). Ruta pública, sin Authorization; nunca devuelve secretos: las claves con apariencia sensible se omiten en el servidor."
+            "description": "Parametros publicos que el frontend necesita para arrancar (URLs, identificadores, modos de servicio y textos). Ruta pública, sin Authorization; nunca devuelve secretos: las claves con apariencia sensible y la configuracion interna del proveedor de IA (AI_API_BASE_URL, AI_MODEL, AI_TEMPERATURE, AI_MAX_TOKENS) se omiten en el servidor."
           },
           "response": [
             {
@@ -124,7 +124,7 @@
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\"data\":{\"api-url\":\"https://api.openrouter.ai/api/v1/chat/completions\",\"model\":\"gpt-4o-mini\"},\"message\":\"Parameters retrieved successfully\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+              "body": "{\"data\":{\"API_BASE_URL\":\"https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com\",\"SERVICE_MODE\":\"REAL\",\"AI_SERVICE_MODE\":\"REAL\",\"AUTH_SERVICE_MODE\":\"REAL\",\"SUBSCRIPTION_SERVICE_MODE\":\"REAL\",\"HEALTH_SERVICE_MODE\":\"REAL\",\"AD_SERVICE_MODE\":\"REAL\",\"PROFILE\":\"DEV\",\"THEME_STYLE\":\"CHATGPT\",\"PROMPT\":\"Genera un JSON válido y NÍTIDO (sin texto adicional) con la clave \\\"questions\\\" ...\",\"REVENUECAT_PUBLIC_KEY\":\"test_xxxxxxxxxxxxxxxx\",\"SUBSCRIPTION_API_BASE_URL\":\"https://api.revenuecat.com\",\"ADMOB_BANNER_ID\":\"ADMOB_BANNER_ID_PLACEHOLDER\",\"PRIVACY_URL\":\"https://quiz-epc-politica-privacidad.s3.us-east-1.amazonaws.com/privacy-policy.html\",\"TERMS_URL\":\"https://quiz-epc-politica-privacidad.s3.us-east-1.amazonaws.com/terms-page.html\",\"AUTH_BACKEND_HOST\":\"https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com\",\"AUTH_TOKEN_EXCHANGE_PATH\":\"/api/v1/auth/exchange\",\"AUTH_LOGOUT_PATH\":\"/auth/logout\",\"AUTH_COGNITO_DOMAIN\":\"https://user-pool.auth.us-east-1.amazoncognito.com\",\"AUTH_CLIENT_ID\":\"xxxxxxxxxxxxxxxxxxxxxxxxxx\",\"AUTH_REDIRECT_URI\":\"myapp://auth/callback\",\"AUTH_REDIRECT_URI_WEB\":\"http://localhost:3000/callback\",\"AUTH_SCOPES\":\"openid email profile\",\"AUTH_IDENTITY_PROVIDER\":\"Google\",\"JWT_EXPIRATION\":\"86400000\"},\"message\":\"Parameters retrieved successfully\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
             }
           ]
         }
@@ -1186,6 +1186,66 @@
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }],
               "body": "{\"data\":null,\"message\":\"Webhook processed\",\"statusCode\":200}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AI",
+      "item": [
+        {
+          "name": "Generate",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Respuesta documentada (200, 400 o 500)', function () { pm.expect([200, 400, 500]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"Generate 3 questions about photosynthesis in Spanish\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ open_b }}baseUrl{{ close_b }}/api/v1/ai/generate",
+              "host": ["{{ open_b }}baseUrl{{ close_b }}"],
+              "path": ["api", "v1", "ai", "generate"]
+            },
+            "description": "Genera texto con el proveedor de IA configurado en el backend. Ruta PÚBLICA: no lleva Authorization (decisión question-003). El backend decide modelo, temperatura y credenciales; el cliente solo envía el prompt.\n\nQué esperar:\n  - 200 'Text generated': data es el cuerpo CRUDO del proveedor (choices[0].message.content).\n  - 400 'prompt is required and must be at most 8000 characters': prompt nulo, vacío o de más de 8000 caracteres.\n  - 500 'Error generating text': estado real mientras la clave ai-api-key del secreto siga siendo AI_API_KEY_PLACEHOLDER (la siembra el usuario en AWS). El mensaje del proveedor no se devuelve al cliente; el detalle queda en los logs de la Lambda."
+          },
+          "response": [
+            {
+              "name": "OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":{\"id\":\"gen-abc123\",\"model\":\"gpt-4o-mini\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"questions\\\":[{\\\"id\\\":\\\"q1\\\",\\\"text\\\":\\\"¿Qué pigmento absorbe la luz?\\\",\\\"options\\\":[\\\"Clorofila\\\",\\\"Carotenoide\\\",\\\"Xantofila\\\",\\\"Antringina\\\"],\\\"correctIndex\\\":0,\\\"explanation\\\":\\\"La clorofila absorbe sobre todo luz roja y azul.\\\"}]}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":42,\"completion_tokens\":88,\"total_tokens\":130}},\"message\":\"Text generated\",\"status\":200,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            },
+            {
+              "name": "Error",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"prompt is required and must be at most 8000 characters\",\"status\":400,\"timestamp\":\"2026-01-01T00:00:00\"}"
+            },
+            {
+              "name": "Error",
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\"data\":null,\"message\":\"Error generating text\",\"status\":500,\"timestamp\":\"2026-01-01T00:00:00\"}"
             }
           ]
         }
