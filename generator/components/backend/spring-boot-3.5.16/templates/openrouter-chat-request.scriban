@@ -1,0 +1,30 @@
+package {{ PACKAGE }}.infrastructure.adapters;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.List;
+
+/**
+ * Cuerpo de POST {api-base-url}/chat/completions de OpenRouter.
+ *
+ * <p>El dominio no la conoce: solo la serializa OpenRouterAdapter. Se declaran únicamente
+ * los campos enviados; el resto se ignoran. {@code NON_NULL} omite los campos configurados
+ * sin valor en Parameter Store en lugar de mandarlos como null.
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record OpenRouterChatRequest(
+    @JsonProperty("model") String model,
+    @JsonProperty("messages") List<Message> messages,
+    @JsonProperty("temperature") Double temperature,
+    @JsonProperty("max_tokens") Integer maxTokens
+) {
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record Message(
+        @JsonProperty("role") String role,
+        @JsonProperty("content") String content
+    ) {}
+}

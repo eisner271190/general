@@ -46,3 +46,15 @@ aws.sns.arn=${AWS_SNS_TOPIC_ARN:}
 subscription.secret-key=${SUBSCRIPTION_SECRET_KEY:${subscription-secret-key:}}
 subscription.webhook-secret=${SUBSCRIPTION_WEBHOOK_SECRET:${subscription-webhook-secret:}}
 subscription.api-base-url=${SUBSCRIPTION_API_BASE_URL:https://api.revenuecat.com}
+
+# IA generativa (proveedor actual: OpenRouter). Claves genericas para poder
+# cambiar de proveedor sin tocar el codigo. La API key NUNCA va aqui en claro.
+# Sin defaults a proposito: si un parametro falta en Parameter Store o en el
+# secreto, el arranque falla y el motivo queda en el log, en vez de enviar una
+# peticion con un modelo asumido que nadie configuro y que solo se descubre al
+# mirar la facturacion del proveedor.
+ai.api-key=${ai-api-key}
+ai.api-base-url=${AI_API_BASE_URL}
+ai.model=${AI_MODEL}
+ai.temperature=${AI_TEMPERATURE}
+ai.max-tokens=${AI_MAX_TOKENS}

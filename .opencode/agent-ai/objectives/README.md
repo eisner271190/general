@@ -4,4 +4,6 @@
 
 | Código | Categoría | Objetivo | Estado |
 | --- | --- | --- | --- |
-| 001 | Backend | API AI: endpoint agnóstico al proveedor, frontend sin OpenRouter directo, secretos en Secret Manager | abierto |
+| — | — | Sin objetivos abiertos | — |
+
+> 001 (API AI agnóstica al proveedor) completado → `OBJECTIVES_DONE/objetivo-001.md`.

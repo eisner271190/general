@@ -12,9 +12,13 @@ description: Principios y reglas de código limpio propias
 - R6: Extrae una condición cuando combine 2 o más comparaciones mediante operadores lógicos, o cuando su expresión requiera interpretación para entender su intención.
 - R7: Limita los métodos a un máximo de 2 parámetros. Si un método requiere más, agrúpalos en una abstracción; esta excepción solo aplica a métodos Factory.
 - R8: No instancies objetos directamente en el flujo principal; encapsula cada creación en un método dedicado y descriptivo.
+- R9: Siempre agregar log.info para registrar la entrada y salida de los métodos.
+- R10: Siempre agregar log.debug para registrar información detallada durante la ejecución de los métodos. Con parámetros, variables, linea por linea.
+- R11: Debe crear una clase para los mensajes, logs. Con el propósito de centralizar y estandarizar la gestión de mensajes y registros en toda la aplicación.
+- R12: Debe crear una clase para las constantes, con el propósito de centralizar y estandarizar la gestión de valores constantes en toda la aplicación.
 
 ## Patrón Facade
-- R9: Propiciar el uso del patrón Facade para simplificar los métodos.
+- R10: Propiciar el uso del patrón Facade para simplificar los métodos.
 class PedidoFacade {
     void procesar(Pedido pedido) {
         validar(pedido);

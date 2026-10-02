@@ -17,6 +17,7 @@ description: Convenciones Java/Spring para plantillas y código backend hexagona
 - Java 17; `record` para DTOs inmutables; Lombok solo donde la plantilla ya lo usa; sin dependencias nuevas sin justificación.
 - Validación en la frontera (controller/adapter); errores vía `GlobalExceptionHandler` + `ApiResponse`; excepciones específicas, nunca catch vacío.
 - Sin secrets en código/properties: variables de entorno o gestor de secretos.
+- application.properties: sin valores por defecto; usar variables de entorno o gestor de secretos.
 
 ## Tests (Maven; pedir autorización)
 - JUnit 5 por capa (usecase, adapters, controllers); Karate para API.

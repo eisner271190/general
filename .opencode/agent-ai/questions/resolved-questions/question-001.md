@@ -1,0 +1,7 @@
+# Question 001
+
+- [x] [researcher] ¿En qué microservicio debe generarse el endpoint de IA, dado que las plantillas del componente `spring-boot-3.5.16` se copian a **todos** los microservicios?
+  - Contexto: `generator/components/backend/spring-boot-3.5.16/component.json:203-204` registra `SubscriptionController`/`RevenueCatWebhookFilter` sin condición, y esas plantillas no tienen bloque `{{ if }}` (a diferencia de `templates/cors-config.scriban:1`, que sí usa `{{ if(Name == "security") }}`). Hoy `generator/target/com.quizsmart.app/com.quizsmart.app.json:54-150` solo declara `quizapi`, pero el objetivo pide "no modificar otros microservicios" y el componente es compartido.
+  - Tarea: 001
+  - Solución propuesta: registrar las plantillas de IA sin condición (mínimo cambio) o envolverlas en `{{ if Name == "quizapi" }}` si el usuario quiere que solo `quizapi` las reciba. Requiere decisión del usuario.
+  - Respuesta (2026-10-01, architect): **sin condición**, igual que `SubscriptionController`/`RevenueCatAdapter` (`component.json:199-204`). El componente es compartido y hoy solo existe `quizapi`; condicionar ahora es especulativo. Además todas las propiedades `ai.*` llevan default, así que un microservicio sin parámetros arranca igual. Si aparece otro microservicio, envolver las 8 plantillas es una línea por plantilla. Ver `deliverables/objetivo-001/architecture-001.md` §8.1 y §12.

@@ -1,0 +1,93 @@
+package {{ PACKAGE }}.infrastructure.controllers;
+
+import {{ PACKAGE }}.application.dto.AiGenerateRequestDTO;
+import {{ PACKAGE }}.domain.servicePorts.IAiServicePort;
+import {{ PACKAGE }}.infrastructure.configuration.AiConstants;
+import {{ PACKAGE }}.infrastructure.configuration.AiMessages;
+import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import reactor.core.publisher.Mono;
+
+import java.util.Map;
+
+/**
+ * Endpoint de IA generativa agnostico al proveedor: el cliente solo envia el prompt.
+ *
+ * <p>El modelo, la temperatura y las credenciales los resuelve el backend, de modo que el
+ * frontend no conoce ningun proveedor de IA.
+ */
+@RestController
+@RequestMapping("/api/v1/ai")
+public class AiController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AiController.class);
+
+    private final IAiServicePort aiService;
+
+    public AiController(IAiServicePort aiService) {
+        this.aiService = aiService;
+    }
+
+    /**
+     * Cuerpo: {@code {"prompt":"..."}} -> ApiResponse con data = cuerpo crudo del proveedor.
+     *
+     * <p>El passthrough mantiene el contrato que el cliente ya consume
+     * ({@code choices[0].message.content}).
+     */
+    @PostMapping("/generate")
+    public Mono<ResponseEntity<ApiResponse>> generate(
+            @RequestBody(required = false) AiGenerateRequestDTO request) {
+        String prompt = extractPrompt(request);
+        LOG.info("POST /api/v1/ai/generate recibido");
+        LOG.debug("Longitud del prompt: {}", prompt == null ? 0 : prompt.length());
+        if (isPromptInvalid(prompt)) {
+            LOG.warn("Prompt rechazado: ausente, vacio o mayor que {}",
+                AiConstants.MAX_PROMPT_LENGTH);
+            return Mono.just(badRequest());
+        }
+        return aiService.generate(prompt)
+            .map(generation -> okResponse(generation.providerPayload()))
+            .onErrorResume(this::handleError);
+    }
+
+    private String extractPrompt(AiGenerateRequestDTO request) {
+        return request == null ? null : request.prompt();
+    }
+
+    private boolean isPromptInvalid(String prompt) {
+        return prompt == null
+            || prompt.isBlank()
+            || prompt.length() > AiConstants.MAX_PROMPT_LENGTH;
+    }
+
+    private ResponseEntity<ApiResponse> badRequest() {
+        // ApiResponse tiene sobrecargas (Map, String, int) y (Object, String, int): un null
+        // sin tipo no compila. La variable tipada elige la de Map.
+        Map<String, Object> noData = null;
+        return ResponseEntity.badRequest()
+            .body(new ApiResponse(noData, AiMessages.PROMPT_INVALID, AiConstants.STATUS_BAD_REQUEST));
+    }
+
+    private ResponseEntity<ApiResponse> okResponse(Map<String, Object> payload) {
+        return ResponseEntity.ok(
+            new ApiResponse(payload, AiMessages.GENERATED, AiConstants.STATUS_OK));
+    }
+
+    private Mono<ResponseEntity<ApiResponse>> handleError(Throwable error) {
+        // El mensaje real puede traer la URL del proveedor: dato de infraestructura
+        // que no debe viajar al cliente de un endpoint publico. Se registra aqui.
+        LOG.error("Fallo al generar texto con IA", error);
+        Map<String, Object> noData = null;
+        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(new ApiResponse(noData, AiMessages.GENERATION_ERROR, AiConstants.STATUS_INTERNAL_ERROR)));
+    }
+}

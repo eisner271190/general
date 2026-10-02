@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:{{ FRONTEND_NAME }}/shared/consume/http_client_impl.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/consume/i_http_client.dart';
 import 'package:{{ FRONTEND_NAME }}/shared/log/logger.dart';
-import 'package:{{ FRONTEND_NAME }}/core/parameters_initializer.dart';
+import 'package:{{ FRONTEND_NAME }}/core/config/api_env.dart';
 
 import '../domain/i_parameters_repository.dart';
 import '../domain/parameter_response.dart';
@@ -12,6 +12,8 @@ import '../domain/parameter_response.dart';
 class ApiParametersRepository implements IParametersRepository {
   static const String _parametersPath = '/api/v1/parameters';
   static const Duration _timeout = Duration(seconds: 5);
+  static const String _messageStatusError = 'Error fetching parameters';
+  static const String _messageFetchFailed = 'Failed to fetch parameters';
 
   final IHttpClient _httpClient;
 
@@ -21,40 +23,42 @@ class ApiParametersRepository implements IParametersRepository {
   @override
   Future<ParameterResponse> fetchParameters() async {
     try {
-      final baseUrl = ParametersInitializer.instance!.getParameterOrDefault(
-        'API_BASE_URL',
-        '',
-      );
+      final baseUrl = ApiEnv.baseUrl;
       final response = await _httpClient
           .get('$baseUrl$_parametersPath')
           .timeout(_timeout);
 
       if (response.statusCode != 200) {
-        Logger.warning('[PARAMETERS] Unexpected status code', data: {
-          'statusCode': response.statusCode,
-        });
-        return const ParameterResponse(
-          data: {},
-          message: 'Error fetching parameters',
-          status: 0,
-        );
+        return _onUnexpectedStatus(response.statusCode);
       }
 
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
-      final parameterResponse = ParameterResponse.fromJson(body);
-
-      Logger.info('[PARAMETERS] Fetched successfully', data: {
-        'count': parameterResponse.data.length,
-      });
-
-      return parameterResponse;
+      return _toResponse(response.body);
     } catch (error) {
       Logger.warning('[PARAMETERS] Fetch failed', data: {'error': '$error'});
-      return const ParameterResponse(
-        data: {},
-        message: 'Failed to fetch parameters',
-        status: 0,
-      );
+      return _fallback(_messageFetchFailed);
     }
+  }
+
+  Future<ParameterResponse> _onUnexpectedStatus(int statusCode) async {
+    Logger.warning('[PARAMETERS] Unexpected status code', data: {
+      'statusCode': statusCode,
+    });
+    return _fallback(_messageStatusError);
+  }
+
+  Future<ParameterResponse> _toResponse(dynamic body) async {
+    final parameterResponse =
+        ParameterResponse.fromJson(jsonDecode(body as String) as Map<String, dynamic>);
+
+    Logger.info('[PARAMETERS] Fetched successfully', data: {
+      'count': parameterResponse.data.length,
+    });
+
+    return parameterResponse;
+  }
+
+  /// Respuesta vacia para que la app arranque con los defaults en vez de propagar el fallo.
+  Future<ParameterResponse> _fallback(String message) async {
+    return ParameterResponse(data: {}, message: message, status: 0);
   }
 }

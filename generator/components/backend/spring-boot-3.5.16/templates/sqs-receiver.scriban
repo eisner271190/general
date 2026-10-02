@@ -1,5 +1,7 @@
 {{- if ConsumedEvents.size > 0 }}package {{ PACKAGE }}.infrastructure.configuration.cloud.aws;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -7,8 +9,16 @@ import software.amazon.awssdk.services.sqs.model.*;
 
 import java.util.List;
 
+/**
+ * Lectura y escritura en la cola SQS.
+ *
+ * <p>El cuerpo de los mensajes no se registra: puede llevar datos de negocio o personales.
+ * La traza anota tamano y cantidad, que es lo que hace falta para diagnosticar.
+ */
 @Service
 public class SqsReceiver {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SqsReceiver.class);
 
     private final SqsClient sqsClient;
 
@@ -20,14 +30,19 @@ public class SqsReceiver {
     }
 
     public void sendMessage(String messageBody) {
+        LOG.info("Enviando mensaje a SQS ({} caracteres)", messageBody.length());
+        LOG.debug("Cola: {}", queueUrl);
         SendMessageRequest sendRequest = SendMessageRequest.builder()
                 .queueUrl(queueUrl)
                 .messageBody(messageBody)
                 .build();
         sqsClient.sendMessage(sendRequest);
+        LOG.debug("Mensaje enviado a SQS");
     }
 
     public List<String> receiveMessages() {
+        LOG.info("Recibiendo mensajes de SQS");
+        LOG.debug("Cola: {}", queueUrl);
         ReceiveMessageRequest request = ReceiveMessageRequest.builder()
                 .queueUrl(queueUrl)
                 .maxNumberOfMessages(10)
@@ -35,6 +50,7 @@ public class SqsReceiver {
                 .build();
 
         List<Message> messages = sqsClient.receiveMessage(request).messages();
+        LOG.debug("SQS devolvio {} mensajes", messages.size());
 
         for (Message message : messages) {
             deleteMessage(message.receiptHandle());
@@ -44,6 +60,7 @@ public class SqsReceiver {
     }
 
     private void deleteMessage(String receiptHandle) {
+        LOG.debug("Confirmando mensaje recibido (receiptHandle de {} caracteres)", receiptHandle.length());
         DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
                 .queueUrl(queueUrl)
                 .receiptHandle(receiptHandle)

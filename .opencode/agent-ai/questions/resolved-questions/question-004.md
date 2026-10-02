@@ -1,0 +1,7 @@
+# Question 004
+
+- [x] [researcher] ¿Qué forma exacta tiene la respuesta de `POST /api/v1/ai/generate` para no tocar `RealAIStrategy`?
+  - Contexto: el frontend parsea el cuerpo crudo del proveedor: `body['choices'][0]['message']['content']` en `generator/components/frontend/flutter3.47.2/templates/lib/features/quiz/data/real_ai_strategy.dart.scriban:46-53`. El envoltorio estándar del backend es `ApiResponse(data, message, status)` (`infrastructure/rest/response/ApiResponse.java`, usado en `subscription-controller.scriban:27`). El objetivo exige "mantener la misma interfaz" en el cliente.
+  - Tarea: 001
+  - Solución propuesta: responder `ApiResponse` con `data` = cuerpo crudo de OpenRouter (mapa completo `choices/message/content`). El cliente nuevo devuelve `jsonDecode(body)['data']`, sin tocar `RealAIStrategy`. Alternativa (solo texto en `data`) obligaría a modificar la lógica de parseo, fuera de alcance.
+  - Respuesta (2026-10-01, architect): confirmado. `ApiResponse` con `data` = cuerpo crudo del proveedor, usando el constructor `ApiResponse(Map<String,Object>, …)` (el de `Object` habría anidado un `data` extra). El puerto `IAProviderPort` sigue siendo agnóstico: devuelve `AiGeneration(model, content, providerPayload)` y el `providerPayload` es solo el passthrough HTTP. El cliente nuevo devuelve `jsonDecode(body)['data']`. Ver `architecture-001.md` §2.1 y §12.

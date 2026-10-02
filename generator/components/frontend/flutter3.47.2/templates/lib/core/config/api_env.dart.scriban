@@ -1,0 +1,18 @@
+import 'package:{{ FRONTEND_NAME }}/core/parameters_initializer.dart';
+
+/// Configuración de la API del backend obtenida vía GET /api/v1/parameters.
+///
+/// Punto único de lectura de la URL base: la consumen los repositorios de
+/// parameters y health, el cliente de IA y RevenueCat.
+abstract final class ApiEnv {
+  ApiEnv._();
+
+  static const String keyBaseUrl = 'API_BASE_URL';
+
+  /// URL base del backend API (vacía hasta que cargan los parámetros).
+  static String get baseUrl =>
+      ParametersInitializer.instance!.getParameterOrDefault(
+        keyBaseUrl,
+        '',
+      );
+}

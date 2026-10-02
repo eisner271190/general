@@ -1,0 +1,32 @@
+package {{ PACKAGE }}.infrastructure.configuration;
+
+/**
+ * Constantes del contrato de IA generativa (endpoint publico, configuracion y trazas).
+ *
+ * <p>Las constantes propias del proveedor (paths, cabeceras, forma del JSON) viven en su
+ * adaptador, no aqui: asi cambiar de proveedor no obliga a tocar este archivo.
+ */
+public final class AiConstants {
+
+    private AiConstants() {
+    }
+
+    /** Longitud maxima aceptada en el prompt. */
+    public static final int MAX_PROMPT_LENGTH = 8000;
+
+    /** Longitud del prompt incluida en la traza de entrada antes de truncar. */
+    public static final int PROMPT_LOG_LIMIT = 200;
+
+    public static final int STATUS_OK = 200;
+    public static final int STATUS_BAD_REQUEST = 400;
+    public static final int STATUS_INTERNAL_ERROR = 500;
+
+    /**
+     * Margen sobre el timeout del cliente Flutter (30 s): aborta antes que la Lambda, que
+     * seguiria facturando hasta su propio timeout de 60 s.
+     */
+    public static final int PROVIDER_TIMEOUT_SECONDS = 20;
+
+    /** Prefijo de las claves de proveedor en Parameter Store; solo se usa en la traza. */
+    public static final String PARAMETER_PREFIX = "ai.";
+}

@@ -1,0 +1,84 @@
+package {{ PACKAGE }}.infrastructure.configuration;
+
+import jakarta.annotation.PostConstruct;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+/**
+ * Configuracion del proveedor de IA, leida de {@code ai.*}.
+ *
+ * <p>Sin valores por defecto: cada propiedad es obligatoria. Si falta una, el arranque
+ * falla y el motivo queda en el log. Es deliberado: un default silencioso (por ejemplo
+ * un modelo de ejemplo) produce 200 con otro modelo del que nadie se dio cuenta, y eso
+ * solo aparece al revisar la facturacion del proveedor.
+ *
+ * <p>La API key llega desde Secrets Manager y solo se usa como cabecera Authorization:
+ * nunca se registra ni se expone.
+ */
+@Component
+@ConfigurationProperties(prefix = "ai")
+public class AiProperties {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AiProperties.class);
+
+    private String apiKey;
+    private String apiBaseUrl;
+    private String model;
+    private Double temperature;
+    private Integer maxTokens;
+
+    /**
+     * El binding de {@code @ConfigurationProperties} ocurre antes de este callback, asi que
+     * aqui los campos ya tienen el valor real. Loguear en el constructor serviria de nada:
+     * todavia estan todos a null.
+     */
+    @PostConstruct
+    void logResolvedConfiguration() {
+        LOG.info("Configuracion de IA cargada: model={}, apiBaseUrl={}, temperature={}, maxTokens={}, "
+                + "apiKey presente={}",
+            model, apiBaseUrl, temperature, maxTokens, apiKey != null && !apiKey.isBlank());
+    }
+
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
+
+    public String getApiBaseUrl() {
+        return apiBaseUrl;
+    }
+
+    public void setApiBaseUrl(String apiBaseUrl) {
+        this.apiBaseUrl = apiBaseUrl;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public Double getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(Double temperature) {
+        this.temperature = temperature;
+    }
+
+    public Integer getMaxTokens() {
+        return maxTokens;
+    }
+
+    public void setMaxTokens(Integer maxTokens) {
+        this.maxTokens = maxTokens;
+    }
+}

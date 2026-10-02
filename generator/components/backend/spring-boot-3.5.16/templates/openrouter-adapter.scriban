@@ -1,0 +1,179 @@
+package {{ PACKAGE }}.infrastructure.adapters;
+
+import {{ PACKAGE }}.domain.model.AiGeneration;
+import {{ PACKAGE }}.domain.ports.IAProviderPort;
+import {{ PACKAGE }}.infrastructure.configuration.AiConstants;
+import {{ PACKAGE }}.infrastructure.configuration.AiMessages;
+import {{ PACKAGE }}.infrastructure.configuration.AiProperties;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import reactor.core.publisher.Mono;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Cliente REST de OpenRouter. La respuesta del proveedor no encaja con el modelo de dominio:
+ * se traduce aqui para que {@code IAProviderPort} siga siendo agnostico.
+ *
+ * <p>La API key nunca vive en codigo ni en el cliente: llega desde Secrets Manager y solo se
+ * usa como cabecera Authorization.
+ */
+@Component
+public class OpenRouterAdapter implements IAProviderPort {
+
+    private static final Logger LOG = LoggerFactory.getLogger(OpenRouterAdapter.class);
+
+    private static final String ROLE_USER = "user";
+    private static final String PATH_CHAT_COMPLETIONS = "/chat/completions";
+    private static final String HEADER_AUTHORIZATION = "Authorization";
+    private static final String PREFIX_BEARER = "Bearer ";
+    private static final String CHOICES = "choices";
+    private static final String MESSAGE = "message";
+    private static final String CONTENT = "content";
+
+    private static final Duration PROVIDER_TIMEOUT =
+        Duration.ofSeconds(AiConstants.PROVIDER_TIMEOUT_SECONDS);
+
+    private final WebClient webClient;
+    private final AiProperties properties;
+
+    public OpenRouterAdapter(WebClient.Builder webClientBuilder, AiProperties properties) {
+        this.properties = properties;
+        this.webClient = webClientBuilder.baseUrl(properties.getApiBaseUrl()).build();
+    }
+
+    /** Fachada: valida, arma la peticion, la envia y traduce la respuesta. */
+    @Override
+    public Mono<AiGeneration> generate(String prompt) {
+        LOG.info("Generando texto con IA: modelo={}, temperature={}, maxTokens={}",
+            properties.getModel(), properties.getTemperature(), properties.getMaxTokens());
+        LOG.debug("Prompt recibido: {}", abbreviate(prompt));
+        if (isApiKeyMissing()) {
+            return Mono.error(new IllegalStateException(AiMessages.MISSING_API_KEY));
+        }
+        return postRequest(buildChatRequest(prompt))
+            .map(this::toGeneration)
+            .doOnNext(this::logGeneration);
+    }
+
+    private boolean isApiKeyMissing() {
+        return properties.getApiKey() == null || properties.getApiKey().isBlank();
+    }
+
+    private OpenRouterChatRequest buildChatRequest(String prompt) {
+        return new OpenRouterChatRequest(
+            properties.getModel(),
+            List.of(new OpenRouterChatRequest.Message(ROLE_USER, prompt)),
+            properties.getTemperature(),
+            properties.getMaxTokens());
+    }
+
+    private Mono<Map<String, Object>> postRequest(OpenRouterChatRequest request) {
+        return webClient.post()
+            .uri(PATH_CHAT_COMPLETIONS)
+            .header(HEADER_AUTHORIZATION, PREFIX_BEARER + properties.getApiKey())
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(request)
+            .retrieve()
+            // Sin esto el error era un "400 Bad Request" sin cuerpo y no habia forma de saber
+            // que modelo habia rechazado el proveedor ni por que.
+            .onStatus(HttpStatusCode::isError, response -> providerError(response, request))
+            .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+            // defer es obligatorio: timeoutError() lleva el LOG.error dentro y como argumento
+            // se evaluaria en el ensamblado, no al expirar. Sin esto cada peticion loguea un
+            // timeout falso aunque la respuesta llegue bien.
+            .timeout(PROVIDER_TIMEOUT, Mono.defer(() -> Mono.error(timeoutError(request))));
+    }
+
+    /** Error del proveedor con su cuerpo: dice si el modelo no existe, si no hay credito, etc. */
+    private Mono<Throwable> providerError(
+            ClientResponse response,
+            OpenRouterChatRequest request) {
+        return response.bodyToMono(String.class)
+            .defaultIfEmpty("<cuerpo vacio>")
+            .flatMap(body -> {
+                String detail = "OpenRouter respondio " + response.statusCode().value()
+                    + " para el modelo " + request.model()
+                    + " (" + AiConstants.PARAMETER_PREFIX + "model): " + body;
+                LOG.error(detail);
+                return Mono.error(new IllegalStateException(detail));
+            });
+    }
+
+    /**
+ * Devuelve el error y no el Mono que lo envuelve: encajarlo aqui haria que el compilador
+ * infiera el timeout devolviendo {@code Mono<Throwable>}, que no es el tipo de la cadena.
+ */
+private Throwable timeoutError(OpenRouterChatRequest request) {
+        String detail = AiMessages.TIMEOUT + AiConstants.PROVIDER_TIMEOUT_SECONDS + " s"
+            + " (modelo " + request.model() + ")";
+        LOG.error(detail);
+        return new IllegalStateException(detail);
+    }
+
+    /**
+     * Sin contenido usable no hay nada que reenviar: fallar aqui evita un 200 con un payload
+     * que el cliente no sabe interpretar.
+     */
+    private AiGeneration toGeneration(Map<String, Object> payload) {
+        String content = extractContent(payload);
+        if (isBlankContent(content)) {
+            throw new IllegalStateException(AiMessages.EMPTY_CONTENT);
+        }
+        return new AiGeneration(properties.getModel(), content, payload);
+    }
+
+    private boolean isBlankContent(String content) {
+        return content == null || content.isBlank();
+    }
+
+    /** choices[0].message.content; null si la respuesta no trae contenido usable. */
+    private String extractContent(Map<String, Object> payload) {
+        Map<?, ?> choice = firstChoice(payload);
+        Map<?, ?> message = choice == null ? null : pickMap(choice, MESSAGE);
+        Object content = message == null ? null : message.get(CONTENT);
+        return content == null ? null : content.toString();
+    }
+
+    private Map<?, ?> firstChoice(Map<String, Object> payload) {
+        List<?> choices = choicesOf(payload);
+        if (choices == null || choices.isEmpty()) {
+            return null;
+        }
+        return choices.get(0) instanceof Map<?, ?> choice ? choice : null;
+    }
+
+    private List<?> choicesOf(Map<String, Object> payload) {
+        if (payload == null || !(payload.get(CHOICES) instanceof List<?> choices)) {
+            return null;
+        }
+        return choices;
+    }
+
+    private Map<?, ?> pickMap(Map<?, ?> source, String key) {
+        return source.get(key) instanceof Map<?, ?> value ? value : null;
+    }
+
+    private void logGeneration(AiGeneration generation) {
+        LOG.info("Generacion recibida: modelo={}", generation.model());
+    }
+
+    private String abbreviate(String prompt) {
+        if (prompt == null) {
+            return "null";
+        }
+        return prompt.length() <= AiConstants.PROMPT_LOG_LIMIT
+            ? prompt
+            : prompt.substring(0, AiConstants.PROMPT_LOG_LIMIT) + "...";
+    }
+}

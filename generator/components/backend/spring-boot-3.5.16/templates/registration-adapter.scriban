@@ -4,11 +4,20 @@ import {{ PACKAGE }}.domain.ports.RegistrationPort;
 import {{ PACKAGE }}.infrastructure.configuration.cloud.aws.CognitoClient;
 import {{ PACKAGE }}.domain.model.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+/**
+ * Adaptador de registro sobre Cognito.
+ *
+ * <p>El correo y el nombre se registran porque identifican al usuario; la contrasena nunca.
+ */
 @Component
 public class RegistrationAdapter implements RegistrationPort {
+
+    private static final Logger LOG = LoggerFactory.getLogger(RegistrationAdapter.class);
 
     private final CognitoClient cognitoClient;
 
@@ -18,17 +27,23 @@ public class RegistrationAdapter implements RegistrationPort {
 
     @Override
     public Mono<Void> registerUserByAdmin(RegisterUser request) {
-        return cognitoClient.createUser(request);
+        LOG.info("Creando usuario {} por administrador", request.getEmail());
+        return cognitoClient.createUser(request)
+            .doOnSuccess(done -> LOG.debug("Usuario {} creado", request.getEmail()));
     }
 
     @Override
     public Mono<Void> registerUser(RegisterUser request) {
-        return cognitoClient.signUpUser(request);
+        LOG.info("Registrando usuario {}", request.getEmail());
+        return cognitoClient.signUpUser(request)
+            .doOnSuccess(done -> LOG.debug("Usuario {} registrado", request.getEmail()));
     }
 
     @Override
     public Mono<Void> confirmUser(ConfirmUser request) {
-        return cognitoClient.confirmUser(request.getUsername(), request.getConfirmationCode());
+        LOG.info("Confirmando usuario {}", request.getUsername());
+        return cognitoClient.confirmUser(request.getUsername(), request.getConfirmationCode())
+            .doOnSuccess(done -> LOG.debug("Usuario {} confirmado", request.getUsername()));
     }
 }
 {{ end }}
