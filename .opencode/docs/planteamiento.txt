@@ -88,6 +88,79 @@ Creación de skils, commands, agents con viñetas y corto
 - API Identity
 - API AI
 
+- ILog
+- Manejo de errores RFC
+- Agente integrador
+- Reducir el tamaño de la imagen docker
+- Arquetipo
+- Granularidad de artefactos - Multi-modulo
+- CodeArtifact
+- Manejo centralizado de dependencias, versiones
+- BOM y Renovate
+
+
+Platform/
+  common/ <- repo Maven (publica a CodeArtifact)
+    pom.xml                        parent: solo propiedades + pluginManagement, sin código
+    renovate.json                  automatiza upgrades del BOM en los ms
+    README.md
+    docs/
+      como-usar.md
+      como-versionar.md
+      como-migrar-un-ms.md
+
+    common-bom/                    <- SOLO dependencyManagement. Sin código.
+      pom.xml                      importa spring-boot, aws-sdk, spring-cloud-aws, + versiones propias
+
+    common-helpers/                <- Java puro, sin Spring
+      pom.xml
+      src/main/java/com/epc/common/helpers/FechaHelper.java
+      src/main/java/com/epc/common/helpers/StringHelper.java
+
+    common-log/                    <- sin web
+      pom.xml
+      src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+      src/main/java/com/epc/common/log/LogAutoConfiguration.java   MDC, request-id
+      src/main/java/com/epc/common/log/CorrelationFilter.java
+
+    common-error/                  <- contrato de error
+      pom.xml                      depende de common-helpers
+      src/main/java/com/epc/common/error/
+        ApiResponse.java
+        PageResponse.java
+        ErrorCode.java
+        CommonException.java
+        exceptions/NotFoundException.java  BusinessRuleException.java
+
+    common-web/                    <- la única que toca MVC
+      pom.xml                      depende de common-log + common-error
+      src/main/java/com/epc/common/web/
+        GlobalExceptionHandler.java   @ConditionalOnMissingBean
+        ErrorWebConfig.java
+      src/main/java/com/epc/common/web/filter/RequestIdFilter.java
+
+    docker/                        <- imagen base ECR
+      Dockerfile FROM eclipse-temurin:17, usuario no-root, TZ=UTC
+      base-image.sh                publica epc/common-base:<version>
+
+    templates/                     <- fuente para generar archivos de config
+      gitignore.template
+      dockerignore.template
+      renovate.template.json scripts/
+      install-config.sh            copia templates a un ms nuevo
+
+  platform-buildspecs/             <- repo CodeCommit (AWS CodePipeline)
+    buildspecs/
+      java-ci.yml                  buildspec compartido (pinned por commit)
+      docker-build.yml
+      base-ci.yml
+
+  azure-pipelines/                 <- repo Azure DevOps (plantillas)
+    stages/
+      build.yml
+      test.yml
+      deploy.yml
+
 
 AWS
 OpenRouter
