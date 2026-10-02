@@ -20,6 +20,10 @@
 - Código generado = resultado: corregir en la fuente de verdad, nunca en la salida.
 - Informa cada paso con un mensaje corto.
 
+## Endpoints
+- Al agregar, modificar o eliminar un endpoint, actualizar SIEMPRE la colección de Postman en el mismo cambio (ejemplos de request/response incluidos). Un endpoint sin entrada en la colección está incompleto.
+- Al cambiar la plantilla de la colección, validar que el JSON sigue siendo correcto (parsearlo).
+
 ## Seguridad
 - Sin secretos, tokens ni credenciales en código: usa variables de entorno o gestor.
 - No editar `.env` ni credenciales sin petición explícita.

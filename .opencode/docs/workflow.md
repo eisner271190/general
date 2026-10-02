@@ -54,14 +54,3 @@ Texto canónico: los agentes con línea `Dudas → WORKFLOW §Dudas` obedecen es
 
 - Objetivo nuevo → `planner-builder` · Investigación → `researcher` · Diseño/arquitectura → `architect` · Revisión de arquitectura → `reviewer-plan` · Código → `developer` · Pruebas → `tester` · Revisión de cambios → `reviewer` · Explorar código → `explore`.
 - Si un subagente no puede escribir (`explore`), devuelve la duda al orchestrator, que la registra.
-
-## Trabajar (`/trabajar [NNN]`)
-
-- Una tarea por ciclo: el objetivo indicado o el siguiente abierto de `OBJECTIVES` (orden del índice). Tras cada PR, preguntar si continúa con la siguiente.
-- Precondiciones: rama base `main` y árbol limpio (`git status`); si no, detener y reportar.
-1. **Branch** — `git checkout -b feature/<slug>`, donde `<slug>` = nombre del plan sin `.md`. Si el branch ya existe → retomar el paso que falte (idempotente).
-2. **Plan base** — si no existe `PLANS/plan-<slug>.md`, skill `plan-builder`.
-3. **Plan detallado** — usar `PLAN_TEMPLATE` como estructura base. El plan se congela al implementar: cambios de alcance ⇒ actualizar el plan antes de continuar.
-4. **Implementar** — cambios pequeños y verificables + `verify-before-done`. Los prompts de permisos (build/test) son la autorización: si se deniegan, detener y reportar.
-5. **PR** — `git add` solo archivos del alcance → `git commit` (`plan-<slug>: <resumen>`) → `git push -u origin feature/<slug>` (ask) → `gh pr create --base main --head feature/<slug>` (ask) con `REPORT_TEMPLATE`; sin `gh` → URL de compare. Marcar el `**Estado:**` del `objetivo-NNN.md` con el PR.
-6. **Al fusionar** — mover `objetivo-NNN.md` a `OBJECTIVES_DONE` y actualizar `OBJECTIVES_INDEX`.
