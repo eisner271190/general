@@ -27,13 +27,6 @@ public final class AiConstants {
      */
     public static final int PROVIDER_TIMEOUT_SECONDS = 20;
 
-    // Nombres de las propiedades, para las trazas de "parametro invalido".
-    public static final String KEY_TEMPERATURE = "ai.temperature";
-    public static final String KEY_MAX_TOKENS = "ai.max-tokens";
-
-    // Defaults:Parameter Store puede devolver vacios y el arranque no debe depender de el.
-    public static final String DEFAULT_API_BASE_URL = "https://openrouter.ai/api/v1";
-    public static final String DEFAULT_MODEL = "gpt-4o-mini";
-    public static final double DEFAULT_TEMPERATURE = 0.7;
-    public static final int DEFAULT_MAX_TOKENS = 1000;
+    /** Prefijo de las claves de proveedor en Parameter Store; solo se usa en la traza. */
+    public static final String PARAMETER_PREFIX = "ai.";
 }

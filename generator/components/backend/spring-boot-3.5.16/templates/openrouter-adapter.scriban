@@ -9,8 +9,10 @@ import {{ PACKAGE }}.infrastructure.configuration.AiProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import reactor.core.publisher.Mono;
@@ -48,20 +50,24 @@ public class OpenRouterAdapter implements IAProviderPort {
     public OpenRouterAdapter(WebClient.Builder webClientBuilder, AiProperties properties) {
         this.properties = properties;
         this.webClient = webClientBuilder.baseUrl(properties.getApiBaseUrl()).build();
-        LOG.debug("OpenRouterAdapter inicializado contra {}", properties.getApiBaseUrl());
     }
 
     /** Fachada: valida, arma la peticion, la envia y traduce la respuesta. */
     @Override
     public Mono<AiGeneration> generate(String prompt) {
-        LOG.info("Generando texto con IA via OpenRouter");
+        LOG.info("Generando texto con IA: modelo={}, temperature={}, maxTokens={}",
+            properties.getModel(), properties.getTemperature(), properties.getMaxTokens());
         LOG.debug("Prompt recibido: {}", abbreviate(prompt));
-        if (properties.isApiKeyMissing()) {
+        if (isApiKeyMissing()) {
             return Mono.error(new IllegalStateException(AiMessages.MISSING_API_KEY));
         }
         return postRequest(buildChatRequest(prompt))
             .map(this::toGeneration)
             .doOnNext(this::logGeneration);
+    }
+
+    private boolean isApiKeyMissing() {
+        return properties.getApiKey() == null || properties.getApiKey().isBlank();
     }
 
     private OpenRouterChatRequest buildChatRequest(String prompt) {
@@ -79,13 +85,37 @@ public class OpenRouterAdapter implements IAProviderPort {
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(request)
             .retrieve()
+            // Sin esto el error era un "400 Bad Request" sin cuerpo y no habia forma de saber
+            // que modelo habia rechazado el proveedor ni por que.
+            .onStatus(HttpStatusCode::isError, response -> providerError(response, request))
             .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
-            .timeout(PROVIDER_TIMEOUT, timeoutFallback());
+            .timeout(PROVIDER_TIMEOUT, Mono.error(timeoutError(request)));
     }
 
-    private Mono<Throwable> timeoutFallback() {
-        return Mono.error(new IllegalStateException(
-            AiMessages.TIMEOUT + AiConstants.PROVIDER_TIMEOUT_SECONDS + " s"));
+    /** Error del proveedor con su cuerpo: dice si el modelo no existe, si no hay credito, etc. */
+    private Mono<Throwable> providerError(
+            ClientResponse response,
+            OpenRouterChatRequest request) {
+        return response.bodyToMono(String.class)
+            .defaultIfEmpty("<cuerpo vacio>")
+            .flatMap(body -> {
+                String detail = "OpenRouter respondio " + response.statusCode().value()
+                    + " para el modelo " + request.model()
+                    + " (" + AiConstants.PARAMETER_PREFIX + "model): " + body;
+                LOG.error(detail);
+                return Mono.error(new IllegalStateException(detail));
+            });
+    }
+
+    /**
+ * Devuelve el error y no el Mono que lo envuelve: encajarlo aqui haria que el compilador
+ * infiera el timeout devolviendo {@code Mono<Throwable>}, que no es el tipo de la cadena.
+ */
+private Throwable timeoutError(OpenRouterChatRequest request) {
+        String detail = AiMessages.TIMEOUT + AiConstants.PROVIDER_TIMEOUT_SECONDS + " s"
+            + " (modelo " + request.model() + ")";
+        LOG.error(detail);
+        return new IllegalStateException(detail);
     }
 
     /**
@@ -132,7 +162,7 @@ public class OpenRouterAdapter implements IAProviderPort {
     }
 
     private void logGeneration(AiGeneration generation) {
-        LOG.debug("Generacion recibida del modelo {}", generation.model());
+        LOG.info("Generacion recibida: modelo={}", generation.model());
     }
 
     private String abbreviate(String prompt) {

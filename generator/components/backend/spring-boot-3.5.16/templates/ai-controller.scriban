@@ -55,7 +55,7 @@ public class AiController {
             return Mono.just(badRequest());
         }
         return aiService.generate(prompt)
-            .map(generation -> ResponseEntity.ok(okResponse(generation.providerPayload())))
+            .map(generation -> okResponse(generation.providerPayload()))
             .onErrorResume(this::handleError);
     }
 

@@ -27,7 +27,14 @@ import org.springframework.util.PropertyPlaceholderHelper;
       "spring.autoconfigure.exclude="
           + "org.springframework.cloud.function.serverless.web.ServerlessAutoConfiguration",
       "AWS_REGION=us-east-1",
-      "spring.cloud.aws.region.static=us-east-1"{{ if ConsumedEvents.size > 0 }},
+      "spring.cloud.aws.region.static=us-east-1",
+      // ai.* no tiene defaults a proposito (fallar es mejor que asumir un modelo), asi que
+      // este arranque sin perfil "cloud" necesita valores propios para resolver los placeholders.
+      "ai.api-key=clave-de-prueba",
+      "ai.api-base-url=https://openrouter.ai/api/v1",
+      "ai.model=openai/gpt-4o-mini",
+      "ai.temperature=0.7",
+      "ai.max-tokens=1000"{{ if ConsumedEvents.size > 0 }},
       "AWS_SQS_URL_{{ Name }}=http://localhost:4566"{{ end }}
     })
 class ApplicationContextTest {

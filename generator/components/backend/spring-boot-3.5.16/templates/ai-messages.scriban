@@ -18,11 +18,8 @@ public final class AiMessages {
     public static final String GENERATION_ERROR = "Error generating text";
 
     public static final String MISSING_API_KEY =
-        "Falta la API key del proveedor de IA (ai.api-key)";
-    public static final String MISSING_API_KEY_WARNING =
-        "ai.api-key vacio: /api/v1/ai/generate respondera error hasta sembrar el secreto";
+        "Falta la API key del proveedor de IA (ai-api-key)";
     public static final String EMPTY_CONTENT =
         "El proveedor de IA no devolvio contenido utilizable";
     public static final String TIMEOUT = "El proveedor de IA no respondio en ";
-    public static final String INVALID_SETTING = "{} invalido, se omite: {}";
 }

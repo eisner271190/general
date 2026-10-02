@@ -35,7 +35,7 @@
         "REVENUECAT_PUBLIC_KEY": "test_bpyAvVGKmESuMZwvtWhJUjjJPhZ",
         "SUBSCRIPTION_API_BASE_URL": "https://api.revenuecat.com",
         "AI_API_BASE_URL": "https://openrouter.ai/api/v1",
-        "AI_MODEL": "nvidia/nemotron-3-ultra:free",
+        "AI_MODEL": "nvidia/nemotron-3-ultra-550b-a55b:free",
         "AI_TEMPERATURE": "0.7",
         "AI_MAX_TOKENS": "1000",
         "ADMOB_BANNER_ID": "ADMOB_BANNER_ID_PLACEHOLDER",

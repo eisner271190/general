@@ -87,3 +87,9 @@ Creación de skils, commands, agents con viñetas y corto
 - API Parameters
 - API Identity
 - API AI
+
+
+AWS
+OpenRouter
+Google Play Store
+RevenueCat
