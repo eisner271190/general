@@ -1,7 +1,0 @@
-# Question 005
-
-- [x] [researcher] Al desaparecer `API_KEY` del frontend, ¿qué condición decide `RealAIStrategy` vs `MockAIStrategy`?
-  - Contexto: `generator/components/frontend/flutter3.47.2/templates/lib/features/quiz/application/strategy_factory.dart.scriban:61-66` exige `mode == real && config.apiKey != null && apiKey.isNotEmpty`, y `StrategyConfig.load` lee `API_KEY` de los parámetros del backend (`templates/lib/features/quiz/application/strategy_config.dart.scriban:11`). `API_KEY` no está en las variables de `develop` (`generator/target/com.quizsmart.app/com.quizsmart.app.json:23-51`), por lo que hoy `develop` cae a mock. El objetivo exige que el `.env` del frontend no tenga la key.
-  - Tarea: 001
-  - Solución propuesta: la condición pasa a `mode == real` (el backend ya es quien autentica al proveedor), y `StrategyConfig` deja de leer `apiKey`; mantener `API_SERVICE_MODE` como interruptor mock/real. Requiere confirmación porque `strategy_factory`/`strategy_config` son "el resto de la app".
-  - Respuesta (2026-10-01, architect): confirmada tal como se propone. `mode == real` (con `AI_SERVICE_MODE` como interruptor) y `StrategyConfig` sin `apiKey`. Efecto colateral asumido: en `develop` (`AI_SERVICE_MODE=REAL`) antes caía a mock por falta de `API_KEY`; ahora sí intenta el endpoint y, sin key sembrada, devuelve 500 — comportamiento correcto según el objetivo. `MOCK` sigue sin tocar el backend. Ver `architecture-001.md` §2.2 y §12.

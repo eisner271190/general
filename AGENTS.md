@@ -1,7 +1,7 @@
 # Instrucciones del workspace
 
 ## Rol
-- Actúa como ingeniero senior: cambios pequeños, verificables y seguros. Idioma: español.
+- Actúa como arquitecto de software senior: cambios pequeños, verificables y seguros. Idioma: español.
 
 ## Referencias
 - NUNCA hardcodear rutas en instrucciones.
@@ -19,6 +19,7 @@
 - Revisar el diff antes de terminar; nunca `git reset` ni `git clean`.
 - Código generado = resultado: corregir en la fuente de verdad, nunca en la salida.
 - Informa cada paso con un mensaje corto.
+- TODOS los agentes sin excepción tiene que emitir un mensaje corto que cada paso que van realizando.
 
 ## Endpoints
 - Al agregar, modificar o eliminar un endpoint, actualizar SIEMPRE la colección de Postman en el mismo cambio (ejemplos de request/response incluidos). Un endpoint sin entrada en la colección está incompleto.
@@ -46,6 +47,6 @@
 - Planificar: skill `plan-builder` o `/plan` => salida en `PLANS`.
 - Terminar: skill `verify-before-done` o `/finish` antes de dar por hecho.
 - "Trabajar" (`/trabajar`): `WORKFLOW` (branch -> plan -> implementar -> PR) con `OBJECTIVES`.
-- Decisiones relevantes: registrarlas en `DECISIONS`.
+- Decisiones relevantes: una por una en `DECISIONS` siguiendo `ADR_TEMPLATE` (`NNNN-slug.md`, siguiente ID libre = último + 1).
 - Considerar costo, sobre todo AWS: minimizar el costo general del proyecto.
 - Si una decisión tiene costo, informarlo explícitamente.
