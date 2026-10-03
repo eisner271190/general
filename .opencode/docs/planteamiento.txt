@@ -166,3 +166,6 @@ AWS
 OpenRouter
 Google Play Store
 RevenueCat
+
+## Dependencias centralizadas
+- Lombok, Karate y Micrometer deben quedar en el `common-bom` para centralizar la gestión de sus versiones y evitar declarar versiones de estas dependencias en los microservicios.
