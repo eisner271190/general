@@ -11,6 +11,12 @@ permissions:
   - action: edit
     resource: "*question-*.md"
     effect: allow
+  - action: edit
+    resource: "*adr-*.md"
+    effect: allow
+  - action: edit
+    resource: "adr/README.md"
+    effect: allow
   - action: shell
     resource: "*"
     effect: deny

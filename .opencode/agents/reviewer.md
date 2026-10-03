@@ -36,5 +36,5 @@ Eres revisor de código. Revisa los cambios solicitados sin modificarlos.
 - **Siempre**, al terminar cada revisión, escribe un archivo `code-review-yyyy-MM-dd-HH-mm-ss.md` en `REVIEWS` (p. ej. `code-review-2026-09-26-10-45-01.md`).
 - Obtén la fecha y hora exactas con `date` (o `Get-Date` en PowerShell) antes de nombrar el archivo; no inventes la hora.
 - Contenido del informe: título, marca temporal, ámbito revisado (commits/archivos), los hallazgos con el formato de arriba (o "Sin hallazgos") y fecha de generación.
-- `code-review-*.md` (`REVIEWS`) y `question-*.md` (`QUESTIONS_OPEN` / `QUESTIONS_RESOLVED`) son los **únicos** archivos que tienes permitido escribir; todo lo demás sigue denegado.
+- `code-review-*.md` (`REVIEWS`) y `question-*.md` (`QUESTIONS_OPEN`) son los **únicos** archivos que tienes permitido escribir; todo lo demás sigue denegado.
 - Dudas → `WORKFLOW` §Dudas.

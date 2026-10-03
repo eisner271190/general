@@ -1,7 +1,0 @@
-# Question 003
-
-- [x] [researcher] ¿El nuevo `POST /api/v1/ai/generate` debe ir autenticado (Authorization Cognito / `X-User-Id`) o público?
-  - Contexto: API Gateway es HTTP API con rutas catch-all y **sin authorizer** (`generator/components/cloud/aws/templates/terraform-apigateway.scriban:1-10`, `terraform-apigateway-lambda.scriban:15-28`), así que cualquier endpoint nuevo queda expuesto. El backend no registra filtro de seguridad (`jwt-authentication-filter.scriban` existe pero no está en `component.json`), y los endpoints de negocio usan `@RequestHeader("X-User-Id")` sin validar (`generator/components/backend/spring-boot-3.5.16/templates/subscription-controller.scriban:31`). CORS solo se genera para el microservicio `security` (`cors-config.scriban:1`), con orígenes `localhost:3000` (web).
-  - Tarea: 001
-  - Solución propuesta: endpoint público como el resto de la API actual (fuera de alcance rate limiting), y documentar el riesgo de coste/uso abusivo. Si se exige auth, es cambio de alcance.
-  - Respuesta (2026-10-01, architect): **público**, coherente con la API actual (API Gateway sin authorizer, sin filtro de auth activo en el backend). Añadir auth tocaría el microservicio `security` y varios componentes: cambio de alcance. Riesgo de coste por abuso asumido y documentado; mitigación (authorizer o cuota por `X-User-Id`) queda como objetivo posterior. Ver `architecture-001.md` §2.1 y §11.

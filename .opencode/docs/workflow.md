@@ -44,8 +44,8 @@ Referencia en `AGENTS.md`. Los símbolos (`OBJECTIVES`, `QUESTIONS_OPEN`, `WORKF
 
 Texto canónico: los agentes con línea `Dudas → WORKFLOW §Dudas` obedecen esto.
 
-- Registrar en `QUESTIONS_OPEN` (plantilla `QUESTION_TEMPLATE`): `- [ ] [agente] Pregunta` + `Contexto:` / `Tarea: NNN` / `Solución propuesta:`.
-- Al resolver: **mover** el archivo a `QUESTIONS_RESOLVED` con `- [x]` + `Respuesta:` + fecha.
+- Registrar en `QUESTIONS_OPEN` siguiendo `QUESTION_TEMPLATE`: encabezado con `Agente` / `Tarea` / `Fecha` / `Estado: OPEN` / `Bloqueante: BLOCKING|NON_BLOCKING`, y las secciones `## Pregunta`, `## Contexto`, `## Tarea`, `## Solución propuesta` (la sección `## Respuesta` se rellena al resolver).
+- Al resolver: rellenar `Estado: RESOLVED` y `## Respuesta` con la respuesta y la fecha. **La duda resuelta no se archiva ni se mueve**: si la respuesta es una decisión con consecuencias, se registra como ADR en `DECISIONS` siguiendo `ADR_TEMPLATE` y se anota `question-NNN.md` en el campo `Origen:`. Si no es decisión, la duda se borra: el hilo ya está en el entregable y en la decisión que lo citaba. El ADR es la fuente; no dupliques el texto.
 - `NON_BLOCKING`: duda → registrar → continuar con la siguiente tarea.
 - `BLOCKING`: duda → registrar → buscar otra tarea ejecutable → continuar; **solo detener si no queda trabajo posible**.
 - El orchestrator revisa `QUESTIONS_OPEN` al inicio de cada fase, resuelve lo que pueda y, al cerrar la sesión, muestra las dudas abiertas.

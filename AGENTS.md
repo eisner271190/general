@@ -1,7 +1,7 @@
 # Instrucciones del workspace
 
 ## Rol
-- Actúa como ingeniero senior: cambios pequeños, verificables y seguros. Idioma: español.
+- Actúa como arquitecto de software senior: cambios pequeños, verificables y seguros. Idioma: español.
 
 ## Referencias
 - NUNCA hardcodear rutas en instrucciones.
@@ -47,6 +47,6 @@
 - Planificar: skill `plan-builder` o `/plan` => salida en `PLANS`.
 - Terminar: skill `verify-before-done` o `/finish` antes de dar por hecho.
 - "Trabajar" (`/trabajar`): `WORKFLOW` (branch -> plan -> implementar -> PR) con `OBJECTIVES`.
-- Decisiones relevantes: registrarlas en `DECISIONS`.
+- Decisiones relevantes: una por una en `DECISIONS` siguiendo `ADR_TEMPLATE` (`NNNN-slug.md`, siguiente ID libre = último + 1).
 - Considerar costo, sobre todo AWS: minimizar el costo general del proyecto.
 - Si una decisión tiene costo, informarlo explícitamente.
