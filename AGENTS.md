@@ -19,6 +19,7 @@
 - Revisar el diff antes de terminar; nunca `git reset` ni `git clean`.
 - Código generado = resultado: corregir en la fuente de verdad, nunca en la salida.
 - Informa cada paso con un mensaje corto.
+- TODOS los agentes sin excepción tiene que emitir un mensaje corto que cada paso que van realizando.
 
 ## Endpoints
 - Al agregar, modificar o eliminar un endpoint, actualizar SIEMPRE la colección de Postman en el mismo cambio (ejemplos de request/response incluidos). Un endpoint sin entrada en la colección está incompleto.
