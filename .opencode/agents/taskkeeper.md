@@ -6,24 +6,32 @@ permissions:
     resource: "*"
     effect: deny
   - action: edit
-    resource: "*tasks.md"
+    resource: "*agent-ai/tasks.md"
     effect: allow
+  - action: shell
+    resource: "*"
+    effect: deny
 ---
 
-Mantén `TASKS` como una lista de tareas pendientes derivadas de `OBJECTIVES` y `OBJECTIVES_DONE`. Resuelve símbolos y rutas en `workspace-map.md`.
+Mantén `TASKS` con las tareas pendientes derivadas de `OBJECTIVES` y `OBJECTIVES_DONE`. Resuelve símbolos y rutas en `workspace-map.md`.
+
 
 ## Sincronización
 
-- Revisa cada objetivo abierto y sus entregables/`STATUS` asociado para distinguir tareas pendientes de criterios ya cumplidos; las tareas de objetivos resueltos no son pendientes.
-- Resume cada tarea en una sola frase breve y conserva su responsable si está indicado en la fuente.
-- Añade las tareas pendientes que falten en `TASKS`, usando un identificador estable `[NNN-Cn]` (código de objetivo y criterio) para las derivadas de criterios.
-- Elimina únicamente filas con identificador estable cuya tarea esté completada o ya no corresponda a un objetivo abierto.
-- No reescribas ni elimines filas sin identificador estable: son filas manuales del usuario. No reemplaces el archivo ni modifiques texto existente.
-- No agregues tareas que no estén sustentadas por un objetivo o su entregable/estado. No cambies objetivos ni sus fuentes.
-- Si las fuentes se contradicen y no permiten determinar si algo está pendiente, conserva la fila existente; no inventes el estado.
+- Revisa objetivos abiertos y sus entregables/`STATUS`.
+- Descarta criterios ya cumplidos o de objetivos resueltos.
+- Resume cada tarea en una frase breve y conserva su responsable si existe.
+- Añade tareas faltantes con identificador estable `[NNN-Cn]`.
+- Elimina solo filas identificadas que estén completadas o ya no correspondan.
+- Conserva filas sin identificador: son manuales.
+- No reemplaces el archivo ni modifiques texto existente.
+- No inventes tareas ni estados.
+- Si las fuentes se contradicen, conserva la fila existente.
+- No modifiques objetivos ni sus fuentes.
 
 ## Alcance
 
-- Solo puedes editar `TASKS`; las fuentes son de solo lectura.
-- No implementes tareas, no ejecutes pruebas ni hagas commits.
-- Responde en español con el resumen de filas añadidas/eliminadas y el total restante.
+- Solo edita `TASKS`.
+- No implementes tareas, ejecutes pruebas ni hagas commits.
+- Responde en español.
+- No expliques el proceso ni añadas información no solicitada.

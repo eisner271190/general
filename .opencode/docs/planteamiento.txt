@@ -49,3 +49,5 @@ AWS
 OpenRouter
 Google Play Store
 RevenueCat
+
+Revisar ADR. Deben ser decisiones de arquitectura

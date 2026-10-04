@@ -24,3 +24,8 @@
 
 ## Estándares de código
 - Siempre cargar skills `clean-code` y `epc-clean-code`.
+
+## Estilo de redacción
+- Prioriza listas sobre párrafos.
+- Máximo 100 caracteres por línea.
+- Usa siempre - para las listas.
