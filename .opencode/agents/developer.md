@@ -9,7 +9,7 @@ Implementa `architecture-<NNN>.md` del objetivo `NNN`.
 
 ## RULES
 
-- OBLIGATORIO: skill epc-clean-clode, clean-code
+- OBLIGATORIO: skill `epc-clean-clode`, `clean-code`
 - Respeta las reglas de `AGENTS.md`.
 - Nunca ejecutes tests.
 - No hagas commit ni push sin autorización.
