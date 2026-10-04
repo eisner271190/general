@@ -35,6 +35,8 @@ Una duda resuelta **no se archiva**: su respuesta, si es una decisión con conse
 | TEMPLATES | `docs/templates/` |
 | AGENTS_ROOT | `../AGENTS.md` |
 | AGENT_ORCHESTRATOR | `agents/orchestrator.md` |
+| DELETE_ALL_SERVICES_AWS | `scripts/delete-all-services-aws.ps1` |
+| GET_SERVICES_AWS | `scripts/get-services-aws.ps1` |
 
 ## Templates (base `.opencode/`)
 

@@ -1,0 +1,11 @@
+# Terraform: los .tf son la fuente, el estado se regenera
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.example.tfvars
+crash.log
+
+# IDE
+.idea/
+.vscode/

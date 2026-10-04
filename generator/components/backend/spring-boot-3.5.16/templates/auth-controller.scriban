@@ -2,8 +2,8 @@
 
 import {{ PACKAGE }}.application.services.IAuthService;
 import {{ PACKAGE }}.application.dto.*;
-import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
-import {{ PACKAGE }}.infrastructure.rest.response.ErrorApiResponse;
+import com.epc.common.error.ApiResponse;
+import com.epc.common.error.ErrorApiResponse;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,11 +29,10 @@ public class AuthController {
                     return ResponseEntity.ok().body(response);
                 })
                 .onErrorResume(e -> {
-                    ErrorApiResponse errorResponse = ErrorApiResponse.createErrorResponse(
+                    ErrorApiResponse errorResponse = new ErrorApiResponse(
                             null,
                             "Error al generar el token",
-                            HttpStatus.UNAUTHORIZED.value(),
-                            e.getMessage()
+                            HttpStatus.UNAUTHORIZED.value()
                     );
                     return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse));
                 });
@@ -47,11 +46,10 @@ public class AuthController {
                     return ResponseEntity.ok().body(response);
                 })
                 .onErrorResume(e -> {
-                    ErrorApiResponse errorResponse = ErrorApiResponse.createErrorResponse(
+                    ErrorApiResponse errorResponse = new ErrorApiResponse(
                             null,
                             "Error al intercambiar el código",
-                            HttpStatus.BAD_REQUEST.value(),
-                            e.getMessage()
+                            HttpStatus.BAD_REQUEST.value()
                     );
                     return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
                 });

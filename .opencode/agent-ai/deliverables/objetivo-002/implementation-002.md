@@ -3,10 +3,12 @@
 Fases [D] de `DELIVERABLES/objetivo-002/architecture-002.md` §5. Sin commit, sin push, sin
 `terraform apply`, sin secretos en ficheros y **sin tocar ningún test**.
 
+> **Actualización posterior:** los apartados históricos que mencionaban Azure están supersedidos por ADR-0018. Se retiraron del componente las plantillas Azure y las plantillas locales de respuesta/excepción/handler; la plantilla `pom.scriban` importa `common-bom`, omite versiones gestionadas por él y declara `common-web`. La salida generada debe eliminarse y regenerarse por el usuario. La migración de producción compila; quedan pendientes los imports de tests y el re-test formal.
+
 ## Qué cambió
 
 Se crea el componente reutilizable `common/` (BOM + 3 módulos por capacidad + 2 muestras), el repo de
-plataforma `platform/` (buildspecs + plantillas Azure DevOps), el Terraform declarativo de `platform`,
+plataforma `platform/` (buildspecs + scripts), el Terraform declarativo de `platform`,
 y se migra el microservicio piloto `quizapi` para consumir `common-bom` y `common-web`.
 
 Fases cerradas por el Developer: **F0, F1, F2, F5.1, F5.2, F6.1, F7.1–F7.4, F8.1, F8.2, F9**.
@@ -44,7 +46,7 @@ Fases **[U] del usuario**: F3 (bootstrap AWS), F4 (`mvn deploy`), F5.3, F6.2, F7
 ### Creados — `platform/`
 
 - `buildspecs/java-ci.yml`, `buildspecs/docker-build.yml`, `scripts/publish-buildspecs.sh`.
-- `azure/stages/{build,test,security,deploy}.yml` (YAML puro), `README.md`, `.gitignore`.
+- `buildspecs/{renovate,bump-bom}.yml`, scripts de PR para CodeCommit, `README.md`, `.gitignore`.
 
 ### Creados — Terraform `platform/` (**declarativo, el agente no aplica**)
 
@@ -68,8 +70,7 @@ Fases **[U] del usuario**: F3 (bootstrap AWS), F4 (`mvn deploy`), F5.3, F6.2, F7
   y `GeneralException` → `CommonException`.
 - `Dockerfile` — 11 líneas multi-stage → 4 sobre `epc/common-base`.
 - `.dockerignore` — **nuevo** (`.git`, `logs`, `postman`, `.idea`, `bootstrap`; **sin `target/`**).
-- `azure-build.yml` — 3 jobs inline → 3 `template: …@platform` + `resources.repositories` con
-  `ref: refs/tags/v1.0.0`; **`NVD_API_KEY` en claro (línea 16) fuera**, ahora del Secret variable group.
+- Se elimina el pipeline Azure del piloto conforme a ADR-0018; la CI objetivo usa CodePipeline/CodeBuild.
 - `renovate.json` — **creado y después eliminado**: con los ms en CodeCommit no hay plataforma de
   Renovate que lo ejecute (ver §Trabajo 2). El PR lo abre el trigger por release.
 
@@ -244,11 +245,6 @@ por el BOM): `Compiling 57 source files` → `BUILD SUCCESS`, Lombok en uso (4 i
 YAML (ConvertFrom-Yaml):
 platform/buildspecs/java-ci.yml            -> YAML valido
 platform/buildspecs/docker-build.yml       -> YAML valido
-platform/azure/stages/build.yml            -> YAML valido
-platform/azure/stages/test.yml             -> YAML valido
-platform/azure/stages/security.yml         -> YAML valido
-platform/azure/stages/deploy.yml           -> YAML valido
-quizapi/azure-build.yml                    -> YAML valido
 common/renovate.json                       -> JSON valido
 quizapi/renovate.json                      -> JSON valido
 ```
@@ -282,9 +278,7 @@ aws codecommit create-repository --repository-name common
 aws codecommit create-repository --repository-name platform
 # Conectar las rutas remotas con common/ y platform/ de este workspace.
 
-# 3.5 Repos de Azure DevOps con el mismo contenido de platform/
-# 3.6 Tag obligatorio antes del primer pipeline que use @platform
-git tag v1.0.0 && git push
+# 3.5 Configurar repositorios CodeCommit y el trigger de release según ADR-0018
 ```
 
 ### F4 — publicación de `common` 1.0.0 (CA #2)
@@ -367,12 +361,10 @@ renovate --platform=local --dry-run     # en el repo common
 6. **Reglas R9/R10 (log en cada método) no aplicadas dentro de `common-log`**: `MdcCorrelation` es
    precisamente la infraestructura de logging; registrase a sí mismo es recursión. Los mensajes del
    advice son literales privados (2), sin clase `ErrorMessages` (decisión §1.3 de la arquitectura).
-7. **`deploy.yml` publicado sin consumidores** (así lo pide el objetivo): mantiene `NVD_API_KEY` fuera
-   del YAML mediante un Secret variable group, que el piloto no tenía.
-8. **`common-parent` también se publica** y el `endpoint` de CodeArtifact **no** está hardcodeado:
+7. **`common-parent` se omite en `mvn deploy`**; sus módulos sí se publican. El `endpoint` de CodeArtifact **no** está hardcodeado:
    `epc.codeartifact.url` es una propiedad con placeholder, la sustituye el usuario al desplegar.
 9. **El CodePipeline de `common` sondea CodeCommit** (`PollForSourceChanges=true`) en vez de usar
-   `aws_codepipeline_webhook`: ese webhook es para GitHub/VSTS y en el provider v6 solo admite
+   `aws_codepipeline_webhook`: CodeCommit no usa ese recurso; en el provider v6 solo admite
    `GITHUB_HMAC`/`IP`/`UNAUTHENTICATED`. Evita además un secreto que sembrar.
 10. **Los samples tienen su propio `<parent>` (`spring-boot-starter-parent`)** y no heredan de
     `common-parent`: es la configuración real de un microservicio y es lo que hace válida la medición
@@ -391,7 +383,7 @@ renovate --platform=local --dry-run     # en el repo common
 | 6 | Renovate actualiza el BOM y abre el PR de `common-bom` en cada ms | **Pendiente de usuario** (F8.3: `renovate --dry-run`) |
 | 7 | `epc/common-base` publicada y ms con `Dockerfile` de ≤5 líneas | **Parcial**: `Dockerfile` de 4 líneas entregado; publicación y `docker build` pendientes de usuario (F6.2) |
 | 8 | Un pipeline resuelve el buildspec por ARN de S3 y publicarlo nuevo no obliga a editar el ms | **Parcial**: Terraform + buildspec entregados y validados; ejecución del pipeline pendiente de usuario (F5.3) |
-| 9 | Un pipeline extiende una plantilla del repo de plataforma | **Parcial**: 4 plantillas entregadas y `azure-build.yml` migrado; la expansión real depende del repo de Azure DevOps y del tag `v1.0.0` (F3.5/F3.6) |
+| 9 | Tag `v*` de common bumpea BOM y crea PRs en repos CodeCommit | **Pendiente de verificación AWS**: scripts/buildspec/trigger entregados; falta ejecución real |
 | 10 | `quizapi` compila y sus pruebas pasan sin el código duplicado | **Pendiente de usuario**: producción compila; los 3 imports de test y la suite son del usuario (F7.5) |
 | 11 | `quizapi` no declara versiones de dependencias presentes en el BOM | **Cumplido, sin excepción**: solo quedan 5 versiones de plugins, que ningún BOM puede gobernar |
 
@@ -577,7 +569,7 @@ sid = ArtifactStoreObjects   -> resources = ["${bucket.arn}/*"]
 sid = EnumerateBucket        -> [ListBucket, GetBucketVersion] sobre bucket.arn
 ```
 
-## Trabajo 2 — Renovate sobre CodeCommit (reemplaza el diseño de `platform: azureDevOps`)
+## Trabajo 2 — Renovate sobre CodeCommit (ADR-0018)
 
 Decisión del usuario: los ms viven en **CodeCommit**, Renovate no tiene plataforma para eso, así que
 el PR en cada ms **no lo abre Renovate**: lo abre un trigger por release.
@@ -713,7 +705,7 @@ aws codebuild start-build --project-name common-renovate --region us-east-1
 
 | # | Criterio | Estado |
 | --- | --- | --- |
-| 6 | Renovate actualiza el BOM y abre el PR de `common-bom` en cada ms | **No verificable sin AWS**, pero el diseño ya es coherente con CodeCommit: `platform: local` + trigger idempotente por release en lugar de `platform: azureDevOps` |
+| 6 | Renovate actualiza el BOM y abre el PR de `common-bom` en cada ms | **No verificable sin AWS**; el flujo es `platform: local` + trigger idempotente por release |
 | 8 | El pipeline resuelve el buildspec por ARN de S3 sin editar el ms | **Defecto de IAM corregido** (permisos a nivel de bucket). La ejecución sigue requiriendo `terraform apply` + arranque del pipeline |
 
 ## Coste AWS

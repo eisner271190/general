@@ -1,0 +1,56 @@
+version: 0.2
+
+env:
+  variables:
+    MAVEN_OPTS: "-Xmx3072m"
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto17
+  pre_build:
+    commands:
+      - 'echo "CODEARTIFACT_AUTH_TOKEN presente: ${CODEARTIFACT_AUTH_TOKEN:+si}"'
+      # Mismo settings.xml que java-ci.yml: sin el, un microservicio no resolveria common-bom.
+      - |
+        if [ -n "${CODEARTIFACT_URL:-}" ]; then
+          mkdir -p "${HOME}/.m2"
+          cat > "${HOME}/.m2/settings.xml" <<'SETTINGS'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <settings>
+          <servers>
+            <server>
+              <id>codeartifact</id>
+              <username>aws</username>
+              <password>${env.CODEARTIFACT_AUTH_TOKEN}</password>
+            </server>
+          </servers>
+          <profiles>
+            <profile>
+              <id>codeartifact</id>
+              <repositories>
+                <repository>
+                  <id>codeartifact</id>
+                  <url>${CODEARTIFACT_URL}</url>
+                </repository>
+              </repositories>
+            </profile>
+          </profiles>
+          <activeProfiles><activeProfile>codeartifact</activeProfile></activeProfiles>
+        </settings>
+        SETTINGS
+        fi
+  build:
+    commands:
+      - mvn -B -ntp compile dependency:copy-dependencies -DincludeScope=runtime -DskipTests
+      - docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" .
+  post_build:
+    commands:
+      - docker images
+  finally:
+    commands:
+      - rm -rf "${HOME}/.m2/settings.xml"
+
+cache:
+  paths:
+    - "/root/.m2/**/*"

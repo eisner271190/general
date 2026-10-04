@@ -1,6 +1,6 @@
 # Arquitectura — Objetivo 002
 
-Componente reutilizable multi-módulo Maven (`common`) para microservicios Java: BOM de versiones, auto-configuración Spring granular por capacidad (`common-log`, `common-error`, `common-web`), publicación en CodeArtifact, imagen base en ECR, buildspecs en bucket S3 versionado, plantillas Azure DevOps y migración del piloto `quizapi`.
+Componente reutilizable multi-módulo Maven (`common`) para microservicios Java: BOM de versiones, auto-configuración Spring granular por capacidad (`common-log`, `common-error`, `common-web`), publicación en CodeArtifact, imagen base en ECR, buildspecs en bucket S3 versionado y migración del piloto `quizapi`. CI y repos de microservicios: AWS CodePipeline/CodeBuild y CodeCommit (ADR-0018).
 
 ## Changelog (v2)
 
@@ -15,12 +15,16 @@ Revisión posterior a `DELIVERABLES/objetivo-002/plan-review-002.md` (veredicto:
 | **B5** | **Ruta fijada: `common/` y `platform/`** en la raíz del workspace (junto a `generator/`). Crear los repos remotos pasa a F3 (bootstrap del usuario) | Sin ruta el Developer no tiene dónde escribir y el flujo branch→PR no se puede ejecutar |
 | **A1** | Las condiciones pasan a los **métodos `@Bean`** de `WebAutoConfiguration` (§1.3) | Los `@Conditional*` de una clase devuelta por `@Bean` no se evalúan: el `@ConditionalOnMissingBean` del advice no se cumplía |
 | **A2** | **Una sola forma** del interruptor de `stackTrace`: se elimina la propiedad; el campo se conserva, nunca poblado, con `@JsonInclude(NON_NULL)` | Laproperty anterior estaba como `@ConditionalOnProperty` sobre el advice: desactivarla rompía el manejo de errores en lugar de ocultar el stack |
-| **A3** | **Decidido**: los ms viven en **Azure DevOps**; Renovate self-hosted con `platform: azureDevOps` (con fallback documentado a `platform: local` si un ms estuviera en CodeCommit) | La CA #6 no era verificable con la plataforma sin resolver |
+| **A3** | **Decisión v2 supersedida por ADR-0018**: los MS viven en CodeCommit; Renovate usa `platform: local` y scripts abren PRs | Se separó el mantenimiento de dependencias del trigger de release de `common` |
 | **A4** | Cada fase marca **subtarea por subtarea** si es entregable del Developer o **"ejecuta el usuario"** (§5) | Varias subtareas (crear repo, `mvn deploy`, push a ECR, `renovate --dry-run`) requieren credenciales que el agente no tiene |
 | **A5** | §1.7.2 mapea las plantillas Azure a los jobs reales del piloto (`Build`/`Static_Testing`/`Security`), añade `stages/security.yml` y declara `deploy.yml` sin consumidores | "Los mismos 3 jobs" era falso; además las plantillas deben ser YAML puro (Azure no ejecuta scripts del repo de plantillas) |
 | **A6** | Contrato de `ApiResponse` **compatible** con el piloto: `timestamp` sigue siendo `LocalDateTime` (solo cambia la zona del reloj a UTC) y **no se toca Postman**; solo quedan 2 imports de test como tarea del usuario (§1.10, F7.5) | El agente no puede editar tests y cambiar el formato del JSON obligaba a tocar Postman + tests a la vez |
 | M1–M8 | §1.4.3 reescribe el párrafo de `spring.cloud.aws.version` (precedencia, no colisión de propiedad); `settings-publish.xml`, `publish-artifacts.yml`, `gitignore.template`, `dockerignore.template` e `install-config.sh` **eliminados**; los 3 proyectos de prueba → **2 samples**; CA #3 reformulada a "verifica la regla inversa"; `.dockerignore` del piloto creado en F7; sin tag `:latest`; sin `ErrorMessages`; sin `epc.common.web.enabled` | Medias y bajas del review: eran piezas muertas o sobrecarga |
 | Decisión del orchestrator | **Un solo repo `platform/`** (buildspecs + plantillas Azure) en lugar de dos repos; se registra como **desviación del objetivo** en `DECISIONS` y se actualizan las líneas afectadas de `OBJECTIVES/objetivo-002.md` | Menos repos, menos IAM, mismo resultado para los ms |
+
+## Changelog (v3)
+
+Actualización posterior conforme a ADR-0018 y al objetivo vigente: Azure DevOps queda descartado; los repos de microservicios usan CodeCommit y la CI usa exclusivamente CodePipeline/CodeBuild. Renovate semanal actualiza `common`; el trigger por tag `v*` bumpea el import de `common-bom` y crea PRs en CodeCommit. `common-parent` no se publica (ADR-0020). La sección v2 anterior se conserva como historial, no como diseño vigente.
 
 ---
 
@@ -237,7 +241,7 @@ Configuración Maven — **un solo fichero**, `common/settings.xml` (plantilla p
 - El **`id` debe coincidir** entre `<server>` y `<repository>` (requisito explícito de la doc). El endpoint se obtiene con `aws codeartifact get-repository-endpoint --domain epc --repository common --format maven`; `<cuenta>`/`<region>` se parametrizan en el bootstrap, no se hardcodean.
 - **No** hay `settings-publish.xml` (M5): la publicación sale del `<distributionManagement>` del POM raíz (§1.4.1).
 - **Sin `<mirrors>`**: un mirror de Central haría que cada build de cada ms descargase de la cuenta (0,09 USD/GB) sin necesidad.
-- El token se obtiene con `aws codeartifact get-authorization-token` (**12 h** de validez, suficiente para una build) y viaja como variable de entorno `CODEARTIFACT_AUTH_TOKEN`, inyectada por el CI desde Secrets Manager (CodeBuild, `env.secrets-manager`) o desde un Secret variable group (Azure DevOps). Nunca en el repositorio.
+- El token se obtiene con `aws codeartifact get-authorization-token` (**12 h** de validez, suficiente para una build) y viaja como variable de entorno `CODEARTIFACT_AUTH_TOKEN`, inyectada por CodeBuild desde Secrets Manager (`env.secrets-manager`). Nunca en el repositorio.
 
 Versionado: una sola línea de versiones. `1.0.0` es el primer y único número; se bumpea en `common/pom.xml` (`1.0.1`, `1.1.0`, `2.0.0`) **antes** de publicar. Sin `-SNAPSHOT` ni propiedad `revision`: con un solo número, `mvn install` en el repo local y lo publicado por CodeArtifact son las mismas coordenadas y el ms resuelve sin sorpresas (B3).
 
@@ -270,55 +274,23 @@ Publicación: `common/docker/publish-base-image.sh` (lo ejecuta el pipeline en c
 
 Divergencia Fargate: una imagen de runtime para Lambda **no** sirve para Fargate (entrypoint, `USER`, filesystem). Cuando exista el primer consumidor Fargate se publica `epc/common-base-fargate:1.0.0` desde el mismo repo. Coste: +0,01 USD/mes por imagen publicada una vez.
 
-### 1.7 CI: dos caminos distintos, no uno mezclado
+### 1.7 CI: AWS CodePipeline + CodeBuild
 
-| | AWS CodePipeline (CodeBuild) | Azure DevOps |
-| --- | --- | --- |
-| Qué lo usa | `common` (publicación) y los ms que despliegan por Terraform/CodePipeline | `quizapi` hoy (`azure-build.yml`) y **los repos de ms en general** (A3) |
-| Unidad compartida | `platform/buildspecs/{java-ci,docker-build}.yml` publicados en `s3://epc-buildspecs/` y referenciados por `buildspec: arn:aws:s3:::epc-buildspecs/java-ci.yml` | `platform/azure/stages/*.yml` del repo `platform`, referenciado como `@platform` |
-| Cómo se referencia | ARN de S3 → publicar un buildspec nuevo **no** obliga a editar el pipeline del ms | `resources.repositories` + `template: azure/stages/build.yml@platform` |
-| Reproducibilidad | CodeBuild resuelve la **última versión** del objeto; el historial de versiones de S3 mitiga (`question-002.md`) | `ref: refs/tags/v1.0.0` en el repo `platform`: **pin real** por tag; actualizar el pin es un commit de una línea en el ms |
-| Publicar al bucket | `platform/scripts/publish-buildspecs.sh` (`aws s3 cp buildspecs/*.yml s3://epc-buildspecs/`) desde el pipeline de `platform` o a mano (bootstrap del usuario) | n/a |
+Los repos de `common`, `platform` y los microservicios viven en CodeCommit. Los buildspecs compartidos viven en `platform/buildspecs/` y se publican en la raíz del bucket S3 versionado `epc-buildspecs`; CodeBuild los consume mediante ARN, por ejemplo `arn:aws:s3:::epc-buildspecs/java-ci.yml`.
 
-#### 1.7.1 Buildspecs compartidos
+- `java-ci.yml`: compila/verifica Java y obtiene el token de CodeArtifact desde Secrets Manager.
+- `docker-build.yml`: compila y construye la imagen del microservicio sobre la imagen base (§1.6).
+- `renovate.yml` y `bump-bom.yml`: automatizaciones separadas de versionado (§1.8).
+- `publish-buildspecs.sh` publica los cuatro buildspecs a la raíz del bucket.
 
-- `java-ci.yml`: `mvn -B -ntp verify` con caché de `~/.m2` (key = hash de `pom.xml`), JDK 17, publicación de resultados de test y `jacoco`. Inyecta `CODEARTIFACT_AUTH_TOKEN` desde Secrets Manager.
-- `docker-build.yml`: §1.6.
-- **No** hay `publish-artifacts.yml` (M6): la publicación es un stage del pipeline de `common` con `mvn deploy`.
-
-Lo que **no** se hace: un pipeline único parametrizado para todos los ms; `BuildspecOverride` inline; copiar el buildspec al repo del ms; fuente secundaria de CodeBuild como mecanismo de composición (el buildspec no tiene `include`, y las fuentes secundarias clonan a `$CODEBUILD_SRC_DIR_<id>` mientras el buildspec se resuelve en `$CODEBUILD_SRC_DIR`).
-
-#### 1.7.2 Plantillas Azure DevOps y mapping con los jobs reales (A5)
-
-`platform/azure/stages/` — **YAML puro**: Azure DevOps resuelve el repo de plantillas una sola vez al arrancar el pipeline y **no puede ejecutar scripts del repo de plantillas** (research §5), así que todo el contenido de un stage es `task:`/`script:` inline; los ficheros que esos scripts lean (`sonar-project.properties`, etc.) viven en el **repo del ms**.
-
-| Plantilla | Stage | Job | Equivalente actual en `quizapi/azure-build.yml` |
-| --- | --- | --- | --- |
-| `build.yml` | `Build` | `Build` (1 job, 2 pasos) | **job `Build`**: `checkout: self` + `Cache@2` + `Maven@4` (`clean package verify -DskipTests`) + `script` de `docker build` + `Cache@2` de guardado. Se mantiene **un solo job** con los mismos dos pasos para que el mapping sea 1:1 |
-| `test.yml` | `Test` | `Static_Testing` | **job `Static_Testing`**: `Maven@4` (`test`) + `Maven@4` (`pitest:mutationCoverage`) + `PublishTestResults@2` |
-| `security.yml` | `Security` | `Security` | **job `Security`**: Trivy sobre la imagen + OWASP dependency-check. **Plantilla nueva**: sin ella, migrar a plantillas perdería los dos gates de seguridad del piloto (regresión de Zero Trust que no se acepta). Lee `NVD_API_KEY` de un Secret variable group, no del YAML (hoy está en claro en `azure-build.yml:16`) |
-| `deploy.yml` | `Deploy` | `Deploy` | **Sin equivalente**: `quizapi` despliega por Terraform/CodePipeline. Se publica porque el objetivo la pide, pero **`quizapi` no la incluye**; queda para el primer ms que despliegue por Azure. Sin consumidores (duda `question-016.md`) |
-
-Las plantillas se parametrizan por variables (`$(dockerImageName)`, `$(javaVersion)`, `$(testOptions)`), que cada ms define en su `azure-build.yml`. El pipeline del ms queda:
-
-```yaml
-resources:
-  repositories:
-    - repository: platform
-      type: git
-      name: <organización>/<proyecto>/platform
-      ref: refs/tags/v1.0.0
-stages:
-  - template: azure/stages/build.yml@platform
-  - template: azure/stages/test.yml@platform
-  - template: azure/stages/security.yml@platform
-```
-
-`ref: refs/tags/v1.0.0` **exige que el tag exista antes** del primer run (A5): es prerrequisito del bootstrap de F3.
+El bucket conserva versiones anteriores, pero el ARN sin `object version` resuelve la versión actual del objeto: no equivale a un pin inmutable de commit. Se acepta esta limitación conforme a ADR-0016. Cada microservicio mantiene su propio pipeline/proyecto CodeBuild; no se crea un pipeline universal parametrizado.
 
 ### 1.8 Renovate
 
-**Decisión de plataforma (A3, cierra `question-006`)**: los repos de ms viven en **Azure DevOps**; Renovate se ejecuta self-hosted con `platform: azureDevOps`, que es la única opción con soporte nativo de PR y la que concuerda con el `azure-build.yml` del piloto. Para un ms que estuviera en CodeCommit, el equivalente sería un runner self-hosted con `platform: local`, que empuja ramas en vez de abrir PR; no se usa en este alcance.
+Conforme a ADR-0018, CodeCommit no tiene plataforma de PR nativa en Renovate. El flujo usa dos automatizaciones, ambas en CodeBuild:
+
+1. **Renovate semanal para `common`**: EventBridge Scheduler ejecuta Renovate con `platform: local`; Renovate actualiza dependencias gobernadas por el BOM y deja ramas. `open-codecommit-prs.py` abre PRs idempotentes.
+2. **Bump por release para cada MS**: el tag `v*` en `common` genera un evento de referencia de CodeCommit que inicia `platform-bump-bom`; `bump-bom-version.py` actualiza solo la versión del import `common-bom` y abre PRs en los repos CodeCommit.
 
 `common/renovate.json` — **sin credenciales** (B4). `hostRules[].password` es un valor **literal**: no existe indirección por variable de entorno en la configuración del repo, y escribir el nombre de la variable ahí haría que Renovate mandara la cadena `CODEARTIFACT_AUTH_TOKEN` como contraseña (401 en cada ejecución) *y* sería una credencial en un fichero versionado.
 
@@ -340,14 +312,14 @@ stages:
 export RENOVATE_DETECT_HOST_RULES_FROM_ENV=true
 export MAVEN_USERNAME=aws
 export MAVEN_PASSWORD="$(aws codeartifact get-authorization-token --domain epc --query token --output text)"
-renovate --platform=azureDevOps --dry-run
+  renovate --platform=local --dry-run
 ```
 
 El token se pide **fresco en cada ejecución** (caduca a las 12 h), lo que además elimina el problema de cacheo de credenciales. Alternativa si el runner no puede hablar con la API de AWS: `secrets` en el `config.js` del administrador + `{{ secrets.CODEARTIFACT_TOKEN }}` en el repo (documentada en la misma página). Ninguna de las dos escribe el secreto en el repositorio.
 
 Qué criterio cumple y cuál no:
 
-- **Cumple**: «Renovate abre PR de actualización en un ms cuando se publica una versión nueva del BOM» — el `depType` `import` de `common-bom` es una dependencia que Renovate ve y actualiza; el PR contiene **una línea**.
+- **Cumple mediante el trigger**, no Renovate directamente: al publicar una versión nueva, el script sube una línea del import `common-bom` y abre el PR en cada MS.
 - **No cumple, y no puede**: abrir PR en el ms por una vulnerabilidad de una dependencia transitiva gobernada por el BOM. Renovate no lee el POM del BOM para actualizar versiones que en el ms no existen. Eso se resuelve **en `common`** (Renovate corriendo sobre `common` abre el PR que sube `spring-boot-dependencies`, `aws-sdk-bom`, …) y luego el PR del ms llega por la vía anterior. La CA #6 del objetivo se reescribe con esta redacción honesta (§3).
 
 ### 1.9 Migración de `quizapi`, archivo por archivo
@@ -409,16 +381,15 @@ Qué criterio cumple y cuál no:
 `platform/` (repo único de plataforma, desviación del objetivo):
 
 - `buildspecs/{java-ci.yml,docker-build.yml}`, `scripts/publish-buildspecs.sh`.
-- `azure/stages/{build.yml,test.yml,security.yml,deploy.yml}`, `README.md`.
+- `buildspecs/{renovate.yml,bump-bom.yml}`, scripts de PR para CodeCommit y `README.md`.
 - `.gitignore`, `README.md`.
 
 ### Cloud
 
-`projects/com.quizsmart.app/cloud/terraform/platform/` (declarado; **el agente no hace `apply`**):
+`platform/` (**el agente no hace `apply`**):
 
-- `main.tf`, `variables.tf`, `outputs.tf` — dominio y repositorio CodeArtifact, bucket `epc-buildspecs` versionado y restringido, ECR `epc/common-base`, roles `common-publisher`/`common-reader`.
-- `pipeline/` — CodePipeline de `common`: `Source` → `Build` (`java-ci`) → `Publish` (`mvn deploy`) → `PublishBaseImage`.
-- Nota: `cloud/terraform/` está registrado como componente del generador; `platform/` es un proyecto Terraform independiente y **no** se registra en `component.json` (no es un microservicio).
+- Terraform de CodeArtifact, bucket `epc-buildspecs` versionado y restringido, ECR `epc/common-base`, roles IAM, CodePipeline de `common`, proyectos CodeBuild para Renovate y bump, Scheduler y regla de evento por tag.
+- La aplicación en AWS la ejecuta el usuario. El agente valida localmente formato y sintaxis, sin `terraform apply`.
 
 ## 3. Archivos a modificar
 
@@ -436,7 +407,7 @@ Qué criterio cumple y cuál no:
 - `src/main/java/com/quizsmart/app/infrastructure/controllers/HolaMundoController.java` — imports a `com.epc.common.error.*`, `GeneralException` → `CommonException`.
 - `.../ParameterController.java`, `.../SubscriptionController.java`, `.../AiController.java` — import de `ApiResponse`.
 - **Borrar**: `.../configuration/GlobalExceptionHandler.java`, `.../configuration/GeneralException.java`, `.../rest/response/ApiResponse.java`, `.../rest/response/ErrorApiResponse.java`.
-- `azure-build.yml` — sustituir los 3 jobs por `template: azure/stages/{build,test,security}.yml@platform` + `resources.repositories` con `ref: refs/tags/v1.0.0`; **`NVD_API_KEY` en claro (línea 16) fuera** (la plantilla lo lee del Secret variable group). F8, no bloquea la migración.
+- El pipeline del microservicio debe ser CodePipeline/CodeBuild con el buildspec de S3 por ARN; la infraestructura específica del MS es pendiente de completar/verificar.
 - **Tarea del usuario (A6), no la hace el agente**: `src/test/java/com/quizsmart/app/infrastructure/controllers/ParameterControllerTest.java:4` y `HolaMundoControllerTest.java:3-4` — imports de `ApiResponse`/`ErrorApiResponse`.
 - `sonar-scanner.properties` / `sonar-project.properties` — credenciales en claro (señalado, fuera de alcance).
 
@@ -446,33 +417,6 @@ Sin cambios: `postman/quizapi.postman_collection.json` (el contrato no cambia de
 
 - `projects/com.quizsmart.app/cloud/terraform/quizapi/lambda.tf` — sin cambios (`package_type = "Image"` + `image_uri`; solo cambia el contenido de la imagen).
 - `projects/com.quizsmart.app/cloud/terraform/platform/` — nuevo (§2 Cloud).
-
-### Objetivo y decisiones — cambios pendientes de aplicar por el orchestrator
-
-> **El agente `architect` no puede editar estos dos ficheros**: su permiso es `edit` solo sobre `*architecture-*.md` y `*question-*.md` (`.opencode/agents/architect.md:4-13`). El intento sobre `objetivo-002.md` devolvió `Permission denied`. Queda registrado en `QUESTIONS_OPEN/question-017.md`. Texto literal para aplicar:
-
-**`OBJECTIVES/objetivo-002.md`, §Alcance** — sustituir las líneas 36 y 48-49 por:
-
-```
-- Repositorio `common` (CodeCommit; en este workspace en `common/`, junto a `generator/`, porque no es una aplicación generada) con estructura multi-módulo y una sola versión (`1.0.0` literal, sin `${revision}` ni SNAPSHOT):
-- Repositorio único de plataforma `platform/` (CodeCommit + Azure DevOps), sustituyendo a los dos repos separados: `buildspecs/{java-ci,docker-build}.yml` publicados al bucket S3 `epc-buildspecs` (versionado) para CodePipeline, y `azure/stages/{build,test,security,deploy}.yml` referenciado con `resources.repositories` (`template: …@platform`, pin por tag) desde cada pipeline.
-```
-
-Borrar de §Alcance las líneas 45 (`templates/` con `.gitignore`, `.dockerignore` y script de instalación) y 48-49 (los dos repos), y añadir en §Fuera del alcance: «plantillas de `.gitignore`/`.dockerignore` de un solo uso: los snippets viven en `common/docs/como-migrar-un-ms.md`».
-
-**`OBJECTIVES/objetivo-002.md`, §Criterios de aceptación** — sustituir las líneas 57, 59 y 60:
-
-```
-- [ ] Un microservicio de prueba que importa solo `common-log` no carga ni arranca ninguna clase de `common-web`: el BOM de `common-log` no declara `common-web` ni `spring-webflux`, `common-log` no tiene `AutoConfiguration.imports`, y el arranque (`--debug`) no registra ninguna clase `com.epc.common.web`.
-- [ ] La definición de la versión de una dependencia vive en un solo fichero (`common-bom/pom.xml`) y el consumo se actualiza subiendo **una línea**: la `<version>` del `import` del BOM en el `pom.xml` del ms, sin tocar ninguna otra declaración de versión de ese `pom.xml`.
-- [ ] Renovate mantiene actualizado el BOM en `common` y abre en cada ms el PR que sube la versión de `common-bom` cuando hay una release nueva. (No abre PR en el ms por dependencias transitivas gobernadas por el BOM: eso se actualiza en `common`.)
-```
-
-Y añadir a la línea 64 (`quizapi` compila y sus pruebas pasan): «— el cierre de este criterio es del usuario: el agente cambia 2 imports de test, que no puede editar».
-
-**`DECISIONS`** — entrada a añadir con fecha **2026-10-02** (resumen, formato `fecha — decisión — contexto — consecuencias`):
-
-> **2026-10-02** — **Objetivo 002 (`common`), v2 tras `plan-review-002`**: (a) las decisiones ya registradas — buildspec compartido en un bucket S3 versionado (no repo con pin de commit), `common-web` WebFlux únicamente, paquetes Dart fuera de alcance; (b) **un único repo de plataforma `platform/`** (buildspecs + plantillas Azure DevOps) en lugar de dos repos, y el repo `common` en la raíz del workspace (`common/`, junto a `generator/`) porque no es una aplicación generada; (c) **versionado único `1.0.0` literal, sin `${revision}` ni SNAPSHOT**, con `flatten-maven-plugin` 1.8.0 en modo por defecto y `updatePomFile=true` (obligatorio para `packaging=pom`, según la doc de MojoHaus); (d) `common-bom` gobierna **todas** las coordenadas de terceros que fijaba el piloto, incluidas las que ningún BOM importado cubría (springdoc, gson, jjwt, karate, archunit, pitest, r2dbc-h2, aws-lambda-*, aws-serverless-java-container), y **las versiones de plugins y `annotationProcessorPaths` siguen en el ms** porque un `import` de BOM no aporta `pluginManagement`; (e) contrato de `ApiResponse` **compatible** con el piloto: `timestamp` sigue siendo `LocalDateTime` pero con reloj UTC y `environment` se elimina (nunca se seteaba), `stackTrace` se conserva pero nunca se puebla; (f) Renovate sin credenciales en el repo: `platform: azureDevOps` y token por `detectHostRulesFromEnv` en el runner. Consecuencias: se reescriben las líneas de Alcance y los criterios #3, #5, #6 y #10 del objetivo; `common-helpers` se pospone (no hay nada que extraer); `ErrorMessages` y `epc.common.web.enabled` se eliminan (YAGNI); las plantillas de un solo uso se sustituyen por snippets en la documentación; el cierre de las pruebas del piloto y toda la fase de bootstrap AWS (Terraform, publicación en CodeArtifact/ECR, token) son **pasos del usuario**. Coste: **< 2 USD/mes** (< 4 USD/mes a 500 ms por el ancho de banda de CodeArtifact), dentro del techo de 10 USD/mes.
 
 ## 4. Flujo
 
@@ -486,51 +430,13 @@ Y añadir a la línea 64 (`quizapi` compila y sus pruebas pasan): «— el cierr
 
 ## 5. Lista de tareas y subtareas
 
-Leyenda: **[D]** entregable del Developer (ficheros en el repo) · **[U] ejecuta el usuario** (requiere credenciales AWS que el agente no tiene; el Developer entrega el fichero + el comando exacto en `implementation-002.md`). Ninguna subtarea **[U]** la puede cerrar el agente.
+El estado de ejecución vigente se mantiene en `DELIVERABLES/objetivo-002/implementation-002.md` y `STATUS/status.md`. Resumen v3:
 
-Orden: F0 y F1 son código. F7 **depende de F2** (no de F4): con un único número de versión, `mvn install` en `common/` instala exactamente `1.0.0` y el ms resuelve sin CodeArtifact (B3). F5 y F6 dependen de F3. F8.1 depende del tag `v1.0.0` de `platform/` (F3.6).
+- **Entregado localmente:** módulos de `common`, BOM, buildspecs/scripts/Terraform de `platform`, importación de `common-bom` en el generador y migración de código de producción de `quizapi` a `common`.
+- **Pendiente de código/documentación:** completar el Terraform/CodeBuild específico de cada microservicio; alinear la documentación heredada con ADR-0018/0020; verificar el despliegue excluyendo solo `common-parent`; re-test de los arreglos y revisión final.
+- **Pendiente del usuario:** limpiar y regenerar la salida del generador, actualizar los imports de tests y ejecutar la suite; aplicar Terraform, sembrar credenciales y verificar CodeArtifact/S3/CodeBuild/ECR/CodeCommit en AWS.
 
-- [ ] **Fase 0 — esqueleto de `common/` y `platform/` (código)**
-  - [ ] 0.1 [D] Árbol de directorios de §2 en `common/` y `platform/`.
-  - [ ] 0.2 [D] `common/pom.xml`: versión literal `1.0.0`, `flatten-maven-plugin` 1.8.0 con `updatePomFile=true` y `flattenMode` por defecto, `pluginManagement`, `distributionManagement`, `modules` (bom, log, error, web + los 2 samples).
-  - [ ] 0.3 [D] POM de cada módulo con el grafo de §1.2. **Verificable**: `mvn install` en `common/` compila todo en verde.
-- [ ] **Fase 1 — BOM y medición de precedencia (código)**
-  - [ ] 1.1 [D] `common-bom/pom.xml` con la tabla completa de §1.4.2.
-  - [ ] 1.2 [D] Medir sobre `samples/log-only-sample` (dentro del reactor, sin CodeArtifact): `mvn -pl samples/log-only-sample -am dependency:tree` y `help:effective-pom`. **Criterio de salida**: una sola versión de spring-boot, aws-sdk y spring-cloud-aws, y la del BOM ganando al parent. Si no gana, se documenta y se decide en el acto.
-  - [ ] 1.3 [D] Confirmar de paso, con el mismo `effective-pom`, los cuatro supuestos de §1.4.4 (`QUESTIONS_OPEN/question-016.md`) (compiler/jacoco gestionados por el parent, `janino` gobernado por Boot, `annotationProcessorPaths` resuelto desde `dependencyManagement`) y ajustar la tabla.
-- [ ] **Fase 2 — código de `common` y muestras (código)**
-  - [ ] 2.1 [D] `MdcCorrelation`, `ApiResponse` (UTC, sin `environment`), `ErrorApiResponse` (`@JsonInclude(NON_NULL)`, nunca poblado), `CommonException`.
-  - [ ] 2.2 [D] `WebAutoConfiguration` (condiciones en la clase, `@ConditionalOnMissingBean` en los **métodos**), `GlobalExceptionHandler`, `RequestCorrelationFilter`, `AutoConfiguration.imports`.
-  - [ ] 2.3 [D] `samples/log-only-sample`. **Verificable**: (a) `dependency:tree` de `common-log` sin `common-web` ni `spring-webflux`; (b) arranque con `--debug` sin ninguna clase `com.epc.common.web`; (c) `common-log` sin `AutoConfiguration.imports`.
-  - [ ] 2.4 [D] `samples/web-sample` con advice propio. **Verificable**: arranca y hay **un solo** handler de `CommonException` (el del ms) → CA #4.
-- [ ] **Fase 3 — bootstrap AWS (ejecuta el usuario)**
-  - [ ] 3.1 [U] `terraform plan && terraform apply` en `projects/com.quizsmart.app/cloud/terraform/platform/` (CodeArtifact, bucket, ECR, roles, pipeline).
-  - [ ] 3.2 [U] Sembrar `epc/develop/codeartifact` con `aws codeartifact get-authorization-token`.
-  - [ ] 3.3 [U] Exportar `CODEARTIFACT_AUTH_TOKEN` en la shell del desarrollador e instalar `common/settings.xml` con el endpoint real de `get-repository-endpoint`.
-  - [ ] 3.4 [U] Crear los repos remotos CodeCommit `common` y `platform` y conectarlos con las rutas de este workspace.
-  - [ ] 3.5 [U] Crear el repo de Azure DevOps `platform` (mismo contenido que `platform/`) para poder referenciar `@platform`.
-  - [ ] 3.6 [U] Publicar el tag `v1.0.0` en el repo de Azure DevOps `platform` (prerrequisito de F8.1).
-- [ ] **Fase 4 — publicación de `common` 1.0.0**
-  - [ ] 4.1 [U] `mvn deploy` en `common/` (ficheros ya entregados por F0/F1) con `CODEARTIFACT_AUTH_TOKEN` exportado. **Verificable**: `mvn dependency:get -Dartifact=com.epc.common:common-bom:1.0.0:pom` y el POM descargado con `1.0.0` literal en las entradas de módulos → CA #2.
-- [ ] **Fase 5 — buildspecs en S3**
-  - [ ] 5.1 [D] `platform/buildspecs/{java-ci,docker-build}.yml` + `scripts/publish-buildspecs.sh`.
-  - [ ] 5.2 [D] Pipeline CodePipeline de `common` (ficheros Terraform) con `buildspec: arn:aws:s3:::epc-buildspecs/java-ci.yml` — **no** aplicado por el agente.
-  - [ ] 5.3 [U] Publicar los buildspecs (`aws s3 cp`) y ejecutar el pipeline. **Verificable**: el log muestra la versión de S3 resuelta y publicar un buildspec nuevo no obliga a tocar el pipeline → CA #8.
-- [ ] **Fase 6 — imagen base**
-  - [ ] 6.1 [D] `common/docker/{Dockerfile,publish-base-image.sh}`.
-  - [ ] 6.2 [U] Publicar `epc/common-base:1.0.0`. **Verificable**: un ms construye su imagen con un `Dockerfile` de 4 líneas → CA #7.
-- [ ] **Fase 7 — migración de `quizapi` (código)**
-  - [ ] 7.1 [D] `mvn install` en `common/` (instala `1.0.0`; el ms resuelve sin CodeArtifact).
-  - [ ] 7.2 [D] Borrar los 4 archivos, actualizar imports, `GeneralException` → `CommonException`.
-  - [ ] 7.3 [D] `pom.xml`: borrar versiones según §1.4.2/§1.4.4, importar `common-bom`, añadir `common-web`; luego `mvn -o test-compile`. **Verificable**: compila (los imports viejos de los tests fallan aquí) y no queda ninguna `<version>` de dependencia de terceros (§1.4.4) → CA #11.
-  - [ ] 7.4 [D] `Dockerfile` de 4 líneas + crear `.dockerignore`. **Verificable**: `mvn -B dependency:copy-dependencies compile && docker build` genera la imagen.
-  - [ ] 7.5 [U] Cambiar los 2 imports de test (§3) y ejecutar la suite. **Cierre de CA #10: tarea del usuario.**
-- [ ] **Fase 8 — plantillas Azure DevOps y Renovate**
-  - [ ] 8.1 [D] `platform/azure/stages/{build,test,security,deploy}.yml` (YAML puro, mapping de §1.7.2) + migrar `azure-build.yml` de `quizapi` a `template@platform`. **Verificable**: el pipeline del ms se expande y ejecuta los mismos 3 jobs → CA #9.
-  - [ ] 8.2 [D] `renovate.json` en `common` y en `quizapi`, **sin credenciales** (§1.8).
-  - [ ] 8.3 [U] `renovate --platform=azureDevOps --dry-run` con `RENOVATE_DETECT_HOST_RULES_FROM_ENV=true` y `MAVEN_PASSWORD` tomado de un token fresco. **Verificable**: lista el PR de `common-bom` sin errores de registry → CA #6 (honesta).
-- [ ] **Fase 9 — docs (código)**
-  - [ ] 9.1 [D] `README.md` y `docs/{como-usar,como-versionar,como-migrar-un-ms}.md`: el build local ya no compila dentro de Docker; `MdcCorrelation` congelada en `1.0.0`; el advice se desactiva con un bean propio, no hay propiedad; snippets de `.gitignore`/`.dockerignore`/`settings.xml`.
+El agente no ejecuta `terraform apply`/`destroy`, no gestiona credenciales ni modifica tests.
 
 ## 6. Decisiones asumidas
 
@@ -546,14 +452,14 @@ Orden: F0 y F1 son código. F7 **depende de F2** (no de F4): con un único núme
 10. **Un solo `settings.xml`** (plantilla) con `<server>` + perfil de repositorio; la publicación va en el POM raíz.
 11. **Token de CodeArtifact** por variable de entorno sembrada por el usuario en Secrets Manager / variable group.
 12. **Sin CMK propia** en CodeArtifact (+1 USD/mes evitado).
-13. **Repo único `platform/`** en lugar de dos repos (desviación del objetivo, registrada en `DECISIONS`): menos repos y menos IAM, mismo resultado para los ms.
-14. **Renovate con `platform: azureDevOps`** y credenciales por `detectHostRulesFromEnv` en el runner, nunca en el repo (resuelve `question-006`, A3, B4).
-15. **`common-parent` también se publica** (~4 KB): `distributionManagement` en un solo sitio beats duplicarlo en 4 módulos o pelear con `maven.deploy.skip`, que se hereda. Resuelve `question-011` de forma distinta a la propuesta, con motivo.
+13. **Repo único `platform/` en CodeCommit** (registrado en ADR-0017/0018): contiene buildspecs, scripts y Terraform de plataforma.
+14. **Renovate con `platform: local`** semanalmente; los PRs de CodeCommit los abre `open-codecommit-prs.py`. El bump por tag es un flujo separado (ADR-0018).
+15. **`common-parent` no se publica** (ADR-0020); el `maven-deploy-plugin` omite solo el POM raíz y la configuración no se hereda a módulos.
 16. **`epc.common.web.enabled` no existe**: se aplaza (resuelve `question-012`). Sin `ErrorMessages` (constantes privadas en el advice).
 17. **No hay `.gitignore`/`.dockerignore` de plantilla ni `install-config.sh`**: snippets en `docs/como-migrar-un-ms.md` (resuelve `question-013` con el `.dockerignore` del piloto creado en F7.4).
 18. **Sin tag `:latest`** en la imagen base.
-19. **`deploy.yml` se publica sin consumidores** (el objetivo la pide); `security.yml` es nueva y obligatoria para no perder Trivy/OWASP.
-20. **Plantillas del generador fuera de alcance** (`pom.scriban`, `api-response.scriban`, `global-exception-handler.scriban`, `general-exception.scriban`): siguen generando el código migrado. Riesgo de regresión aceptado, con entrada en `question-006.md` y objetivo siguiente.
+19. **La CI común usa CodePipeline/CodeBuild** y los MS consumen buildspecs del bucket S3 por ARN; cada MS conserva su propio pipeline/proyecto.
+20. **El generador importa `common`**: deja de emitir los contratos/excepciones/handler que ahora entrega `common`; `logback.xml` sigue en el MS.
 21. **`logback.xml` del ms se queda** (el patrón con `%X{requestId}` es opcional y no bloqueante).
 22. **CA #5 y #6 del objetivo se reescriben** con la redacción honesta, y se registra en `DECISIONS`.
 
@@ -563,10 +469,10 @@ Orden: F0 y F1 son código. F7 **depende de F2** (no de F4): con un único núme
 - `common-web` para servlet/MVC: llega con el primer consumidor (`question-003.md`).
 - Migrar más de un microservicio; solo `quizapi`.
 - Imagen base para Fargate (imagen aparte cuando haya consumidor).
-- Plantillas del generador (§6.20).
+- Publicar un parent Maven compartido para `pluginManagement` (el MS conserva `spring-boot-starter-parent`; plugins siguen configurados por MS).
 - Autenticación de CodeArtifact en los pipelines de ms que todavía no usan `common`.
 - Gates de calidad nuevos, OpenTelemetry, caché, colas, rate limiting, CORS, security como parte de `common`.
-- Credenciales en claro de `azure-build.yml:16` y `sonar-scanner.properties`: la de `azure-build.yml` desaparece al migrar el pipeline en F8; las de Sonar quedan fuera.
+- Credenciales preexistentes de `sonar-scanner.properties`: fuera del alcance de este objetivo; requieren rotación y gestión segura.
 - Sincronización automática de `.gitignore`/`.dockerignore`.
 - Pipeline único parametrizado; `BuildspecOverride` inline; `git submodule`.
 - `CORS` y `SecurityConfig` en `common-web`.
@@ -578,7 +484,7 @@ Orden: F0 y F1 son código. F7 **depende de F2** (no de F4): con un único núme
 | El BOM no cubre alguna coordenada que el piloto fijaba y el ms se queda sin versión | Alta (era B1) | Tabla exhaustiva §1.4.2 + F1.3 verifica los cuatro supuestos con `effective-pom`; F7.3 compila con `-o` |
 | Precedencia `spring-boot-starter-parent` vs BOM importado sin verificar en la doc de Spring | Alta | Medida en F1.2 antes de migrar; si gana el parent, el BOM deja de importar `spring-boot-dependencies` |
 | Mockito 4.11.0 → gestionada (major) al borrar su versión | Media | Dependencia **de test**; el Developer verifica `test-compile` y el usuario decide al ejecutar la suite (`question-015.md`) |
-| Renovate sin soporte nativo de CodeCommit y token de 12 h | Media | Decidido `platform: azureDevOps`; token fresco por ejecución; fallback documentado (`platform: local` / `secrets` en `config.js`) |
+| Renovate sin soporte nativo de CodeCommit y token de 12 h | Media | Scheduler semanal con `platform: local`; scripts idempotentes crean PRs; token de CodeArtifact fresco por ejecución |
 | Matriz IAM de CodeArtifact sin verificar | Media | Rol con los permisos mínimos documentados; lo valida el `apply` del usuario (`question-006`) |
 | Pérdida del pin exacto del buildspec (CodeBuild toma la última versión del objeto) | Media (ya aceptada en `question-002.md`) | Versionado del bucket; claves por versión (`java-ci-1.0.0.yml`) si alguna vez hace falta reproducibilidad bit a bit |
 | `Dockerfile` de 4 líneas rompe el build local de quien solo haga `docker build` | Baja | Documentado en `docs/como-usar.md`; el CI compila antes |

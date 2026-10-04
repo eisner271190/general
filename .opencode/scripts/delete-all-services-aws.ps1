@@ -5,7 +5,7 @@
 
 .DESCRIPTION
   DESTRUCTIVO E IRREVERSIBLE. Solo afecta a los recursos del proyecto
-  (quizsmart/app): ECR, Lambda, API Gateway, Cognito, SNS, SQS, SSM,
+  (quizsmart/app): ECR, Lambda, API Gateway, Cognito, SNS, SQS, DynamoDB, SSM,
   Secrets Manager, IAM y los grupos de log de sus Lambdas.
 
   Sin -Force pide confirmacion interactiva escribiendo "SI". En un shell no
@@ -30,6 +30,7 @@ param(
   [string[]]$LambdaNames = @('quizapi'),
   [string]$ApiName = 'api-gateway',
   [string]$QueueName = 'quizapi',
+  [string[]]$DynamoDbTableNames = @('quizapiSubscription', 'quizapiWebhookEvent'),
   [string]$TopicName = 'main-topic',
   [string]$UserPoolName = 'user-management-user-pool',
   [string[]]$RoleNames = @('quizapi', 'CognitoAuthenticatedRole'),
@@ -102,6 +103,7 @@ $queryCalls = [ordered]@{
   Lambda    = @('lambda', 'list-functions')
   Sns       = @('sns', 'list-topics')
   Sqs       = @('sqs', 'list-queues')
+  DynamoDb  = @('dynamodb', 'list-tables')
   Ecr       = @('ecr', 'describe-repositories')
   Secrets   = @('secretsmanager', 'list-secrets')
   Ssm       = @('ssm', 'describe-parameters', '--parameter-filters', "Key=Name,Option=BeginsWith,Values=$SsmPrefix")
@@ -176,6 +178,14 @@ $queues = $query.Sqs.Data
 foreach ($queueUrl in Get-ListFrom $queues 'QueueUrls') {
   if ($queueUrl -like "*/$QueueName") {
     Add-Target -Servicio 'SQS' -Recurso $queueUrl -AwsArguments @('sqs', 'delete-queue', '--queue-url', $queueUrl)
+  }
+}
+
+# DynamoDB
+$tables = $query.DynamoDb.Data
+foreach ($tableName in Get-ListFrom $tables 'TableNames') {
+  if ($DynamoDbTableNames -contains $tableName) {
+    Add-Target -Servicio 'DynamoDB' -Recurso $tableName -AwsArguments @('dynamodb', 'delete-table', '--table-name', $tableName)
   }
 }
 

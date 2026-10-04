@@ -1,0 +1,40 @@
+version: 0.2
+
+# Trigger por release de `common`: se dispara con el evento de CodeCommit "Reference Change" cuando
+# aparece un tag v*. El repositorio es `platform` (este repo), que contiene el script.
+#
+# Idempotente: si el ms ya esta en la version nueva, no hace nada; si el PR ya esta abierto, no lo
+# duplica. Se puede reejecutar sin riesgo.
+#
+# La version NO se pasa por variable de entorno: el source de CodeBuild no admite `branch_ref` en el
+# provider v6, asi que el script resuelve el ultimo tag v* de `common` con la API de CodeCommit.
+
+env:
+  variables:
+    GIT_TERMINAL_PROMPT: "0"
+    COMMON_REPOSITORY: "common"
+
+phases:
+  pre_build:
+    commands:
+      - 'echo "CODEARTIFACT_URL: ${CODEARTIFACT_URL}"'
+      - |
+        cat > "$CODEBUILD_SRC_DIR/askpass.sh" <<'ASKPASS'
+        #!/bin/sh
+        case "$1" in
+          *Username*) echo "$GIT_USERNAME" ;;
+          *) echo "$GIT_PASSWORD" ;;
+        esac
+        ASKPASS
+      - 'chmod +x "$CODEBUILD_SRC_DIR/askpass.sh"'
+      - 'export GIT_ASKPASS="$CODEBUILD_SRC_DIR/askpass.sh"'
+      - git config --global user.name "renovate"
+      - git config --global user.email "renovate@epc.local"
+  build:
+    commands:
+      - 'echo "Ref del build: ${CODEBUILD_RESOLVED_SOURCE_VERSION:-sin etiqueta}"'
+      - 'test -n "$MS_REPOSITORY_PREFIX" || { echo "MS_REPOSITORY_PREFIX debe configurarse para los repos de microservicios generados" >&2; exit 2; }'
+      - python3 scripts/bump-bom-version.py --repo-prefix "$MS_REPOSITORY_PREFIX" --common-repository "$COMMON_REPOSITORY"
+  finally:
+    commands:
+      - rm -f "$CODEBUILD_SRC_DIR/askpass.sh"

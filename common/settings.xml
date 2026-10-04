@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PLANTILLA. Copiala a ~/.m2/settings.xml y sustituye <cuenta> y <region> por los del dominio
+  CodeArtifact (los devuelve `aws codeartifact get-repository-endpoint`).
+
+  El token NUNCA se escribe aqui: viaja en la variable de entorno CODEARTIFACT_AUTH_TOKEN, que
+  caduca a las 12 h. El CI la inyecta desde Secrets Manager o desde un Secret variable group.
+-->
+<settings>
+  <servers>
+    <server>
+      <!-- El id debe coincidir con el del <repository> de abajo (requisito de la doc de AWS). -->
+      <id>codeartifact</id>
+      <username>aws</username>
+      <password>${env.CODEARTIFACT_AUTH_TOKEN}</password>
+    </server>
+  </servers>
+
+  <profiles>
+    <profile>
+      <id>codeartifact</id>
+      <repositories>
+        <repository>
+          <id>codeartifact</id>
+          <url>https://epc-<cuenta>.d.codeartifact.<region>.amazonaws.com/maven/common/</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+
+  <activeProfiles>
+    <activeProfile>codeartifact</activeProfile>
+  </activeProfiles>
+</settings>

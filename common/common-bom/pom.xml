@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.epc.common</groupId>
+    <artifactId>common-parent</artifactId>
+    <version>1.0.0</version>
+  </parent>
+
+  <artifactId>common-bom</artifactId>
+  <packaging>pom</packaging>
+  <name>common-bom</name>
+  <description>Gobierno de versiones de terceros y de los modulos propios de common. Solo dependencyManagement.</description>
+
+  <build>
+    <plugins>
+      <!--
+        Modo `bom` (medido): es el unico que conserva el dependencyManagement en el POM publicado.
+        Con el modo `oss` del parent el POM sale sin dependencyManagement y el BOM no gobierna nada.
+        En modo `bom` el POM aplanado se instala tambien para packaging=pom.
+      -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>flatten-maven-plugin</artifactId>
+        <configuration>
+          <flattenMode>bom</flattenMode>
+          <updatePomFile>true</updatePomFile>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <!--
+    Las propiedades epc.* se declaran aqui (y no solo en common-parent) porque flatten las
+    resuelve en el POM publicado: el microservidor no ve las del parent al resolver el import.
+    Renovar una coordenada es editar un unico fichero: este.
+  -->
+  <properties>
+    <epc.spring-boot.version>3.4.0</epc.spring-boot.version>
+    <epc.aws-sdk.version>2.31.73</epc.aws-sdk.version>
+    <epc.spring-cloud-aws.version>3.3.1</epc.spring-cloud-aws.version>
+    <epc.aws-lambda-java-core.version>1.2.3</epc.aws-lambda-java-core.version>
+    <epc.aws-lambda-java-runtime.version>2.8.3</epc.aws-lambda-java-runtime.version>
+    <epc.springdoc.version>2.8.3</epc.springdoc.version>
+    <epc.gson.version>2.13.1</epc.gson.version>
+    <epc.jjwt.version>0.12.6</epc.jjwt.version>
+    <!-- MEDIDO: spring-boot-dependencies 3.4.0 ya no gobierna MapStruct (la propiedad mapstruct.version no existe). -->
+    <epc.mapstruct.version>1.6.3</epc.mapstruct.version>
+    <epc.karate.version>1.4.1</epc.karate.version>
+    <epc.archunit.version>1.3.0</epc.archunit.version>
+    <epc.pitest.version>1.2.1</epc.pitest.version>
+    <epc.r2dbc-h2.version>1.0.0.RELEASE</epc.r2dbc-h2.version>
+    <epc.serverless-java-container.version>2.1.4</epc.serverless-java-container.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- (1) Modulos propios: version unica del sistema, resuelta por flatten a 1.0.0 literal. -->
+      <dependency>
+        <groupId>com.epc.common</groupId>
+        <artifactId>common-log</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.epc.common</groupId>
+        <artifactId>common-error</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.epc.common</groupId>
+        <artifactId>common-web</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <!-- (2) Boot: gobierna spring-*, reactor, slf4j, jackson, junit, mockito, mapstruct, lombok, janino. -->
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${epc.spring-boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- (3) AWS SDK v2. -->
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>bom</artifactId>
+        <version>${epc.aws-sdk.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- (4) Spring Cloud AWS (sus starters no los gobierna ningun otro BOM). -->
+      <dependency>
+        <groupId>io.awspring.cloud</groupId>
+        <artifactId>spring-cloud-aws-dependencies</artifactId>
+        <version>${epc.spring-cloud-aws.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- (5) Coordenadas que ningun BOM importado cubre. -->
+
+      <!--
+        Mockito: el piloto fijaba 4.11.0 (Mockito 4) y al borrar esa version sube a la gestionada
+        por Boot (Mockito 5): salto de major en dependencia de test. decision del usuario en
+        QUESTIONS_OPEN/question-015.md. Si se decide fijarla, se anade epc.mockito.version aqui.
+      -->
+
+      <dependency>
+        <groupId>com.amazonaws</groupId>
+        <artifactId>aws-lambda-java-core</artifactId>
+        <version>${epc.aws-lambda-java-core.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.amazonaws</groupId>
+        <artifactId>aws-lambda-java-runtime-interface-client</artifactId>
+        <version>${epc.aws-lambda-java-runtime.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.amazonaws.serverless</groupId>
+        <artifactId>aws-serverless-java-container-core</artifactId>
+        <version>${epc.serverless-java-container.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.amazonaws.serverless</groupId>
+        <artifactId>aws-serverless-java-container-springboot3</artifactId>
+        <version>${epc.serverless-java-container.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+        <version>${epc.springdoc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>${epc.gson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-api</artifactId>
+        <version>${epc.jjwt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-impl</artifactId>
+        <version>${epc.jjwt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-jackson</artifactId>
+        <version>${epc.jjwt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.intuit.karate</groupId>
+        <artifactId>karate-junit5</artifactId>
+        <version>${epc.karate.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.tngtech.archunit</groupId>
+        <artifactId>archunit-junit5</artifactId>
+        <version>${epc.archunit.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mapstruct</groupId>
+        <artifactId>mapstruct</artifactId>
+        <version>${epc.mapstruct.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mapstruct</groupId>
+        <artifactId>mapstruct-processor</artifactId>
+        <version>${epc.mapstruct.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-junit5-plugin</artifactId>
+        <version>${epc.pitest.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>

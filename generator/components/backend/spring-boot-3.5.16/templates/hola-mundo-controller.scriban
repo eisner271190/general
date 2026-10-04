@@ -1,6 +1,6 @@
 package {{ PACKAGE }}.infrastructure.controllers;
-import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
-import {{ PACKAGE }}.infrastructure.configuration.GeneralException;
+import com.epc.common.error.ApiResponse;
+import com.epc.common.error.CommonException;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,13 +24,13 @@ public class HolaMundoController {
     }
 
     @GetMapping("/error")
-    public ResponseEntity<ApiResponse> holaError() throws GeneralException {
+    public ResponseEntity<ApiResponse> holaError() throws CommonException {
         return ResponseEntity.ok(new ApiResponse(getError("Valor del parámetro"), "Hola Mundo", HttpStatus.OK.value()));
     }
 
-    private Map<String, Object> getError(String parameter) throws GeneralException {
+    private Map<String, Object> getError(String parameter) throws CommonException {
         String variable = "Valor de la variable";
-        GeneralException generalException = new GeneralException("Se genera excepción con los valores de los parámetros y variables");
+        CommonException generalException = new CommonException("Se genera excepción con los valores de los parámetros y variables");
         generalException.addData("variable", variable);
         generalException.addData("parameter", parameter);
 

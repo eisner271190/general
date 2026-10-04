@@ -1,0 +1,66 @@
+version: 0.2
+
+# Buildspec compartido de microservicios Java: valida con `mvn verify`.
+# Referenciado por ARN de S3 (s3://epc-buildspecs/java-ci.yml), no copiado en cada microservicio.
+
+env:
+  variables:
+    MAVEN_OPTS: "-Xmx3072m"
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto17
+    commands:
+      - mvn -version
+  pre_build:
+    commands:
+      # Solo comprueba que llego el token de Secrets Manager; nunca lo imprime.
+      - 'test -n "${CODEARTIFACT_AUTH_TOKEN}" && echo "CODEARTIFACT_AUTH_TOKEN: presente" || echo "CODEARTIFACT_AUTH_TOKEN: ausente"'
+      # settings.xml lo genera el build, no el repositorio: el token va por variable de entorno.
+      # Si el proyecto no define CODEARTIFACT_URL (build de `common` contra si mismo) no hace nada.
+      - |
+        if [ -n "${CODEARTIFACT_URL:-}" ]; then
+          mkdir -p "${HOME}/.m2"
+          cat > "${HOME}/.m2/settings.xml" <<'SETTINGS'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <settings>
+          <servers>
+            <server>
+              <id>codeartifact</id>
+              <username>aws</username>
+              <password>${env.CODEARTIFACT_AUTH_TOKEN}</password>
+            </server>
+          </servers>
+          <profiles>
+            <profile>
+              <id>codeartifact</id>
+              <repositories>
+                <repository>
+                  <id>codeartifact</id>
+                  <url>${CODEARTIFACT_URL}</url>
+                </repository>
+              </repositories>
+            </profile>
+          </profiles>
+          <activeProfiles><activeProfile>codeartifact</activeProfile></activeProfiles>
+        </settings>
+        SETTINGS
+        else
+          echo "CODEARTIFACT_URL no definida: se compila sin repositorio CodeArtifact"
+        fi
+  build:
+    commands:
+      - mvn -B -ntp verify
+  post_build:
+    commands:
+      - mkdir -p "${CODEBUILD_SRC_DIR}/test-reports"
+      - find . -type d -path '*/target/surefire-reports' -exec cp -r {} "${CODEBUILD_SRC_DIR}/test-reports/" \;
+  finally:
+    commands:
+      # El token viaja en el entorno del build; no se deja en disco.
+      - rm -rf "${HOME}/.m2/settings.xml"
+
+cache:
+  paths:
+    - "/root/.m2/**/*"
