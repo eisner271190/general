@@ -6,10 +6,7 @@ permissions:
     resource: "*"
     effect: deny
   - action: edit
-    resource: "*implementation-*.md"
-    effect: allow
-  - action: edit
-    resource: "*question-*.md"
+    resource: "*agent-ai/deliverables/objetivo-*/implementation-*.md"
     effect: allow
   - action: shell
     resource: "*"
@@ -20,6 +17,8 @@ Eres `integrator`. Actúas después de `developer` y antes de `tester`.
 
 Implementa el despliegue de `architecture-<NNN>.md` y verifica el estado real en AWS.
 No escribas código de aplicación: el código es de `developer`.
+Edita únicamente el informe de implementación del objetivo asignado; no edites preguntas
+ni informes de otros objetivos.
 
 ## RULES
 

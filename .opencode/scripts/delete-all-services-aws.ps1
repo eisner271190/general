@@ -36,18 +36,31 @@ param(
   [string[]]$RoleNames = @('quizapi', 'CognitoAuthenticatedRole'),
   [string[]]$PolicyNames = @('CognitoPolicy'),
   [string[]]$LogGroupNames = @('/aws/lambda/quizapi'),
+  [string]$LogPath = (Join-Path ([IO.Path]::GetTempPath()) (
+    "delete-all-services-aws-$(Get-Date -Format 'yyyyMMdd-HHmmss-fff').log")),
   [switch]$Force
 )
 
 # --- utilidades -------------------------------------------------------------
 
+function Write-Log {
+  param([Parameter(Mandatory)][string]$Message)
+  $entry = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $Message"
+  Add-Content -LiteralPath $LogPath -Value $entry -Encoding utf8 -ErrorAction Stop
+}
+
 function Invoke-AwsRaw {
   # Ejecuta AWS CLI devolviendo codigo de salida y salida combinada.
   param([Parameter(Mandatory)][string[]]$AwsArguments)
   $lines = & aws @AwsArguments --region $Region --output json 2>&1
+  $exitCode = $LASTEXITCODE
+  $output = ($lines | ForEach-Object { "$_" }) -join [Environment]::NewLine
+  $command = "aws $($AwsArguments -join ' ') --region $Region --output json"
+  if ($exitCode -ne 0) { Write-Log "ERROR $command ExitCode=$exitCode Output=$output" }
   return [pscustomobject]@{
-    ExitCode = $LASTEXITCODE
-    Output   = ($lines | ForEach-Object { "$_" }) -join [Environment]::NewLine
+    ExitCode = $exitCode
+    Output   = $output
+    Command  = $command
   }
 }
 
@@ -92,6 +105,15 @@ if (-not (Get-Command -Name aws -ErrorAction SilentlyContinue)) {
   exit 1
 }
 
+try {
+  Set-Content -LiteralPath $LogPath -Value "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') Inicio" -Encoding utf8 -ErrorAction Stop
+}
+catch {
+  Write-Error "No se pudo crear el log '$LogPath': $_"
+  exit 1
+}
+Write-Output "Log: $LogPath"
+
 # El paginador de AWS CLI v2 puede retener la salida; aqui solo interesa el JSON.
 $env:AWS_PAGER = ''
 
@@ -117,15 +139,23 @@ $queryCalls.GetEnumerator() | ForEach-Object -Parallel {
   $awsArgs = $_.Value
   $lines = & aws @awsArgs --region $using:Region --output json 2>&1
   $exitCode = $LASTEXITCODE
+  $text = ($lines | ForEach-Object { "$_" }) -join [Environment]::NewLine
   $parsed = $null
   if ($exitCode -eq 0) {
-    $text = ($lines | ForEach-Object { "$_" }) -join [Environment]::NewLine
     if (-not [string]::IsNullOrWhiteSpace($text)) {
       try { $parsed = $text | ConvertFrom-Json } catch { $parsed = $null }
     }
   }
-  [pscustomobject]@{ Name = $_.Key; Data = $parsed; ExitCode = $exitCode }
+  [pscustomobject]@{
+    Name = $_.Key; Data = $parsed; ExitCode = $exitCode
+    Output = $text; Arguments = ($awsArgs -join ' ')
+  }
 } -ThrottleLimit 13 | ForEach-Object { $query[$_.Name] = $_ }
+
+Write-Log "Cuenta=$($query.Sts.Data.Account) Region=$Region"
+foreach ($failedQuery in @($query.Values | Where-Object { $_.ExitCode -ne 0 })) {
+  Write-Log "ERROR consulta aws $($failedQuery.Arguments): $($failedQuery.Output)"
+}
 
 $failedQueries = @($query.Values | Where-Object { $_.ExitCode -ne 0 })
 if ($failedQueries.Count -gt 0) {
@@ -276,11 +306,13 @@ foreach ($roleName in $roleNamesToDelete) {
   $attached = Get-AwsData -AwsArguments @('iam', 'list-attached-role-policies', '--role-name', $roleName)
   foreach ($policyArn in @(Get-NamesFrom (Get-ListFrom $attached 'AttachedPolicies') 'PolicyArn')) {
     $result = Invoke-AwsRaw -AwsArguments @('iam', 'detach-role-policy', '--role-name', $roleName, '--policy-arn', $policyArn)
+    Write-Log "IAM detach $($result.Command) ExitCode=$($result.ExitCode) Output=$($result.Output)"
     Write-Output ("detach {0} <- {1}: {2}" -f $roleName, $policyArn, $(if ($result.ExitCode -eq 0) { 'ok' } else { 'error' }))
   }
   $inline = Get-AwsData -AwsArguments @('iam', 'list-role-policies', '--role-name', $roleName)
   foreach ($policyName in Get-ListFrom $inline 'PolicyNames') {
     $result = Invoke-AwsRaw -AwsArguments @('iam', 'delete-role-policy', '--role-name', $roleName, '--policy-name', $policyName)
+    Write-Log "IAM inline $($result.Command) ExitCode=$($result.ExitCode) Output=$($result.Output)"
     Write-Output ("delete inline {0}/{1}: {2}" -f $roleName, $policyName, $(if ($result.ExitCode -eq 0) { 'ok' } else { 'error' }))
   }
 }
@@ -291,6 +323,7 @@ $report = [System.Collections.Generic.List[object]]::new()
 
 foreach ($target in $targets) {
   if (-not $PSCmdlet.ShouldProcess($target.Recurso, "Eliminar ($($target.Servicio))")) {
+    Write-Log "OMIT $($target.Servicio) $($target.Recurso): ShouldProcess no autorizo la ejecucion"
     $report.Add([pscustomobject]@{ Servicio = $target.Servicio; Recurso = $target.Recurso; Resultado = 'omitido' }) | Out-Null
     continue
   }
@@ -307,6 +340,7 @@ foreach ($target in $targets) {
     $message = ($result.Output -replace '\s+', ' ').Trim()
     $status = 'ERROR: ' + $message.Substring(0, [Math]::Min(160, $message.Length))
   }
+  Write-Log "DELETE $($result.Command) ExitCode=$($result.ExitCode) Result=$status Output=$($result.Output)"
   $report.Add([pscustomobject]@{ Servicio = $target.Servicio; Recurso = $target.Recurso; Resultado = $status }) | Out-Null
 }
 
