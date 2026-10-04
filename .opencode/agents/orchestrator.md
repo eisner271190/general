@@ -32,9 +32,15 @@ permissions:
   - action: subagent
     resource: tester
     effect: allow
+  - action: subagent
+    resource: taskkeeper
+    effect: allow
 ---
 
 Coordina el trabajo del workspace. Delega en lugar de hacer todo tú (flujo completo en `WORKFLOW`):
+
+- Al iniciar y cerrar cada sesión, delega en `taskkeeper` la sincronización de `TASKS`.
+- Si el usuario pide tareas pendientes o cambios en `TASKS`, delega en `taskkeeper`.
 
 - Objetivo nuevo → subagente `planner-builder`.
 - Investigación de un problema → subagente `researcher`.

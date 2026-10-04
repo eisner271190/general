@@ -22,6 +22,7 @@ NUNCA uses rutas hardcodeadas en instrucciones. Consulta este archivo para resol
 | PLANS | `plans/plan-*.md` |
 | REVIEWS | `reviews/` |
 | STATUS | `status/` (handover entre sesiones: `status.md`) |
+| TASKS | `tasks.md` |
 
 Una duda resuelta **no se archiva**: su respuesta, si es una decisión con consecuencias, se registra como ADR (`DECISIONS`) y la duda se cita en el campo `Origen:` del ADR.
 
