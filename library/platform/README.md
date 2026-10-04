@@ -4,8 +4,34 @@ Un solo repositorio con la configuración compartida de CI. No es una aplicació
 
 ```
 buildspecs/          Buildspecs para CodePipeline (CodeBuild), publicados en s3://epc-buildspecs/
-scripts/             Publicación de los buildspecs al bucket
+scripts/             Publicación de los buildspecs al bucket y de `common` a CodeArtifact
+terraform/           Dominio y repositorio maven de CodeArtifact (declarativo, lo aplica el usuario)
 ```
+
+## CodeArtifact: publicar `common`
+
+`terraform/` crea el dominio `epc` y el repositorio maven `common`, con Maven Central como
+upstream. No hay CMK ni secretos: el token de CodeArtifact dura 12 h y se pide en el momento
+(ADR-0022).
+
+```bash
+cp terraform/terraform.example.tfvars terraform/terraform.tfvars   # ajustar region y domain_name
+pwsh scripts/publish-common.ps1
+```
+
+Qué hace el script, en orden:
+
+1. `terraform init` y `terraform apply -auto-approve` (con `-SkipApply` usa el estado existente).
+2. Lee el output `codeartifact_endpoint`.
+3. Pide el token con `aws codeartifact get-authorization-token --domain epc`: vive solo en
+   memoria y en la variable de entorno del proceso, nunca en disco ni en Secrets Manager.
+4. `mvn deploy` del reactor `../common` con `-Depc.codeartifact.url=<endpoint>`.
+   `common-parent` queda fuera del deploy (`maven.deploy.skip`, ADR-0020).
+5. `aws codeartifact list-packages` para confirmar que `common-bom`, `common-log`,
+   `common-error` y `common-web` están publicados.
+
+El endpoint que devuelve Terraform es el que hay que copiar en `../common/settings.xml`
+(sustituyendo `<cuenta>` y `<region>`) para que Maven resuelva `common` desde el host.
 
 ## Buildspecs (CodePipeline / CodeBuild)
 

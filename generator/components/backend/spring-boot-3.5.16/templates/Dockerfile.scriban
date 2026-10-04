@@ -1,7 +1,24 @@
 {{ if Graalvm == "false" }}FROM maven:3.9.6-eclipse-temurin-17 AS builder
 WORKDIR /app
 COPY . .
-RUN mvn compile dependency:copy-dependencies -DincludeScope=runtime -DskipTests
+
+# CODEARTIFACT_REPOSITORY_URL: endpoint maven del repositorio `common`. Valor plano, no secreto.
+# CODEARTIFACT_AUTH_TOKEN: token de CodeArtifact (12 h) montado como secret. El `settings.xml`
+# se crea y se borra dentro del MISMO RUN: no queda en ninguna capa de la imagen.
+ARG CODEARTIFACT_REPOSITORY_URL=""
+RUN --mount=type=secret,id=CODEARTIFACT_AUTH_TOKEN \
+    set -e; \
+    if [ -n "$CODEARTIFACT_REPOSITORY_URL" ]; then \
+        mkdir -p /root/.m2; \
+        token="$(cat /run/secrets/CODEARTIFACT_AUTH_TOKEN)"; \
+        printf '%s' '<settings><servers><server><id>codeartifact</id><username>aws</username><password>' > /root/.m2/settings.xml; \
+        printf '%s' "$token" >> /root/.m2/settings.xml; \
+        printf '%s' '</password></server></servers><profiles><profile><id>codeartifact</id><repositories><repository><id>codeartifact</id><url>' >> /root/.m2/settings.xml; \
+        printf '%s' "$CODEARTIFACT_REPOSITORY_URL" >> /root/.m2/settings.xml; \
+        printf '%s' '</url><releases><enabled>true</enabled></releases><snapshots><enabled>false</enabled></snapshots></repository></repositories></profile></profiles><activeProfiles><activeProfile>codeartifact</activeProfile></activeProfiles></settings>' >> /root/.m2/settings.xml; \
+    fi; \
+    mvn ${CODEARTIFACT_REPOSITORY_URL:+-s /root/.m2/settings.xml} compile dependency:copy-dependencies -DincludeScope=runtime -DskipTests; \
+    rm -f /root/.m2/settings.xml
 
 FROM public.ecr.aws/lambda/java:17
 COPY --from=builder /app/target/classes ${LAMBDA_TASK_ROOT}

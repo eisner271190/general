@@ -21,7 +21,7 @@ Matriz IAM mínima acordada:
 | **Solo lectura** | `codeartifact:GetAuthorizationToken` + `ReadFromRepository` | Builds de los ms y Renovate |
 
 - **`kms:Decrypt` no hace falta**: el repositorio no usa CMK propia (decisión de coste).
-- El token viaja **siempre por variable de entorno** inyectada desde Secrets Manager, nunca en un fichero: un `settings.xml` con el token en claro acaba en el contexto de Docker, en los logs o en un commit.
+- El token se emite con `get-authorization-token` en el momento y viaja **siempre por variable de entorno**, nunca en un fichero: un `settings.xml` con el token en claro acaba en el contexto de Docker, en los logs o en un commit. En el build local el `Dockerfile` lo monta con `RUN --mount=type=secret` y genera el `settings.xml` en el mismo `RUN`, de modo que no queda en ninguna capa.
 - Renovate pide un token fresco en cada ejecución.
 
 ## Consecuencias
@@ -34,7 +34,8 @@ Matriz IAM mínima acordada:
 ### Negativas y riesgos
 
 - No hay alternativa al secreto: un repositorio Maven privado exige autenticación HTTPS. Lo que se reduce es el radio de exposición, no la necesidad.
-- Requiere dos roles IAM y dos secretos en Secrets Manager que el usuario siembra (`epc/develop/codeartifact`).
+- El token **no se persiste en Secrets Manager**: dura 12 h, así que guardar un valor es guardar algo ya expirado. En el bootstrap local sale de las credenciales del propio usuario, sin ningún secreto previo que sembrar. En CI sí habrá que sembrar `epc/<env>/codeartifact` para los builds, porque CodeBuild no tiene identidad de usuario.
+- Los dos roles siguen vigentes para CodeBuild: son el mecanismo de mínimo privilegio del pipeline de publicación y de los builds de lectura.
 - `.tf` declarativos: el agente no ejecuta `terraform apply`.
 
 ### Coste
