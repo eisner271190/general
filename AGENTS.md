@@ -19,7 +19,7 @@
 - Ante ambigüedad, pide aclaración.
 - Haz el cambio mínimo necesario, sin refactors ajenos.
 - Corrige el código generado desde su fuente de verdad.
-- Informa cada paso con un mensaje corto.
+- Informa cada paso con un mensaje corto con YYYY-MM-dd HH:mm:ss.
 - Todo agente debe informar cada paso con un mensaje corto.
 
 ## Estándares de código

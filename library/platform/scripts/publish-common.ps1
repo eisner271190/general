@@ -33,9 +33,26 @@ $ErrorActionPreference = 'Stop'
 
 $script:Domain = 'epc'
 $script:Repository = 'common'
+# Debe coincidir con el <id> del distributionManagement de common/pom.xml: es el id del
+# servidor que Maven busca en settings.xml, no el nombre del repositorio en CodeArtifact.
+$script:RepositoryId = 'codeartifact'
+# `--format` de codeartifact list-packages es el formato del PAQUETE (maven, npm, pypi...),
+# no el de salida. Es el que lleva `--output`.
+$script:PackageFormat = 'maven'
 $script:TokenVariable = 'CODEARTIFACT_AUTH_TOKEN'
 $script:EndpointOutput = 'codeartifact_endpoint'
 $script:ExitCode = 1
+
+# La coma tiene mas precedencia que + en PowerShell: sin parentesis,
+# @('-chdir=' + $Path, 'init') concatena el array entero en una sola cadena.
+function Get-TerraformArguments {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)][string[]]$Arguments
+    )
+
+    return @(("-chdir=$Path")) + $Arguments
+}
 
 function Write-Step {
     param([Parameter(Mandatory)][string]$Message)
@@ -100,6 +117,17 @@ function Invoke-Captured {
     return ($output -join '').Trim()
 }
 
+function Get-TerraformVarFile {
+    param([Parameter(Mandatory)][string]$Path)
+
+    $varFile = Join-Path -Path $Path -ChildPath 'terraform.tfvars'
+    if (-not (Test-Path -Path $varFile)) {
+        Stop-WithError -Reason "Falta $varFile. Copia terraform.example.tfvars y ajústalo."
+    }
+
+    return $varFile
+}
+
 function Initialize-Terraform {
     param(
         [Parameter(Mandatory)][string]$Path,
@@ -107,22 +135,26 @@ function Initialize-Terraform {
     )
 
     Write-Step -Message 'terraform init'
-    Invoke-Process -FilePath 'terraform' -Arguments @('-chdir=' + $Path, 'init')
+    Invoke-Process -FilePath 'terraform' `
+        -Arguments (Get-TerraformArguments -Path $Path -Arguments @('init'))
     if (-not $Apply) {
         Write-Step -Message 'apply omitido (-SkipApply): se usa el estado existente.'
         return
     }
 
-    Invoke-Process -FilePath 'terraform' `
-        -Arguments @('-chdir=' + $Path, 'apply', '-auto-approve')
+    $applyArguments = Get-TerraformArguments -Path $Path -Arguments @(
+        'apply', '-auto-approve', '-var-file', (Get-TerraformVarFile -Path $Path)
+    )
+    Invoke-Process -FilePath 'terraform' -Arguments $applyArguments
 }
 
 function Get-RepositoryEndpoint {
     param([Parameter(Mandatory)][string]$Path)
 
     Write-Step -Message 'lectura del endpoint maven'
-    return Invoke-Process -FilePath 'terraform' -Capture `
-        -Arguments @('-chdir=' + $Path, 'output', '-raw', $script:EndpointOutput)
+    return Invoke-Process -FilePath 'terraform' -Capture -Arguments (
+        Get-TerraformArguments -Path $Path -Arguments @('output', '-raw', $script:EndpointOutput)
+    )
 }
 
 function Get-CodeArtifactToken {
@@ -159,12 +191,14 @@ function Clear-CodeArtifactToken {
 function Publish-Common {
     param(
         [Parameter(Mandatory)][string]$Path,
-        [Parameter(Mandatory)][string]$Endpoint
+        [Parameter(Mandatory)][string]$Endpoint,
+        [Parameter(Mandatory)][string]$SettingsPath
     )
 
     Write-Step -Message "mvn deploy -> $Endpoint"
     Invoke-Process -FilePath 'mvn' -Arguments @(
-        '-B', '-ntp', '-f', (Join-Path -Path $Path -ChildPath 'pom.xml'),
+        '-B', '-ntp', '-s', $SettingsPath,
+        '-f', (Join-Path -Path $Path -ChildPath 'pom.xml'),
         'deploy', "-Depc.codeartifact.url=$Endpoint"
     )
 }
@@ -174,14 +208,48 @@ function Confirm-PublishedPackages {
         'codeartifact', 'list-packages',
         '--domain', $script:Domain,
         '--repository', $script:Repository,
-        '--format', 'json',
-        '--query', 'packages[].name',
+        '--format', $script:PackageFormat,
+        '--query', 'packages[].package',
         '--output', 'json'
     )
 
     Write-Step -Message 'confirmación de paquetes publicados'
     $packages = Invoke-Process -FilePath 'aws' -Capture -Arguments $arguments
     Write-Step -Message "paquetes en ${script:Domain}/${script:Repository}: $packages"
+}
+
+# Maven solo envia credenciales si un <server> declara el id del repositorio, que es
+# `codeartifact` en el distributionManagement de common/pom.xml. La variable de entorno
+# por si sola produce 401. El fichero se crea en TEMP y se borra: el token no queda en disco
+# mas alla del proceso, y el settings.xml de `common/` no se toca (tiene la URL con
+# placeholders <cuenta>/<region> que rompen la resolucion de terceros).
+function New-CodeArtifactSettings {
+    param([Parameter(Mandatory)][string]$Token)
+
+    Write-Step -Message 'settings.xml efimero con el server codeartifact'
+    $path = Join-Path -Path ([System.IO.Path]::GetTempPath()) `
+        -ChildPath "common-settings-$([System.Guid]::NewGuid().ToString('N')).xml"
+
+    $xml = @"
+<settings>
+  <servers>
+    <server>
+      <id>$script:RepositoryId</id>
+      <username>aws</username>
+      <password>$Token</password>
+    </server>
+  </servers>
+</settings>
+"@
+    [System.IO.File]::WriteAllText($path, $xml, [System.Text.UTF8Encoding]::new($false))
+    return $path
+}
+
+function Remove-CodeArtifactSettings {
+    param([Parameter(Mandatory)][string]$Path)
+
+    Write-Step -Message 'se borra el settings.xml efimero'
+    Remove-Item -Path $Path -ErrorAction SilentlyContinue
 }
 
 function Publish-CommonWithToken {
@@ -191,12 +259,14 @@ function Publish-CommonWithToken {
         [Parameter(Mandatory)][string]$Token
     )
 
-    Set-CodeArtifactToken -Token $Token
+    $settingsPath = New-CodeArtifactSettings -Token $Token
     try {
-        Publish-Common -Path $Path -Endpoint $Endpoint
+        Set-CodeArtifactToken -Token $Token
+        Publish-Common -Path $Path -Endpoint $Endpoint -SettingsPath $settingsPath
     }
     finally {
         Clear-CodeArtifactToken
+        Remove-CodeArtifactSettings -Path $settingsPath
     }
 }
 

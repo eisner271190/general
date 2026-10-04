@@ -43,4 +43,22 @@
       <artifactId>spring-boot-starter-webflux</artifactId>
     </dependency>
   </dependencies>
+
+  <!--
+    No se publica: es una muestra para verificar que common-web registra
+    GlobalExceptionHandler solo si el microservicio no define el suyo. Su parent es
+    spring-boot-starter-parent a proposito (ver arriba), asi que no hereda ni el
+    distributionManagement ni el skip de common-parent, y hay que declararlo aqui (ADR-0020).
+  -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

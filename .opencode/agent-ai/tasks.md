@@ -4,7 +4,7 @@ Filas con identificador estable: sincronizadas por `taskkeeper`. Filas sin ident
 
 ## Objetivo 002
 
-- [ ] [002-C2] [usuario] Publicar `common` en CodeArtifact y comprobar que un proyecto externo resuelve el BOM.
+- [x] [002-C2] [usuario] Publicar `common` en CodeArtifact y comprobar que un proyecto externo resuelve el BOM.
 - [ ] [002-C6] [usuario] Verificar con Renovate que el BOM se actualiza y los cambios llegan a los microservicios.
 - [ ] [002-C7] [usuario] Publicar `epc/common-base` en ECR y probar el Dockerfile del piloto.
 - [ ] [002-C8] [usuario] Aplicar Terraform y ejecutar el pipeline que usa el buildspec del bucket S3.
