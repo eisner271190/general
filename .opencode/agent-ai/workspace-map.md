@@ -33,11 +33,20 @@ Una duda resuelta **no se archiva**: su respuesta, si es una decisión con conse
 | WORKFLOW | `docs/workflow.md` |
 | DECISIONS | `docs/adr/` (un ADR por decisión: `NNNN-slug.md`) |
 | DECISIONS_INDEX | `docs/adr/README.md` |
+| NOTES | `docs/no-adr/` (notas y conventions, no son decisiones) |
 | TEMPLATES | `docs/templates/` |
 | AGENTS_ROOT | `../AGENTS.md` |
 | AGENT_ORCHESTRATOR | `agents/orchestrator.md` |
 | DELETE_ALL_SERVICES_AWS | `scripts/delete-all-services-aws.ps1` |
 | GET_SERVICES_AWS | `scripts/get-services-aws.ps1` |
+
+## Scripts de despliegue (base raíz del repo)
+
+| Símbolo | Ruta |
+|---------|------|
+| UP_ALL | `projects/{APPLICATION_ID}/up.ps1` (rápido: `-Fast`) |
+| UPDATE_ALL | `projects/{APPLICATION_ID}/backend/update-all.ps1` |
+| DOWN_ALL | `projects/{APPLICATION_ID}/down.ps1` |
 
 ## Templates (base `.opencode/`)
 

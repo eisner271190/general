@@ -23,6 +23,7 @@ Referencia en `AGENTS.md`. Los símbolos (`OBJECTIVES`, `QUESTIONS_OPEN`, `WORKF
 | Architect | `DELIVERABLES/objetivo-<NNN>/architecture-<NNN>.md` |
 | Reviewer-plan | `DELIVERABLES/objetivo-<NNN>/plan-review-<NNN>.md` |
 | Developer | código fuente + `DELIVERABLES/objetivo-<NNN>/implementation-<NNN>.md` |
+| Integrator | despliegue y verificación AWS → actualiza `DELIVERABLES/objetivo-<NNN>/implementation-<NNN>.md` |
 | Tester | `DELIVERABLES/objetivo-<NNN>/test-report-<NNN>.md` |
 
 ## Flujo
@@ -35,7 +36,9 @@ Referencia en `AGENTS.md`. Los símbolos (`OBJECTIVES`, `QUESTIONS_OPEN`, `WORKF
    - Con observaciones → vuelve a Architect.
 5. **Developer** → implementa → código fuente + `implementation-001.md`.
    - Si el problema requiere cambio de arquitectura → vuelve a Architect.
-6. **Tester** → prueba → `test-report-001.md`.
+6. **Integrator** → despliega (`up.ps1` según caso) y verifica AWS → actualiza `implementation-001.md`.
+   - Comandos con efectos AWS → autorización explícita.
+7. **Tester** → prueba → `test-report-001.md`.
    - Pasan → finaliza: mover `objetivo-001.md` a `OBJECTIVES_DONE`.
    - Falla por implementación → vuelve a Developer.
    - Falla por arquitectura/requisito → vuelve a Architect.
@@ -52,5 +55,5 @@ Texto canónico: los agentes con línea `Dudas → WORKFLOW §Dudas` obedecen es
 
 ## Delegación
 
-- Objetivo nuevo → `planner-builder` · Investigación → `researcher` · Diseño/arquitectura → `architect` · Revisión de arquitectura → `reviewer-plan` · Código → `developer` · Pruebas → `tester` · Revisión de cambios → `reviewer` · Explorar código → `explore`.
+- Objetivo nuevo → `planner-builder` · Investigación → `researcher` · Diseño/arquitectura → `architect` · Revisión de arquitectura → `reviewer-plan` · Código → `developer` · Despliegue y verificación AWS → `integrator` · Pruebas → `tester` · Revisión de cambios → `reviewer` · Explorar código → `explore`.
 - Si un subagente no puede escribir (`explore`), devuelve la duda al orchestrator, que la registra.

@@ -9,7 +9,7 @@ Implementa `architecture-<NNN>.md` del objetivo `NNN`.
 
 ## RULES
 
-- OBLIGATORIO: skill `epc-clean-clode`, `clean-code`
+- OBLIGATORIO: skills `epc-clean-code`, `clean-code`
 - Respeta las reglas de `AGENTS.md`.
 - Nunca ejecutes tests.
 - No hagas commit ni push sin autorización.
@@ -19,11 +19,8 @@ Implementa `architecture-<NNN>.md` del objetivo `NNN`.
 - Si requiere un cambio de arquitectura, detente y regístralo según `WORKFLOW` §Dudas para devolverlo a Architect.
 - Debes probar la curl
 - Compila y ejecuta el generador
-- Despues de verificar los archivos y carpetas, ejecutar up.ps1 -Fast
 - Verifica que se hayan generado los archivos y carpetas
-- Verifica que se hayan creado los servicios aws
-- Verifica que se hayan creado los parameter store y aws secret manager
-- Verifica logs
+- Despliegue y verificación AWS → `integrator`, no lo hagas tú.
 - Dudas → `WORKFLOW` §Dudas.
 - Español y breve.
 

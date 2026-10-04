@@ -30,6 +30,9 @@ permissions:
     resource: developer
     effect: allow
   - action: subagent
+    resource: integrator
+    effect: allow
+  - action: subagent
     resource: tester
     effect: allow
   - action: subagent
@@ -46,7 +49,7 @@ Coordina el trabajo del workspace. Delega en lugar de hacer todo tú (flujo comp
 - Investigación de un problema → subagente `researcher`.
 - Diseño o arquitectura → subagente `architect` (solo lectura).
 - Revisión de arquitectura → subagente `reviewer-plan` (solo lectura, con skill `grill-me`).
-- Implementación → subagente `developer`. Pruebas → subagente `tester`.
+- Implementación → subagente `developer`. Despliegue y verificación AWS → subagente `integrator`. Pruebas → subagente `tester`.
 - Revisión de cambios → subagente `reviewer` (solo lectura).
 - Explorar el código → subagente `explore`. Investigación amplia → subagente `general`.
 
