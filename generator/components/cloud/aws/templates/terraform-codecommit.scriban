@@ -1,0 +1,28 @@
+# -----------------------------------------------------------------------------
+# Repositorio de CodeCommit de la aplicacion.
+#
+# Los microservicios viven en backend/<ms>/; el trigger de release de `common`
+# (library/platform/scripts/bump-bom-version.py) actualiza sus pom desde aqui.
+# up.ps1 conecta el remoto y hace el push: ningun comando git suelto.
+# Sin credenciales: CodeBuild usa su credential helper nativo con el rol del build.
+# -----------------------------------------------------------------------------
+
+resource "aws_codecommit_repository" "application" {
+  repository_name = "{{ APPLICATION_ID }}"
+  description     = "Microservicios de {{ APPLICATION_ID }} (backend/*)."
+
+  tags = {
+    Project     = "{{ APPLICATION_ID }}"
+    Environment = var.environment
+  }
+}
+
+output "codecommit_clone_url" {
+  description = "URL HTTPS de clon. up.ps1 la usa como remoto origin."
+  value       = aws_codecommit_repository.application.clone_url_http
+}
+
+output "codecommit_repository_name" {
+  description = "Nombre del repositorio de la aplicacion."
+  value       = aws_codecommit_repository.application.repository_name
+}

@@ -9,10 +9,13 @@ data "aws_caller_identity" "current" {}
 locals {
   account_id = data.aws_caller_identity.current.account_id
 
-  # Los repos de CodeCommit los crea el usuario (F3.4) y no se declaran aqui: su ARN es
-  # determinista, asi que se compone en vez de referenciar un recurso inexistente.
-  common_repository_arn   = "arn:aws:codecommit:${var.region}:${local.account_id}:${var.common_source_bucket}"
-  platform_repository_arn = "arn:aws:codecommit:${var.region}:${local.account_id}:${var.platform_source_bucket}"
+  # Repos de plataforma (codecommit.tf). El repo de la aplicacion lo declara su propio
+  # Terraform (cloud/terraform/app/codecommit.tf del proyecto generado); aqui solo se compone
+  # el ARN porque el IAM del trigger de bump necesita nombrarlo.
+  common_repository_arn   = aws_codecommit_repository.common.arn
+  platform_repository_arn = aws_codecommit_repository.platform.arn
+
+  application_repository_arn = "arn:aws:codecommit:${var.region}:${local.account_id}:repository/${var.application_repository}"
 
   codeartifact_package_arn = "arn:aws:codeartifact:${var.region}:${local.account_id}:repository/${aws_codeartifact_domain.epc.domain}/${aws_codeartifact_repository.common.repository}"
 
@@ -20,17 +23,10 @@ locals {
   # constante. Llega al build como CODEARTIFACT_URL y sustituye al placeholder por -D.
   codeartifact_url = data.aws_codeartifact_repository_endpoint.common.repository_endpoint
 
-  # Nombre de los secretos: epc/<env>/codeartifact y epc/<env>/codecommit-git.
-  secret_name_prefix = "epc/${var.environment}"
-
-  pipeline_name = "common"
-
-  renovate_project_name  = "common-renovate"
-  bump_project_name      = "platform-bump-bom"
-  renovate_project_arn   = "arn:aws:codebuild:${var.region}:${local.account_id}:project/${local.renovate_project_name}"
-  bump_project_arn       = "arn:aws:codebuild:${var.region}:${local.account_id}:project/${local.bump_project_name}"
-  renovate_schedule_name = "common-renovate-weekly"
-  release_rule_name      = "common-release"
+  pipeline_name     = "common"
+  bump_project_name = "platform-bump-bom"
+  bump_project_arn  = "arn:aws:codebuild:${var.region}:${local.account_id}:project/${local.bump_project_name}"
+  release_rule_name = "common-release"
 
   tags = {
     Project     = "epc"
@@ -78,18 +74,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "buildspecs" {
   }
 }
 
-# --------------------------------------------------------------------------
-# Token de CodeArtifact. El secreto se declara VACIO: el valor lo siembra el usuario con
-# `aws secretsmanager put-secret-value` (dura 12 h y caduca solo). Aqui no hay secretos.
-# --------------------------------------------------------------------------
-
-resource "aws_secretsmanager_secret" "codeartifact" {
-  name                    = "${local.secret_name_prefix}/codeartifact"
-  description             = "Token de CodeArtifact para `common` (clave: token)."
-  recovery_window_in_days = 0
-
-  tags = merge(local.tags, { Name = "${local.secret_name_prefix}/codeartifact" })
-}
+# Sin secretos en la plataforma (ADR-0022): el token de CodeArtifact se pide en `pre_build`
+# con `aws codeartifact get-authorization-token` y vive solo en el entorno del build.
 
 # --------------------------------------------------------------------------
 # Imagen base de runtime que publica el pipeline de `common` en cada release.

@@ -47,6 +47,9 @@ Creación de skils, commands, agents con viñetas y corto
 	- Niveles de tareas hasta nivel atomico
 	- Prohibido usar nombres reales como "com.quizsmart.app", se debe usar la variable {{APPLICATION_ID}}
 	- Listar las cosas que dependen de mi anticipadamente
+	- Reemplazar aws secret manager por ParameterStore SecureString por costo y porque no se necesita rotación
+	- Ajustar Agent reviewer
+	- .agentignore
 
 ## Herramientas externas
 	- AWS
@@ -55,11 +58,3 @@ Creación de skils, commands, agents con viñetas y corto
 	- RevenueCat
 
 Revisar ADR. Deben ser decisiones de arquitectura
-
-
-1. Si se puede evitar el costo de otro secret con un rol, evitemoslo.
-2. Renovate y el script de bump deben hablar Git con esa configuración, no con variables de entorno. Explicame esto.
-3. Investigar: filtros de ruta en PR y comportamiento del credential-helper con Renovate
-4. Rehacer ADR-0022
-5. Ajustar toda la documentación de objetive 002 (C:\epc\general\.opencode\agent-ai\deliverables\objetivo-002 y C:\epc\general\.opencode\agent-ai\objectives\objetivo-002.md)
-6. Eliminar Renovate de todo el proyecto

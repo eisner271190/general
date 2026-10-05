@@ -40,8 +40,10 @@ Un archivo por decisión. Convención: `NNNN-slug.md`, donde `NNNN` es el ID sec
 | [ADR-0019](0019-generador-no-emite-el-codigo-de-common.md) | 2026-10-03 | El generador deja de emitir el código de `common` | Aceptada |
 | [ADR-0020](0020-common-parent-no-se-publica.md) | 2026-10-03 | `common-parent` no se publica en CodeArtifact | Aceptada |
 | [ADR-0021](../no-adr/0021-precedencia-maven-common-bom.md) | 2026-10-03 | Precedencia Maven: una entrada explícita gana a un `import` | Aceptada |
-| [ADR-0022](0022-iam-codeartifact-dos-roles.md) | 2026-10-03 | IAM de CodeArtifact en dos roles y token por variable de entorno | Aceptada |
+| [ADR-0022](0022-iam-codeartifact-dos-roles.md) | 2026-10-03 | IAM de CodeArtifact por rol, token bajo demanda, cero secretos | Aceptada (revisada 2026-10-04) |
 | [ADR-0023](0023-secreto-unico-solo-runtime.md) | 2026-10-04 | Un único secreto JSON por aplicación, decidido por coste | Aceptada |
+| [ADR-0024](0024-dos-repos-de-plataforma.md) | 2026-10-04 | Dos repos de plataforma, `common` y `platform`, un pipeline cada uno | Aceptada |
+| [ADR-0025](0025-retirada-de-renovate.md) | 2026-10-04 | Renovate retirado; BOM a mano y un único PR por release | Aceptada |
 
 ## Cadena de sustitución
 
@@ -59,6 +61,24 @@ ADR-0016 (common v1)
    └─> ADR-0017 (common v2)
           └─> ADR-0018 (Azure DevOps eliminado)
 ```
+
+**Sustituciones parciales.** Un ADR puede quedar sustituido **solo en una de sus partes**, y en ese
+caso sigue `Aceptada`: el resto de su decisión no se toca y el ADR permanece en vigor.
+
+```
+ADR-0018 (Azure DevOps eliminado)
+   ├─ decisión de hosting (CodeCommit, sin Azure DevOps)  -> EN VIGOR
+   ├─ (a) Renovate programado con Scheduler               -> sustituido por ADR-0025
+   └─ (b) un PR por repositorio de ms                    -> sustituido por ADR-0024 + ADR-0025
+
+ADR-0024 (dos repos de plataforma, un pipeline cada uno)
+ADR-0025 (Renovate retirado; un único PR por release)
+```
+
+**Relacionadas** (no se sustituyen, se apoyan):
+
+- ADR-0016 (buildspecs en S3) -> ADR-0022 (el token lo pide cada build con su rol).
+- ADR-0022 (cero secretos de plataforma) -> ADR-0025 (mismo criterio aplicado a Renovate).
 
 ## Documentos archivados en `NOTES`
 

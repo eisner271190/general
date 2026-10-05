@@ -1,3 +1,7 @@
+# Binarios de Python compilados: no son fuente
+__pycache__/
+*.pyc
+
 # Terraform: los .tf son la fuente, el estado se regenera
 .terraform/
 *.tfstate

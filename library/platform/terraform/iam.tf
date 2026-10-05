@@ -101,7 +101,7 @@ resource "aws_iam_role_policy" "common_reader" {
 }
 
 # --------------------------------------------------------------------------
-# buildspecs-publisher: `aws s3 sync` (scripts/publish-buildspecs.sh) sobre el bucket.
+# buildspecs-publisher: `publish-buildspecs.ps1` sobre el bucket.
 # --------------------------------------------------------------------------
 
 data "aws_iam_policy_document" "buildspecs_publisher_assume" {
@@ -152,8 +152,8 @@ resource "aws_iam_role_policy" "buildspecs_publisher" {
 }
 
 # --------------------------------------------------------------------------
-# codebuild: rol de servicio de los 4 proyectos CodeBuild (los 2 del pipeline de `common`
-# y los 2 de automatizacion de renovate.tf). Compartirlo evita cuatro roles identicos.
+# codebuild: rol de servicio de los 3 proyectos CodeBuild (los 2 del pipeline de `common` y
+# el de bump del BOM). Compartirlo evita tres roles identicos.
 # --------------------------------------------------------------------------
 
 data "aws_iam_policy_document" "codebuild_assume" {
@@ -217,6 +217,49 @@ data "aws_iam_policy_document" "codebuild" {
       "ecr:UploadLayerPart",
     ]
     resources = [aws_ecr_repository.common_base.arn]
+  }
+
+  # El token de CodeArtifact lo pide el propio build en `pre_build` (ADR-0022): la API exige
+  # esta accion sobre `*` y solo entrega un token de 12 h.
+  statement {
+    sid       = "GetCodeArtifactToken"
+    actions   = ["codeartifact:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+
+  # CodeCommit: clon del repo de plataforma (el build de bump ejecuta el script de el) y
+  # escritura en el repo de la aplicacion. GitPull/GitPush para el push por git; el resto
+  # son las acciones de la API que usa bump-bom-version.py.
+  statement {
+    sid = "PullPlatformRepository"
+    actions = [
+      "codecommit:GetBranch",
+      "codecommit:GetCommit",
+      "codecommit:GetRepository",
+      "codecommit:GitPull",
+      "codecommit:ListBranches",
+    ]
+    resources = [local.platform_repository_arn]
+  }
+
+  statement {
+    sid = "UpdateApplicationRepository"
+    actions = [
+      "codecommit:CreatePullRequest",
+      "codecommit:GetFolder",
+      "codecommit:GetPullRequest",
+      "codecommit:GitPush",
+      "codecommit:ListPullRequests",
+      "codecommit:PutFile",
+    ]
+    resources = [local.application_repository_arn]
+  }
+
+  # El script resuelve el ultimo tag v* de `common`; la accion va sobre ese repo.
+  statement {
+    sid       = "ListCommonTags"
+    actions   = ["codecommit:ListReferences"]
+    resources = [local.common_repository_arn]
   }
 }
 

@@ -1073,3 +1073,303 @@ corren por release o una vez por semana.
 | 9 | Tag `v*` bumpea BOM y crea PRs | **Declarado**: regla `common-release` + `platform-bump-bom` + `MS_REPOSITORY_PREFIX`. Verificable tras el `apply` |
 
 Sin commit ni push. Sin `terraform apply` ni `destroy`. Sin secretos en ficheros. Sin tocar tests.
+
+---
+
+## Trabajo 4 — Cero secretos, sin Renovate, scripts en vez de comandos, un PR por release
+
+Fecha: 2026-10-04 23:33–23:50. Developer. Sin commit, sin `apply`/`destroy`, sin tests, sin secretos
+en ficheros.
+
+### 1. Cero secretos de plataforma
+
+| Fichero | Cambio |
+| --- | --- |
+| `terraform/main.tf` | **Borrado** `aws_secretsmanager_secret.codeartifact` y el local `secret_name_prefix` |
+| `terraform/renovate.tf` | **Borrado** el secreto `codecommit-git` y sus 4 variables de entorno `SECRETS_MANAGER` |
+| `terraform/pipeline/main.tf` | Token de CodeArtifact **pedido en `pre_build`** con `aws codeartifact get-authorization-token` e inyectado en el `settings.xml` efímero (se borra en `finally`). Fuera las 2 variables `SECRETS_MANAGER`; entra `CODEARTIFACT_DOMAIN` (valor plano) |
+| `terraform/pipeline/variables.tf` | `codeartifact_secret_arn` → `codeartifact_domain_name` |
+| `buildspecs/java-ci.yml`, `buildspecs/docker-build.yml` | Igual: `pre_build` pide el token; el `settings.xml` efímero lleva `<password>$CODEARTIFACT_AUTH_TOKEN</password>` literal del shell (antes `${env.…}`, que ya no tenía de dónde llegar: CodeBuild ejecuta cada fase en su propia shell) |
+| `buildspecs/bump-bom.yml` | **Borrados** `askpass.sh`, `GIT_ASKPASS`, `GIT_USERNAME` y `GIT_PASSWORD`: el script usa la API de CodeCommit, que autentica con el rol del build |
+| `terraform/iam.tf` | Al rol `epc-codebuild`: `codeartifact:GetAuthorizationToken`, `codecommit:GitPull`/`GitPush` y las acciones de la API (`GetFolder`, `PutFile`, `CreatePullRequest`, `GetPullRequest`, `ListPullRequests`) **acotadas** al repo de la aplicación; `ListReferences` acotado a `common`; `GitPull` y lectura a `platform` |
+
+No queda ningún `aws_secretsmanager_secret`, ninguna variable `SECRETS_MANAGER` ni ningún
+`put-secret-value`: **el usuario no siembra nada**.
+
+### 2. Fuera Renovate
+
+Borrados `terraform/renovate.tf`, `buildspecs/renovate.yml`, el proyecto CodeBuild `common-renovate`,
+el rol `epc-renovate-scheduler`, el Scheduler `common-renovate-weekly`, `common/renovate.json` y las
+referencias en `library/platform/README.md`, `library/common/docs/como-migrar-un-ms.md:131` y
+`library/common/docs/como-versionar.md:55`. Variables eliminadas: `renovate_schedule_expression`,
+`platform_source_branch`, `ms_repository_prefix`.
+
+El criterio 6 del objetivo queda **fuera de alcance**: quien actualiza el BOM tras un aviso de
+seguridad es una persona, y la propagación a los microservicios la hace el trigger por tag.
+
+### 3. Scripts, no comandos sueltos
+
+| Fichero | Cambio |
+| --- | --- |
+| `scripts/up.ps1` | **Nuevo**: `init -> plan -> apply` de `terraform/`, leyendo `terraform.tfvars`. `-WhatIf` = solo plan, `-AutoApprove` = sin preguntar |
+| `scripts/publish-common.ps1` | **Deja de hacer Terraform** (se borran `Get-TerraformVarFile`, `Initialize-Terraform` y `-SkipApply`): el endpoint sale de `aws codeartifact get-repository-endpoint`. Idempotente, borra el `settings.xml` efímero, nuevo `-DryRun` |
+| `scripts/publish-buildspecs.ps1` | **Nuevo**, sustituye a `.sh` (borrado): idempotente, compara el MD5 local con el ETag remoto y solo sube lo que cambió; `-DryRun` |
+| `library/platform/.gitignore` | `__pycache__/` y `*.pyc` (el `.pyc` estaba versionado) |
+
+`scripts/__pycache__/open-codecommit-prs.cpython-313.pyc` eliminado del repo.
+
+### 4. Un PR por release
+
+`scripts/bump-bom-version.py`: destino **único** (`--repository`, por defecto `com.quizsmart.app`),
+microservicios localizados **por ruta** (`--pom-glob`, por defecto `backend/*/pom.xml`) y **un solo
+PR** con todos los `pom.xml` en **una sola rama** (`bump/common-bom-<versión>`). Eliminados
+`list_microservice_repositories` y su paginación. Terraform: `ms_repository_prefix` →
+`application_repository` + `application_pom_glob`.
+
+### 5. Dos repos y generador
+
+| Fichero | Cambio |
+| --- | --- |
+| `terraform/codecommit.tf` | **Nuevo**: declara los repos CodeCommit `common` y `platform` |
+| `generator/components/cloud/aws/templates/terraform-codecommit.scriban` | **Nuevo**: `aws_codecommit_repository.application` (`{{ APPLICATION_ID }}`) + outputs `codecommit_clone_url` y `codecommit_repository_name` |
+| `generator/components/cloud/aws/component.json` | Registrada la plantilla → `cloud/terraform/app/codecommit.tf` (nunca en el componente backend) |
+| `generator/components/root/workspace/templates/up.ps1.scriban` | Nuevo paso 3b: `Invoke-RepositorySync` lee `codecommit_clone_url` de `cloud/terraform/app`, hace `git remote add/set-url origin` y `git push -u origin <rama>`. Único sitio del proyecto con comandos git |
+
+El repo de la aplicación **no** se declara en `PLATFORM_REPO`: lo declara su propio Terraform, y
+`application_repository` solo da el nombre para componer el ARN del IAM.
+
+### Defecto corregido de paso
+
+`VERSION` se exportaba en `pre_build` del buildspec inline y se usaba en `post_build`: CodeBuild
+ejecuta cada fase en su propia shell, así que el `docker push` habría usado una `VERSION` vacía. La
+lectura de `project.version` se movió a `post_build` (`terraform/pipeline/main.tf:58-62`).
+
+### Evidencia verificada en local
+
+```
+terraform fmt -check -recursive .   -> fmt-exit=0
+terraform validate                  -> Success! The configuration is valid.
+terraform plan -var environment=develop -> Plan: 25 to add, 0 to change, 0 to destroy.
+                                      (antes 27: -2 secretos de Secrets Manager,
+                                       -1 proyecto CodeBuild, -1 Scheduler, +2 repos CodeCommit)
+buildspecs/{java-ci,docker-build,bump-bom}.yml -> YAML valido (ConvertFrom-Yaml)
+buildspec inline renderizado del plan -> YAML valido, 6 comandos de pre_build,
+   <password>$CODEARTIFACT_AUTH_TOKEN</password> literal
+grep de GIT_ASKPASS|GIT_USERNAME|GIT_PASSWORD|askpass|secretsmanager|SECRETS_MANAGER
+  en buildspecs/, scripts/, terraform/ y README -> 0 coincidencias (solo texto explicativo)
+generator: dotnet build OK (0 avisos, 0 errores); dotnet run OK
+  -> projects/com.quizsmart.app/cloud/terraform/app/codecommit.tf generado (con
+     APPLICATION_ID resuelto) y projects/com.quizsmart.app/up.ps1 con Invoke-RepositorySync
+terraform validate en projects/com.quizsmart.app/cloud/terraform/app y en .../quizapi -> valido
+terraform fmt -check -recursive en cloud/terraform/app -> fmt-exit=0
+
+scripts/up.ps1 -WhatIf
+  -> [up] terraform init / plan / "Plan: 25 to add" / "no se aplica (-WhatIf)"
+scripts/publish-buildspecs.ps1 -DryRun -Region us-east-1
+  -> 3 head-object (el bucket aun no existe) / "DryRun: se subirían 3 de 3"
+scripts/publish-common.ps1 -> no ejecuta Terraform (grep: 0 coincidencias de 'terraform')
+python scripts/bump-bom-version.py --help   -> uso correcto (--repository, --pom-glob)
+python scripts/open-codecommit-prs.py --help -> uso correcto
+```
+
+Prueba de la lógica del bump con un cliente CodeCommit falso (fichero temporal **fuera** del repo,
+borrado después; no es un test del proyecto):
+
+```
+== 1. Dos poms, uno ya en 1.0.1 -> un solo put_file, una rama, un PR ==
+  estado: updated | puts: 1 | PR: created 42
+  saltados: ['backend/quizapi2/pom.xml: ya esta en 1.0.1']
+  destino PR: bump/common-bom-1.0.1 -> main
+  (el put_file conserva el 3.4.0 del <parent>: solo cambia la linea del import)
+== 2. dry-run no escribe ni crea PR      -> would-update | puts: 0 | PR: None
+== 3. poms ya en la version             -> skipped / 'nada que actualizar'
+== 4. ningun pom casa con el glob        -> skipped / 'ningun pom casa con backend/*/pom.xml'
+== 5. find_poms filtra README.md         -> ['backend/quizapi/pom.xml', 'backend/quizapi2/pom.xml']
+```
+
+### Dudas (WORKFLOW §Dudas) — NON_BLOCKING
+
+1. **`git-credential-helper: yes` no existe en el provider v6.67.0.** Verificado con
+   `terraform providers schema -json`: `aws_codebuild_project` no tiene atributo
+   `git_credential_helper` (ni en el recurso ni en `source` ni en `environment`). Además, tras quitar
+   Renovate y el `GIT_ASKPASS` **ningún buildspec empuja con `git`**: el trigger de bump usa la API
+   de CodeCommit y el push de la aplicación lo hace `up.ps1` en local. Por eso no se ha añadido
+   configuración Git muerta; si algún build necesita clonar o empujar, la imagen estándar de
+   CodeBuild ya trae el credential helper nativo autenticado con el rol del build.
+2. **`VERSION` por `env: variables:` no es posible** (CodeBuild no evalúa comandos en ese bloque), de
+   ahí el arreglo de mover la lectura a `post_build`.
+3. **Coste:** el Scheduler y el proyecto de Renovate desaparecen (~0 USD/mes) y los 2 repos
+   CodeCommit son 0 USD. Total del objetivo sin cambios: **< 2 USD/mes**.
+
+### Tareas del usuario
+
+```powershell
+# 1. Plataforma: el bucket, los repos CodeCommit, el ECR, los roles y el pipeline.
+cd library/platform
+Copy-Item terraform\terraform.example.tfvars terraform\terraform.tfvars   # ajustar environment
+pwsh scripts\up.ps1 -WhatIf          # esperado: 25 to add
+pwsh scripts\up.ps1 -AutoApprove     # terraform apply: lo ejecuta el usuario
+
+# 2. Buildspecs al bucket (raiz), ya idempotente
+pwsh scripts\publish-buildspecs.ps1 -Region us-east-1
+
+# 3. Publicar `common` (ya no hace Terraform)
+pwsh scripts\publish-common.ps1
+
+# 4. Conectar los remotos de common y platform (el usuario; no hay script para eso)
+#    Los microservicios de la aplicación los empuja projects/com.quizsmart.app/up.ps1.
+
+# 5. Tras el apply, comprobar
+aws s3 ls s3://epc-buildspecs/
+aws codecommit list-repositories
+aws codebuild start-build --project-name platform-bump-bom --region us-east-1
+#    El log debe listar los poms de backend/*/pom.xml y, por cada uno, skipped/updated.
+```
+
+### Estado de los criterios afectados
+
+| # | Criterio | Estado |
+| --- | --- | --- |
+| 6 | Actualizar el BOM y propagar el PR a los ms | **Fuera de alcance** (decisión del usuario): sin Renovate. La propagación la hace el trigger por tag, con destino único y un PR |
+| 8 | Pipeline resuelve el buildspec por ARN de S3 | Terraform válido y `plan` limpio (25 recursos). La ejecución sigue requiriendo el `apply` del usuario |
+| 9 | Tag `v*` bumpea el BOM y crea PR | **Cambiado**: un repo, poms por ruta, un PR, una rama. Verificable tras el `apply` |
+
+Sin commit ni push. Sin `terraform apply` ni `destroy`. Sin secretos ni tokens en ficheros. Sin
+tocar tests. No se ha modificado ninguna colección de Postman: este trabajo no añade, cambia ni
+elimina ningún endpoint.
+
+## Trabajo 4 — Refactor de los scripts de `platform/scripts/`
+
+Fecha: 2026-10-05. Alcance: `up.ps1`, `publish-common.ps1`, `publish-buildspecs.ps1`,
+`bump-bom-version.py`, `open-codecommit-prs.py` y, solo para el punto 1, `variables.tf`,
+`codecommit.tf` y `terraform.example.tfvars`. Sin commit, sin push, sin tests, sin secretos.
+
+### 1. Fuera el hardcode (prioridad maxima)
+
+| Antes | Ahora |
+| --- | --- |
+| `bump-bom-version.py:44` `DEFAULT_REPOSITORY = "com.quizsmart.app"` | **Eliminado**. `--repository` toma su valor de la variable de entorno `APPLICATION_REPOSITORY`; si falta, error explicito (`--repository no puede estar vacio` pasa a `Falta --repository: defina la variable de entorno APPLICATION_REPOSITORY...`) |
+| `variables.tf:74` `default = "com.quizsmart.app"` | **Eliminado**: `application_repository` es obligatoria, con `validation` de nombre de repo CodeCommit. La inyecta el `terraform.tfvars` de cada aplicacion |
+| `terraform.example.tfvars:16` `application_repository = "com.quizsmart.app"` | `application_repository = "mi-aplicacion"` (valor de ejemplo, sin nombre de cliente) |
+| `codecommit.tf:2` y `README.md:88` mencionan el repo del piloto | Comentario y diagrama genéricos; el destino se llama `APPLICATION_REPOSITORY` |
+
+El camino completo ya existia y ahora es el unico: `var.application_repository` (`variables.tf:70`)
+-> `aws_codebuild_project.bump_bom.environment_variable` (`bump_bom.tf:22-26`) ->
+`buildspecs/bump-bom.yml:34` (`--repository "$APPLICATION_REPOSITORY"`) -> `--repository` del script.
+`POM_GLOB` y `CODEARTIFACT_DOMAIN` viajan por el mismo camino, asi que **no hizo falta tocar el
+buildspec**.
+
+Barrido: `quizsmart` -> **0 coincidencias** en `scripts/`, `buildspecs/`, `terraform/*.tf`,
+`terraform/*.example.tfvars` y `README.md`. Se reviso tambien `pom_glob`: `DEFAULT_POM_GLOB`
+(`backend/*/pom.xml`) se conserva como valor por defecto porque es el **layout que genera el
+generador**, no la identidad de la aplicacion; el valor real llega por `--pom-glob` / `POM_GLOB`.
+Igual con `common`: `COMMON_REPOSITORY` es el repo de plataforma (ADR-0024), no un valor de cliente.
+
+### 2. Por fichero
+
+#### `bump-bom-version.py`
+
+- Dataclasses `BumpRequest`, `PomTarget`, `PomChange`, `PomOutcome`: sustituyen a las tuplas y a las
+  listas sueltas, y son lo que permite cumplir R7 sin inventar envoltorios.
+- `update_repository` (era 66 lineas con 7 parametros) se parte en `find_poms`, `apply_poms`,
+  `record_change`, `build_result`, `skipped_result`, `open_bump_pull_request`.
+- `apply_pom` decide (¿tiene `import`?, ¿ya esta en la version?) y delega la escritura en `put_pom`
+  (R8); `skip_reason` extrae la condicion con dos operadores logicos (R6).
+- **Bucle encontrado y corregido**: `put_pom` encadenaba `parentCommitId = parent_commit_id or
+  commit_id`, pero `PomTarget` no llevaba el `commitId` del `get_file`; se añadió el campo para que el
+  primer commit de la rama nazca del pom y los siguientes encadenen sobre el anterior.
+- Sin codigo muerto: `result()`/`pull_request_result()` del ayudante y las funciones de texto de PR
+  se sustituyen por constructores de resultado; `latest_release_version` ya no acumula una lista
+  intermedia gigante.
+- R9/R10: log al entrar y salir en `main`/`open_pull_request`, y `LOGGER.debug` con los valores de
+  cada paso (candidatos, resumen de poms, destino de cada peticion).
+- `sys.modules[_spec.name] = _helper` antes de `exec_module`: sin esto `@dataclass` del ayudante falla
+  con `AttributeError: 'NoneType' object has no attribute '__dict__'` (bug real, reproducido y
+  corregido).
+
+#### `open-codecommit-prs.py`
+
+- `PullRequestRequest` agrupa los 6 parametros de `open_pull_request` (R7); `open_pull_request` pasa
+  a 2.
+- `result()` y `pull_request_result()` (4 parametros, logica duplicada) se sustituyen por
+  `describe_pull_request` + `existing_result`/`created_result`/`planned_result`.
+- `open_pull_requests` + `process_repository` se funden en `open_pull_requests` (2 funciones donde
+  habia 2, pero una sola con el flujo) y `parse_args` se parte en tres `add_*_arguments` (R1).
+- `--dry-run` **no** crea el PR y **no** lo anuncia solo: `planned_result` es un caso mas, no un flag.
+
+#### `up.ps1`
+
+- Constantes al inicio (`$script:LogTag`, `$script:VarFileName`, `$script:ConfirmQuestion`,
+  `$script:ConfirmPattern`) y bloque de mensajes con `-f` en lugar de concatenacion inline (R11/R12).
+- `Invoke-PlatformUp` (20 lineas, dos `if`) se parte en `Initialize-Platform`, `Plan-Platform`,
+  `Apply-Platform` y `Test-ShouldApply` (R1/R2/R6). `Test-TerraformFailed` centraliza la comprobacion
+  de `$LASTEXITCODE` y `Get-Description` evita repetir `$Arguments -join ' '` (R6/DRY).
+
+#### `publish-buildspecs.ps1`
+
+- `Invoke-PublishBuildspecs` (28 lineas, tres `if`) se parte en `Get-BuildspecFiles`,
+  `Count-Uploads` y `Write-Result`; `Test-NeedsUpload` extrae la comparacion MD5/ETag (R2/R6).
+- `Invoke-Aws` conserva el patron `-Capture` porque devuelve un objeto con `ExitCode`; aqui el flag
+  **no** es un parametro de datos, asi que se queda.
+
+#### `publish-common.ps1`
+
+- Se introduce `New-PublishContext` (hashtable `Path` + `Endpoint`): `Publish-Common` y
+  `Publish-CommonWithToken` bajan a 2 parametros (R7).
+- `Invoke-Process -Capture` desaparece: `Invoke-Captured` y `Invoke-Aws` hacen el modo explicito
+  (mismo criterio que en Python, aqui si, porque `Invoke-Aws` cubre el 100% de los usos con retorno).
+- El `settings.xml` efimero pasa a ser **plantilla en la zona de constantes** con `$Token` como
+  marcador: `New-CodeArtifactSettings` baja de 21 a 8 lineas y el XML es legible arriba (R1/R12).
+
+### 3. Reglas que **no** se aplicaron, y por que
+
+| Regla | Decision |
+| --- | --- |
+| R11 con clase de mensajes | Constantes de mensaje al inicio de cada fichero en vez de una clase: son scripts, no hay segunda unidad que los comparta, y una clase solo anade indireccion (KISS). En Python, funciones `*_result` / constantes `MESSAGE_*` |
+| R4 (Strategy) | No hay variantes de una misma operacion: `Invoke-Process`/`Invoke-Aws` y `describe/create/existing/planned_result` son un flujo con ramas, no implementaciones intercambiables. Una jerarquia seria mas codigo sin segundo caso (YAGNI) |
+| R7 hasta 2 parametros | Se admite 3 cuando uno es el cliente boto3 y otro un contexto ya agrupado (`read_pom`, `put_pom`, `apply_pom`). Agruparlos mas exigiria un envoltorio artificial |
+| R9/R10 en todas las funciones | Log en el flujo principal y en las funciones con decision, no en las de una linea (`base_result`, `skipped_result`): registrar `return {...}` no aporta nada (ruido) |
+| DRY entre los 3 `.ps1` | `Write-Step`/`Stop-WithError`/`Resolve-Directory` se repiten en los tres scripts **a proposito**: son(entry points) autonomos y un modulo comun anade un punto de fallo al despliegue. Se anota; si molesta, un `.psm1` compartido es el siguiente paso |
+
+### 4. Verificacion
+
+```
+> python bump-bom-version.py --help        -> usage correcto (--repository dice APPLICATION_REPOSITORY)
+> python open-codecommit-prs.py --help     -> usage correcto
+> python -m py_compile ambos               -> exit 0
+> AST: ninguna funcion > 20 lineas, ninguna con > 3 parametros -> []
+> Parser de PowerShell: up.ps1 / publish-common.ps1 / publish-buildspecs.ps1 -> 0 errores de sintaxis
+> Mismo recorrido por AST de PowerShell (cuerpo <= 20 lineas y <= 2 parametros) -> "ok" en los 3
+> pwsh scripts/publish-buildspecs.ps1 -DryRun -Region us-east-1 -> recorre los 3 .yml, no sube nada
+> pwsh scripts/publish-buildspecs.ps1 -Region us-east-1 -BuildspecsDirectory ./no-existe -> error y exit 1
+> pwsh scripts/up.ps1 -WhatIf -TerraformDirectory ./no-existe -> error y exit 1
+> pwsh scripts/publish-common.ps1 -DryRun -> endpoint + token OK, no publica (exit 0)
+> Con APPLICATION_REPOSITORY=app.demo: dry-run reaches CodeCommit y falla con RepositoryDoesNotExist
+   (el repo no existe en la cuenta: prueba de que el valor llega desde el entorno)
+> Sin APPLICATION_REPOSITORY: "Falta --repository: defina la variable de entorno ..." (exit 1)
+> terraform fmt -check -recursive .  -> fmt-exit=0
+> terraform validate                 -> Success! The configuration is valid.
+> terraform plan (con -var application_repository=...) -> 25 to add, 0 to change, 0 to destroy
+> ConvertFrom-Yaml sobre los 3 buildspecs -> YAML valido
+```
+
+Logic check without AWS (cliente falso, executed and discarded, **no es un test del proyecto**):
+`apply_pom` sobre un pom con `common-bom 1.0.0` devuelve
+`backend/quizapi/pom.xml: 1.0.0 -> 1.0.1` sin llamar a `put_file`; `bump_pom` sustituye **solo** la
+version del `import`; `current_bom_version('<project/>')` devuelve `None`.
+
+### 5. Coste AWS
+
+**0 USD**. No hay `apply`, ni builds, ni recursos nuevos. `terraform plan` es de solo lectura.
+
+### 6. Tarea del usuario
+
+`application_repository` **ya no tiene valor por defecto**: hay que anadirla al `terraform.tfvars`
+local (no versionado) antes del proximo `plan`/`apply`, junto a `environment`:
+
+```bash
+cd library/platform/terraform
+# terraform.tfvars: anadir environment = "develop" y application_repository = "<repo-codecommit-real>"
+pwsh ../scripts/up.ps1 -WhatIf
+```
+

@@ -128,11 +128,15 @@ target/
 </settings>
 ```
 
-## 4. Renovate
+## 4. Actualización del `import`
 
-`renovate.json` sin credenciales: el token llega al runner por
-`RENOVATE_DETECT_HOST_RULES_FROM_ENV=true` + `MAVEN_PASSWORD`. Cuando haya un `common-bom` nuevo,
-Renovate abre en el microservicio el PR que sube **una línea**.
+Cuando haya un `common-bom` nuevo, el tag `v*` de `common` arranca el trigger de plataforma
+(`library/platform/scripts/bump-bom-version.py`): sube **una línea** —la `<version>` del `import`—
+en todos los `pom.xml` del microservicio y abre un único pull request. No hay nada que configurar
+en el microservicio ni credenciales que sembrar.
+
+Actualizar las versiones de terceros del BOM es cosa de una persona: se edita
+`common/common-bom/pom.xml` y se publica una release.
 
 ## 5. Comprobaciones
 

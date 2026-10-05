@@ -6,6 +6,7 @@
     1. cloud  -Phase Bootstrap : crea el repositorio ECR.
     2. backend -Phase Build    : build + push de la imagen de cada microservicio.
     3. cloud  -Phase Apply     : plan + apply de toda la infraestructura.
+    3b. codecommit             : conecta el remoto de la aplicación y hace push.
     4. backend -Phase Run      : lee Parameter Store y arranca cada contenedor.
     5. frontend                : clean -> pub get -> iconos -> appbundle -> run.
        Con -Fast el frontend se limita a clean + pub get + iconos: sin
@@ -182,6 +183,67 @@ function Invoke-CloudApplyStage {
     Invoke-CloudPhase -Phase 'Apply' -Arguments $cloudArguments
 }
 
+# El repositorio de la aplicación lo declara cloud/terraform/app/codecommit.tf (ya aplicado en
+# el paso 3). Aquí solo se conecta el remoto y se empuja: es el único sitio del proyecto con
+# comandos git, para que no haya pushes sueltos a mano. Sin credenciales sembradas: CodeCommit
+# autentica con las del usuario (credential helper local o AWS CLI).
+function Invoke-Git {
+    param([Parameter(Mandatory)][string[]]$Arguments)
+
+    Write-LogDetail -Message "git $($Arguments -join ' ')"
+    & git @Arguments *>&1 | Tee-Object -FilePath $script:LogFile -Append
+    $code = $LASTEXITCODE
+    Write-LogDetail -Message "git exit=$code"
+    return $code
+}
+
+function Get-GitOutput {
+    param([Parameter(Mandatory)][string[]]$Arguments)
+
+    $value = (& git @Arguments 2>> $script:LogFile | Out-String)
+    if ($LASTEXITCODE -ne 0) {
+        return ''
+    }
+
+    return $value.Trim()
+}
+
+function Invoke-RepositorySync {
+    Write-LogDetail -Message 'paso 3b/5 codecommit remoto + push'
+
+    $terraformApp = Join-Path -Path $PSScriptRoot -ChildPath 'cloud/terraform/app'
+    if (-not (Test-Path -Path $terraformApp)) {
+        Write-LogDetail -Message "sin cloud/terraform/app (se omite el remoto)"
+        return
+    }
+
+    $cloneUrl = (& terraform -chdir=$terraformApp output -raw codecommit_clone_url 2>> $script:LogFile | Out-String).Trim()
+    if ([string]::IsNullOrWhiteSpace($cloneUrl)) {
+        Write-LogDetail -Message 'codecommit_clone_url vacio (se omite el remoto)'
+        return
+    }
+
+    $branch = Get-GitOutput -Arguments @('rev-parse', '--abbrev-ref', 'HEAD')
+    if ([string]::IsNullOrWhiteSpace($branch)) {
+        Write-LogDetail -Message 'no se pudo resolver la rama actual (se omite el push)'
+        return
+    }
+
+    $remotes = Get-GitOutput -Arguments @('remote')
+    if (($remotes -split "`r?`n") -contains 'origin') {
+        Invoke-Git -Arguments @('remote', 'set-url', 'origin', $cloneUrl) | Out-Null
+    }
+    else {
+        Invoke-Git -Arguments @('remote', 'add', 'origin', $cloneUrl) | Out-Null
+    }
+
+    if ((Invoke-Git -Arguments @('push', '-u', 'origin', $branch)) -ne 0) {
+        throw "git push a $cloneUrl ($branch) falló"
+    }
+
+    Write-Log -Message "Repositorio sincronizado: $cloneUrl ($branch)"
+}
+
 function Invoke-FrontendStage {
     if ($SkipFrontend) {
         Write-LogDetail -Message 'paso 5/5 frontend omitido (skipFrontend)'
@@ -209,6 +271,8 @@ function Invoke-ApplicationUp {
         Write-Log -Message 'Despliegue finalizado (PlanOnly: sin apply)'
         return
     }
+
+    Invoke-RepositorySync
 
     Write-LogDetail -Message 'paso 4/5 backend run (Parameter Store + docker run)'
     Invoke-BackendPhase -Phase 'Run'

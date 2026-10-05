@@ -12,13 +12,14 @@ module "pipeline" {
   pipeline_name = local.pipeline_name
 
   repository_name = var.common_source_bucket
+  source_branch   = var.source_branch
 
   artifact_bucket_name = var.buildspecs_bucket
   buildspecs_bucket    = var.buildspecs_bucket
 
-  codeartifact_url        = local.codeartifact_url
-  codeartifact_secret_arn = aws_secretsmanager_secret.codeartifact.arn
-  ecr_repository_url      = aws_ecr_repository.common_base.repository_url
+  codeartifact_domain_name = var.domain_name
+  codeartifact_url         = local.codeartifact_url
+  ecr_repository_url       = aws_ecr_repository.common_base.repository_url
 
   codebuild_role_arn = aws_iam_role.codebuild.arn
   pipeline_role_arn  = aws_iam_role.pipeline.arn

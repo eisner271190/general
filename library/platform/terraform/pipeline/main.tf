@@ -8,15 +8,8 @@ locals {
   build_project_name   = "${var.pipeline_name}-build"
   publish_project_name = "${var.pipeline_name}-publish"
 
-  # El token viaja por Secrets Manager; el endpoint es un valor plano y se lee en el log.
-  token_secret = {
-    name  = "CODEARTIFACT_AUTH_TOKEN"
-    value = "${var.codeartifact_secret_arn}:token"
-  }
-
-  # `$${}` sale como `${}`: el shell expande las variables del build y Maven resuelve
-  # `${env.CODEARTIFACT_AUTH_TOKEN}` desde el entorno. El heredoc va entre comillas
-  # simples para que el shell no toque el contenido.
+  # `$${}` sale como `${}`: el shell expande las variables del build. El heredoc va SIN comillas
+  # para que `$CODEARTIFACT_AUTH_TOKEN` se sustituya al generar el settings.xml efimero.
   publish_buildspec = <<-BUILDSPEC
     version: 0.2
 
@@ -24,6 +17,7 @@ locals {
       variables:
         MAVEN_OPTS: "-Xmx3072m"
         ECR_REPOSITORY: "${var.ecr_repository_url}"
+        CODEARTIFACT_DOMAIN: "${var.codeartifact_domain_name}"
 
     phases:
       install:
@@ -31,11 +25,16 @@ locals {
           java: corretto17
       pre_build:
         commands:
-          - 'echo "CODEARTIFACT_AUTH_TOKEN presente: $${CODEARTIFACT_AUTH_TOKEN:+si}"'
           - 'echo "CODEARTIFACT_URL: $${CODEARTIFACT_URL}"'
+          # ADR-0022: el token se pide aqui con la identidad del build y se inyecta en el
+          # settings.xml efimero. No hay secreto en Terraform ni en Secrets Manager, y el
+          # fichero se borra en `finally`.
           - |
+            CODEARTIFACT_AUTH_TOKEN="$(aws codeartifact get-authorization-token \
+              --domain "$CODEARTIFACT_DOMAIN" --query authorizationToken --output text)"
+            test -n "$CODEARTIFACT_AUTH_TOKEN" || { echo "No se pudo obtener el token"; exit 1; }
             mkdir -p "$${HOME}/.m2"
-            cat > "$${HOME}/.m2/settings.xml" <<'SETTINGS'
+            cat > "$${HOME}/.m2/settings.xml" <<SETTINGS
             <?xml version="1.0" encoding="UTF-8"?>
             <settings>
               <servers>
@@ -43,20 +42,23 @@ locals {
                   <!-- El id debe coincidir con el distributionManagement de common/pom.xml. -->
                   <id>codeartifact</id>
                   <username>aws</username>
-                  <password>$${env.CODEARTIFACT_AUTH_TOKEN}</password>
+                  <password>$CODEARTIFACT_AUTH_TOKEN</password>
                 </server>
               </servers>
             </settings>
             SETTINGS
+          - 'unset CODEARTIFACT_AUTH_TOKEN'
           - 'test -n "$${CODEARTIFACT_URL}" || { echo "CODEARTIFACT_URL vacia"; exit 1; }'
-          # La version sale del POM raiz: es la unica fuente de verdad del numero.
-          - 'VERSION="$(mvn -B -ntp -N help:evaluate -Dexpression=project.version -DforceStdout -q | tr -d "\r")"'
-          - 'test -n "$${VERSION}" || { echo "No se pudo leer project.version"; exit 1; }'
       build:
         commands:
           - 'mvn -B -ntp deploy -Depc.codeartifact.url="$${CODEARTIFACT_URL}"'
       post_build:
         commands:
+          # La version sale del POM raiz: es la unica fuente de verdad del numero. Se lee aqui
+          # y no en pre_build porque CodeBuild ejecuta cada fase en su propia shell: un export
+          # de pre_build no llega a post_build.
+          - 'VERSION="$(mvn -B -ntp -N help:evaluate -Dexpression=project.version -DforceStdout -q | tr -d "\r")"'
+          - 'test -n "$${VERSION}" || { echo "No se pudo leer project.version"; exit 1; }'
           - |
             aws ecr get-login-password --region "$${AWS_REGION}" \
               | docker login --username AWS --password-stdin "$${ECR_REPOSITORY%%/*}"
@@ -89,10 +91,11 @@ resource "aws_codebuild_project" "build" {
       type  = "PLAINTEXT"
     }
 
+    # Sin secretos: `java-ci.yml` pide el token con la identidad del build (ADR-0022).
     environment_variable {
-      name  = local.token_secret.name
-      value = local.token_secret.value
-      type  = "SECRETS_MANAGER"
+      name  = "CODEARTIFACT_DOMAIN"
+      value = var.codeartifact_domain_name
+      type  = "PLAINTEXT"
     }
   }
 
@@ -131,9 +134,9 @@ resource "aws_codebuild_project" "publish" {
     }
 
     environment_variable {
-      name  = local.token_secret.name
-      value = local.token_secret.value
-      type  = "SECRETS_MANAGER"
+      name  = "CODEARTIFACT_DOMAIN"
+      value = var.codeartifact_domain_name
+      type  = "PLAINTEXT"
     }
   }
 

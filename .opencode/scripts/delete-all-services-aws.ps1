@@ -6,7 +6,15 @@
 .DESCRIPTION
   DESTRUCTIVO E IRREVERSIBLE. Solo afecta a los recursos del proyecto
   (quizsmart/app): ECR, Lambda, API Gateway, Cognito, SNS, SQS, DynamoDB, SSM,
-  Secrets Manager, IAM y los grupos de log de sus Lambdas.
+  Secrets Manager, IAM y los grupos de log de sus Lambdas — Y LA PLATAFORMA completa de
+  library/platform: pipeline, proyectos CodeBuild, regla de release, bucket de buildspecs,
+  repos de CodeCommit, ECR de la imagen base, roles IAM epc-*, y el dominio con sus repos de
+  CodeArtifact. Sin parametros borra TODO, sin excepcion.
+
+  ATENCION: borrar CodeArtifact destruye los artefactos Maven ya publicados
+  (com.epc.common:*). Despues hay que republicarlos con publish-common.ps1.
+
+  -SkipPlatform limita el borrado a la aplicacion y conserva la plataforma.
 
   Sin -Force pide confirmacion interactiva escribiendo "SI". En un shell no
   interactivo (agente) se abstiene de borrar salvo -Force con autorizacion
@@ -16,10 +24,16 @@
   siguiente `terraform plan`/`up.ps1` los refresca y los quita del estado.
 
 .EXAMPLE
+  Borra TODO (aplicacion y plataforma). Revisa la lista antes de confirmar.
+
+.EXAMPLE
   .opencode/scripts/delete-all-services-aws.ps1 -WhatIf
 
 .EXAMPLE
   .opencode/scripts/delete-all-services-aws.ps1 -Force
+
+.EXAMPLE
+  .opencode/scripts/delete-all-services-aws.ps1 -SkipPlatform -WhatIf
 #>
 [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
 param(
@@ -38,8 +52,23 @@ param(
   [string[]]$LogGroupNames = @('/aws/lambda/quizapi'),
   [string]$LogPath = (Join-Path ([IO.Path]::GetTempPath()) (
     "delete-all-services-aws-$(Get-Date -Format 'yyyyMMdd-HHmmss-fff').log")),
-  [switch]$Force
+  [switch]$Force,
+
+  # --- Plataforma (library/platform). Se borra por defecto: -SkipPlatform lo desactiva ---
+  [switch]$SkipPlatform,
+  [string]$PlatformPrefix = 'epc',
+  [string]$BuildspecsBucket = 'epc-buildspecs',
+  [string]$CommonBaseEcr = 'epc/common-base',
+  [string[]]$PlatformRepositories = @('common', 'platform'),
+  [string]$CommonPipeline = 'common',
+  [string]$BumpProject = 'platform-bump-bom',
+  [string]$ReleaseRule = 'common-release',
+  [string]$CodeArtifactDomain = 'epc',
+  [string[]]$CodeArtifactRepositories = @('maven-central', 'common')
 )
+
+# La plataforma entra por defecto. -SkipPlatform es el opt-out explicito.
+$includePlatform = -not $SkipPlatform
 
 # --- utilidades -------------------------------------------------------------
 
@@ -264,6 +293,49 @@ foreach ($policyObject in Get-ListFrom $iamPolicies 'Policies') {
   Add-Target -Servicio 'IAM policy' -Recurso $policyObject.PolicyName -AwsArguments @('iam', 'delete-policy', '--policy-arn', $policyObject.Arn)
 }
 
+# --- plataforma (library/platform) ------------------------------------------
+#
+# Solo sin -SkipPlatform. El orden importa: se anade en orden de borrado, y el bucle de
+# ejecucion los recorre en ese orden. Dependencias:
+#   pipeline -> proyectos CodeBuild (CodePipeline borra stages, no los proyectos)
+#   regla    -> remove-targets antes de delete-rule
+#   dominio  -> repos antes que el dominio (si no, RepositoryNotFoundException)
+#   S3       -> el bucket esta versionado: hay que vaciar todas las versiones antes
+
+if ($includePlatform) {
+  Add-Target -Servicio 'CodePipeline' -Recurso $CommonPipeline -AwsArguments @('codepipeline', 'delete-pipeline', '--name', $CommonPipeline)
+
+  foreach ($projectName in @("$CommonPipeline-build", "$CommonPipeline-publish", $BumpProject)) {
+    Add-Target -Servicio 'CodeBuild' -Recurso $projectName -AwsArguments @('codebuild', 'delete-project', '--name', $projectName)
+  }
+
+  Add-Target -Servicio 'EventBridge' -Recurso $ReleaseRule -AwsArguments @('events', 'remove-targets', '--rule', $ReleaseRule)
+  Add-Target -Servicio 'EventBridge' -Recurso $ReleaseRule -AwsArguments @('events', 'delete-rule', '--name', $ReleaseRule)
+
+  foreach ($repositoryName in $PlatformRepositories) {
+    Add-Target -Servicio 'CodeCommit' -Recurso $repositoryName -AwsArguments @('codecommit', 'delete-repository', '--repository-name', $repositoryName)
+  }
+
+  foreach ($repositoryName in $CodeArtifactRepositories) {
+    Add-Target -Servicio 'CodeArtifact' -Recurso $repositoryName -AwsArguments @('codeartifact', 'delete-repository', '--domain', $CodeArtifactDomain, '--repository', $repositoryName)
+  }
+  Add-Target -Servicio 'CodeArtifact' -Recurso "$CodeArtifactDomain (dominio)" -AwsArguments @('codeartifact', 'delete-domain', '--domain', $CodeArtifactDomain)
+
+  Add-Target -Servicio 'ECR' -Recurso $CommonBaseEcr -AwsArguments @('ecr', 'delete-repository', '--repository-name', $CommonBaseEcr, '--force')
+
+  # El bucket va al final de los datos: CodePipeline y CodeBuild escriben artefactos y logs.
+  Add-Target -Servicio 'S3' -Recurso $BuildspecsBucket -AwsArguments @('s3', 'rb', "s3://$BuildspecsBucket", '--force')
+
+  # Las 6 politicas de la plataforma son INLINE (aws_iam_role_policy): no aparecen en
+  # `iam list-policies --scope Local`. Las borra el pre-step de inline que ya existe abajo,
+  # asi que aqui solo van los roles.
+  foreach ($roleName in @(
+      "$PlatformPrefix-bump-trigger", "$PlatformPrefix-common-pipeline", "$PlatformPrefix-codebuild",
+      "$PlatformPrefix-buildspecs-publisher", "$PlatformPrefix-common-reader", "$PlatformPrefix-common-publisher")) {
+    Add-Target -Servicio 'IAM role' -Recurso $roleName -AwsArguments @('iam', 'delete-role', '--role-name', $roleName)
+  }
+}
+
 # --- plan -------------------------------------------------------------------
 
 $generatedAt = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
@@ -273,7 +345,7 @@ Write-Output ''
 Write-Output ('{0,-14} {1}' -f 'SERVICIO', 'RECURSO')
 Write-Output ('{0,-14} {1}' -f ('-' * 14), ('-' * 50))
 if ($targets.Count -eq 0) {
-  Write-Output '  (no hay recursos del proyecto que borrar)'
+  Write-Output '  (no hay recursos que borrar)'
   exit 0
 }
 foreach ($target in $targets) {
@@ -314,6 +386,36 @@ foreach ($roleName in $roleNamesToDelete) {
     $result = Invoke-AwsRaw -AwsArguments @('iam', 'delete-role-policy', '--role-name', $roleName, '--policy-name', $policyName)
     Write-Log "IAM inline $($result.Command) ExitCode=$($result.ExitCode) Output=$($result.Output)"
     Write-Output ("delete inline {0}/{1}: {2}" -f $roleName, $policyName, $(if ($result.ExitCode -eq 0) { 'ok' } else { 'error' }))
+  }
+}
+
+# --- bucket de buildspecs: hay que vaciarlo antes ----------------------------
+#
+# El bucket esta versionado yTerraform lo declara con force_destroy = false. `delete-bucket`
+# no acepta un bucket con versiones: se purgan todas (con sus marcadores de borrado) en lotes
+# de 1000 y luego se borra el bucket. Es la unica operacion que no cabe en un unico target.
+
+if ($includePlatform -and -not $WhatIfPreference -and ($targets.Recurso -contains $BuildspecsBucket)) {
+  $keys = [System.Collections.Generic.List[object]]::new()
+  $versioning = Get-AwsData -AwsArguments @('s3api', 'get-bucket-versioning', '--bucket', $BuildspecsBucket)
+  $versions = Get-AwsData -AwsArguments @('s3api', 'list-object-versions', '--bucket', $BuildspecsBucket)
+  foreach ($v in Get-ListFrom $versions 'Versions') {
+    $keys.Add([pscustomobject]@{ Key = $v.Key; VersionId = $v.VersionId }) | Out-Null
+  }
+  foreach ($d in Get-ListFrom $versions 'DeleteMarkers') {
+    $keys.Add([pscustomobject]@{ Key = $d.Key; VersionId = $d.VersionId }) | Out-Null
+  }
+  Write-Output "Bucket $BuildspecsBucket versionado=$($null -ne $versioning.Status) objetos+versiones=$($keys.Count)"
+  for ($offset = 0; $offset -lt $keys.Count; $offset += 1000) {
+    $batch = $keys[$offset..([Math]::Min($offset + 999, $keys.Count - 1))]
+    $payload = @{ Objects = @($batch) } | ConvertTo-Json -Depth 4 -Compress
+    $result = Invoke-AwsRaw -AwsArguments @('s3api', 'delete-objects', '--bucket', $BuildspecsBucket, '--delete', $payload)
+    Write-Log "S3 purge $BuildspecsBucket ExitCode=$($result.ExitCode) Output=$($result.Output)"
+    if ($result.ExitCode -ne 0) {
+      Write-Output "No se pudo vaciar el bucket ${BuildspecsBucket}: $($result.Output)"
+      Write-Output 'Se omite su borrado.'
+      $targets = @($targets | Where-Object { $_.Recurso -ne $BuildspecsBucket })
+    }
   }
 }
 

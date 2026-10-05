@@ -33,6 +33,7 @@
     { "key": "cloud/terraform/app/variables.tf", "value": "templates/terraform-variables.scriban" },
     { "key": "cloud/terraform/app/terraform.{{ENVIRONMENT}}.tfvars", "value": "templates/terraform-tfvars.scriban" },
     { "key": "cloud/terraform/app/secrets.tf", "value": "templates/terraform-secrets.scriban" },
+    { "key": "cloud/terraform/app/codecommit.tf", "value": "templates/terraform-codecommit.scriban" },
     { "key": "cloud/terraform/modules/secrets-manager/main.tf", "value": "templates/terraform-secrets-manager.scriban" },
     { "key": "cloud/terraform/modules/secrets-manager/variables.tf", "value": "templates/terraform-secrets-manager-variables.scriban" },
     { "key": "cloud/terraform/modules/pipeline/main.tf", "value": "templates/terraform-pipeline.scriban" },

@@ -1,5 +1,9 @@
 version: 0.2
 
+# Buildspec compartido: compila fuera de Docker y construye la imagen del microservicio sobre
+# la imagen base de runtime. El token de CodeArtifact se pide en `pre_build` con la identidad del
+# build (ADR-0022), igual que en java-ci.yml.
+
 env:
   variables:
     MAVEN_OPTS: "-Xmx3072m"
@@ -10,19 +14,21 @@ phases:
       java: corretto17
   pre_build:
     commands:
-      - 'echo "CODEARTIFACT_AUTH_TOKEN presente: ${CODEARTIFACT_AUTH_TOKEN:+si}"'
       # Mismo settings.xml que java-ci.yml: sin el, un microservicio no resolveria common-bom.
       - |
         if [ -n "${CODEARTIFACT_URL:-}" ]; then
+          CODEARTIFACT_AUTH_TOKEN="$(aws codeartifact get-authorization-token \
+            --domain "${CODEARTIFACT_DOMAIN:-epc}" --query authorizationToken --output text)"
+          test -n "$CODEARTIFACT_AUTH_TOKEN" || { echo "No se pudo obtener el token"; exit 1; }
           mkdir -p "${HOME}/.m2"
-          cat > "${HOME}/.m2/settings.xml" <<'SETTINGS'
+          cat > "${HOME}/.m2/settings.xml" <<SETTINGS
         <?xml version="1.0" encoding="UTF-8"?>
         <settings>
           <servers>
             <server>
               <id>codeartifact</id>
               <username>aws</username>
-              <password>${env.CODEARTIFACT_AUTH_TOKEN}</password>
+              <password>$CODEARTIFACT_AUTH_TOKEN</password>
             </server>
           </servers>
           <profiles>
@@ -39,6 +45,7 @@ phases:
           <activeProfiles><activeProfile>codeartifact</activeProfile></activeProfiles>
         </settings>
         SETTINGS
+          unset CODEARTIFACT_AUTH_TOKEN
         fi
   build:
     commands:

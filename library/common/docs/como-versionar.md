@@ -52,9 +52,10 @@ Se edita **un** fichero: `common-bom/pom.xml`.
   propiedad `epc.*` del import correspondiente.
 - Si no lo gobierna ningún import, cambia su entrada `epc.*` en el mismo fichero.
 
-Después, Renovate abre en cada microservicio el PR que sube **una línea**: la `<version>` del
-`import` de `common-bom`. El `pom.xml` del microservicio no vuelve a declarar ninguna versión de
-terceros.
+Después, el tag `v*` dispara el trigger de plataforma
+(`library/platform/scripts/bump-bom-version.py`), que abre en el repositorio de la aplicación el PR
+que sube **una línea** por `pom.xml`: la `<version>` del `import` de `common-bom`. El `pom.xml` del
+microservicio no vuelve a declarar ninguna versión de terceros.
 
 ### Trampa al subir Spring Boot
 

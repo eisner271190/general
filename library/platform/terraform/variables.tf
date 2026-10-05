@@ -5,7 +5,7 @@ variable "region" {
 
 variable "domain_name" {
   type        = string
-  description = "Nombre del dominio de CodeArtifact (epc). Lo referencian settings.xml y renovate.json."
+  description = "Nombre del dominio de CodeArtifact (epc). Lo referencian settings.xml y el token que pide cada build."
 
   validation {
     condition     = can(regex("^[a-z][a-z0-9\\-]{1,8}[a-z0-9]$", var.domain_name))
@@ -14,8 +14,7 @@ variable "domain_name" {
 }
 
 # ---------------------------------------------------------------------------
-# Variables de la plataforma (bucket, ECR, IAM, pipeline, Renovate).
-# Los repos de CodeCommit los crea el usuario: aqui solo se da su nombre.
+# Variables de la plataforma (bucket, ECR, IAM, pipeline, repos de CodeCommit).
 # ---------------------------------------------------------------------------
 
 variable "environment" {
@@ -49,31 +48,43 @@ variable "ecr_common_base_name" {
 
 variable "common_source_bucket" {
   type        = string
-  description = "Nombre del repositorio CodeCommit de `common` (lo crea el usuario). Su ARN se compone: el repositorio no se declara aqui."
+  description = "Nombre del repositorio CodeCommit de `common`. Lo declara codecommit.tf."
+
+  default = "common"
 }
 
 variable "platform_source_bucket" {
   type        = string
-  description = "Nombre del repositorio CodeCommit de `platform` (lo crea el usuario). Es el source de los builds de Renovate y del bump."
+  description = "Nombre del repositorio CodeCommit de `platform`. Es el source del build de bump."
+
+  default = "platform"
 }
 
-variable "platform_source_branch" {
+variable "source_branch" {
   type        = string
-  description = "Rama de `platform` que ejecutan los builds de Renovate y de bump."
+  description = "Rama de trabajo de los repos de plataforma. La crea Terraform como `default_branch` y es la que activa el pipeline de `common`."
 
   default = "main"
 }
 
-variable "ms_repository_prefix" {
+variable "application_repository" {
   type        = string
-  description = "Prefijo de nombre de los repos de microservicios. Es lo unico que separa los ms de `common` y `platform` (bump-bom-version.py --repo-prefix)."
+  description = "Nombre del repositorio CodeCommit de la aplicacion (codecommit.tf del proyecto generado). Destino unico del trigger de bump del BOM: llega al build como APPLICATION_REPOSITORY."
 
-  default = "com.quizsmart.app/"
+  validation {
+    condition     = can(regex("^[A-Za-z0-9][A-Za-z0-9_.\\-]{1,100}$", var.application_repository))
+    error_message = "application_repository debe ser un nombre de repositorio CodeCommit."
+  }
 }
 
-variable "renovate_schedule_expression" {
+variable "application_pom_glob" {
   type        = string
-  description = "Expresion cron de EventBridge Scheduler para el build programado de Renovate."
+  description = "Ruta (relativa a la raiz del repo de la aplicacion) de los pom de microservicios que el trigger de bump actualiza."
 
-  default = "cron(0 4 ? * MON *)"
+  default = "backend/*/pom.xml"
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9*.\\-_/]+$", var.application_pom_glob))
+    error_message = "application_pom_glob debe ser una ruta con globs (backend/*/pom.xml)."
+  }
 }

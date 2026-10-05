@@ -30,9 +30,9 @@ variable "codeartifact_url" {
   description = "Endpoint maven de CodeArtifact. Valor plano: se pasa al build como CODEARTIFACT_URL y este lo inyecta en `mvn deploy` con -D."
 }
 
-variable "codeartifact_secret_arn" {
+variable "codeartifact_domain_name" {
   type        = string
-  description = "Secreto de Secrets Manager con el token de CodeArtifact. El valor lo siembra el usuario; aqui no hay secretos."
+  description = "Dominio de CodeArtifact. El build pide su token con get-authorization-token en pre_build: no hay ningun secreto declarado ni sembrado."
 }
 
 variable "ecr_repository_url" {

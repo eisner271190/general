@@ -3,34 +3,37 @@
 .SYNOPSIS
     Publica `common` en CodeArtifact y confirma que el repositorio ya lo contiene.
 .DESCRIPTION
-    1. terraform init + apply del dominio y del repositorio maven `common`.
-    2. Lectura del endpoint maven del output codeartifact_endpoint.
-    3. Token de CodeArtifact con get-authorization-token: se pide ahora, dura 12 h y
-       no se persiste ni en disco ni en Secrets Manager (ADR-0022).
-    4. mvn deploy del reactor con -Depc.codeartifact.url=endpoint.
-    5. aws codeartifact list-packages para confirmar.
+    No hace Terraform: la infraestructura la levanta `scripts/up.ps1`.
+
+    1. Lectura del endpoint maven con `aws codeartifact get-repository-endpoint`.
+    2. Token con `get-authorization-token`: se pide ahora, dura 12 h y no se persiste ni en disco
+       ni en Secrets Manager (ADR-0022).
+    3. `mvn deploy` del reactor con `-Depc.codeartifact.url=<endpoint>`.
+    4. `aws codeartifact list-packages` para confirmar.
+
+    Es idempotente: se puede reejecutar sin efecto si no cambio el POM.
     `common-parent` queda fuera del deploy (maven.deploy.skip, ADR-0020).
-.PARAMETER TerraformDirectory
-    Directorio con los .tf de plataforma.
 .PARAMETER CommonDirectory
     Directorio del reactor `common` (el pom padre).
-.PARAMETER SkipApply
-    No ejecuta terraform apply: solo publica con el estado ya existente.
+.PARAMETER DryRun
+    No publica: solo comprueba endpoint, token y POM.
 .EXAMPLE
     ./publish-common.ps1
 .EXAMPLE
-    ./publish-common.ps1 -SkipApply
+    ./publish-common.ps1 -DryRun
 #>
 [CmdletBinding()]
 param(
-    [string]$TerraformDirectory = (Join-Path -Path $PSScriptRoot -ChildPath '../terraform'),
     [string]$CommonDirectory = (Join-Path -Path $PSScriptRoot -ChildPath '../../common'),
-    [switch]$SkipApply
+    [switch]$DryRun
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# --- Constantes (un unico sitio) ----------------------------------------------
+$script:LogTag = 'publish-common'
+$script:ExitCode = 1
 $script:Domain = 'epc'
 $script:Repository = 'common'
 # Debe coincidir con el <id> del distributionManagement de common/pom.xml: es el id del
@@ -40,24 +43,38 @@ $script:RepositoryId = 'codeartifact'
 # no el de salida. Es el que lleva `--output`.
 $script:PackageFormat = 'maven'
 $script:TokenVariable = 'CODEARTIFACT_AUTH_TOKEN'
-$script:EndpointOutput = 'codeartifact_endpoint'
-$script:ExitCode = 1
+$script:AwsCommand = 'aws'
+$script:MavenCommand = 'mvn'
+$script:MavenUser = 'aws'
+$script:RootPomName = 'pom.xml'
+$script:SettingsFilePattern = 'common-settings-{0}.xml'
+# Plantilla del settings.xml efimero: Maven solo envia credenciales si un <server> declara el
+# id del repositorio (`codeartifact` en el distributionManagement de common/pom.xml).
+$script:SettingsTemplate = @"
+<settings>
+  <servers>
+    <server>
+      <id>$script:RepositoryId</id>
+      <username>$script:MavenUser</username>
+      <password>`$Token</password>
+    </server>
+  </servers>
+</settings>
+"@
 
-# La coma tiene mas precedencia que + en PowerShell: sin parentesis,
-# @('-chdir=' + $Path, 'init') concatena el array entero en una sola cadena.
-function Get-TerraformArguments {
-    param(
-        [Parameter(Mandatory)][string]$Path,
-        [Parameter(Mandatory)][string[]]$Arguments
-    )
-
-    return @(("-chdir=$Path")) + $Arguments
-}
+# --- Mensajes (centralizados, sin concatenacion inline) -----------------------
+$script:FormatCommand = '{0} {1}'
+$script:FormatCommandFailed = '{0} falló con código {1}.'
+$script:FormatMissingDirectory = "No existe el directorio '{0}'."
+$script:FormatEmptyToken = 'AWS devolvió un token vacío.'
+$script:FormatDeployTarget = 'mvn deploy -> {0}'
+$script:FormatTokenInfo = 'token obtenido (longitud {0}); no se persiste.'
+$script:FormatPackages = 'paquetes en {0}/{1}: {2}'
 
 function Write-Step {
     param([Parameter(Mandatory)][string]$Message)
 
-    Write-Host "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] [publish-common] $Message"
+    Write-Host "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] [$script:LogTag] $Message"
 }
 
 function Stop-WithError {
@@ -71,39 +88,18 @@ function Resolve-Directory {
     param([Parameter(Mandatory)][string]$Path)
 
     if (-not (Test-Path -Path $Path)) {
-        Stop-WithError -Reason "No existe el directorio '$Path'."
+        Stop-WithError -Reason ($script:FormatMissingDirectory -f $Path)
     }
 
     return (Resolve-Path -Path $Path).Path
 }
 
-function Assert-ExitCode {
-    param(
-        [Parameter(Mandatory)][string]$FilePath,
-        [Parameter(Mandatory)][int]$ExitCode
-    )
+function Test-ProcessFailed {
+    param([Parameter(Mandatory)][string]$FilePath)
 
-    if ($ExitCode -ne 0) {
-        Stop-WithError -Reason "$FilePath falló con código $ExitCode."
+    if ($LASTEXITCODE -ne 0) {
+        Stop-WithError -Reason ($script:FormatCommandFailed -f $FilePath, $LASTEXITCODE)
     }
-}
-
-# Un único canal para las herramientas externas: sin -Capture la salida va a consola,
-# con -Capture se devuelve como texto para usarlo como valor.
-function Invoke-Process {
-    param(
-        [Parameter(Mandatory)][string]$FilePath,
-        [Parameter(Mandatory)][string[]]$Arguments,
-        [switch]$Capture
-    )
-
-    Write-Step -Message "$FilePath $($Arguments -join ' ')"
-    if ($Capture) {
-        return (Invoke-Captured -FilePath $FilePath -Arguments $Arguments)
-    }
-
-    & $FilePath @Arguments | Out-Host
-    Assert-ExitCode -FilePath $FilePath -ExitCode $LASTEXITCODE
 }
 
 function Invoke-Captured {
@@ -113,47 +109,40 @@ function Invoke-Captured {
     )
 
     $output = @(& $FilePath @Arguments)
-    Assert-ExitCode -FilePath $FilePath -ExitCode $LASTEXITCODE
+    Test-ProcessFailed -FilePath $FilePath
     return ($output -join '').Trim()
 }
 
-function Get-TerraformVarFile {
-    param([Parameter(Mandatory)][string]$Path)
+# Un único canal para las herramientas externas: Invoke-Process deja la salida en consola,
+# Invoke-Captured la devuelve como texto para usarlo como valor. Ninguno lleva un flag: el
+# modo se decide con la función que se llama.
+function Invoke-Process {
+    param(
+        [Parameter(Mandatory)][string]$FilePath,
+        [Parameter(Mandatory)][string[]]$Arguments
+    )
 
-    $varFile = Join-Path -Path $Path -ChildPath 'terraform.tfvars'
-    if (-not (Test-Path -Path $varFile)) {
-        Stop-WithError -Reason "Falta $varFile. Copia terraform.example.tfvars y ajústalo."
-    }
-
-    return $varFile
+    Write-Step -Message ($script:FormatCommand -f $FilePath, ($Arguments -join ' '))
+    & $FilePath @Arguments | Out-Host
+    Test-ProcessFailed -FilePath $FilePath
 }
 
-function Initialize-Terraform {
-    param(
-        [Parameter(Mandatory)][string]$Path,
-        [Parameter(Mandatory)][bool]$Apply
-    )
+# `aws` es el único cliente que devuelve valores (endpoint, token, paquetes).
+function Invoke-Aws {
+    param([Parameter(Mandatory)][string[]]$Arguments)
 
-    Write-Step -Message 'terraform init'
-    Invoke-Process -FilePath 'terraform' `
-        -Arguments (Get-TerraformArguments -Path $Path -Arguments @('init'))
-    if (-not $Apply) {
-        Write-Step -Message 'apply omitido (-SkipApply): se usa el estado existente.'
-        return
-    }
-
-    $applyArguments = Get-TerraformArguments -Path $Path -Arguments @(
-        'apply', '-auto-approve', '-var-file', (Get-TerraformVarFile -Path $Path)
-    )
-    Invoke-Process -FilePath 'terraform' -Arguments $applyArguments
+    return Invoke-Captured -FilePath $script:AwsCommand -Arguments $Arguments
 }
 
 function Get-RepositoryEndpoint {
-    param([Parameter(Mandatory)][string]$Path)
-
-    Write-Step -Message 'lectura del endpoint maven'
-    return Invoke-Process -FilePath 'terraform' -Capture -Arguments (
-        Get-TerraformArguments -Path $Path -Arguments @('output', '-raw', $script:EndpointOutput)
+    Write-Step -Message 'endpoint maven'
+    return Invoke-Aws -Arguments @(
+        'codeartifact', 'get-repository-endpoint',
+        '--domain', $script:Domain,
+        '--repository', $script:Repository,
+        '--format', $script:PackageFormat,
+        '--query', 'repositoryEndpoint',
+        '--output', 'text'
     )
 }
 
@@ -161,7 +150,7 @@ function Get-CodeArtifactToken {
     # El token vive solo en memoria y caduca a las 12 h: persistirlo sería guardar
     # algo expirado.
     Write-Step -Message 'token de CodeArtifact'
-    $token = Invoke-Process -FilePath 'aws' -Capture -Arguments @(
+    $token = Invoke-Aws -Arguments @(
         'codeartifact', 'get-authorization-token',
         '--domain', $script:Domain,
         '--query', 'authorizationToken',
@@ -169,42 +158,40 @@ function Get-CodeArtifactToken {
     )
 
     if ([string]::IsNullOrWhiteSpace($token)) {
-        Stop-WithError -Reason 'AWS devolvió un token vacío.'
+        Stop-WithError -Reason $script:FormatEmptyToken
     }
 
-    Write-Step -Message "token obtenido (longitud $($token.Length)); no se persiste."
+    Write-Step -Message ($script:FormatTokenInfo -f $token.Length)
     return $token
 }
 
-function Set-CodeArtifactToken {
-    param([Parameter(Mandatory)][string]$Token)
+# Agrupa lo que necesita el deploy: asi Publish-Common y Publish-CommonWithToken no acumulan
+# parametros (R7).
+function New-PublishContext {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)][string]$Endpoint
+    )
 
-    Write-Step -Message "se expone $script:TokenVariable solo durante el deploy"
-    Set-Item -Path "Env:$script:TokenVariable" -Value $Token
-}
-
-function Clear-CodeArtifactToken {
-    Write-Step -Message "se retira $script:TokenVariable del entorno"
-    Remove-Item -Path "Env:$script:TokenVariable" -ErrorAction SilentlyContinue
+    return @{ Path = $Path; Endpoint = $Endpoint }
 }
 
 function Publish-Common {
     param(
-        [Parameter(Mandatory)][string]$Path,
-        [Parameter(Mandatory)][string]$Endpoint,
+        [Parameter(Mandatory)][hashtable]$Context,
         [Parameter(Mandatory)][string]$SettingsPath
     )
 
-    Write-Step -Message "mvn deploy -> $Endpoint"
-    Invoke-Process -FilePath 'mvn' -Arguments @(
+    Write-Step -Message ($script:FormatDeployTarget -f $Context.Endpoint)
+    Invoke-Process -FilePath $script:MavenCommand -Arguments @(
         '-B', '-ntp', '-s', $SettingsPath,
-        '-f', (Join-Path -Path $Path -ChildPath 'pom.xml'),
-        'deploy', "-Depc.codeartifact.url=$Endpoint"
+        '-f', (Join-Path -Path $Context.Path -ChildPath $script:RootPomName),
+        'deploy', "-Depc.codeartifact.url=$($Context.Endpoint)"
     )
 }
 
 function Confirm-PublishedPackages {
-    $arguments = @(
+    $packages = Invoke-Aws -Arguments @(
         'codeartifact', 'list-packages',
         '--domain', $script:Domain,
         '--repository', $script:Repository,
@@ -213,9 +200,7 @@ function Confirm-PublishedPackages {
         '--output', 'json'
     )
 
-    Write-Step -Message 'confirmación de paquetes publicados'
-    $packages = Invoke-Process -FilePath 'aws' -Capture -Arguments $arguments
-    Write-Step -Message "paquetes en ${script:Domain}/${script:Repository}: $packages"
+    Write-Step -Message ($script:FormatPackages -f $script:Domain, $script:Repository, $packages)
 }
 
 # Maven solo envia credenciales si un <server> declara el id del repositorio, que es
@@ -227,20 +212,10 @@ function New-CodeArtifactSettings {
     param([Parameter(Mandatory)][string]$Token)
 
     Write-Step -Message 'settings.xml efimero con el server codeartifact'
-    $path = Join-Path -Path ([System.IO.Path]::GetTempPath()) `
-        -ChildPath "common-settings-$([System.Guid]::NewGuid().ToString('N')).xml"
-
-    $xml = @"
-<settings>
-  <servers>
-    <server>
-      <id>$script:RepositoryId</id>
-      <username>aws</username>
-      <password>$Token</password>
-    </server>
-  </servers>
-</settings>
-"@
+    $uniqueId = [System.Guid]::NewGuid().ToString('N')
+    $fileName = $script:SettingsFilePattern -f $uniqueId
+    $path = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath $fileName
+    $xml = $script:SettingsTemplate.Replace('$Token', $Token)
     [System.IO.File]::WriteAllText($path, $xml, [System.Text.UTF8Encoding]::new($false))
     return $path
 }
@@ -254,39 +229,48 @@ function Remove-CodeArtifactSettings {
 
 function Publish-CommonWithToken {
     param(
-        [Parameter(Mandatory)][string]$Path,
-        [Parameter(Mandatory)][string]$Endpoint,
+        [Parameter(Mandatory)][hashtable]$Context,
         [Parameter(Mandatory)][string]$Token
     )
 
     $settingsPath = New-CodeArtifactSettings -Token $Token
     try {
-        Set-CodeArtifactToken -Token $Token
-        Publish-Common -Path $Path -Endpoint $Endpoint -SettingsPath $settingsPath
+        Set-Item -Path "Env:$script:TokenVariable" -Value $Token
+        Publish-Common -Context $Context -SettingsPath $settingsPath
     }
     finally {
-        Clear-CodeArtifactToken
+        Remove-Item -Path "Env:$script:TokenVariable" -ErrorAction SilentlyContinue
         Remove-CodeArtifactSettings -Path $settingsPath
     }
 }
 
-# Facade: apply -> endpoint -> token -> deploy -> confirmación.
+function Test-DryRunStop {
+    if ($DryRun) {
+        Write-Step -Message 'DryRun: no se publica. Endpoint y token OK.'
+        return $true
+    }
+
+    return $false
+}
+
+# Facade: endpoint -> token -> deploy -> confirmación.
 function Invoke-PublishCommon {
     Write-Step -Message 'Inicio de la publicación de common'
 
-    $terraformPath = Resolve-Directory -Path $TerraformDirectory
-    $commonPath = Resolve-Directory -Path $CommonDirectory
-
-    Initialize-Terraform -Path $terraformPath -Apply (-not $SkipApply)
-
-    $endpoint = Get-RepositoryEndpoint -Path $terraformPath
-    Write-Step -Message "Endpoint: $endpoint"
+    $context = New-PublishContext -Path (Resolve-Directory -Path $CommonDirectory) -Endpoint (Get-RepositoryEndpoint)
+    Write-Step -Message "Endpoint: $($context.Endpoint)"
 
     $token = Get-CodeArtifactToken
-    Publish-CommonWithToken -Path $commonPath -Endpoint $endpoint -Token $token
+
+    if (Test-DryRunStop) {
+        return
+    }
+
+    Publish-CommonWithToken -Context $context -Token $token
 
     Confirm-PublishedPackages
     Write-Step -Message 'common publicado.'
 }
 
 Invoke-PublishCommon
+exit 0
