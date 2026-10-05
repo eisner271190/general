@@ -47,6 +47,7 @@ param(
   [string[]]$DynamoDbTableNames = @('quizapiSubscription', 'quizapiWebhookEvent'),
   [string]$TopicName = 'main-topic',
   [string]$UserPoolName = 'user-management-user-pool',
+  [string]$UserPoolDomain = 'user-management-domain',
   [string[]]$RoleNames = @('quizapi', 'CognitoAuthenticatedRole'),
   [string[]]$PolicyNames = @('CognitoPolicy'),
   [string[]]$LogGroupNames = @('/aws/lambda/quizapi'),
@@ -64,7 +65,7 @@ param(
   [string]$BumpProject = 'platform-bump-bom',
   [string]$ReleaseRule = 'common-release',
   [string]$CodeArtifactDomain = 'epc',
-  [string[]]$CodeArtifactRepositories = @('maven-central', 'common')
+  [string[]]$CodeArtifactRepositories = @('common', 'maven-central')
 )
 
 # La plataforma entra por defecto. -SkipPlatform es el opt-out explicito.
@@ -124,7 +125,7 @@ function Get-ListFrom {
 function Test-IsMissingError {
   # Clasifica errores que solo indican que el recurso ya no existe.
   param([string]$Message)
-  return ($Message -match 'NotFound|NoSuchEntity|ResourceDeleted|does not exist|RepositoryNotFoundException|QueueDoesNotExist')
+  return ($Message -match 'NotFound|NoSuchEntity|ResourceDeleted|does not exist|RepositoryNotFoundException|DomainNotFound|QueueDoesNotExist')
 }
 
 # --- recoleccion de objetivos ----------------------------------------------
@@ -209,10 +210,11 @@ foreach ($apiObject in Get-ListFrom $apis 'Items') {
   Add-Target -Servicio 'API Gateway' -Recurso $apiObject.Name -AwsArguments @('apigatewayv2', 'delete-api', '--api-id', $apiObject.ApiId)
 }
 
-# Cognito (al borrar el pool caen client y domain)
+# Cognito (el dominio va primero: DeleteUserPool falla si el pool tiene un dominio configurado)
 $pools = $query.Cognito.Data
 foreach ($poolObject in Get-ListFrom $pools 'UserPools') {
   if ($poolObject.Name -ne $UserPoolName) { continue }
+  Add-Target -Servicio 'Cognito' -Recurso "$UserPoolDomain (dominio)" -AwsArguments @('cognito-idp', 'delete-user-pool-domain', '--domain', $UserPoolDomain, '--user-pool-id', $poolObject.Id)
   Add-Target -Servicio 'Cognito' -Recurso $poolObject.Name -AwsArguments @('cognito-idp', 'delete-user-pool', '--user-pool-id', $poolObject.Id)
 }
 
@@ -299,7 +301,7 @@ foreach ($policyObject in Get-ListFrom $iamPolicies 'Policies') {
 # ejecucion los recorre en ese orden. Dependencias:
 #   pipeline -> proyectos CodeBuild (CodePipeline borra stages, no los proyectos)
 #   regla    -> remove-targets antes de delete-rule
-#   dominio  -> repos antes que el dominio (si no, RepositoryNotFoundException)
+#   dominio  -> `common` antes que `maven-central` (no se puede borrar un upstream en uso)
 #   S3       -> el bucket esta versionado: hay que vaciar todas las versiones antes
 
 if ($includePlatform) {
@@ -309,7 +311,7 @@ if ($includePlatform) {
     Add-Target -Servicio 'CodeBuild' -Recurso $projectName -AwsArguments @('codebuild', 'delete-project', '--name', $projectName)
   }
 
-  Add-Target -Servicio 'EventBridge' -Recurso $ReleaseRule -AwsArguments @('events', 'remove-targets', '--rule', $ReleaseRule)
+  # `remove-targets` exige --targets y no hace falta: DeleteRule ya se lleva los targets.
   Add-Target -Servicio 'EventBridge' -Recurso $ReleaseRule -AwsArguments @('events', 'delete-rule', '--name', $ReleaseRule)
 
   foreach ($repositoryName in $PlatformRepositories) {
