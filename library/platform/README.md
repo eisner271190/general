@@ -5,17 +5,20 @@ Un solo repositorio con la configuración compartida de CI. No es una aplicació
 ```
 buildspecs/          Buildspecs para CodePipeline (CodeBuild), publicados en s3://epc-buildspecs/
 scripts/             Publicación de los buildspecs al bucket y de `common` a CodeArtifact
-terraform/           Dominio y repositorio maven de CodeArtifact (declarativo, lo aplica el usuario)
+terraform/           Plataforma: CodeArtifact, bucket de buildspecs, ECR, IAM, pipeline de `common`
+                     y los dos builds de automatización (declarativo, lo aplica el usuario)
 ```
 
 ## CodeArtifact: publicar `common`
 
 `terraform/` crea el dominio `epc` y el repositorio maven `common`, con Maven Central como
-upstream. No hay CMK ni secretos: el token de CodeArtifact dura 12 h y se pide en el momento
-(ADR-0022).
+upstream, y **el resto de la plataforma**: bucket `epc-buildspecs` (versionado, sin acceso
+público, también artifact store), ECR `epc/common-base`, los roles IAM, el pipeline `common` con
+sus dos CodeBuild y los dos builds de automatización. No hay CMK ni secretos en los `.tf`: los dos
+secretos de Secrets Manager se **declaran vacíos** y los siembra el usuario.
 
 ```bash
-cp terraform/terraform.example.tfvars terraform/terraform.tfvars   # ajustar region y domain_name
+cp terraform/terraform.example.tfvars terraform/terraform.tfvars   # ajustar los valores
 pwsh scripts/publish-common.ps1
 ```
 
@@ -54,6 +57,9 @@ AWS_REGION=us-east-1 ./scripts/publish-buildspecs.sh
 ## Requisitos
 
 - Bucket `epc-buildspecs` **en la misma región** que el proyecto CodeBuild (requisito del ARN).
+  Lo crea `terraform/`, no hace falta hacerlo a mano.
+- Repos de CodeCommit `common` y `platform` **antes** del primer build: los crea el usuario y
+  Terraform solo compone su ARN (no se declaran como recursos).
 
 ## Renovate y versión del BOM (`common` es CodeCommit)
 
@@ -87,7 +93,17 @@ Dos secretos en Secrets Manager:
 | Secreto | Claves | Para qué |
 | --- | --- | --- |
 | `epc/<env>/codecommit-git` | `username`, `password` | Git HTTPS de CodeCommit: `GIT_USERNAME` / `GIT_PASSWORD` de ambos builds |
-| `epc/<env>/codeartifact` | `token` | `MAVEN_PASSWORD` del build de Renovate (con `RENOVATE_DETECT_HOST_RULES_FROM_ENV=true`, `MAVEN_USERNAME=aws`) |
+| `epc/<env>/codeartifact` | `token` | `CODEARTIFACT_AUTH_TOKEN` del pipeline de `common` y `MAVEN_PASSWORD` del build de Renovate (con `RENOVATE_DETECT_HOST_RULES_FROM_ENV=true`, `MAVEN_USERNAME=aws`) |
+
+Los dos secretos los **declara Terraform vacíos** (el valor va por `put-secret-value`):
+
+```bash
+aws secretsmanager put-secret-value --secret-id epc/develop/codeartifact --region us-east-1 \
+  --secret-string "{\"token\":\"$(aws codeartifact get-authorization-token --domain epc --query token --output text)\"}"
+
+aws secretsmanager put-secret-value --secret-id epc/develop/codecommit-git --region us-east-1 \
+  --secret-string '{"username":"<usuario-git>","password":"<password-o-token-git>"}'
+```
 
 En los buildspecs, las credenciales de Git viajan con `GIT_ASKPASS` (en memoria): no se escriben en
 `~/.gitconfig` ni en disco.

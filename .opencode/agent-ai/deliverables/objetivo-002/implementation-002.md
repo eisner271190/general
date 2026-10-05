@@ -870,3 +870,206 @@ ejecutado.
 | 9 | Tag `v*` bumpea BOM y crea PRs (C9) | **No ejecutable**: no existe regla EventBridge, Scheduler ni repos CodeCommit |
 
 Sin commit ni push. No se borró ningún recurso. No se creó ningún recurso fuera de `PLATFORM_REPO`.
+
+## Trabajo 3 — Terraform de plataforma (lo que faltaba en `PLATFORM_REPO`)
+
+Fecha: 2026-10-04. El `integrator` encontró que `library/platform/terraform/` solo declaraba
+CodeArtifact: los ficheros citados en §Trabajo 1 y §Trabajo 2 no existían. Aquí se entregan.
+
+### Archivos creados — `library/platform/terraform/`
+
+- `main.tf` — `data.aws_caller_identity`, `locals` (ARN de CodeCommit compuestos, ARN del paquete
+  CodeArtifact, `codeartifact_url` desde el data source de `outputs.tf`, nombres de proyectos y
+  secretos, etiquetas), bucket `epc-buildspecs` (versionado, sin acceso público, SSE-S3) con sus
+  3 recursos de configuración, ECR `epc/common-base` (inmutable, escaneo en push) y el secreto
+  `epc/<env>/codeartifact` **declarado vacío**.
+- `iam.tf` — 5 roles y sus políticas: `epc-common-publisher`, `epc-common-reader`,
+  `epc-buildspecs-publisher`, `epc-codebuild` (los 4 proyectos CodeBuild) y `epc-common-pipeline`.
+- `main_pipeline.tf` — una llamada al módulo `pipeline`.
+- `pipeline/main.tf` — `common-build` (buildspec `java-ci.yml` por ARN del bucket), `common-publish`
+  (buildspec **inline** de publicación) y el CodePipeline de 3 stages.
+- `pipeline/variables.tf` — 10 variables del módulo (`codeartifact_url` entre ellas).
+- `renovate.tf` — secreto `epc/<env>/codecommit-git` (vacío), proyectos `common-renovate` y
+  `platform-bump-bom`, rol `epc-renovate-scheduler`, `aws_scheduler_schedule`
+  `common-renovate-weekly` y regla `common-release` sobre el evento *Reference Change* de CodeCommit.
+
+### Modificados
+
+- `variables.tf` — se **añaden** 7 variables: `environment`, `buildspecs_bucket`,
+  `ecr_common_base_name`, `common_source_bucket`, `platform_source_bucket`,
+  `platform_source_branch`, `ms_repository_prefix`, `renovate_schedule_expression`. Las dos
+  existentes (`region`, `domain_name`) no se tocan.
+- `terraform.example.tfvars` — la plantilla incluye ya las variables nuevas.
+- `README.md` — el `terraform/` ya no es solo CodeArtifact; secretos a sembrar y requisitos.
+- `library/platform/.gitignore` — una línea: `tfplan*` (un plan guarda el estado en claro).
+- **No tocados**: `codeartifact.tf`, `provider.tf`, `outputs.tf`, `terraform.tfvars`.
+
+### IAM a nivel de bucket (Arreglo / Trabajo 1 aplicado)
+
+El bucket sirve para buildspecs, artifact store, logs y cache de CodeBuild; las claves de las tres
+últimas las genera el servicio, así que **no hay ni un comodín por clave**: `*.yml`, `logs/*` y
+`cache/*` → 0 coincidencias en `iam.tf`.
+
+| Rol | Statements |
+| --- | --- |
+| `epc-codebuild` | `ArtifactStoreBucket` (`GetBucketAcl`, `GetBucketLocation`, `GetBucketVersioning`, `ListBucket`, `PutBucketAcl` sobre el bucket), `ArtifactStoreObjects` (`GetObject`, `GetObjectVersion`, `PutObject`, `DeleteObject` sobre `${bucket.arn}/*`), `GetEcrToken` (`*`) y `PushCommonBase` (5 acciones de push sobre el ARN del repo ECR) |
+| `epc-common-pipeline` | los mismos dos statements de artifact store + `ReadCommonRepository` (CodeCommit acotado al repo `common`) + `StartPipeline` + `RunBuildProjects` (ARN de los 2 proyectos) |
+| `epc-buildspecs-publisher` | `EnumerateBucket` (`ListBucket`, `GetBucketVersioning`) + `UploadBuildspecs` (`PutObject` sobre `${bucket.arn}/*`) |
+| `epc-common-publisher` / `epc-common-reader` | `GetAuthorizationToken` sobre `*` (lo exige la API) + lectura/publicación acotadas al ARN del paquete |
+
+### Buildspec inline de publicación (Arreglo 2 aplicado)
+
+`pipeline/main.tf` → `local.publish_buildspec`: `pre_build` **crea** `~/.m2/settings.xml` con el
+heredoc entre comillas (`<<'SETTINGS'`, `${env.CODEARTIFACT_AUTH_TOKEN}` literal para Maven) y exige
+`CODEARTIFACT_URL`; `build` ejecuta `mvn -B -ntp deploy -Depc.codeartifact.url="${CODEARTIFACT_URL}"`;
+la versión de la release sale de `project.version` del POM raíz (`help:evaluate`); `post_build`
+publica `docker/Dockerfile` como `epc/common-base:<versión>`; `finally` borra el `settings.xml`.
+
+### Los dos flujos de automatización
+
+| Flujo | Disparador | Proyecto |
+| --- | --- | --- |
+| Renovate semanal | `aws_scheduler_schedule` `common-renovate-weekly` → `codebuild:StartBuild` | `common-renovate` (source `common`, buildspec `renovate.yml` por ARN, `MAVEN_USERNAME`/`MAVEN_PASSWORD` y `GIT_USERNAME`/`GIT_PASSWORD` desde Secrets Manager) |
+| Bump por tag `v*` | `aws_cloudwatch_event_rule` `common-release` sobre `aws.codecommit` / *Reference Change* con `prefix = refs/tags/v`, acotada a `repositoryName = common` | `platform-bump-bom` (source `platform`, buildspec `bump-bom.yml`, `MS_REPOSITORY_PREFIX`) |
+
+Los repos de CodeCommit **no** se declaran como recursos (los crea el usuario): sus ARN se componen
+en `locals`. `codeartifact_url` también se compone, desde el data source que ya expone `outputs.tf`.
+
+### Defectos detectados y corregidos durante este trabajo
+
+| # | Defecto | Corrección |
+| --- | --- | --- |
+| 1 | **El stage `Publish` recibía el artefacto del build.** Con `source.type = CODEPIPELINE`, `CODEBUILD_SRC_DIR` es el *input artifact*; `java-ci.yml` no sube artefactos, así que el proyecto de publicación habría recibido un directorio vacío y `mvn deploy` no habría tenido nada que publicar | `input_artifacts = ["common_source"]` (`pipeline/main.tf:213`) |
+| 2 | **Esquema del provider v6 distinto del esperado**: `aws_codebuild_project` no admite `role_arn`, `compute_type`, `image` ni el bloque `env`; exige `service_role` y anida `compute_type`/`image`/`environment_variable` dentro de `environment`. `terraform validate` lo detectó en los 4 proyectos | Los 4 reescritos con el esquema v6 (obtenido de `terraform providers schema -json`, no de memoria) |
+| 3 | **`aws_iam_role.pipeline` no es visible desde el módulo** | El ARN del rol entra como variable `pipeline_role_arn` |
+
+### Evidencia verificada en local
+
+```
+> terraform fmt -check -recursive .        -> fmt-exit=0
+> terraform init -backend=false            -> pipeline in pipeline (módulo local)
+> terraform validate                       -> Success! The configuration is valid.
+> terraform plan -no-color -input=false    -> Plan: 27 to add, 0 to change, 0 to destroy.
+  aws_s3_bucket.buildspecs / versioning / public_access_block / sse
+  aws_ecr_repository.common_base
+  aws_secretsmanager_secret.codeartifact / .codecommit_git
+  aws_iam_role.{common_publisher,common_reader,buildspecs_publisher,codebuild,pipeline,renovate_scheduler}
+  aws_iam_role_policy.* (6)  aws_codebuild_project.{renovate,bump_bom}
+  module.pipeline.{aws_codebuild_project.build, .publish, aws_codepipeline.this}
+  aws_scheduler_schedule.renovate  aws_cloudwatch_event_rule.common_release + target
+
+grep de '*.yml|logs/*|cache/*|buildspecs/*' en iam.tf   -> No matches found
+grep de secretos en *.tf                                -> No matches found
+```
+
+**Buildspec inline renderizado** (sacado del `terraform plan -json` con la URL de ECR sustituida
+para que el plan la muestres literal; sale `unknown` solo porque `repository_url` se calcula en el
+apply) y validado con `ConvertFrom-Yaml`: **YAML válido**, con
+`<password>${env.CODEARTIFACT_AUTH_TOKEN}</password>` literal (el heredoc entre comillas impide que
+lo toque el shell) y `mvn -B -ntp deploy -Depc.codeartifact.url="${CODEARTIFACT_URL}"`.
+
+**Prueba funcional del `settings.xml` generado** (extracción del heredoc, desescapado `$$`→`$`,
+fichero temporal fuera del repo):
+
+```
+> mvn -B -ntp -o -N -s <settings.xml> help:effective-pom -Depc.codeartifact.url=https://epc-.../maven/common/
+  <distributionManagement>
+      <id>codeartifact</id>
+      <url>https://epc-577638384397.d.codeartifact.us-east-1.amazonaws.com/maven/common/</url>
+  </distributionManagement>
+> mvn -B -ntp -o -N help:evaluate -Dexpression=project.version -DforceStdout -q
+  1.0.0
+```
+
+Es decir: el `id` del servidor casa con el de `distributionManagement`, el token se resuelve desde
+la variable de entorno, `-D` sustituye al `CHANGE_ME` del POM y la versión del tag de la imagen sale
+del POM raíz.
+
+### Tareas del usuario para el `apply`
+
+`terraform.tfvars` **no** se ha tocado: se pasa todo por entorno (o se copia la plantilla).
+
+```powershell
+cd library/platform/terraform
+$env:TF_VAR_environment          = "develop"
+$env:TF_VAR_common_source_bucket = "common"
+$env:TF_VAR_platform_source_bucket = "platform"
+terraform init
+terraform plan -out=tfplan        # esperado: 27 to add
+terraform apply tfplan            # terraform apply: lo ejecuta el usuario
+```
+
+Valores por defecto que ya trae el código si no se pasan: `buildspecs_bucket=epc-buildspecs`,
+`ecr_common_base_name=epc/common-base`, `platform_source_branch=main`,
+`ms_repository_prefix=com.quizsmart.app/`, `renovate_schedule_expression=cron(0 4 ? * MON *)`.
+
+Repos de CodeCommit (el pipeline sondea `common`; sin él el Source se queda sin artefacto):
+
+```bash
+aws codecommit create-repository --repository-name common
+aws codecommit create-repository --repository-name platform
+```
+
+Secretos a sembrar **después** del `apply` (Terraform los declara vacíos):
+
+```bash
+aws secretsmanager put-secret-value --region us-east-1 --secret-id epc/develop/codeartifact \
+  --secret-string "{\"token\":\"$(aws codeartifact get-authorization-token --domain epc --query token --output text)\"}"
+
+aws secretsmanager put-secret-value --region us-east-1 --secret-id epc/develop/codecommit-git \
+  --secret-string '{"username":"<usuario-git>","password":"<password-o-token-git>"}'
+```
+
+El usuario de `codecommit-git` necesita `codecommit:GitPush` sobre los repos de ms y el nombre de
+esos repos debe empezar por `ms_repository_prefix`. Después:
+
+```bash
+aws s3 cp platform/buildspecs/java-ci.yml s3://epc-buildspecs/ --region us-east-1   # y los otros 3
+aws codepipeline start-pipeline-execution --name common
+aws scheduler list-schedules --region us-east-1
+aws events list-rules --name-prefix common-release --region us-east-1
+```
+
+### Decisiones asumidas de este trabajo
+
+1. **Un solo rol de CodeBuild** (`epc-codebuild`) para los 4 proyectos: cuatro roles idénticos no
+   aportan nada y son cuatro policies más que revisar.
+2. **`common_reader` confía en `codebuild.amazonaws.com`**: su consumidor son los builds de los ms,
+   no el flujo de publicación de CodeArtifact. El nombre del repositorio maven (`common`) y del
+   bucket no son variables porque los referencian `library/common/settings.xml`, `pom.xml` y
+   `scripts/publish-buildspecs.sh`.
+3. **La versión del tag de la imagen sale del POM raíz** (`mvn help:evaluate`), no de una variable
+   ni del nombre del commit: el POM es la fuente de verdad del número (arquitectura §1.4.1).
+4. **El stage `Publish` consume `common_source`**: es el único modo de que `CODEBUILD_SRC_DIR`
+   contenga el repo, ya que `java-ci.yml` no produce artefactos.
+5. **Sin `logs_config` en los proyectos**: CodeBuild usa su propio bucket de logs gestionado, así
+   que el rol no necesita permisos de S3 para ellos.
+6. **Sin log group de eventos de CodeCommit**: la regla entrega el evento a CodeBuild y ya está
+   registrado en CloudWatch; un log group adicional sería recurso sin consumidor.
+7. **`epc-buildspecs-publisher` se declara sin consumidor en Terraform**: existe para que el
+   bootstrap del usuario suba los buildspecs con ese rol en vez de con permisos de administrador.
+   No se añade un output porque `outputs.tf` queda fuera del alcance de este trabajo; se localiza
+   por nombre.
+8. **`CODEBUILD_SOURCE_REPO_URL` se sobrescribe con la URL HTTPS de CodeCommit** en los 2 proyectos
+   de automatización, para que el clon use `GIT_ASKPASS` (credenciales del secreto). Si CodeBuild
+   no lo respetara, el camino de repliegue es el *credential helper* de `git-codecommit`, que
+   autentica con el rol del build. **No verificable sin AWS**: se comprueba en el primer
+   `start-build`.
+
+### Coste AWS de este trabajo
+
+**0 USD**: solo código y `plan` local (27 recursos por crear, ninguno creado). Cuando el usuario
+aplique, el coste estimado es el de la tabla de §Coste AWS de este documento (< 2 USD/mes), sin
+cambios: el bucket y los roles no se cobran, Scheduler sigue en 4 invocaciones/mes y los builds solo
+corren por release o una vez por semana.
+
+### Estado de los criterios afectados
+
+| # | Criterio | Estado |
+| --- | --- | --- |
+| 6 | Renovate actualiza el BOM y abre PR en cada ms | **Infraestructura declarada** (Scheduler, regla, 2 proyectos, rol). La ejecución sigue requiriendo `apply`, el repos de ms y los secretos |
+| 7 | `epc/common-base` en ECR | **Repositorio declarado**; la publicación la hace el stage `Publish` tras el `apply` |
+| 8 | Pipeline resuelve el buildspec por ARN de S3 | **Declarado y validado**: IAM a nivel de bucket, ARN a la raíz del bucket, buildspec inline que sí puede publicar |
+| 9 | Tag `v*` bumpea BOM y crea PRs | **Declarado**: regla `common-release` + `platform-bump-bom` + `MS_REPOSITORY_PREFIX`. Verificable tras el `apply` |
+
+Sin commit ni push. Sin `terraform apply` ni `destroy`. Sin secretos en ficheros. Sin tocar tests.

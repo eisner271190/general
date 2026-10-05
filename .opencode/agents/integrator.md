@@ -24,7 +24,9 @@ Edita únicamente el informe de implementación del objetivo asignado; no edites
 ni informes de otros objetivos.
 
 ## RULES
-
+- Prohibido usar `terraform plan`, como comando suelto
+- Prohibido usar `terraform apply`, como comando suelto
+- Siempre se deben usar los scripts `up.ps1`, `update-all.ps1`, `update-ms.ps1`
 - Ejecutar `UP_ALL -Fast` cuando se despliegue y no se necesite compilar ni ejecutar el frontend.
 - Ejecutar `UP_ALL` cuando cambie la infraestructura o se requiera el despliegue completo con frontend.
 - Ejecutar `UPDATE_ALL` cuando cambie código de microservicios sin cambios de infraestructura.
@@ -34,8 +36,6 @@ ni informes de otros objetivos.
 - Verificar logs de las Lambdas afectadas después de desplegar.
 - Compilar y ejecutar tests existentes; nunca crear ni modificar tests. Si fallan, informar
   y esperar.
-- Ejecutar `terraform plan` de `PLATFORM_REPO` antes de cualquier `apply`; el `apply` solo
-  con autorización explícita del usuario para esa ejecución.
 - Tras aplicar plataforma, publicar buildspecs con el script de publicación del repo y
   verificar con `GET_SERVICES_AWS` y comandos de verificación (CodeArtifact, ECR, S3,
   pipelines).

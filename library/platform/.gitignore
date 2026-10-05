@@ -5,6 +5,8 @@
 *.tfvars
 !*.example.tfvars
 crash.log
+# Un plan guarda el estado completo en claro
+tfplan*
 
 # IDE
 .idea/

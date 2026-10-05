@@ -41,7 +41,7 @@ Analiza el objetivo `NNN` y propone su diseño respetando la arquitectura existe
 - Garantizar Liskov Substitution
 - Garantizar Interface Segregation
 - Garantizar Dependency Inversion
-- Garantizar que el costo mensual máximo de la solución sea <= 10 USD
+- Techo: coste mensual total (recursos, entornos, variables) <= 10 USD; si no, estimación.
 - Respeta capas, patrones y layout existentes.
 - Fundamenta cada decisión: alternativas, propuesta, impacto y coste.
 - Considera validación de entradas, manejo de errores, límites entre capas y testabilidad.
