@@ -8,7 +8,8 @@
   (quizsmart/app): ECR, Lambda, API Gateway, Cognito, SNS, SQS, DynamoDB, SSM,
   Secrets Manager, IAM y los grupos de log de sus Lambdas — Y LA PLATAFORMA completa de
   library/platform: pipeline, proyectos CodeBuild, regla de release, bucket de buildspecs,
-  repos de CodeCommit, ECR de la imagen base, roles IAM epc-*, y el dominio con sus repos de
+  repos de CodeCommit (los de plataforma y el de la aplicacion), ECR de la imagen base, roles IAM
+  epc-*, y el dominio con sus repos de
   CodeArtifact. Sin parametros borra TODO, sin excepcion.
 
   ATENCION: borrar CodeArtifact destruye los artefactos Maven ya publicados
@@ -61,6 +62,7 @@ param(
   [string]$BuildspecsBucket = 'epc-buildspecs',
   [string]$CommonBaseEcr = 'epc/common-base',
   [string[]]$PlatformRepositories = @('common', 'platform'),
+  [string[]]$ApplicationRepositories = @('com.quizsmart.app'),
   [string]$CommonPipeline = 'common',
   [string]$BumpProject = 'platform-bump-bom',
   [string]$ReleaseRule = 'common-release',
@@ -299,8 +301,9 @@ foreach ($policyObject in Get-ListFrom $iamPolicies 'Policies') {
 #
 # Solo sin -SkipPlatform. El orden importa: se anade en orden de borrado, y el bucle de
 # ejecucion los recorre en ese orden. Dependencias:
+#   repos    -> los de plataforma y el de la aplicacion; no tienen dependencias entre si
 #   pipeline -> proyectos CodeBuild (CodePipeline borra stages, no los proyectos)
-#   regla    -> remove-targets antes de delete-rule
+#   regla    -> los targets de EventBridge se consultan y se quitan uno a uno antes de delete-rule
 #   dominio  -> `common` antes que `maven-central` (no se puede borrar un upstream en uso)
 #   S3       -> el bucket esta versionado: hay que vaciar todas las versiones antes
 
@@ -311,10 +314,18 @@ if ($includePlatform) {
     Add-Target -Servicio 'CodeBuild' -Recurso $projectName -AwsArguments @('codebuild', 'delete-project', '--name', $projectName)
   }
 
-  # `remove-targets` exige --targets y no hace falta: DeleteRule ya se lleva los targets.
+  # DeleteRule falla con ValidationException si la regla tiene targets, y remove-targets exige
+  # --targets Id=<id>. El id lo autogenera Terraform (bump_bom.tf no lo declara: sale como
+  # `common-release-terraform-XXXX` y cambia en cada apply), asi que hay que consultarlo.
+  $ruleTargets = Get-ListFrom (Get-AwsData -AwsArguments @('events', 'list-targets-by-rule', '--rule', $ReleaseRule)) 'Targets'
+  foreach ($ruleTarget in $ruleTargets) {
+    $targetId = $ruleTarget.PSObject.Properties['Id']
+    if ($null -eq $targetId -or $null -eq $targetId.Value) { continue }
+    Add-Target -Servicio 'EventBridge' -Recurso "$ReleaseRule -> target $($targetId.Value)" -AwsArguments @('events', 'remove-targets', '--rule', $ReleaseRule, '--targets', "Id=$($targetId.Value)")
+  }
   Add-Target -Servicio 'EventBridge' -Recurso $ReleaseRule -AwsArguments @('events', 'delete-rule', '--name', $ReleaseRule)
 
-  foreach ($repositoryName in $PlatformRepositories) {
+  foreach ($repositoryName in @($PlatformRepositories) + @($ApplicationRepositories)) {
     Add-Target -Servicio 'CodeCommit' -Recurso $repositoryName -AwsArguments @('codecommit', 'delete-repository', '--repository-name', $repositoryName)
   }
 

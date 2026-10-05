@@ -3,6 +3,14 @@
 .SYNOPSIS
     Levanta la aplicación completa (cloud -> backend -> frontend).
 .DESCRIPTION
+    0. platform               : library/platform/scripts/up.ps1. Crea el dominio de CodeArtifact,
+                                sin el cual el build del backend no puede resolver `common`. Con
+                                -SkipPlatform se omite.
+    0b. publish common        : library/platform/scripts/publish-common.ps1. Publica los paquetes
+                                Maven de `common`; sin ellos el pom del microservicio no resuelve el
+                                common-bom y `docker build` falla.
+    0c. publish buildspecs     : library/platform/scripts/publish-buildspecs.ps1. Los buildspecs se
+                                referencian por ARN; sin ellos en el bucket el pipeline no arranca.
     1. cloud  -Phase Bootstrap : crea el repositorio ECR.
     2. backend -Phase Build    : build + push de la imagen de cada microservicio.
     3. cloud  -Phase Apply     : plan + apply de toda la infraestructura.
@@ -38,6 +46,15 @@
     ./up.ps1 -Fast
 .EXAMPLE
     ./up.ps1 -AutoApprove:$false
+.PARAMETER PlatformRoot
+    Raiz de la plataforma (el repo `library/platform` del monorepo). Es un paso previo: sin el
+    dominio de CodeArtifact el build del backend no puede resolver `common`. Por defecto se
+    resuelve como `../../../library/platform`, que es donde vive junto a `projects/`.
+.PARAMETER SkipPlatform
+    Omite el paso de plataforma. Util cuando la plataforma ya esta desplegada y solo se
+    actualiza la aplicacion.
+.EXAMPLE
+    ./up.ps1 -SkipPlatform
 #>
 [CmdletBinding()]
 param(
@@ -46,7 +63,9 @@ param(
     [switch]$PlanOnly,
     [switch]$SkipFrontend,
     [switch]$Fast,
-    [string]$DeviceId = ''
+    [string]$DeviceId = '',
+    [string]$PlatformRoot = (Join-Path -Path $PSScriptRoot -ChildPath '../../library/platform'),
+    [switch]$SkipPlatform
 )
 
 Set-StrictMode -Version Latest
@@ -141,6 +160,61 @@ function Get-ComponentScript {
     Write-LogDetail -Message "descubrimiento total=$($scripts.Count)"
 
     return $scripts
+}
+
+function Invoke-PlatformStage {
+    # El dominio de CodeArtifact lo declara la plataforma, no la aplicacion. Sin el,
+    # `aws codeartifact get-repository-endpoint` falla en el paso 2 y no hay build.
+    if ($SkipPlatform) {
+        Write-LogDetail -Message 'paso 0/5 plataforma omitida (SkipPlatform)'
+        return
+    }
+
+    $path = Join-Path -Path $PlatformRoot -ChildPath 'scripts/up.ps1'
+    if (-not (Test-Path -Path $path)) {
+        # No es un error: se puede desplegar solo la aplicacion si la plataforma ya existe en otra
+        # parte. Se avisa y se sigue, en vez de abortar por una ruta.
+        Write-Log -Message "Plataforma no encontrada en $path; se omite el paso 0 (usa -SkipPlatform para silenciarlo)"
+        return
+    }
+
+    Write-LogDetail -Message "paso 0/5 plataforma path=$path"
+    Invoke-ComponentScript -Path $path -Arguments @{ AutoApprove = [bool]$AutoApprove }
+
+    Invoke-PlatformPublishStage -PlatformRoot $PlatformRoot
+}
+
+# Sin los paquetes Maven publicados, el `pom.xml` de cada microservicio no resuelve el import del
+# common-bom y `docker build` falla sin versiones en todas las dependencias.
+function Invoke-PlatformPublishStage {
+    param([Parameter(Mandatory)][string]$PlatformRoot)
+
+    $publish = Join-Path -Path $PlatformRoot -ChildPath 'scripts/publish-common.ps1'
+    if (-not (Test-Path -Path $publish)) {
+        Write-Log -Message "publish-common.ps1 no encontrado en $publish; se omite (los paquetes ya deben estar en CodeArtifact)"
+        return
+    }
+
+    Write-LogDetail -Message "paso 0b/5 publica common en CodeArtifact path=$publish"
+    Invoke-ComponentScript -Path $publish -Arguments @{}
+
+    Invoke-PlatformBuildspecsStage -PlatformRoot $PlatformRoot
+}
+
+# Los buildspecs se referencian por ARN desde el pipeline y los proyectos CodeBuild, asi que sin
+# ellos en el bucket el pipeline falla al arrancar. El script es idempotente (compara MD5), asi
+# que invocarlo siempre no genera versiones nuevas.
+function Invoke-PlatformBuildspecsStage {
+    param([Parameter(Mandatory)][string]$PlatformRoot)
+
+    $publish = Join-Path -Path $PlatformRoot -ChildPath 'scripts/publish-buildspecs.ps1'
+    if (-not (Test-Path -Path $publish)) {
+        Write-Log -Message "publish-buildspecs.ps1 no encontrado en $publish; se omite (los buildspecs deben estar ya en el bucket)"
+        return
+    }
+
+    Write-LogDetail -Message "paso 0c/5 publica buildspecs en el bucket path=$publish"
+    Invoke-ComponentScript -Path $publish -Arguments @{}
 }
 
 function Invoke-CloudPhase {
@@ -258,7 +332,9 @@ function Invoke-FrontendStage {
 function Invoke-ApplicationUp {
     Write-Log -Message 'Iniciando despliegue'
     Write-LogDetail -Message "log=$script:LogFile"
-    Write-LogDetail -Message "aplicacion={{ APPLICATION_NAME }} environment=$Environment autoApprove=$AutoApprove planOnly=$PlanOnly skipFrontend=$SkipFrontend fast=$Fast deviceId=$DeviceId"
+    Write-LogDetail -Message "aplicacion={{ APPLICATION_NAME }} environment=$Environment autoApprove=$AutoApprove planOnly=$PlanOnly skipFrontend=$SkipFrontend fast=$Fast deviceId=$DeviceId platformRoot=$PlatformRoot skipPlatform=$SkipPlatform"
+
+    Invoke-PlatformStage
 
     Write-LogDetail -Message 'paso 1/5 cloud bootstrap (crea ECR)'
     Invoke-CloudPhase -Phase 'Bootstrap' -Arguments @{ Environment = $Environment; AutoApprove = $true }

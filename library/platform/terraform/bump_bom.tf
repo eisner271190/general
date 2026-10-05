@@ -44,8 +44,7 @@ resource "aws_codebuild_project" "bump_bom" {
   }
 
   artifacts {
-    type     = "S3"
-    location = var.buildspecs_bucket
+    type = "CODEPIPELINE"
   }
 
   tags = local.tags

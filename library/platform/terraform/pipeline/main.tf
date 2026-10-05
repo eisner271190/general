@@ -104,9 +104,10 @@ resource "aws_codebuild_project" "build" {
     buildspec = "arn:aws:s3:::${var.buildspecs_bucket}/java-ci.yml"
   }
 
+  # El API de CodeBuild exige artifacts.type = CODEPIPELINE cuando source.type = CODEPIPELINE.
+  # El bucket sigue siendo el artifact store del pipeline (artifact_store), no del proyecto.
   artifacts {
-    type     = "S3"
-    location = var.artifact_bucket_name
+    type = "CODEPIPELINE"
   }
 
   tags = var.tags
@@ -145,9 +146,10 @@ resource "aws_codebuild_project" "publish" {
     buildspec = local.publish_buildspec
   }
 
+  # El API de CodeBuild exige artifacts.type = CODEPIPELINE cuando source.type = CODEPIPELINE.
+  # El bucket sigue siendo el artifact store del pipeline (artifact_store), no del proyecto.
   artifacts {
-    type     = "S3"
-    location = var.artifact_bucket_name
+    type = "CODEPIPELINE"
   }
 
   tags = var.tags

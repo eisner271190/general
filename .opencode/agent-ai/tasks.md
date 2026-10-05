@@ -5,18 +5,29 @@ Filas con identificador estable: sincronizadas por `taskkeeper`. Filas sin ident
 ## Objetivo 002
 
 - [x] [002-C2] [usuario] Publicar `common` en CodeArtifact y comprobar que un proyecto externo resuelve el BOM.
-- [ ] [002-C7] [usuario] Publicar `epc/common-base` en ECR y probar el Dockerfile del piloto.
+- [ ] [002-C7] [usuario] Publicar `epc/common-base` en ECR y probar el Dockerfile del piloto. El repo ECR
+  existe pero sin imágenes: la construye el stage Publish del pipeline de `common`, que necesita un tag `v*`.
 - [ ] [002-C8] [usuario] Aplicar Terraform y ejecutar el pipeline que usa el buildspec del bucket S3.
+  El apply funcionó (`Apply complete! Resources: 26 added`) y el pipeline se creó, pero la cuenta quedó vacía
+  a las 17:49: hay que volver a desplegar con `library/platform/scripts/up.ps1 -AutoApprove`.
 - [ ] [002-C9] [usuario] Verificar en AWS el trigger de release y los PRs de actualización de BOM.
+  Depende de volver a desplegar (`[002-C8]`) y del tag `v1.0.0` en el repo `common`.
 - [x] [002-C10] [usuario] Actualizar los imports de tests del piloto y ejecutar la suite para cerrar la migración.
 - [x] [002-C11] [usuario] Declarar en Terraform los dos repos de plataforma `common` y `platform` (CodeCommit).
 - [x] [002-C12] [usuario] Trabajar sin secretos: token de CodeArtifact pedir por rol IAM y Git con credential-helper.
 - [ ] [002-C13] [usuario] Emitir un único PR por release de `common` en `com.quizsmart.app`.
+  Depende de volver a desplegar (`[002-C8]`) y del tag `v1.0.0` en el repo `common`. El criterio sigue
+  siendo un único PR por release.
 - [x] [002-C14] [usuario] Entregar los scripts de despliegue en PowerShell: `platform/scripts/up.ps1`, `publish-common.ps1` (sin apply) y `publish-buildspecs.ps1`.
 - [x] [002-C15] [usuario] Generador: plantilla Terraform del repo en el componente cloud y `up.ps1` que crea el repo, añade el remoto y empuja.
-- [ ] [002-C17] [usuario] Conectar los remotos de `common` y `platform` en git: es el único paso manual
-  que queda, sin script detrás (`STATUS/status.md`, pendiente 4).
-- [ ] [002-C16] [usuario] Añadir `environment` y `application_repository` al `terraform.tfvars` local de `library/platform/terraform/` antes del siguiente `plan`/`apply`: ambas variables han perdido su valor por defecto.
+- [x] [002-C17] [usuario] Conectar los remotos de `common` y `platform` en git: automatizado en
+  `library/platform/scripts/seed-repos.ps1`, que copia `library/common` y `library/platform` a carpetas
+  temporales, hace `git init`, un commit y push a los repos CodeCommit `common` y `platform`. No toca el
+  índice del monorepo `general`. Idempotente, con `-DryRun` y `-KeepTemp`.
+- [x] [002-C16] [usuario] Añadir `environment` y `application_repository` al `terraform.tfvars` local de
+  `library/platform/terraform/`: hecho con `environment = "develop"` y
+  `application_repository = "com.quizsmart.app"` (fichero local, gitignored). Apply correcto con
+  `library/platform/scripts/up.ps1 -AutoApprove`.
 
 ## Notas de alcance
 
@@ -38,3 +49,27 @@ Filas con identificador estable: sincronizadas por `taskkeeper`. Filas sin ident
   (ADR-0024), así que el `terraform.tfvars` local es obligatorio antes de cualquier `plan`/`apply`.
 - Endurecimiento de calidad de los cinco scripts con `clean-code` y `epc-clean-code`; en el camino se
   corrigieron dos bugs reales.
+- Correcciones entregadas hoy sin tarea propia (notas, sin identificador nuevo):
+  - Bug real de API de CodeBuild: `source { type = "CODEPIPELINE" }` exige
+    `artifacts { type = "CODEPIPELINE" }`. Con `artifacts.type = "S3"` los 3 proyectos CodeBuild fallaban
+    con `InvalidInputException` y el `apply` se caía. Corregido en
+    `library/platform/terraform/pipeline/main.tf` y `library/platform/terraform/bump_bom.tf`.
+    `terraform validate` no lo detecta: solo valida esquema, no reglas del API de AWS.
+  - El Credential Manager de Windows (`credential.helper = manager`, en el config de sistema de Git) se
+    ejecutaba antes que el helper de CodeCommit y abría un diálogo de usuario/contraseña. Resuelto en
+    `seed-repos.ps1` con `-c credential.helper=` y `$env:GIT_TERMINAL_PROMPT='0'`.
+  - `delete-all-services-aws.ps1`: ahora borra plataforma y app por defecto (20 recursos), consulta y quita
+    los targets de EventBridge antes de `delete-rule` (el id lo autogenera Terraform, no se puede
+    hardcodear) y borra también `com.quizsmart.app` vía `-ApplicationRepositories`. Sigue pidiendo
+    confirmación `SI` o `-Force`.
+  - `up.ps1` de la aplicación y su plantilla Scriban
+    (`generator/components/root/workspace/templates/up.ps1.scriban`) sincronizados con tres pasos previos
+    idempotentes: paso 0 `library/platform/scripts/up.ps1` (crea el dominio de CodeArtifact; sin él,
+    `docker build` falla con `ResourceNotFoundException`), paso 0b `publish-common.ps1` (sin los paquetes
+    Maven, el `pom.xml` no resuelve el `common-bom` y `docker build` falla), paso 0c
+    `publish-buildspecs.ps1` (los buildspecs se referencian por ARN; sin ellos el pipeline no arranca).
+    Parámetros nuevos: `-PlatformRoot` (por defecto `../../library/platform`) y `-SkipPlatform`.
+- Pendiente antes del tag: verificar que `com.quizsmart.app` tiene commits y `backend/quizapi/pom.xml`,
+  porque `POM_GLOB = "backend/*/pom.xml"` y sin ese pom el PR saldría vacío.
+- Hoy 2026-10-05: el apply de `[002-C16]` creó 26 recursos (antes 25 en el plan), pero la cuenta quedó vacía
+  a las 17:49. `[002-C8]`, `[002-C7]`, `[002-C9]` y `[002-C13]` siguen abiertas por eso.
