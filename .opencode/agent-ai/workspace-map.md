@@ -47,6 +47,7 @@ Una duda resuelta **no se archiva**: su respuesta, si es una decisión con conse
 | UP_ALL | `projects/{APPLICATION_ID}/up.ps1` (rápido: `-Fast`) |
 | UPDATE_ALL | `projects/{APPLICATION_ID}/backend/update-all.ps1` |
 | DOWN_ALL | `projects/{APPLICATION_ID}/down.ps1` |
+| PLATFORM_REPO | library/platform/ |
 
 ## Templates (base `.opencode/`)
 

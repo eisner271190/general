@@ -9,4 +9,4 @@ Filas con identificador estable: sincronizadas por `taskkeeper`. Filas sin ident
 - [ ] [002-C7] [usuario] Publicar `epc/common-base` en ECR y probar el Dockerfile del piloto.
 - [ ] [002-C8] [usuario] Aplicar Terraform y ejecutar el pipeline que usa el buildspec del bucket S3.
 - [ ] [002-C9] [usuario] Verificar en AWS el trigger de release y los PRs de actualización de BOM.
-- [ ] [002-C10] [usuario] Actualizar los imports de tests del piloto y ejecutar la suite para cerrar la migración.
+- [x] [002-C10] [usuario] Actualizar los imports de tests del piloto y ejecutar la suite para cerrar la migración.

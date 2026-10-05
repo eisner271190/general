@@ -727,3 +727,146 @@ Lo que costará cuando el usuario aplique el Terraform (estimaciones de la arqui
 Decisiones de coste tomadas aquí: bucket sin acceso público, KMS gestionada (sin CMK propia: +1
 USD/mes evitado), pipeline con sondeo en vez de webhook, y buildspec de publicación **inline** en el
 Terraform en vez de un `publish-artifacts.yml` extra que habría que subir a S3.
+
+## Integración y verificación AWS — 2026-10-04
+
+- `GET_SERVICES_AWS` (solo lectura, `us-east-1`, cuenta `577638384397`): CodeArtifact `epc/common`
+  y `maven-central` están presentes; `common-bom`, `common-error`, `common-log` y `common-web`
+  versión `1.0.0` figuran publicados y OK. El endpoint AWS coincide con el output Terraform.
+- No se encontraron ECR, Lambda, API Gateway, SNS, SQS ni roles/policies de `quizapi` en AWS; el
+  estado Terraform local enumera 59 recursos de `quizapi`. Existe desfase entre estado local y AWS.
+- Plan de solo lectura mediante `projects/com.quizsmart.app/cloud/up.ps1 -PlanOnly`: app, **1 por
+  crear, 0 cambios, 0 destruir**; quizapi, **54 por crear, 0 cambios, 0 destruir**. Evidencia:
+  `projects/com.quizsmart.app/cloud/logs/2026-10-04-18-56-59.log`. No se ejecutó `apply`.
+- Compilación/suite existente: `mvn -B -ntp test` en `projects/com.quizsmart.app/backend/quizapi`
+  falló durante `testCompile` por 3 imports obsoletos del paquete eliminado
+  `com.quizsmart.app.infrastructure.rest.response` en `HolaMundoControllerTest` (2) y
+  `ParameterControllerTest` (1). No se modificaron tests. No se continúa el despliegue hasta que
+  Developer corrija el bloqueo o el usuario indique el siguiente paso.
+- No hay Lambda desplegada que permita verificar logs. Sin `apply`, este ciclo no incurrió en coste
+  AWS atribuible a despliegue; no se estiman cargos normales del CodeArtifact existente.
+- Resultado: **despliegue bloqueado** por pruebas fallidas antes del `apply`. El defecto está en
+  imports de tests que requieren actualización → `developer`; no es un fallo de arquitectura.
+- Pendiente: resolver esos imports fuera de este rol; volver a ejecutar `mvn test`, desplegar la
+  infraestructura autorizada y la aplicación según `UP_ALL`; después revisar estado AWS y logs de
+  las Lambdas afectadas. No se borraron recursos ni se hizo commit/push.
+
+## Despliegue de `PLATFORM_REPO` — 2026-10-04 20:20–20:34
+
+Alcance recibido: `plan` + `apply` de `PLATFORM_REPO` con variables reales, publicar buildspecs,
+publicar `epc/common-base:1.0.0` en ECR, arrancar el pipeline `common` y verificar el trigger por tag
+y los PRs de BOM. Autorización del usuario: "integrador despliega completo" / "Ok. Procede".
+
+### Resultado: aplicado lo declarado; **bloqueado en el punto 2**
+
+`PLATFORM_REPO` (`library/platform/`) **solo declara CodeArtifact**. No existe en el repo —ni en
+HEAD, ni en el historial de git (`git ls-tree -r HEAD -- platform` → 0 ficheros)— el bucket
+`epc-buildspecs`, el ECR `epc/common-base`, los roles IAM, el CodePipeline de `common`, los proyectos
+CodeBuild, el Scheduler ni la regla de evento por tag. Los ficheros citados en §Trabajo 1 y §Trabajo 2
+de este mismo informe (`platform/iam.tf`, `platform/main.tf`, `platform/main_pipeline.tf`,
+`platform/pipeline/`, `platform/renovate.tf`, `platform/variables.tf`) **no existen**: sus números de
+línea y sus variables (`TF_VAR_environment`, `TF_VAR_common_source_bucket`,
+`TF_VAR_platform_source_bucket`, `TF_VAR_ms_repository_prefix`,
+`TF_VAR_renovate_schedule_expression`) apuntan a ficheros inexistentes.
+
+### 1. `plan` y `apply` — ejecutado
+
+```
+> cd library/platform/terraform
+> terraform fmt -check -recursive .        -> fmt-exit=0
+> terraform validate                      -> Success! The configuration is valid.
+> terraform plan -no-color -input=false
+  aws_codeartifact_domain.epc:            Refreshing state... [id=arn:aws:codeartifact:us-east-1:577638384397:domain/epc]
+  aws_codeartifact_repository.maven_central: Refreshing state...
+  aws_codeartifact_repository.common:      Refreshing state...
+  No changes. Your infrastructure matches the configuration.
+> terraform apply -auto-approve -no-color -input=false
+  Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+  codeartifact_endpoint = "https://epc-577638384397.d.codeartifact.us-east-1.amazonaws.com/maven/common/"
+```
+
+- Variables reales disponibles: **solo `region` y `domain_name`** (`variables.tf:1-14`, valores en
+  `terraform.tfvars:6-7`). El resto del juego de variables del encargo no existe.
+- **0 cambios**: el estado local ya coincide con AWS; el `apply` fue un no-op (0/0/0). Sin coste.
+- Sin borrados, sin recursos fuera de `PLATFORM_REPO`.
+
+### 2. Publicación de buildspecs — **bloqueado**
+
+```
+=== S3 buckets (us-east-1) ===
+app-20250717231135  com-quizsmart-app-aab-artifacts  com.quizsmart.app-aab-artifacts
+quiz-epc-politica-privacidad
+```
+
+- El bucket **`epc-buildspecs` no existe** y **no está declarado en Terraform**. `aws s3 ls
+  s3://epc-buildspecs/` es imposible; `scripts/publish-buildspecs.sh:12` (`aws s3 sync ... s3://${BUCKET}/`)
+  fallaría.
+- Ejecutado además `bash scripts/publish-buildspecs.sh` → **no arranca en esta máquina**:
+  `WSL (1416) ERROR: execvpe(/bin/bash) failed: No such file or directory` (no hay bash/WSL).
+- **No se creó el bucket a mano**: hacerlo sería crear recurso fuera de la fuente de verdad
+  (Terraform) y sin versionado/políticas declaradas → riesgo nuevo, fuera del alcance autorizado.
+
+### 3-5. ECR, pipeline `common`, trigger por tag — **bloqueado**
+
+```
+=== ECR describe-repositories ===        (vacío)
+=== CodePipeline list-pipelines ===      (vacío)
+=== CodeBuild list-projects ===         (vacío)
+=== Scheduler list-schedules ===        (vacío)
+=== Events list-rules ===               (vacío)
+=== CodeCommit list-repositories ===     (vacío)
+```
+
+- **ECR 0 repositorios** en la cuenta: `epc/common-base:1.0.0` no se puede publicar (Docker 29.8.0 sí
+  está disponible, verificado). No se creó el repo a mano por el mismo motivo que en el punto 2.
+- **No existe pipeline `common`** → `start-pipeline-execution` no tiene objetivo. **C8 no verificable.**
+- **No existe Scheduler ni regla EventBridge ni repos CodeCommit** → **C9 no verificable**: el tag
+  `v*` no tiene regla que lo escuche, `common` no existe como repo y los ms tampoco, así que
+  `bump-bom-version.py` no tiene sobre qué actuar aunque se arrancase el build.
+
+### CodeArtifact — verificado (único recurso del ciclo que existe)
+
+```
+com.epc.common:common-bom     -> 1.0.0 [Published]
+com.epc.common:common-error   -> 1.0.0 [Published]
+com.epc.common:common-log     -> 1.0.0 [Published]
+com.epc.common:common-web     -> 1.0.0 [Published]
+endpoint Terraform == AWS: https://epc-577638384397.d.codeartifact.us-east-1.amazonaws.com/maven/common/
+```
+
+4 paquetes `com.epc.common` publicados (los 3 módulos + BOM; `common-parent` correctamente ausente,
+ADR-0020). CA #2 sigue pendiente del `dependency:get` externo, que este rol no ejecuta.
+
+### Hallazgos por severidad
+
+| Sev | Hallazgo | Ubicación |
+| --- | --- | --- |
+| **Bloqueante** | La infraestructura de plataforma que el encargo pide desplegar **no existe en `PLATFORM_REPO`**; los cinco puntos del encargo salvo el 1 son inejecutables | `library/platform/terraform/` (solo `codeartifact.tf`, `variables.tf`, `provider.tf`, `outputs.tf`) |
+| **Bloqueante** | `implementation-002.md` cita ficheros con línea que **no están en el repo**: §Trabajo 1 (`platform/iam.tf:79-107`, `:165-186`) y §Trabajo 2 (`platform/renovate.tf`, `platform/variables.tf`, `platform/pipeline/main.tf:95`) | `.opencode/agent-ai/deliverables/objetivo-002/implementation-002.md:551-566` y `:591-601` |
+| **Alta** | `architecture-002.md` §1.5/§1.7/§2 Cloud y el encargo piden bucket, ECR, roles, pipeline, CodeBuild y Scheduler como **Terraform declarativo**; no están declarados ni entregados | `.opencode/agent-ai/deliverables/objetivo-002/architecture-002.md:206-213`, `:389-392` |
+| **Media** | `publish-buildspecs.sh` es **intransportable en Windows**: no hay bash/WSL en esta máquina, así que la publicación de buildspecs depende de WSL, Git Bash o de un runner Linux | `library/platform/scripts/publish-buildspecs.sh:1` |
+| **Media** | `library/platform/scripts/__pycache__/open-codecommit-prs.cpython-313.pyc` está **versionado** en git (binario dentro del repo de plataforma) | `library/platform/scripts/__pycache__/` |
+| **Baja** | El bucket `quiz-epc-politica-privacidad` existe en la cuenta pero **no está en ningún Terraform** del workspace: recurso huérfano fuera del estado | `aws s3api list-buckets` |
+
+**Reparto de responsabilidades**: el defecto no está en la implementación de `common` (que compila y
+está publicada) ni en la arquitectura —que sí especifica la infraestructura—, sino en que **el
+Terraform de plataforma no fue entregado**. Es trabajo de código → `developer` (crear
+`main.tf`/`iam.tf`/`s3.tf`/`ecr.tf`/`pipeline/`/`renovate.tf` y sus variables), con revisión de
+`architect` si se confirma que el diseño de IAM/Scheduler de §Trabajo 1–2 es el Wanted.
+
+### Coste AWS de este ciclo
+
+**0 USD**. `apply` con 0/0/0 recursos; ninguna creación en AWS; ningún build, pipeline ni Scheduler
+ejecutado.
+
+### Estado de los criterios tras el despliegue
+
+| # | Criterio | Estado |
+| --- | --- | --- |
+| 2 | `common` en CodeArtifact y un proyecto externo resuelve el BOM | **Parcial**: 4 paquetes `1.0.0` publicados y verificados; falta el `dependency:get` externo (F4) |
+| 6 | Renovate actualiza el BOM y abre PR en cada ms | **No verificable**: no hay Scheduler, CodeBuild, CodeCommit ni ms |
+| 7 | `epc/common-base` en ECR | **No verificable**: ECR vacío y el repo no está declarado en Terraform (`Dockerfile` del ms ya está en 4 líneas) |
+| 8 | Pipeline resuelve el buildspec por ARN de S3 (C8) | **No ejecutable**: no existe bucket ni pipeline `common` |
+| 9 | Tag `v*` bumpea BOM y crea PRs (C9) | **No ejecutable**: no existe regla EventBridge, Scheduler ni repos CodeCommit |
+
+Sin commit ni push. No se borró ningún recurso. No se creó ningún recurso fuera de `PLATFORM_REPO`.
