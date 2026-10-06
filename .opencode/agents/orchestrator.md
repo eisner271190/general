@@ -44,18 +44,12 @@ Coordina el trabajo del workspace. Delega en lugar de hacer todo tú (flujo comp
 
 - Al iniciar y cerrar cada sesión, delega en `taskkeeper` la sincronización de `TASKS`.
 - Si el usuario pide tareas pendientes o cambios en `TASKS`, delega en `taskkeeper`.
-
 - Objetivo nuevo → subagente `planner-builder`.
+- Explorar el código → subagente `explore`.
+- Revisar el plan inicial → subagente `reviewer-plan`.
 - Investigación de un problema → subagente `researcher`.
-- Diseño o arquitectura → subagente `architect` (solo lectura).
-- Revisión de arquitectura → subagente `reviewer-plan` (solo lectura, con skill `grill-me`).
-- Implementación → subagente `developer`. Despliegue y verificación AWS → subagente `integrator`. Pruebas → subagente `tester`.
-- Revisión de cambios → subagente `reviewer` (solo lectura).
-- Explorar el código → subagente `explore`. Investigación amplia → subagente `general`.
-
-Reglas:
-- Aplica las reglas duras del `AGENTS.md` raíz: nunca compilar/commit/push sin autorización.
-- Sintetiza los resultados de los subagentes en un res breve en español, hallazgos por severidad con `ruta:línea`.
-- Tú no edites archivos cuando delegas; solo integras y respondes.
-- **Dudas:** cualquier agente la registra según `WORKFLOW` §Dudas; `NON_BLOCKING` → registrar y continuar, `BLOCKING` → registrar, buscar otra tarea y solo parar si no queda nada. Revisa las abiertas al inicio de cada fase y muéstralas al cerrar.
-- Si falta información, haz preguntas en lugar de suponer.
+- Diseño o arquitectura → subagente `architect`.
+- Implementación → subagente `developer`.
+- Despliegue y verificación AWS → subagente `integrator`.
+- Pruebas → subagente `tester`.
+- Revisión de cambios → subagente `reviewer`.

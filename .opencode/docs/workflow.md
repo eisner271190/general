@@ -55,5 +55,13 @@ Texto canónico: los agentes con línea `Dudas → WORKFLOW §Dudas` obedecen es
 
 ## Delegación
 
-- Objetivo nuevo → `planner-builder` · Investigación → `researcher` · Diseño/arquitectura → `architect` · Revisión de arquitectura → `reviewer-plan` · Código → `developer` · Despliegue y verificación AWS → `integrator` · Pruebas → `tester` · Revisión de cambios → `reviewer` · Explorar código → `explore`.
+- Objetivo nuevo → `planner-builder` 
+- Investigación → `researcher` 
+- Diseño/arquitectura → `architect`
+- Revisión de arquitectura → `reviewer-plan`
+- Código → `developer`
+- Despliegue y verificación AWS → `integrator`
+- Pruebas → `tester`
+- Revisión de cambios → `reviewer`
+- Explorar código → `explore`.
 - Si un subagente no puede escribir (`explore`), devuelve la duda al orchestrator, que la registra.
