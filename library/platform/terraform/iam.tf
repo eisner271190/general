@@ -205,6 +205,18 @@ data "aws_iam_policy_document" "codebuild" {
     resources = ["*"]
   }
 
+  # Sin esto CodeBuild aborta en fase QUEUED con ACCESS_DENIED: no puede crear el log group ni
+  # escribir en los log streams. El rol lo comparten los 3 proyectos (build, publish y bump-bom).
+  statement {
+    sid = "BuildLogs"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+    resources = ["arn:aws:logs:*:*:log-group:/aws/codebuild/*"]
+  }
+
   # Solo push sobre el repositorio de la imagen base. No hay GetDownloadUrlForLayer: las
   # imagenes base de los ms se construyen desde public.ecr.aws, no desde este repositorio.
   statement {

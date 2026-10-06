@@ -66,7 +66,7 @@ $script:FormatCopying = 'copiando {0} -> {1}'
 $script:FormatSeeded = 'sembrando {0} ({1} archivos)'
 $script:FormatPushing = 'subiendo {0} a {1}'
 $script:FormatPushed = 'subido: {0} -> {1}'
-$script:FormatRemoteHasCommits = '{0} ya tiene commits en remoto; no se reescribe.'
+$script:FormatRemoteHasCommits = '{0} ya tiene commits; --force reemplaza el contenido con la copia actual.'
 $script:FormatDryRunRepo = '  {0}: {1} -> s3/CodeCommit repo {1} [se omitiria]'
 $script:FormatDryRunSummary = 'DryRun: se subirian {0} repos. No se copio ni se subio nada.'
 $script:FormatCleaned = 'copias temporales eliminadas: {0}'
@@ -173,11 +173,12 @@ function Seed-Repository {
 
     if (Test-RemoteHasCommits -Path $seed) {
         Write-Step -Message ($script:FormatRemoteHasCommits -f $Platform.Repository)
-        return $seed
     }
 
+    # `--force` siempre: la copia es una foto del contenido actual, no un historial que haya que
+    # conservar. Sin el, el segundo sembrado se rechaza porque el remoto ya tiene un commit.
     Write-Step -Message ($script:FormatPushing -f $Platform.Repository, $Platform.Repository)
-    Invoke-Git -Path $seed -Arguments @('push', '-u', 'origin', $script:Branch) | Out-Null
+    Invoke-Git -Path $seed -Arguments @('push', '--force', '-u', 'origin', $script:Branch) | Out-Null
     Write-Step -Message ($script:FormatPushed -f $Platform.Repository, $Platform.Repository)
     return $seed
 }

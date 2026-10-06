@@ -50,6 +50,7 @@ Creación de skils, commands, agents con viñetas y corto
 	- Reemplazar aws secret manager por ParameterStore SecureString por costo y porque no se necesita rotación
 	- Ajustar Agent reviewer
 	- .agentignore
+	- Proyecto separado para las pruebas e2e, mutation, unit, etc. Objetivo: Reducir el tiempo de docker build
 
 ## Herramientas externas
 	- AWS
@@ -58,3 +59,17 @@ Creación de skils, commands, agents con viñetas y corto
 	- RevenueCat
 
 Revisar ADR. Deben ser decisiones de arquitectura
+
+
+## Research
+- Antes de iniciar una tarea o subtarea, buscar referencias de como se hace.
+- Buscar referencias sobre SDK, API, Herramienta, Framework que se vaya a usar
+- Buscar referencias sobre que significa cada campo y que valor puede llevar
+
+## Reviewer
+- Validar que se cumplan los ADR
+- Validar que se cumplan los skills
+- 
+
+## Architect
+- 

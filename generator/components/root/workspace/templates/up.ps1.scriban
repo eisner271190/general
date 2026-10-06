@@ -291,31 +291,59 @@ function Invoke-RepositorySync {
         return
     }
 
-    $cloneUrl = (& terraform -chdir=$terraformApp output -raw codecommit_clone_url 2>> $script:LogFile | Out-String).Trim()
+    # El Credential Manager de Windows (`credential.helper = manager`, en el config de sistema) se
+    # consulta antes que el helper de CodeCommit y abre un dialogo de usuario/contrasena que no
+    # existe: el token sale de STS con las credenciales del usuario IAM (ADR-0022). El helper vacio
+    # resetea la lista y deja solo el de AWS.
+    function Invoke-SeedGit {
+        param(
+            [Parameter(Mandatory)][string]$Path,
+            [Parameter(Mandatory)][string[]]$Arguments
+        )
+
+        $env:GIT_TERMINAL_PROMPT = '0'
+        & git -C $Path @('-c', 'credential.helper=', '-c', 'credential.helper=!aws codecommit credential-helper $@') @Arguments *>&1 |
+            Tee-Object -FilePath $script:LogFile -Append
+        if ($LASTEXITCODE -ne 0) {
+            throw "git $($Arguments -join ' ') fallo con codigo $LASTEXITCODE en la copia temporal"
+        }
+    }
+
+    # Las comillas son obligatorias: sin ellas PowerShell no expande la variable y Terraform recibe
+    # el string literal "$terraformApp", que no existe como directorio (exit 1).
+    $cloneUrl = (& terraform "-chdir=$terraformApp" output -raw codecommit_clone_url 2>> $script:LogFile | Out-String).Trim()
     if ([string]::IsNullOrWhiteSpace($cloneUrl)) {
-        Write-LogDetail -Message 'codecommit_clone_url vacio (se omite el remoto)'
-        return
+        # El directorio existe, asi que Terraform ya aplico y el repo deberia estar creado: si el
+        # output sale vacio es un fallo real. Avisar y seguir dejaba el repo vacio sin senal.
+        throw 'codecommit_clone_url vacio: Terraform no devolvio la URL. Revisa el log del apply de app/.'
     }
 
-    $branch = Get-GitOutput -Arguments @('rev-parse', '--abbrev-ref', 'HEAD')
-    if ([string]::IsNullOrWhiteSpace($branch)) {
-        Write-LogDetail -Message 'no se pudo resolver la rama actual (se omite el push)'
-        return
+    # La app es un subdirectorio del monorepo, no un repo propio: empujar `HEAD` subiria el
+    # historial de `general` y el repo de la app no tendria `backend/<ms>/pom.xml` en la raiz.
+    # Se siembra desde una copia temporal, igual que hace library/platform/scripts/seed-repos.ps1
+    # con `common` y `platform`. El indice del monorepo no se toca.
+    $seed = Join-Path -Path ([IO.Path]::GetTempPath()) -ChildPath "app-seed-$(Get-Random)"
+    try {
+        Write-LogDetail -Message "copiando la app a $seed"
+        New-Item -Path $seed -ItemType Directory -Force | Out-Null
+        Copy-Item -Path (Join-Path -Path $PSScriptRoot -ChildPath '*') -Destination $seed -Recurse -Force -Exclude 'logs'
+
+        Invoke-SeedGit -Path $seed -Arguments @('init', '-b', 'main')
+        Invoke-SeedGit -Path $seed -Arguments @('add', '-A')
+        Invoke-SeedGit -Path $seed -Arguments @('commit', '-q', '-m', 'chore: estado inicial de la aplicacion')
+        Invoke-SeedGit -Path $seed -Arguments @('remote', 'add', 'origin', $cloneUrl)
+        # `--force` a proposito: la copia es una foto del codigo generado, no un historial que
+        # haya que conservar. Sin el, un intento anterior deja commits y el push se rechaza.
+        Write-LogDetail -Message 'push --force: la copia reemplaza el contenido del repo'
+        Invoke-SeedGit -Path $seed -Arguments @('push', '--force', '-u', 'origin', 'main')
+    }
+    finally {
+        if (Test-Path -Path $seed) {
+            Remove-Item -Path $seed -Recurse -Force -ErrorAction SilentlyContinue
+        }
     }
 
-    $remotes = Get-GitOutput -Arguments @('remote')
-    if (($remotes -split "`r?`n") -contains 'origin') {
-        Invoke-Git -Arguments @('remote', 'set-url', 'origin', $cloneUrl) | Out-Null
-    }
-    else {
-        Invoke-Git -Arguments @('remote', 'add', 'origin', $cloneUrl) | Out-Null
-    }
-
-    if ((Invoke-Git -Arguments @('push', '-u', 'origin', $branch)) -ne 0) {
-        throw "git push a $cloneUrl ($branch) falló"
-    }
-
-    Write-Log -Message "Repositorio sincronizado: $cloneUrl ($branch)"
+    Write-Log -Message "Repositorio sincronizado: $cloneUrl (main)"
 }
 
 function Invoke-FrontendStage {

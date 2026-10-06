@@ -10,6 +10,7 @@
 - Resuelve cada símbolo (`WORKFLOW`, `OBJECTIVES`, etc.) en `workspace-map.md`.
 - Si falta un símbolo, agrégalo al mapa.
 - No escribas rutas directamente.
+- Antes de iniciar cualquier tarea, vuelve a leer AGENTS.md completo.
 
 ## Reglas duras
 - Sigue `WORKFLOW` estrictamente, sin saltar ni reordenar pasos.
@@ -29,3 +30,6 @@
 - Prioriza listas sobre párrafos.
 - Máximo 100 caracteres por línea.
 - Usa siempre - para las listas.
+
+## Output
+- Debes responde en <=50 palabras

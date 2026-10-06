@@ -38,13 +38,18 @@ resource "aws_codebuild_project" "bump_bom" {
     }
   }
 
+  # source CODECOMMIT, no CODEPIPELINE: este proyecto lo arranca EventBridge con start-build y
+  # CodeBuild rechaza source CODEPIPELINE fuera de un pipeline. CODECOMMIT es arrancable con
+  # start-build y ademas puebla CODEBUILD_SRC_DIR, de donde el buildspec lee el script.
+  # NO_SOURCE no sirve: con ese tipo el API no admite un buildspec externo por ARN.
   source {
-    type      = "CODEPIPELINE"
+    type      = "CODECOMMIT"
+    location  = var.platform_source_bucket
     buildspec = "arn:aws:s3:::${var.buildspecs_bucket}/bump-bom.yml"
   }
 
   artifacts {
-    type = "CODEPIPELINE"
+    type = "NO_ARTIFACTS"
   }
 
   tags = local.tags
