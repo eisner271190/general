@@ -15,7 +15,7 @@ El frontend necesitaba consultar los parámetros que el backend expone al inicio
 
 Endpoint `GET /api/v1/parameters` con **solo parámetros públicos** (`parameter.public-config.*`), ruta catch-all **`ANY /{proxy+}`** en el API Gateway y `actuator` reducido a **`health`**.
 
-Decisiones del usuario que loendidos: las plantillas del generador son la fuente de verdad, **nunca secretos**, rename del diseño de `frontend` a `parameter`, refactor bajo `epc-clean-code` y añadir el endpoint a la colección Postman.
+Decisiones del usuario que loendidos: las plantillas del generador son la fuente de verdad, **nunca secretos**, rename del diseño de `frontend` a `parameter`, refactor bajo las reglas EPC de `clean-code` y añadir el endpoint a la colección Postman.
 
 - Plantillas nuevas: `parameter-properties.scriban` (`@ConfigurationProperties(prefix="parameter")`, único campo `publicConfig`, filtro de claves sensibles con `Pattern` y `log.warn` al omitir) y `parameter-controller{,-test}.scriban`, las 3 registradas en `component.json`.
 - Carpeta **Parameters** en `postman-collection.scriban` con el test "Sin secretos" y descripción de las rutas públicas.

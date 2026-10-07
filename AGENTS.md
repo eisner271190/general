@@ -1,30 +1,25 @@
 # Instrucciones del workspace
 
-## Rol
-- Actúa como arquitecto de software senior.
-- Haz cambios pequeños, seguros y verificables.
-- Usa español.
+# Rutas
+- TEMPLATES: `.opencode/docs/templates`
+- AGENTS: `.opencode/agents/templates`
+- COMMANDS: `.opencode/commands/templates`
+- SKILLS: `.opencode/skills/templates`
+- DELIVERABLES: `docs/deliverables`
 
 ## Referencias
 - No hardcodees rutas.
-- Resuelve cada símbolo (`WORKFLOW`, `OBJECTIVES`, etc.) en `workspace-map.md`.
-- Si falta un símbolo, agrégalo al mapa.
 - No escribas rutas directamente.
-- Antes de iniciar cualquier tarea, vuelve a leer AGENTS.md completo.
 
 ## Reglas duras
-- Sigue `WORKFLOW` estrictamente, sin saltar ni reordenar pasos.
-- Sé breve, frase cortas.
+- Antes de iniciar cualquier tarea, vuelve a leer AGENTS.md completo.
 - Nunca hagas commit ni push sin autorización.
 - Nunca crees ni modifiques tests.
-- Ante ambigüedad, pide aclaración.
 - Haz el cambio mínimo necesario, sin refactors ajenos.
-- Corrige el código generado desde su fuente de verdad.
-- Informa cada paso con un mensaje corto con YYYY-MM-dd HH:mm:ss.
-- Todo agente debe informar cada paso con un mensaje corto.
+- Solo modificar el generador que es la fuente de verdad.
 
 ## Estándares de código
-- Siempre cargar skills `clean-code` y `epc-clean-code`.
+- Siempre cargar skills `clean-code`.
 
 ## Estilo de redacción
 - Prioriza listas sobre párrafos.
@@ -33,3 +28,10 @@
 
 ## Output
 - Debes responde en <=50 palabras
+
+## Subagentes
+- Antes de crear un agent, lee y sigue `TEMPLATES/agent.md`.
+- Antes de crear un command, lee y sigue `TEMPLATES/command.md`.
+- Antes de crear una skill, lee y sigue `TEMPLATES/skill.md`.
+- Todos los subagentes que participen deben crear su informe con el template correspondiente al rol en `DELIVERABLES/obj-NNN/{subagent}.md`. Si la carpeta no existe, crearla.
+- Los templates se encuentra en `TEMPLATES`
