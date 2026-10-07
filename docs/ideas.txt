@@ -1,3 +1,5 @@
+Creación de skills, commands, agents con viñetas y corto
+
 ## MVP (Prioridad)
 - Separar el generador en componentes independientes: Frontend, Backend y Cloud. Cada componente debe ser un proyecto independiente, con sus propios modelos, estrategias, targets y templates, de forma que el generador sea completamente agnóstico a implementaciones concretas.
 
@@ -22,6 +24,14 @@
 	- Diagram as Code
 	- Diagrama de componentes
 
+## Backend
+	- API Suscripcion
+		-> Actualmente en el frontend, se tiene una implementación sobre una suscripcion
+		basada en revenueCat. Al tenerla en el frontend, se exponer API-Key y otros datos
+		sensibles. Diseña una solución donde se extraiga el consumo de esa API en el
+		backend.
+	- BOM y Renovate
+
 ## Ideas pendientes
 	- Poder actualizar el arquetipo
 	- Supabase: login y registro
@@ -38,7 +48,6 @@
 	- Granularidad de artefactos - Multi-modulo
 	- CodeArtifact
 	- Manejo centralizado de dependencias, versiones
-	- BOM
 	- Researcher que solo investigue la web. No permitir revisar el repositorio
 	- Architect evaluar y justificar el uso de cada herramienta, SDK, Framework, Librería, etc
 	- Architect evaluar y justicar los costos y mantener un listado de los costos.
@@ -58,6 +67,11 @@
 	- OpenRouter
 	- Google Play Store
 	- RevenueCat
+
+## Dependencias centralizadas
+- Lombok, Karate y Micrometer deben quedar en el `common-bom` para centralizar la
+  gestión de sus versiones y evitar declarar versiones de estas dependencias en los
+  microservicios.
 
 obj-003: 
 	- Crear en common.log manejo de logs estructurados
