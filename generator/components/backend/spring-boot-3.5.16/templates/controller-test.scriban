@@ -2,7 +2,7 @@ package {{ PACKAGE }}.infrastructure.controllers;
 
 import {{ PACKAGE }}.application.dto.{{ EntityCapital }}DTO;
 import {{ PACKAGE }}.application.services.I{{ EntityCapital }}Service;
-import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
+import com.epc.common.error.ApiResponse;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

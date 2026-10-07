@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+    Parent de Boot a proposito: es la configuracion real de un microservicio (conserva su parent
+    e importa common-bom). Por eso NO es modulo de common-parent aunque viva dentro del reactor.
+  -->
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.4.0</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.epc.common.samples</groupId>
+  <artifactId>log-only-sample</artifactId>
+  <version>1.0.0</version>
+  <name>log-only-sample</name>
+  <description>Verifica que un microservicio que solo importa common-log no carga common-web.</description>
+
+  <properties>
+    <java.version>17</java.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.epc.common</groupId>
+        <artifactId>common-bom</artifactId>
+        <version>1.0.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.epc.common</groupId>
+      <artifactId>common-log</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter</artifactId>
+    </dependency>
+  </dependencies>
+
+  <!--
+    No se publica: es una muestra para verificar que un microservicio que solo importa
+    common-log no carga common-web. Su parent es spring-boot-starter-parent a proposito
+    (ver arriba), asi que no hereda ni el distributionManagement ni el skip de
+    common-parent, y hay que declararlo aqui (ADR-0020).
+  -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

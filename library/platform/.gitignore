@@ -1,0 +1,17 @@
+# Binarios de Python compilados: no son fuente
+__pycache__/
+*.pyc
+
+# Terraform: los .tf son la fuente, el estado se regenera
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.example.tfvars
+crash.log
+# Un plan guarda el estado completo en claro
+tfplan*
+
+# IDE
+.idea/
+.vscode/

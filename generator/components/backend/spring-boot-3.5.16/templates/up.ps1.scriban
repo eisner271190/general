@@ -136,10 +136,72 @@ function Get-RepositoryUri {
     return $uri
 }
 
+# Dominio y repositorio maven de CodeArtifact donde vive `common`. No son secretos.
+$script:CodeArtifactDomain = 'epc'
+$script:CodeArtifactRepository = 'common'
+
+function Get-CodeArtifactEndpoint {
+    $arguments = @(
+        'codeartifact', 'get-repository-endpoint',
+        '--domain', $script:CodeArtifactDomain,
+        '--repository', $script:CodeArtifactRepository,
+        '--format', 'maven',
+        '--query', 'repositoryEndpoint',
+        '--output', 'text'
+    )
+
+    $result = Invoke-Aws -Arguments $arguments
+    $endpoint = $result.Output
+
+    if ($result.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($endpoint)) {
+        throw "No se pudo resolver el endpoint de CodeArtifact (exit $($result.ExitCode)). Ejecuta primero 'library/platform/scripts/publish-common.ps1'."
+    }
+
+    return $endpoint
+}
+
+# El token dura 12 h: se pide ahora y viaja a docker como --secret. No se persiste.
+function Get-CodeArtifactToken {
+    $arguments = @(
+        'codeartifact', 'get-authorization-token',
+        '--domain', $script:CodeArtifactDomain,
+        '--query', 'authorizationToken',
+        '--output', 'text'
+    )
+
+    $result = Invoke-Aws -Arguments $arguments
+    $token = $result.Output
+
+    if ($result.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($token)) {
+        throw "No se pudo obtener el token de CodeArtifact (exit $($result.ExitCode)). Ejecuta primero 'library/platform/scripts/publish-common.ps1'."
+    }
+
+    Write-LogDetail -Message "codeartifact token presente longitud=$($token.Length)"
+    return $token
+}
+
 function Invoke-ImageBuild {
     Write-Log -Message "Creando imagen docker $($script:ServiceName)"
-    # --provenance=false: Lambda rechaza el image index con attestations que BuildKit añade por defecto.
-    Invoke-Process -FilePath 'docker' -Arguments @('build', '--provenance=false', '--platform', 'linux/amd64', '-t', $script:ServiceName, '.')
+
+    $endpoint = Get-CodeArtifactEndpoint
+    Write-LogDetail -Message "codeartifact endpoint=$endpoint"
+    $env:CODEARTIFACT_AUTH_TOKEN = Get-CodeArtifactToken
+
+    try {
+        $arguments = @(
+            'build', '--provenance=false', '--platform', 'linux/amd64',
+            '--build-arg', "CODEARTIFACT_REPOSITORY_URL=$endpoint",
+            '--secret', 'id=CODEARTIFACT_AUTH_TOKEN,env=CODEARTIFACT_AUTH_TOKEN',
+            '-t', $script:ServiceName, '.'
+        )
+        # --provenance=false: Lambda rechaza el image index con attestations que BuildKit anade por defecto.
+        Invoke-Process -FilePath 'docker' -Arguments $arguments
+    }
+    finally {
+        # El token desaparece del entorno aunque el build falle: no se escribe en ninguna capa.
+        Remove-Item Env:CODEARTIFACT_AUTH_TOKEN -ErrorAction SilentlyContinue
+    }
+
     Write-Log -Message "Imagen docker creada $($script:ServiceName)"
 }
 

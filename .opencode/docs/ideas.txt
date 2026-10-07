@@ -1,0 +1,88 @@
+Creación de skills, commands, agents con viñetas y corto
+
+## MVP (Prioridad)
+- Separar el generador en componentes independientes: Frontend, Backend y Cloud. Cada componente debe ser un proyecto independiente, con sus propios modelos, estrategias, targets y templates, de forma que el generador sea completamente agnóstico a implementaciones concretas.
+
+## Frontend
+- Optimizar carga inicial de la app, debe demorar máximo 1 segundo
+- Suscripción
+- AdMob
+- Consumo de servicios REST
+
+## Cloud
+	- Separar los parametros del frontend bajo el prefijo /frontend/quizsmart/ en ssm.tf (decision de parametros.md #6)
+	- Plantillas con todas las propiedades de cada servicio AWS
+	- AWS ElastiCache
+
+## DevSecOps
+	- SonarQube
+	- Trivy
+	- Dependency Check
+	- Observabilidad
+
+## Documentación
+	- Diagram as Code
+	- Diagrama de componentes
+
+## Backend
+	- API Suscripcion
+		-> Actualmente en el frontend, se tiene una implementación sobre una suscripcion
+		basada en revenueCat. Al tenerla en el frontend, se exponer API-Key y otros datos
+		sensibles. Diseña una solución donde se extraiga el consumo de esa API en el
+		backend.
+	- BOM y Renovate
+
+## Ideas pendientes
+	- Poder actualizar el arquetipo
+	- Supabase: login y registro
+	- API Ad
+	- API Notifications
+	- API Parameters
+	- API Identity
+	- API AI
+	- ILog
+	- Manejo de errores RFC
+	- Agente integrador
+	- Reducir el tamaño de la imagen docker
+	- Arquetipo
+	- Granularidad de artefactos - Multi-modulo
+	- CodeArtifact
+	- Manejo centralizado de dependencias, versiones
+	- Researcher que solo investigue la web. No permitir revisar el repositorio
+	- Architect evaluar y justificar el uso de cada herramienta, SDK, Framework, Librería, etc
+	- Architect evaluar y justicar los costos y mantener un listado de los costos.
+	- Niveles de tareas hasta nivel atomico
+	- Prohibido usar nombres reales como "com.quizsmart.app", se debe usar la variable {{APPLICATION_ID}}
+	- Listar las cosas que dependen de mi anticipadamente
+	- Reemplazar aws secret manager por ParameterStore SecureString por costo y porque no se necesita rotación
+	- Ajustar Agent reviewer
+	- .agentignore
+	- Proyecto separado para las pruebas e2e, mutation, unit, etc. Objetivo: Reducir el tiempo de docker build
+	- Monolito modular
+	- Revisar ADR. Deben ser decisiones de arquitectura
+		- Crear ADR sobre uso de common
+
+## Herramientas externas
+	- AWS
+	- OpenRouter
+	- Google Play Store
+	- RevenueCat
+
+## Dependencias centralizadas
+- Lombok, Karate y Micrometer deben quedar en el `common-bom` para centralizar la
+  gestión de sus versiones y evitar declarar versiones de estas dependencias en los
+  microservicios.
+
+obj-003: 
+	- Crear en common.log manejo de logs estructurados
+	- log.info: Al principio de cada metodo, sin excepción
+	- log.debug: Parametros, variables, sin excepción
+	- Enmascarar datos sensibles
+	- Debe tener una interface
+	- Debe inyectarse
+	- Todos los ms deben usarlo
+	- Se debe crear una clase con los texto de los logs
+	- Solo aplica a common y generator
+	- No aplica al código generado. Se elimina y vuelve a regenerar
+	
+	

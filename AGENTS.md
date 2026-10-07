@@ -1,52 +1,40 @@
 # Instrucciones del workspace
 
-## Rol
-- Actúa como arquitecto de software senior: cambios pequeños, verificables y seguros. Idioma: español.
+# Rutas
+- TEMPLATES: `.opencode/docs/templates`
+- AGENTS: `.opencode/agents/templates`
+- COMMANDS: `.opencode/commands/templates`
+- SKILLS: `.opencode/skills/templates`
+- DELIVERABLES: `.opencode/docs/deliverables`
+- DECISIONS: `.opencode/docs/adr`
+- GENERATOR: `generator`
 
 ## Referencias
-- NUNCA hardcodear rutas en instrucciones.
-- Cada símbolo (`WORKFLOW`, `OBJECTIVES`, etc.) se resuelve en `workspace-map.md`.
-- Si un símbolo no está en el mapa: agregarlo allí, no escribir la ruta en la instrucción.
+- Haz el cambio mínimo necesario, sin refactors ajenos.
 
 ## Reglas duras
-- Obligatorio seguir `WORKFLOW` estrictamente, sin saltarse ni reordenar pasos.
-- Sé breve en tus respuestas.
-- NUNCA hacer commit ni push sin autorización.
-- NUNCA crear ni modificar tests: los escribe y gestiona el usuario.
-- Test rojo => informar y esperar instrucciones; no "arreglarlo" ni crear uno nuevo.
-- Pedir aclaración ante requisitos ambiguos.
-- El cambio más pequeño que resuelva el requisito; sin refactors ajenos.
-- Revisar el diff antes de terminar; nunca `git reset` ni `git clean`.
-- Código generado = resultado: corregir en la fuente de verdad, nunca en la salida.
-- Informa cada paso con un mensaje corto.
-- TODOS los agentes sin excepción tiene que emitir un mensaje corto que cada paso que van realizando.
-
-## Endpoints
-- Al agregar, modificar o eliminar un endpoint, actualizar SIEMPRE la colección de Postman en el mismo cambio (ejemplos de request/response incluidos). Un endpoint sin entrada en la colección está incompleto.
-- Al cambiar la plantilla de la colección, validar que el JSON sigue siendo correcto (parsearlo).
-
-## Seguridad
-- Sin secretos, tokens ni credenciales en código: usa variables de entorno o gestor.
-- No editar `.env` ni credenciales sin petición explícita.
-- `terraform apply` y `terraform destroy` denegados al agente.
-
-## Arquitectura
-- Salidas generadas: no editar como fuente de verdad.
-- Backlog, planes, docs y decisiones: en la carpeta de trabajo del equipo.
+- Antes de iniciar cualquier tarea, vuelve a leer AGENTS.md completo.
+- Obligatorio crear un informe con el template correspondiente al rol en `DELIVERABLES/obj-NNN/{subagent}.md`. 
+- Si la carpeta no existe, crearla.
+- Nunca hagas commit ni push sin autorización.
+- Nunca crees ni modifiques tests.
+- Solo modificar el generador que es la fuente de verdad.
+- No hardcodees rutas.
+- No escribas rutas directamente.
 
 ## Estándares de código
-- Cargar `clean-code` y `epc-clean-code` antes de escribir o refactorizar.
-- Stack: skills `flutter`, `java`, `dotnet`, `terraform` + `AGENTS.md` de la carpeta.
-- Identificadores en inglés.
-- PascalCase en clases, métodos y propiedades públicas.
-- Interfaces con prefijo `I`; verbos en los métodos.
+- Siempre cargar skills `clean-code`.
 
-## Planes y verificación
-- Flujo completo (roles, entregables, dudas, `/trabajar`): `WORKFLOW`.
-- Dudas: registrar según `WORKFLOW` §Dudas (dónde, plantilla, cuándo parar).
-- Planificar: skill `plan-builder` o `/plan` => salida en `PLANS`.
-- Terminar: skill `verify-before-done` o `/finish` antes de dar por hecho.
-- "Trabajar" (`/trabajar`): `WORKFLOW` (branch -> plan -> implementar -> PR) con `OBJECTIVES`.
-- Decisiones relevantes: una por una en `DECISIONS` siguiendo `ADR_TEMPLATE` (`NNNN-slug.md`, siguiente ID libre = último + 1).
-- Considerar costo, sobre todo AWS: minimizar el costo general del proyecto.
-- Si una decisión tiene costo, informarlo explícitamente.
+## Estilo de redacción
+- Prioriza listas sobre párrafos.
+- Máximo 100 caracteres por línea.
+- Usa siempre - para las listas.
+
+## Output
+- Debes responder en <= 50 palabras
+
+## Subagentes
+- Los templates se encuentra en `TEMPLATES`
+- Antes de crear un agent, lee y sigue `TEMPLATES/agent.md`.
+- Antes de crear un command, lee y sigue `TEMPLATES/command.md`.
+- Antes de crear una skill, lee y sigue `TEMPLATES/skill.md`.

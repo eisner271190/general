@@ -3,9 +3,18 @@
 .SYNOPSIS
     Levanta la aplicación completa (cloud -> backend -> frontend).
 .DESCRIPTION
+    0. platform               : library/platform/scripts/up.ps1. Crea el dominio de CodeArtifact,
+                                sin el cual el build del backend no puede resolver `common`. Con
+                                -SkipPlatform se omite.
+    0b. publish common        : library/platform/scripts/publish-common.ps1. Publica los paquetes
+                                Maven de `common`; sin ellos el pom del microservicio no resuelve el
+                                common-bom y `docker build` falla.
+    0c. publish buildspecs     : library/platform/scripts/publish-buildspecs.ps1. Los buildspecs se
+                                referencian por ARN; sin ellos en el bucket el pipeline no arranca.
     1. cloud  -Phase Bootstrap : crea el repositorio ECR.
     2. backend -Phase Build    : build + push de la imagen de cada microservicio.
     3. cloud  -Phase Apply     : plan + apply de toda la infraestructura.
+    3b. codecommit             : conecta el remoto de la aplicación y hace push.
     4. backend -Phase Run      : lee Parameter Store y arranca cada contenedor.
     5. frontend                : clean -> pub get -> iconos -> appbundle -> run.
        Con -Fast el frontend se limita a clean + pub get + iconos: sin
@@ -37,6 +46,15 @@
     ./up.ps1 -Fast
 .EXAMPLE
     ./up.ps1 -AutoApprove:$false
+.PARAMETER PlatformRoot
+    Raiz de la plataforma (el repo `library/platform` del monorepo). Es un paso previo: sin el
+    dominio de CodeArtifact el build del backend no puede resolver `common`. Por defecto se
+    resuelve como `../../../library/platform`, que es donde vive junto a `projects/`.
+.PARAMETER SkipPlatform
+    Omite el paso de plataforma. Util cuando la plataforma ya esta desplegada y solo se
+    actualiza la aplicacion.
+.EXAMPLE
+    ./up.ps1 -SkipPlatform
 #>
 [CmdletBinding()]
 param(
@@ -45,7 +63,9 @@ param(
     [switch]$PlanOnly,
     [switch]$SkipFrontend,
     [switch]$Fast,
-    [string]$DeviceId = ''
+    [string]$DeviceId = '',
+    [string]$PlatformRoot = (Join-Path -Path $PSScriptRoot -ChildPath '../../library/platform'),
+    [switch]$SkipPlatform
 )
 
 Set-StrictMode -Version Latest
@@ -142,6 +162,61 @@ function Get-ComponentScript {
     return $scripts
 }
 
+function Invoke-PlatformStage {
+    # El dominio de CodeArtifact lo declara la plataforma, no la aplicacion. Sin el,
+    # `aws codeartifact get-repository-endpoint` falla en el paso 2 y no hay build.
+    if ($SkipPlatform) {
+        Write-LogDetail -Message 'paso 0/5 plataforma omitida (SkipPlatform)'
+        return
+    }
+
+    $path = Join-Path -Path $PlatformRoot -ChildPath 'scripts/up.ps1'
+    if (-not (Test-Path -Path $path)) {
+        # No es un error: se puede desplegar solo la aplicacion si la plataforma ya existe en otra
+        # parte. Se avisa y se sigue, en vez de abortar por una ruta.
+        Write-Log -Message "Plataforma no encontrada en $path; se omite el paso 0 (usa -SkipPlatform para silenciarlo)"
+        return
+    }
+
+    Write-LogDetail -Message "paso 0/5 plataforma path=$path"
+    Invoke-ComponentScript -Path $path -Arguments @{ AutoApprove = [bool]$AutoApprove }
+
+    Invoke-PlatformPublishStage -PlatformRoot $PlatformRoot
+}
+
+# Sin los paquetes Maven publicados, el `pom.xml` de cada microservicio no resuelve el import del
+# common-bom y `docker build` falla sin versiones en todas las dependencias.
+function Invoke-PlatformPublishStage {
+    param([Parameter(Mandatory)][string]$PlatformRoot)
+
+    $publish = Join-Path -Path $PlatformRoot -ChildPath 'scripts/publish-common.ps1'
+    if (-not (Test-Path -Path $publish)) {
+        Write-Log -Message "publish-common.ps1 no encontrado en $publish; se omite (los paquetes ya deben estar en CodeArtifact)"
+        return
+    }
+
+    Write-LogDetail -Message "paso 0b/5 publica common en CodeArtifact path=$publish"
+    Invoke-ComponentScript -Path $publish -Arguments @{}
+
+    Invoke-PlatformBuildspecsStage -PlatformRoot $PlatformRoot
+}
+
+# Los buildspecs se referencian por ARN desde el pipeline y los proyectos CodeBuild, asi que sin
+# ellos en el bucket el pipeline falla al arrancar. El script es idempotente (compara MD5), asi
+# que invocarlo siempre no genera versiones nuevas.
+function Invoke-PlatformBuildspecsStage {
+    param([Parameter(Mandatory)][string]$PlatformRoot)
+
+    $publish = Join-Path -Path $PlatformRoot -ChildPath 'scripts/publish-buildspecs.ps1'
+    if (-not (Test-Path -Path $publish)) {
+        Write-Log -Message "publish-buildspecs.ps1 no encontrado en $publish; se omite (los buildspecs deben estar ya en el bucket)"
+        return
+    }
+
+    Write-LogDetail -Message "paso 0c/5 publica buildspecs en el bucket path=$publish"
+    Invoke-ComponentScript -Path $publish -Arguments @{}
+}
+
 function Invoke-CloudPhase {
     param(
         [Parameter(Mandatory)][string]$Phase,
@@ -182,6 +257,95 @@ function Invoke-CloudApplyStage {
     Invoke-CloudPhase -Phase 'Apply' -Arguments $cloudArguments
 }
 
+# El repositorio de la aplicación lo declara cloud/terraform/app/codecommit.tf (ya aplicado en
+# el paso 3). Aquí solo se conecta el remoto y se empuja: es el único sitio del proyecto con
+# comandos git, para que no haya pushes sueltos a mano. Sin credenciales sembradas: CodeCommit
+# autentica con las del usuario (credential helper local o AWS CLI).
+function Invoke-Git {
+    param([Parameter(Mandatory)][string[]]$Arguments)
+
+    Write-LogDetail -Message "git $($Arguments -join ' ')"
+    & git @Arguments *>&1 | Tee-Object -FilePath $script:LogFile -Append
+    $code = $LASTEXITCODE
+    Write-LogDetail -Message "git exit=$code"
+    return $code
+}
+
+function Get-GitOutput {
+    param([Parameter(Mandatory)][string[]]$Arguments)
+
+    $value = (& git @Arguments 2>> $script:LogFile | Out-String)
+    if ($LASTEXITCODE -ne 0) {
+        return ''
+    }
+
+    return $value.Trim()
+}
+
+function Invoke-RepositorySync {
+    Write-LogDetail -Message 'paso 3b/5 codecommit remoto + push'
+
+    $terraformApp = Join-Path -Path $PSScriptRoot -ChildPath 'cloud/terraform/app'
+    if (-not (Test-Path -Path $terraformApp)) {
+        Write-LogDetail -Message "sin cloud/terraform/app (se omite el remoto)"
+        return
+    }
+
+    # El Credential Manager de Windows (`credential.helper = manager`, en el config de sistema) se
+    # consulta antes que el helper de CodeCommit y abre un dialogo de usuario/contrasena que no
+    # existe: el token sale de STS con las credenciales del usuario IAM (ADR-0022). El helper vacio
+    # resetea la lista y deja solo el de AWS.
+    function Invoke-SeedGit {
+        param(
+            [Parameter(Mandatory)][string]$Path,
+            [Parameter(Mandatory)][string[]]$Arguments
+        )
+
+        $env:GIT_TERMINAL_PROMPT = '0'
+        & git -C $Path @('-c', 'credential.helper=', '-c', 'credential.helper=!aws codecommit credential-helper $@') @Arguments *>&1 |
+            Tee-Object -FilePath $script:LogFile -Append
+        if ($LASTEXITCODE -ne 0) {
+            throw "git $($Arguments -join ' ') fallo con codigo $LASTEXITCODE en la copia temporal"
+        }
+    }
+
+    # Las comillas son obligatorias: sin ellas PowerShell no expande la variable y Terraform recibe
+    # el string literal "$terraformApp", que no existe como directorio (exit 1).
+    $cloneUrl = (& terraform "-chdir=$terraformApp" output -raw codecommit_clone_url 2>> $script:LogFile | Out-String).Trim()
+    if ([string]::IsNullOrWhiteSpace($cloneUrl)) {
+        # El directorio existe, asi que Terraform ya aplico y el repo deberia estar creado: si el
+        # output sale vacio es un fallo real. Avisar y seguir dejaba el repo vacio sin senal.
+        throw 'codecommit_clone_url vacio: Terraform no devolvio la URL. Revisa el log del apply de app/.'
+    }
+
+    # La app es un subdirectorio del monorepo, no un repo propio: empujar `HEAD` subiria el
+    # historial de `general` y el repo de la app no tendria `backend/<ms>/pom.xml` en la raiz.
+    # Se siembra desde una copia temporal, igual que hace library/platform/scripts/seed-repos.ps1
+    # con `common` y `platform`. El indice del monorepo no se toca.
+    $seed = Join-Path -Path ([IO.Path]::GetTempPath()) -ChildPath "app-seed-$(Get-Random)"
+    try {
+        Write-LogDetail -Message "copiando la app a $seed"
+        New-Item -Path $seed -ItemType Directory -Force | Out-Null
+        Copy-Item -Path (Join-Path -Path $PSScriptRoot -ChildPath '*') -Destination $seed -Recurse -Force -Exclude 'logs'
+
+        Invoke-SeedGit -Path $seed -Arguments @('init', '-b', 'main')
+        Invoke-SeedGit -Path $seed -Arguments @('add', '-A')
+        Invoke-SeedGit -Path $seed -Arguments @('commit', '-q', '-m', 'chore: estado inicial de la aplicacion')
+        Invoke-SeedGit -Path $seed -Arguments @('remote', 'add', 'origin', $cloneUrl)
+        # `--force` a proposito: la copia es una foto del codigo generado, no un historial que
+        # haya que conservar. Sin el, un intento anterior deja commits y el push se rechaza.
+        Write-LogDetail -Message 'push --force: la copia reemplaza el contenido del repo'
+        Invoke-SeedGit -Path $seed -Arguments @('push', '--force', '-u', 'origin', 'main')
+    }
+    finally {
+        if (Test-Path -Path $seed) {
+            Remove-Item -Path $seed -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    Write-Log -Message "Repositorio sincronizado: $cloneUrl (main)"
+}
+
 function Invoke-FrontendStage {
     if ($SkipFrontend) {
         Write-LogDetail -Message 'paso 5/5 frontend omitido (skipFrontend)'
@@ -196,7 +360,9 @@ function Invoke-FrontendStage {
 function Invoke-ApplicationUp {
     Write-Log -Message 'Iniciando despliegue'
     Write-LogDetail -Message "log=$script:LogFile"
-    Write-LogDetail -Message "aplicacion={{ APPLICATION_NAME }} environment=$Environment autoApprove=$AutoApprove planOnly=$PlanOnly skipFrontend=$SkipFrontend fast=$Fast deviceId=$DeviceId"
+    Write-LogDetail -Message "aplicacion={{ APPLICATION_NAME }} environment=$Environment autoApprove=$AutoApprove planOnly=$PlanOnly skipFrontend=$SkipFrontend fast=$Fast deviceId=$DeviceId platformRoot=$PlatformRoot skipPlatform=$SkipPlatform"
+
+    Invoke-PlatformStage
 
     Write-LogDetail -Message 'paso 1/5 cloud bootstrap (crea ECR)'
     Invoke-CloudPhase -Phase 'Bootstrap' -Arguments @{ Environment = $Environment; AutoApprove = $true }
@@ -209,6 +375,8 @@ function Invoke-ApplicationUp {
         Write-Log -Message 'Despliegue finalizado (PlanOnly: sin apply)'
         return
     }
+
+    Invoke-RepositorySync
 
     Write-LogDetail -Message 'paso 4/5 backend run (Parameter Store + docker run)'
     Invoke-BackendPhase -Phase 'Run'

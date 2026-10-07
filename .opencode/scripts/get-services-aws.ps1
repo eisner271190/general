@@ -9,6 +9,10 @@
   para senalar desfases (recursos en el estado que ya no existen en AWS, o al
   reves). No crea, modifica ni borra nada.
 
+  Anade un bloque CodeArtifact: repositorios del dominio, paquetes maven
+  publicados y el desfase del endpoint maven contra el output
+  `codeartifact_endpoint` del estado de plataforma.
+
 .EXAMPLE
   .opencode/scripts/get-services-aws.ps1
 
@@ -23,6 +27,10 @@ param(
   [string[]]$RoleNames = @('quizapi', 'CognitoAuthenticatedRole'),
   [string[]]$PolicyNames = @('CognitoPolicy'),
   [string]$TerraformRoot = (Join-Path $PSScriptRoot '..' '..' 'projects' 'com.quizsmart.app' 'cloud' 'terraform'),
+  # Estado de plataforma: es OTRO estado de Terraform, no mezclar con -TerraformRoot.
+  [string]$CodeArtifactDomain = 'epc',
+  [string]$CodeArtifactRepository = 'common',
+  [string]$CodeArtifactTerraformRoot = (Join-Path $PSScriptRoot '..' '..' 'library' 'platform' 'terraform'),
   [switch]$AsJson
 )
 
@@ -223,6 +231,303 @@ foreach ($state in $states) {
   }
 }
 
+# --- codeartifact ------------------------------------------------------------
+# Workarounds para AWS CLI 2.28.6 (solo lectura, nunca `codeartifact login`):
+# - `list-repositories` falla con `Unknown options: --domain`: se llama sin
+#   `--domain` y se filtra por `domainName` en PowerShell.
+# - Los flags camelCase fallan: no se usa `--originType`; se filtra por
+#   `originConfiguration.restrictions.publish == 'ALLOW'`.
+# - `terraform -chdir=<ruta>` sin comillas falla: se construye $chdir.
+# - `describe-repository` no expone `assetSize`: esa columna no existe aqui.
+
+$caConstants = @{
+  Format       = 'maven'
+  SortBy       = 'PUBLISHED_TIME'
+  PublishAllow = 'ALLOW'
+  TfOutput     = 'codeartifact_endpoint'
+  Placeholder  = '-'
+}
+
+$caMsg = @{
+  NoDomain      = 'No se encontro ningun repositorio en el dominio (revisa dominio o permisos).'
+  NoPackages    = '(sin paquetes publicados)'
+  NoTfRoot      = 'No existe el directorio de Terraform: {0}'
+  NoTfOutput    = 'No se pudo leer el output codeartifact_endpoint de Terraform.'
+  SameEndpoint  = 'coincide con Terraform'
+  DiffEndpoint  = 'DIFIERE de Terraform'
+  NoTfEndpoint  = 'sin endpoint en Terraform'
+  NoAwsEndpoint = 'sin endpoint en AWS'
+  AwsCallFailed = 'AWS CLI fallo en: {0}'
+  OkState       = 'OK'
+  FailState     = 'fallo'
+}
+
+$caCtx = [pscustomobject]@{
+  Region        = $Region
+  Domain        = $CodeArtifactDomain
+  Repository    = $CodeArtifactRepository
+  Format        = $caConstants.Format
+  TerraformRoot = $CodeArtifactTerraformRoot
+}
+
+# --- utilidades codeartifact -------------------------------------------------
+
+function Test-EmptyText {
+  param($Text)
+  return [string]::IsNullOrWhiteSpace("$Text")
+}
+
+function Convert-JsonPayload {
+  param($Raw)
+  if ($null -eq $Raw) { return $null }
+  $text = ($Raw -join [Environment]::NewLine)
+  if (Test-EmptyText $text) { return $null }
+  return $text | ConvertFrom-Json
+}
+
+function Invoke-Aws {
+  param([string[]]$Arguments)
+  $full = @($Arguments) + @('--region', $caCtx.Region, '--output', 'json')
+  $raw = & aws @full 2>$null
+  return [pscustomobject]@{ ExitCode = $LASTEXITCODE; Data = (Convert-JsonPayload $raw) }
+}
+
+function Write-CallFailure {
+  param($Command)
+  Write-Warning ($caMsg.AwsCallFailed -f $Command)
+}
+
+function Format-Value {
+  param($Value)
+  if (Test-EmptyText $Value) { return $caConstants.Placeholder }
+  return "$Value"
+}
+
+# Recorre cada clave y proyecta cada elemento con $Select. Un solo bucle para las
+# dos colecciones de CodeArtifact, que si no quedan duplicados.
+function Select-Rows {
+  param([string[]]$Keys, [scriptblock]$Select)
+  $rows = @()
+  foreach ($key in $Keys) { $rows += (& $Select $key) }
+  return @($rows)
+}
+
+# --- repositorios -----------------------------------------------------------
+
+function Get-CodeArtifactRepositoryNames {
+  # Sin `--domain`: ver workaround en la cabecera del bloque.
+  $call = Invoke-Aws @('codeartifact', 'list-repositories')
+  if ($call.ExitCode -ne 0) {
+    Write-CallFailure 'codeartifact list-repositories'
+    return @()
+  }
+  $repositories = @(Get-ObjectProperty $call.Data @('repositories'))
+  return @($repositories |
+    Where-Object { (Get-ObjectProperty $_ @('domainName')) -eq $caCtx.Domain } |
+    ForEach-Object { Get-ObjectProperty $_ @('name') } |
+    Where-Object { $_ })
+}
+
+function Select-CodeArtifactRepository {
+  param([string]$Name)
+  $call = Invoke-Aws @('codeartifact', 'describe-repository',
+    '--domain', $caCtx.Domain, '--repository', $Name)
+  $repository = Get-ObjectProperty $call.Data @('repository')
+  $upstreams = @(Get-ObjectProperty $repository @('upstreams') |
+    ForEach-Object { Get-ObjectProperty $_ @('repositoryName') } | Where-Object { $_ })
+  $externals = @(Get-ObjectProperty $repository @('externalConnections') |
+    ForEach-Object { Get-ObjectProperty $_ @('externalConnectionName') } | Where-Object { $_ })
+  return [pscustomobject]@{
+    Nombre    = $Name
+    Upstreams = @($upstreams)
+    Externas  = @($externals)
+    Creado    = (Format-Value (Get-ObjectProperty $repository @('createdTime')))
+  }
+}
+
+function Get-CodeArtifactRepositories {
+  return Select-Rows -Keys (Get-CodeArtifactRepositoryNames) `
+    -Select { param($name) Select-CodeArtifactRepository $name }
+}
+
+# --- paquetes ---------------------------------------------------------------
+
+function Test-PublishAllowed {
+  param($Package)
+  $origin = Get-ObjectProperty $Package @('originConfiguration')
+  $restrictions = Get-ObjectProperty $origin @('restrictions')
+  return (Get-ObjectProperty $restrictions @('publish')) -eq $caConstants.PublishAllow
+}
+
+function Get-PublishedCoordinates {
+  $call = Invoke-Aws @('codeartifact', 'list-packages', '--domain', $caCtx.Domain,
+    '--repository', $caCtx.Repository, '--format', $caCtx.Format)
+  if ($call.ExitCode -ne 0) {
+    Write-CallFailure 'codeartifact list-packages'
+    return @()
+  }
+  $packages = @(Get-ObjectProperty $call.Data @('packages') |
+    Where-Object { Test-PublishAllowed $_ })
+  return @($packages | ForEach-Object { "$($_.namespace):$($_.package)" })
+}
+
+function Select-CodeArtifactPackage {
+  param([string]$Coordinates)
+  $parts = $Coordinates.Split(':')
+  $call = Invoke-Aws @('codeartifact', 'list-package-versions', '--domain', $caCtx.Domain,
+    '--repository', $caCtx.Repository, '--format', $caCtx.Format,
+    '--namespace', $parts[0], '--package', $parts[1], '--sort-by', $caConstants.SortBy)
+  $versions = @(Get-ObjectProperty $call.Data @('versions') |
+    ForEach-Object { Get-ObjectProperty $_ @('version') } | Where-Object { $_ })
+  return [pscustomobject]@{
+    Paquete   = $Coordinates
+    Versiones = @($versions)
+    Latest    = (Format-Value (Get-ObjectProperty $call.Data @('defaultDisplayVersion')))
+    ExitCode  = $call.ExitCode
+  }
+}
+
+function Get-CodeArtifactPackages {
+  return Select-Rows -Keys (Get-PublishedCoordinates) `
+    -Select { param($coordinates) Select-CodeArtifactPackage $coordinates }
+}
+
+# --- endpoint ---------------------------------------------------------------
+
+function Get-TerraformCodeArtifactEndpoint {
+  if (-not (Test-Path -Path $caCtx.TerraformRoot)) {
+    Write-Warning ($caMsg.NoTfRoot -f $caCtx.TerraformRoot)
+    return $null
+  }
+  # Con comillas: sin ellas PowerShell no expande bien -chdir=<ruta>.
+  $chdir = "-chdir=$($caCtx.TerraformRoot)"
+  $raw = & terraform $chdir output -json $caConstants.TfOutput 2>$null
+  if ($LASTEXITCODE -ne 0) { Write-Warning $caMsg.NoTfOutput; return $null }
+  return Convert-JsonPayload $raw
+}
+
+function Get-AwsCodeArtifactEndpoint {
+  $call = Invoke-Aws @('codeartifact', 'get-repository-endpoint', '--domain', $caCtx.Domain,
+    '--repository', $caCtx.Repository, '--format', $caCtx.Format)
+  return Get-ObjectProperty $call.Data @('repositoryEndpoint')
+}
+
+function Test-MissingEndpoint {
+  param($Endpoints, [string]$Property)
+  return (Format-Value $Endpoints.$Property) -eq $caConstants.Placeholder
+}
+
+function Test-SameEndpoint {
+  param($Endpoints)
+  $terraform = (Format-Value $Endpoints.Terraform).TrimEnd('/')
+  $aws = (Format-Value $Endpoints.Aws).TrimEnd('/')
+  return $terraform -eq $aws
+}
+
+function Compare-CodeArtifactEndpoint {
+  param($Endpoints)
+  if (Test-MissingEndpoint $Endpoints 'Terraform') { return $caMsg.NoTfEndpoint }
+  if (Test-MissingEndpoint $Endpoints 'Aws') { return $caMsg.NoAwsEndpoint }
+  if (Test-SameEndpoint $Endpoints) { return $caMsg.SameEndpoint }
+  return $caMsg.DiffEndpoint
+}
+
+# --- informe ----------------------------------------------------------------
+
+function Get-CodeArtifactEndpoints {
+  return [pscustomobject]@{
+    Terraform = (Get-TerraformCodeArtifactEndpoint)
+    Aws       = (Get-AwsCodeArtifactEndpoint)
+  }
+}
+
+function Get-CodeArtifactReport {
+  $endpoints = Get-CodeArtifactEndpoints
+  return [pscustomobject]@{
+    Domain        = $caCtx.Domain
+    Repository    = $caCtx.Repository
+    Format        = $caCtx.Format
+    TerraformRoot = $caCtx.TerraformRoot
+    Repositories  = (Get-CodeArtifactRepositories)
+    Packages      = (Get-CodeArtifactPackages)
+    Endpoint      = [pscustomobject]@{
+      Terraform   = $endpoints.Terraform
+      Aws         = $endpoints.Aws
+      Comparacion = (Compare-CodeArtifactEndpoint $endpoints)
+    }
+  }
+}
+
+# --- salida codeartifact ----------------------------------------------------
+
+function Get-PackageState {
+  param($Package)
+  if ($Package.ExitCode -eq 0) { return $caMsg.OkState }
+  return $caMsg.FailState
+}
+
+function Write-CodeArtifactRepositories {
+  param($Repositories)
+  if ($Repositories.Count -eq 0) {
+    Write-Output ("  {0}" -f $caMsg.NoDomain)
+    return
+  }
+  Write-Output ('  {0,-18} {1,-20} {2,-20} {3}' -f 'REPOSITORIO', 'UPSTREAM', 'EXTERNAS', 'CREADO')
+  foreach ($repository in $Repositories) {
+    Write-Output ('  {0,-18} {1,-20} {2,-20} {3}' -f
+      $repository.Nombre,
+      (Format-Detail $repository.Upstreams),
+      (Format-Detail $repository.Externas),
+      $repository.Creado)
+  }
+}
+
+function Write-CodeArtifactPackageRow {
+  param($Package)
+  Write-Output ('  {0,-44} {1,-5} {2,-12} {3}' -f
+    $Package.Paquete, $Package.Versiones.Count, $Package.Latest, (Get-PackageState $Package))
+}
+
+function Write-CodeArtifactPackageVersions {
+  param($Packages)
+  foreach ($package in $Packages) {
+    Write-Output ("    {0}: {1}" -f $package.Paquete, (Format-Detail $package.Versiones))
+  }
+}
+
+function Write-CodeArtifactPackages {
+  param($Packages)
+  if ($Packages.Count -eq 0) {
+    Write-Output ("  {0}" -f $caMsg.NoPackages)
+    return
+  }
+  Write-Output ('  {0,-44} {1,-5} {2,-12} {3}' -f 'PAQUETE', 'VERS', 'LATEST', 'ESTADO')
+  foreach ($package in $Packages) { Write-CodeArtifactPackageRow $package }
+  Write-CodeArtifactPackageVersions $Packages
+}
+
+function Write-CodeArtifactEndpoint {
+  param($Report)
+  Write-Output ''
+  Write-Output '  ENDPOINT maven'
+  Write-Output ("    terraform : {0}" -f (Format-Value $Report.Endpoint.Terraform))
+  Write-Output ("    aws       : {0}" -f (Format-Value $Report.Endpoint.Aws))
+  Write-Output ("    estado    : {0}" -f $Report.Endpoint.Comparacion)
+}
+
+function Write-CodeArtifactReport {
+  param($Report)
+  Write-Output ''
+  Write-Output ("CODEARTIFACT (dominio: {0}  repositorio: {1}  formato: {2})" -f
+    $Report.Domain, $Report.Repository, $Report.Format)
+  Write-CodeArtifactRepositories $Report.Repositories
+  Write-Output ''
+  Write-CodeArtifactPackages $Report.Packages
+  Write-CodeArtifactEndpoint $Report
+}
+
+$codeArtifact = Get-CodeArtifactReport
+
 # --- salida -----------------------------------------------------------------
 
 $generatedAt = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
@@ -237,7 +542,8 @@ if ($AsJson) {
     Terraform   = @($states | Where-Object { $_ })
     Mismatches  = $mismatches
     AwsFailures = @($failures | ForEach-Object Name)
-  } | ConvertTo-Json -Depth 6
+    CodeArtifact = $codeArtifact
+  } | ConvertTo-Json -Depth 8
   exit 0
 }
 
@@ -272,3 +578,5 @@ else {
     Write-Output ("  {0}: {1} -> estado={2} aws={3}" -f $mismatch.Estado, $mismatch.Tipo, $mismatch.EnEstado, $mismatch.EnAws)
   }
 }
+
+Write-CodeArtifactReport $codeArtifact

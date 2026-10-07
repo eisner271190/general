@@ -1,8 +1,8 @@
 {{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.controllers;
 
 import {{ PACKAGE }}.application.services.IAdminUserService;
-import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
-import {{ PACKAGE }}.infrastructure.rest.response.ErrorApiResponse;
+import com.epc.common.error.ApiResponse;
+import com.epc.common.error.ErrorApiResponse;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,11 +27,10 @@ public class AdminUserController {
                     return ResponseEntity.ok().body(response);
                 }))
                 .onErrorResume(e -> {
-                    ErrorApiResponse errorResponse = ErrorApiResponse.createErrorResponse(
+                    ErrorApiResponse errorResponse = new ErrorApiResponse(
                             null,
                             "Error al eliminar el usuario",
-                            HttpStatus.BAD_REQUEST.value(),
-                            e.getMessage()
+                            HttpStatus.BAD_REQUEST.value()
                     );
                     return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
                 });
@@ -45,11 +44,10 @@ public class AdminUserController {
                     return ResponseEntity.ok().body(response);
                 }))
                 .onErrorResume(e -> {
-                    ErrorApiResponse errorResponse = ErrorApiResponse.createErrorResponse(
+                    ErrorApiResponse errorResponse = new ErrorApiResponse(
                             null,
                             "Error al activar el usuario",
-                            HttpStatus.BAD_REQUEST.value(),
-                            e.getMessage()
+                            HttpStatus.BAD_REQUEST.value()
                     );
                     return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
                 });
@@ -63,11 +61,10 @@ public class AdminUserController {
                     return ResponseEntity.ok().body(response);
                 }))
                 .onErrorResume(e -> {
-                    ErrorApiResponse errorResponse = ErrorApiResponse.createErrorResponse(
+                    ErrorApiResponse errorResponse = new ErrorApiResponse(
                             null,
                             "Error al desactivar el usuario",
-                            HttpStatus.BAD_REQUEST.value(),
-                            e.getMessage()
+                            HttpStatus.BAD_REQUEST.value()
                     );
                     return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
                 });

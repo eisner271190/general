@@ -1,6 +1,6 @@
 {{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.configuration.authentication;
 
-import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
+import com.epc.common.error.ApiResponse;
 import {{ PACKAGE }}.application.dto.AuthRequestDTO;
 import reactor.core.publisher.Mono;
 

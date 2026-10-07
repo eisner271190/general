@@ -7,6 +7,20 @@
 - **Alcance:** proyecto
 - **Origen:** objetivo 002; `question-006.md`
 
+> **Nota de 2026-10-04:** este ADR **sigue `Aceptada`**. Su decisión de hosting —solo CodeCommit,
+> CodePipeline y CodeBuild, sin Azure DevOps— continúa vigente y no se ha tocado.
+>
+> Lo que **queda sustituido** es su reparto de actualización de dependencias, escrito abajo como
+> (a) Renovate programado y (b) un PR por repositorio de microservicio:
+>
+> - (a) → **ADR-0025**: Renovate se retira; el BOM se actualiza a mano y su propagación la hace el
+>   trigger por tag.
+> - (b) → **ADR-0024** y **ADR-0025**: un repositorio por aplicación y **un único PR** por release de
+>   `common`, no uno por microservicio.
+>
+> También quedan obsoletas las líneas 20-21 y 21 (los dos automatismos de Renovate) y la línea 41
+> (el coste del Scheduler, que ya no existe).
+
 ## Contexto
 
 El objetivo 002 mezclaba dos plataformas: el piloto `quizapi` traía un `azure-build.yml`, mientras que el resto del diseño era CodePipeline + CodeBuild. Renovate no soporta CodeCommit de forma nativa, así que el criterio de aceptación "Renovate abre PR en un microservicio" no era verificable con ninguna de las dos plataformas sin reformularlo.

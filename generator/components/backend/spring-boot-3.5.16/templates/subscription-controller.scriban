@@ -4,7 +4,7 @@ import {{ PACKAGE }}.domain.dto.SubscriptionStatusResponseDTO;
 import {{ PACKAGE }}.domain.servicePorts.ISubscriptionServicePort;
 import {{ PACKAGE }}.domain.servicePorts.IWebhookServicePort;
 import {{ PACKAGE }}.infrastructure.adapters.RevenueCatWebhookPayload;
-import {{ PACKAGE }}.infrastructure.rest.response.ApiResponse;
+import com.epc.common.error.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;

@@ -1,31 +1,51 @@
-# generator/ — Aplicación .NET 9 (fuente de verdad)
+# Generador .NET 9
 
-## Comandos (requieren autorización)
-- `dotnet build` en esta carpeta.
-- Ejecutar el generador: `dotnet run --project Generator.csproj`.
-- No hay proyecto de tests actualmente.
+`generator/` es la fuente de verdad del generador.
 
-## Convenciones
-- Cargar el skill `dotnet` antes de escribir o refactorizar código aquí (nullable, records, DI, capas, valores).
-- Carpetas propias: mensajes fijos en `Domain/Messages/GeneratorMessages.cs`, códigos estables en `ErrorCodes` (ej. `GEN002`); salida CLI: `<error-code>: <message>`; nombres tipo `GenerationPlanFileName`, no `"generation-plan.json"`.
+## Comandos
 
-## Reglas del generador
-- El JSON de configuración (`target/<applicationId>/<applicationId>.json`) es entrada, no artefacto generado.
-- Componentes resueltos desde los directorios configurados; `templates/` y `defaults/` dentro de cada componente.
-- Tipos de componente: `backend`, `frontend`, `cloud` y `root`. El `root` (`components/root/workspace`) es el orquestador: genera `up.ps1`/`down.ps1` en la raíz del proyecto y se renderiza una sola vez (`GenerationPlanBuilder.AddRootComponent`).
-- Un `generation-plan.json` determinista por ambiente; renderizar placeholders antes de escribir.
-- Fallar antes de escribir si hay configuración, rutas, duplicados, relaciones o placeholders inválidos.
-- Rechazar rutas absolutas y segmentos `..`; detectar rutas de salida duplicadas; no sobrescribir conflictos implícitamente.
-- Validar entidades y relaciones bidireccionales; mensajes con archivo/propiedad relevante; parar en el primer estado inválido si produciría salida parcial.
+- `dotnet build` y `dotnet run --project Generator.csproj`.
+- Actualmente no existe un proyecto de tests.
 
-## component.json
-- Copia SOLO los archivos listados en `files` (clave de destino → plantilla) y `directories` listados (`Infrastructure/PlanExecutor.cs` usa `File.Copy` por plan). Un archivo no listado NO se genera.
-- Al agregar/renombrar una plantilla: actualizar `component.json` en el mismo cambio.
+## Cambios de código
 
-## Estructura de carpetas
-- `Program.cs` composición/exit codes (capa de presentación; aquí se ensambla todo).
-- `Application/` casos de uso: `GeneratorApplication`, `GenerationPlanBuilder`, estado del plan (`PlanRequest`, `PlanContext`, `PlanState`, `PlannedGeneration`), logger y puertos (`IJsonFileReader`, `ITemplateRenderer`, `IPlanExecutor`, `IPlanExecutorFactory`, `IFileSystem`, `IPathValidator`). La capa Application nunca toca `File.*`/`Path.*`/`Directory.*`: siempre vía puertos.
-- `Domain/` sin dependencias de Application/Infrastructure: `Domain/Models/` (configuración y plan), `Domain/Validation/` (reglas y estrategias de inversas), `Domain/Messages/` (`ErrorCodes`, `GeneratorMessages`, `GeneratorException`). Sin `System.IO`.
-- `Infrastructure/` implementa los puertos de Application: `JsonFileReader`, `TemplateRenderer`, `PlanExecutor`, `PlanExecutorFactory`, `PhysicalFileSystem`, `PathValidator`, `ProjectDirectoryResolver`.
-- `Configuration/` constantes técnicas (`GeneratorConstants`); `components/` y `target/` son datos, no código; `docs/` planes y decisiones del generador.
-- Regla de dependencia: Infrastructure → Application (puertos) y ambos → Domain; nunca al revés.
+- Cargar skill `clean-code`
+- Mensajes en `Domain/Messages/GeneratorMessages.cs`.
+- Valores constantes en `Configuration\GeneratorConstants.cs`.
+- Valores literales son constantes
+
+## Contrato de generación
+
+- La configuración JSON bajo `target/` es entrada, no un artefacto generado.
+- Resuelve componentes desde los directorios configurados; cada uno puede incluir
+  `templates/` y `defaults/`.
+- Los tipos de componente son `backend`, `frontend`, `cloud` y `root`.
+- El componente `root` (`components/root/workspace`) se agrega una sola vez mediante
+  `GenerationPlanBuilder.AddRootComponent` y genera `up.ps1` y `down.ps1` en la raíz.
+- Genera un plan determinista por ambiente y renderiza placeholders antes de escribir.
+- Valida toda la configuración antes de escribir para evitar salidas parciales.
+- Rechaza rutas absolutas, segmentos `..`, rutas de salida duplicadas y conflictos
+  de sobrescritura implícita.
+- Valida entidades y relaciones bidireccionales. Los errores deben señalar el archivo
+  y la propiedad pertinentes.
+
+## Manifiesto `component.json`
+
+- Solo se copian archivos y directorios declarados en `files` y `directories`.
+- `files` mapea la ruta destino a la plantilla; `PlanExecutor` copia los archivos.
+- Los archivos no declarados no se generan.
+- Al agregar o renombrar una plantilla, actualiza `component.json` en el mismo cambio.
+
+## Arquitectura
+
+- `Program.cs`: composición de dependencias y códigos de salida.
+- `Application/`: casos de uso, estado del plan, logger y puertos.
+- Application accede al sistema de archivos solo mediante sus puertos; no usa
+  directamente `File`, `Path` ni `Directory`.
+- `Domain/`: modelos, validación y mensajes; no depende de Application ni Infrastructure,
+  y no usa `System.IO`.
+- `Infrastructure/`: implementaciones de los puertos de Application.
+- `Configuration/`: constantes técnicas. `components/` y `target/` son datos;
+  `docs/` contiene planes y decisiones.
+- Dependencias permitidas: Infrastructure → Application → Domain, y Application → Domain.
+  Domain no depende de las otras capas.

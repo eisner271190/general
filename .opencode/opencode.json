@@ -17,7 +17,8 @@
     { "action": "shell", "resource": "gradle*", "effect": "ask" },
     { "action": "shell", "resource": "terraform apply*", "effect": "deny" },
     { "action": "shell", "resource": "terraform destroy*", "effect": "deny" },
-    { "action": "shell", "resource": "gh pr*", "effect": "ask" }
+    { "action": "shell", "resource": "gh pr*", "effect": "ask" },
+    { "action": "edit", "resource": "docs/deliverables/obj-*/**", "effect": "allow" }
   ],
   "formatter": true,
   "references": {

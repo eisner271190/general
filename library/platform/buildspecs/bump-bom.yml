@@ -1,0 +1,36 @@
+version: 0.2
+
+# Trigger por release de `common`: se dispara con el evento de CodeCommit "Reference Change" cuando
+# aparece un tag v*. El repositorio es `platform` (este repo), que contiene el script.
+#
+# Destino unico: el repositorio de la aplicacion (APPLICATION_REPOSITORY), donde los microservicios
+# se localizan por ruta (POM_GLOB, por defecto backend/*/pom.xml). Un solo PR con todos los pom.
+#
+# Idempotente: si los pom ya estan en la version nueva, no hace nada; si el PR ya esta abierto, no lo
+# duplica. Se puede reejecutar sin riesgo.
+#
+# Cero credenciales de Git: el script usa la API de CodeCommit (boto3), que autentica con el rol
+# del propio proyecto CodeBuild. No hay GIT_ASKPASS ni secreto sembrado.
+#
+# La version NO se pasa por variable de entorno: el source de CodeBuild no admite `branch_ref` en el
+# provider v6, asi que el script resuelve el ultimo tag v* de `common` con la API de CodeCommit.
+
+env:
+  variables:
+    GIT_TERMINAL_PROMPT: "0"
+    COMMON_REPOSITORY: "common"
+
+phases:
+  pre_build:
+    commands:
+      - 'echo "CODEARTIFACT_DOMAIN: ${CODEARTIFACT_DOMAIN}"'
+      - 'test -n "$APPLICATION_REPOSITORY" || { echo "APPLICATION_REPOSITORY no configurado" >&2; exit 2; }'
+      - 'test -n "$POM_GLOB" || { echo "POM_GLOB no configurado" >&2; exit 2; }'
+  build:
+    commands:
+      - 'echo "Ref del build: ${CODEBUILD_RESOLVED_SOURCE_VERSION:-sin etiqueta}"'
+      - |
+        python3 scripts/bump-bom-version.py \
+          --repository "$APPLICATION_REPOSITORY" \
+          --pom-glob "$POM_GLOB" \
+          --common-repository "$COMMON_REPOSITORY"
