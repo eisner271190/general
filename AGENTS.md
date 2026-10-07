@@ -1,12 +1,12 @@
 # Instrucciones del workspace
 
 # Rutas
-- TEMPLATES: `.opencode/docs/templates`
+- TEMPLATES: `docs/templates`
 - AGENTS: `.opencode/agents/templates`
 - COMMANDS: `.opencode/commands/templates`
 - SKILLS: `.opencode/skills/templates`
-- DELIVERABLES: `.opencode/docs/deliverables`
-- DECISIONS: `.opencode/docs/adr`
+- DELIVERABLES: `docs/deliverables`
+- DECISIONS: `docs/adr`
 - GENERATOR: `generator`
 
 ## Referencias
