@@ -35,6 +35,7 @@ Proponer un diseño implementable, trazable a requisitos y restricciones del obj
   evidencia → verificación.
 - Esperar investigación necesaria y revisión de Reviewer antes de presentar el diseño.
 
+
 ## Atributos de calidad (Priorizados)
 - Funcionalidad
 - Costo
