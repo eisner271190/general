@@ -70,5 +70,3 @@ obj-003:
 	- Se debe crear una clase con los texto de los logs
 	- Solo aplica a common y generator
 	- No aplica al código generado. Se elimina y vuelve a regenerar
-	
-	
