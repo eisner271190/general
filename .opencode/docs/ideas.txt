@@ -51,6 +51,7 @@
 	- Proyecto separado para las pruebas e2e, mutation, unit, etc. Objetivo: Reducir el tiempo de docker build
 	- Monolito modular
 	- Revisar ADR. Deben ser decisiones de arquitectura
+		- Crear ADR sobre uso de common
 
 ## Herramientas externas
 	- AWS

@@ -5,7 +5,8 @@
 - AGENTS: `.opencode/agents/templates`
 - COMMANDS: `.opencode/commands/templates`
 - SKILLS: `.opencode/skills/templates`
-- DELIVERABLES: `docs/deliverables`
+- DELIVERABLES: `.opencode/docs/deliverables`
+- DECISIONS: `.opencode/docs/adr`
 
 ## Referencias
 - No hardcodees rutas.
