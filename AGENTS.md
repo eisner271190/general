@@ -38,3 +38,4 @@
 - Antes de crear un agent, lee y sigue `TEMPLATES/agent.md`.
 - Antes de crear un command, lee y sigue `TEMPLATES/command.md`.
 - Antes de crear una skill, lee y sigue `TEMPLATES/skill.md`.
+- Todos los subagentes deben leer `DELIVERABLES/obj-NNN/obj-NNN.md`.
