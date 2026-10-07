@@ -22,6 +22,12 @@
 - No hardcodees rutas.
 - No escribas rutas directamente.
 
+## Preguntas y dependencias
+- Fuente única: `DELIVERABLES/obj-NNN/questions.md`. Si no existe, crearlo.
+- Todo subagente lee `DELIVERABLES/obj-NNN/obj-NNN.md` antes de actuar.
+- Cada pregunta se agrega a `questions.md`, corta, puntual y con recomendación.
+- Las dependencias van a la seccion `Dependencias` del mismo archivo.
+
 ## Estándares de código
 - Siempre cargar skills `clean-code`.
 
