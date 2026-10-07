@@ -14,6 +14,8 @@
 
 ## Reglas duras
 - Antes de iniciar cualquier tarea, vuelve a leer AGENTS.md completo.
+- Obligatorio crear un informe con el template correspondiente al rol en `DELIVERABLES/obj-NNN/{subagent}.md`. 
+- Si la carpeta no existe, crearla.
 - Nunca hagas commit ni push sin autorización.
 - Nunca crees ni modifiques tests.
 - Solo modificar el generador que es la fuente de verdad.
@@ -36,5 +38,3 @@
 - Antes de crear un agent, lee y sigue `TEMPLATES/agent.md`.
 - Antes de crear un command, lee y sigue `TEMPLATES/command.md`.
 - Antes de crear una skill, lee y sigue `TEMPLATES/skill.md`.
-- Obligatorio crear un informe con el template correspondiente al rol en `DELIVERABLES/obj-NNN/{subagent}.md`. 
-- Si la carpeta no existe, crearla.
