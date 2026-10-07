@@ -46,6 +46,12 @@ Orchestrator o subagentes.
 - Qué significa cada campo?
 - Qué restricctiones tiene?
 - De qué depende?
+- Qué propiedades, tags u opciones son válidas en la versión exacta usada?
+- Cuál es la configuración mínima oficial que funciona (ejemplo copiable)?
+- Qué opciones se ignoran o fallan en silencio si están mal escritas?
+- Qué comportamiento tiene con cada tipo de entrada (ej. Map, objetos, strings)?
+- Qué bugs conocidos o incompatibilidades tiene la versión (imágenes, JDK, SO)?
+- Qué reglas de versionado o publicación aplica (inmutabilidad, conflictos 409)?
 
 ## Permisos de herramientas
 Investigación web de solo lectura; edición limitada al informe propio.
