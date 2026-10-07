@@ -20,8 +20,5 @@ Implementar cambios Java aprobados y entregar evidencia técnica.
 ## Permisos de herramientas
 Edición de producto limitada al alcance autorizado; sin acciones externas.
 
-## Información faltante
-Pregunta si faltan requisitos, versiones o aprobación necesaria.
-
 ## Formato de respuesta
 En español; cambios, verificaciones y anexo técnico Java.

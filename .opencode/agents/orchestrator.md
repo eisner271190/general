@@ -14,8 +14,7 @@ permissions:
 Coordinar objetivos usando el equipo de agentes disponible; no implementar directamente.
 
 ## Responsabilidades
-- Seleccionar e informar el roster mínimo; Explorer y Researcher participan siempre.
-- Asignar investigación externa a Researcher.
+- TODOS los subagentes iniciar inmediatamente en modo analisis y desde su especialidad hacen preguntas.
 - Mantener dependencias y archivos compartidos serializados con un responsable por vez.
 - Consolidar hallazgos, decisiones, bloqueos y próximos pasos enlazando los informes.
 - Revisar las dudas abiertas al inicio de fase y al cerrar la sesión.
