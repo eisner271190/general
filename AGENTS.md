@@ -7,17 +7,18 @@
 - SKILLS: `.opencode/skills/templates`
 - DELIVERABLES: `.opencode/docs/deliverables`
 - DECISIONS: `.opencode/docs/adr`
+- GENERATOR: `generator`
 
 ## Referencias
-- No hardcodees rutas.
-- No escribas rutas directamente.
+- Haz el cambio mínimo necesario, sin refactors ajenos.
 
 ## Reglas duras
 - Antes de iniciar cualquier tarea, vuelve a leer AGENTS.md completo.
 - Nunca hagas commit ni push sin autorización.
 - Nunca crees ni modifiques tests.
-- Haz el cambio mínimo necesario, sin refactors ajenos.
 - Solo modificar el generador que es la fuente de verdad.
+- No hardcodees rutas.
+- No escribas rutas directamente.
 
 ## Estándares de código
 - Siempre cargar skills `clean-code`.
@@ -28,11 +29,12 @@
 - Usa siempre - para las listas.
 
 ## Output
-- Debes responde en <=50 palabras
+- Debes responder en <= 50 palabras
 
 ## Subagentes
+- Los templates se encuentra en `TEMPLATES`
 - Antes de crear un agent, lee y sigue `TEMPLATES/agent.md`.
 - Antes de crear un command, lee y sigue `TEMPLATES/command.md`.
 - Antes de crear una skill, lee y sigue `TEMPLATES/skill.md`.
-- Todos los subagentes que participen deben crear su informe con el template correspondiente al rol en `DELIVERABLES/obj-NNN/{subagent}.md`. Si la carpeta no existe, crearla.
-- Los templates se encuentra en `TEMPLATES`
+- Obligatorio crear un informe con el template correspondiente al rol en `DELIVERABLES/obj-NNN/{subagent}.md`. 
+- Si la carpeta no existe, crearla.

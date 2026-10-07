@@ -12,6 +12,9 @@
 ## Decisión
 - `<decisión propuesta>`
 
+## Moivos
+- `<motivo de la decisión>`
+
 ## Alternativas
 - `<alternativa y motivo de descarte>`
 
