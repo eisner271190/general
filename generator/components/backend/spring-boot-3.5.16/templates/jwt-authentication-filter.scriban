@@ -1,7 +1,7 @@
 {{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.configuration.authentication.jwt;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.epc.common.log.ILogService;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
@@ -22,7 +22,11 @@ import java.util.Set;
 @Component
 public class JwtAuthenticationFilter implements WebFilter {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private final ILogService log;
+
+    public JwtAuthenticationFilter(ILogService log) {
+        this.log = log;
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -30,23 +34,23 @@ public class JwtAuthenticationFilter implements WebFilter {
         String path = request.getPath().value();
 
         if (PathConstants.COMMON_PATHS.contains(path) || path.contains(PathConstants.AUTH)) {
-            LOG.debug("Ruta publica, sin filtro: {}", path);
+            log.debug(DomainLogMessages.ROUTE_PUBLIC, path);
             return chain.filter(exchange);
         }
 
         String auth = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (auth == null) {
-            LOG.warn("Peticion sin cabecera Authorization: {}", path);
+            log.warn(DomainLogMessages.REQUEST_WITHOUT_AUTHORIZATION, path);
             return Mono.error(new Throwable("no token was found"));
         }
 
         if (!auth.startsWith("Bearer ")) {
-            LOG.warn("Cabecera Authorization sin prefijo Bearer: {}", path);
+            log.warn(DomainLogMessages.AUTHORIZATION_WITHOUT_BEARER, path);
             return Mono.error(new Throwable("invalid auth"));
         }
 
         String token = auth.replace("Bearer ", "");
-        LOG.debug("Token presente en {} ({} caracteres)", path, token.length());
+        log.debug(DomainLogMessages.TOKEN_PRESENT, path, token.length());
 
         exchange.getAttributes().put("token", token);
 

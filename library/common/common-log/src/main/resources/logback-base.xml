@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Configuracion base de logs en JSON incluida por logback.xml del microservicio.
+
+  Un evento = una linea JSON: CloudWatch indexa solo el primer JSON de la linea, luego agrupar
+  eventos rompe la indexacion. El esquema es fijo (timestamp, level, message, logger, thread,
+  stack_trace, requestId): Lambda exige `level` y `timestamp` en RFC 3339 para indexar y filtrar.
+
+  El enmascarado es por nombre de campo (`<path>` de un solo token), no por valor: la propia
+  libreria lo marca como mucho mas barato y no mete regex en el camino caliente.
+-->
+<included>
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+      <includeMdc>true</includeMdc>
+      <includeCallerData>false</includeCallerData>
+      <customFields>{}</customFields>
+      <jsonGeneratorDecorator class="net.logstash.logback.mask.MaskingJsonGeneratorDecorator">
+        <defaultMask>***</defaultMask>
+        <addPaths>password,passwd,secret,secretKey,clientSecret,token,accessToken,refreshToken,idToken,apiKey,authorization,cookie,setCookie,sessionId,connectionString,awsSecretAccessKey,awsSessionToken,cardNumber,pan,cvv,email,phone,documentId</addPaths>
+      </jsonGeneratorDecorator>
+    </encoder>
+  </appender>
+  <root level="info">
+    <appender-ref ref="CONSOLE" />
+  </root>
+</included>
+

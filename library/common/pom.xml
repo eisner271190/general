@@ -6,7 +6,7 @@
 
   <groupId>com.epc.common</groupId>
   <artifactId>common-parent</artifactId>
-  <version>1.0.1</version>
+  <version>1.1.5</version>
   <packaging>pom</packaging>
   <name>common-parent</name>
   <description>Componente reutilizable para microservicios Java: BOM de versiones y modulos por capacidad.</description>

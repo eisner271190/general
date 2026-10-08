@@ -1,8 +1,8 @@
 package {{ PACKAGE }}.infrastructure.controllers;
 
+import com.epc.common.log.ILogService;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import {{ PACKAGE }}.infrastructure.configuration.cloud.aws.SnsEventPublisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
@@ -10,19 +10,19 @@ import org.springframework.http.ResponseEntity;
 @RequestMapping("/sns")
 public class SNSController {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SNSController.class);
-
+    private final ILogService log;
     private final SnsEventPublisher snsEventPublisher;
 
-    public SNSController(SnsEventPublisher snsEventPublisher) {
+    public SNSController(SnsEventPublisher snsEventPublisher, ILogService log) {
+        this.log = log;
         this.snsEventPublisher = snsEventPublisher;
     }
 
     @PostMapping("/publish")
     public ResponseEntity<String> publish(@RequestParam("message") String message) {
-        LOG.info("POST /sns/publish recibido ({} caracteres)", message.length());
+        log.info(DomainLogMessages.SNS_PUBLISH_ENDPOINT, message.length());
         snsEventPublisher.publishEvent("product.created", message);
-        LOG.debug("Evento product.created publicado");
+        log.debug(DomainLogMessages.SNS_PUBLISH_DONE);
         return ResponseEntity.ok("Mensaje enviado a SNS.");
     }
 }

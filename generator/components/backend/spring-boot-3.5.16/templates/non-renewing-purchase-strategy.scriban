@@ -1,22 +1,22 @@
 package {{ PACKAGE }}.domain.usecase.strategies;
 
+import com.epc.common.log.ILogService;
 import {{ PACKAGE }}.domain.dto.WebhookEventDTO;
 import {{ PACKAGE }}.domain.model.Subscription;
 import {{ PACKAGE }}.domain.ports.SubscriptionPort;
 import {{ PACKAGE }}.domain.usecase.IWebhookStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
 public class NonRenewingPurchaseStrategy implements IWebhookStrategy {
 
-    private static final Logger LOG = LoggerFactory.getLogger(NonRenewingPurchaseStrategy.class);
-
+    private final ILogService log;
     private final SubscriptionPort subscriptionPort;
 
-    public NonRenewingPurchaseStrategy(SubscriptionPort subscriptionPort) {
+    public NonRenewingPurchaseStrategy(SubscriptionPort subscriptionPort, ILogService log) {
+        this.log = log;
         this.subscriptionPort = subscriptionPort;
     }
 
@@ -31,11 +31,11 @@ public class NonRenewingPurchaseStrategy implements IWebhookStrategy {
      */
     @Override
     public Mono<Void> handle(WebhookEventDTO event) {
-        LOG.info("Procesando evento {}", eventType());
-        LOG.debug("userId={}", event.userId());
+        log.info(DomainLogMessages.WEBHOOK_PROCESSING_EVENT, eventType());
+        log.debug(DomainLogMessages.WEBHOOK_USER_ID, event.userId());
         return subscriptionPort.saveSubscription(toSubscription(event)).then()
             .doOnSuccess(done ->
-                LOG.debug("Evento {} aplicado a userId={}", eventType(), event.userId()));
+                log.debug(DomainLogMessages.WEBHOOK_EVENT_APPLIED, eventType(), event.userId()));
     }
 
     private Subscription toSubscription(WebhookEventDTO event) {

@@ -1,11 +1,11 @@
 {{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.adapters;
 
+import com.epc.common.log.ILogService;
 import {{ PACKAGE }}.domain.ports.RegistrationPort;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import {{ PACKAGE }}.infrastructure.configuration.cloud.aws.CognitoClient;
 import {{ PACKAGE }}.domain.model.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -17,33 +17,33 @@ import reactor.core.publisher.Mono;
 @Component
 public class RegistrationAdapter implements RegistrationPort {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RegistrationAdapter.class);
-
+    private final ILogService log;
     private final CognitoClient cognitoClient;
 
-    public RegistrationAdapter(CognitoClient cognitoClient) {
+    public RegistrationAdapter(CognitoClient cognitoClient, ILogService log) {
+        this.log = log;
         this.cognitoClient = cognitoClient;
     }
 
     @Override
     public Mono<Void> registerUserByAdmin(RegisterUser request) {
-        LOG.info("Creando usuario {} por administrador", request.getEmail());
+        log.info(DomainLogMessages.USER_CREATING_BY_ADMIN, request.getEmail());
         return cognitoClient.createUser(request)
-            .doOnSuccess(done -> LOG.debug("Usuario {} creado", request.getEmail()));
+            .doOnSuccess(done -> log.debug(DomainLogMessages.USER_CREATED, request.getEmail()));
     }
 
     @Override
     public Mono<Void> registerUser(RegisterUser request) {
-        LOG.info("Registrando usuario {}", request.getEmail());
+        log.info(DomainLogMessages.USER_REGISTERING, request.getEmail());
         return cognitoClient.signUpUser(request)
-            .doOnSuccess(done -> LOG.debug("Usuario {} registrado", request.getEmail()));
+            .doOnSuccess(done -> log.debug(DomainLogMessages.USER_REGISTERED, request.getEmail()));
     }
 
     @Override
     public Mono<Void> confirmUser(ConfirmUser request) {
-        LOG.info("Confirmando usuario {}", request.getUsername());
+        log.info(DomainLogMessages.USER_CONFIRMING, request.getUsername());
         return cognitoClient.confirmUser(request.getUsername(), request.getConfirmationCode())
-            .doOnSuccess(done -> LOG.debug("Usuario {} confirmado", request.getUsername()));
+            .doOnSuccess(done -> log.debug(DomainLogMessages.USER_CONFIRMED, request.getUsername()));
     }
 }
 {{ end }}

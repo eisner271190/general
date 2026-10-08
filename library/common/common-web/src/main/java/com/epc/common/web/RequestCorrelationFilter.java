@@ -1,6 +1,6 @@
 package com.epc.common.web;
 
-import com.epc.common.log.MdcCorrelation;
+import com.epc.common.log.ILogService;
 import java.util.UUID;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -18,10 +18,17 @@ public class RequestCorrelationFilter implements WebFilter, Ordered {
 
   private static final String REQUEST_ID_HEADER = "X-Request-Id";
 
+  private final ILogService log;
+
+  public RequestCorrelationFilter(ILogService log) {
+    this.log = log;
+  }
+
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-    MdcCorrelation.put(resolveRequestId(exchange));
-    return chain.filter(exchange).doFinally(signalType -> MdcCorrelation.clear());
+    String requestId = resolveRequestId(exchange);
+    log.withRequestId(requestId, () -> log.debug("Request correlated: {}", requestId));
+    return chain.filter(exchange).doFinally(signalType -> log.clearRequestId());
   }
 
   @Override

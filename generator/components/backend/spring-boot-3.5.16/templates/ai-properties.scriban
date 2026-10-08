@@ -1,9 +1,9 @@
 package {{ PACKAGE }}.infrastructure.configuration;
 
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
+import com.epc.common.log.ILogService;
 import jakarta.annotation.PostConstruct;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +22,11 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "ai")
 public class AiProperties {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AiProperties.class);
+    private final ILogService log;
+
+    public AiProperties(ILogService log) {
+        this.log = log;
+    }
 
     private String apiKey;
     private String apiBaseUrl;
@@ -37,8 +41,7 @@ public class AiProperties {
      */
     @PostConstruct
     void logResolvedConfiguration() {
-        LOG.info("Configuracion de IA cargada: model={}, apiBaseUrl={}, temperature={}, maxTokens={}, "
-                + "apiKey presente={}",
+        log.info(DomainLogMessages.AI_CONFIGURATION_LOADED,
             model, apiBaseUrl, temperature, maxTokens, apiKey != null && !apiKey.isBlank());
     }
 

@@ -1,43 +1,43 @@
 {{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.adapters;
 
+import com.epc.common.log.ILogService;
 import {{ PACKAGE }}.domain.ports.AdminUserPort;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import {{ PACKAGE }}.infrastructure.configuration.cloud.aws.CognitoClient;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
 public class AdminUserAdapter implements AdminUserPort {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AdminUserAdapter.class);
-
+    private final ILogService log;
     private final CognitoClient cognitoClient;
 
-    public AdminUserAdapter(CognitoClient cognitoClient) {
+    public AdminUserAdapter(CognitoClient cognitoClient, ILogService log) {
+        this.log = log;
         this.cognitoClient = cognitoClient;
     }
 
     @Override
     public Mono<Void> deleteUser(String username) {
-        LOG.info("Eliminando usuario {} en Cognito", username);
+        log.info(DomainLogMessages.USER_DELETING, username);
         return cognitoClient.deleteUser(username)
-            .doOnSuccess(done -> LOG.debug("Usuario {} eliminado", username));
+            .doOnSuccess(done -> log.debug(DomainLogMessages.USER_DELETED, username));
     }
 
     @Override
     public Mono<Void> activateUser(String username) {
-        LOG.info("Activando usuario {} en Cognito", username);
+        log.info(DomainLogMessages.USER_ACTIVATING, username);
         return cognitoClient.updateUserStatus(username, true)
-            .doOnSuccess(done -> LOG.debug("Usuario {} activado", username));
+            .doOnSuccess(done -> log.debug(DomainLogMessages.USER_ACTIVATED, username));
     }
 
     @Override
     public Mono<Void> deactivateUser(String username) {
-        LOG.info("Desactivando usuario {} en Cognito", username);
+        log.info(DomainLogMessages.USER_DEACTIVATING, username);
         return cognitoClient.updateUserStatus(username, false)
-            .doOnSuccess(done -> LOG.debug("Usuario {} desactivado", username));
+            .doOnSuccess(done -> log.debug(DomainLogMessages.USER_DEACTIVATED, username));
     }
 }
 {{ end }}

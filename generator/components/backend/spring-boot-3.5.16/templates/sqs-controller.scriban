@@ -1,8 +1,8 @@
 {{- if ConsumedEvents.size > 0 }}package {{ PACKAGE }}.infrastructure.controllers;
 
+import com.epc.common.log.ILogService;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import {{ PACKAGE }}.infrastructure.configuration.cloud.aws.SqsReceiver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
@@ -12,27 +12,27 @@ import java.util.List;
 @RequestMapping("/sqs")
 public class SQSController {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SQSController.class);
-
+    private final ILogService log;
     private final SqsReceiver sqsReceiver;
 
-    public SQSController(SqsReceiver sqsReceiver) {
+    public SQSController(SqsReceiver sqsReceiver, ILogService log) {
+        this.log = log;
         this.sqsReceiver = sqsReceiver;
     }
 
     @PostMapping("/send")
     public ResponseEntity<String> sendMessage(@RequestParam("message") String message) {
-        LOG.info("POST /sqs/send recibido ({} caracteres)", message.length());
+        log.info(DomainLogMessages.SQS_SEND_ENDPOINT, message.length());
         sqsReceiver.sendMessage(message);
-        LOG.debug("Mensaje encolado en SQS");
+        log.debug(DomainLogMessages.SQS_QUEUED);
         return ResponseEntity.ok("Mensaje enviado a SQS.");
     }
 
     @GetMapping("/consume")
     public ResponseEntity<List<String>> consumeMessages() {
-        LOG.info("GET /sqs/consume recibido");
+        log.info(DomainLogMessages.SQS_CONSUME_ENDPOINT);
         List<String> messages = sqsReceiver.receiveMessages();
-        LOG.debug("SQS devolvio {} mensajes", messages.size());
+        log.debug(DomainLogMessages.SQS_RECEIVED_COUNT, messages.size());
         return ResponseEntity.ok(messages);
     }
 }{{ end }}

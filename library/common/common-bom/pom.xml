@@ -7,7 +7,7 @@
   <parent>
     <groupId>com.epc.common</groupId>
     <artifactId>common-parent</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.5</version>
   </parent>
 
   <artifactId>common-bom</artifactId>
@@ -43,8 +43,8 @@
     <epc.aws-sdk.version>2.31.73</epc.aws-sdk.version>
     <epc.spring-cloud-aws.version>3.3.1</epc.spring-cloud-aws.version>
     <epc.aws-lambda-java-core.version>1.2.3</epc.aws-lambda-java-core.version>
-    <epc.aws-lambda-java-runtime.version>2.8.3</epc.aws-lambda-java-runtime.version>
-    <epc.springdoc.version>2.8.3</epc.springdoc.version>
+    <epc.aws-lambda-java-runtime.version>2.8.1</epc.aws-lambda-java-runtime.version>
+    <epc.springdoc.version>2.8.1</epc.springdoc.version>
     <epc.gson.version>2.13.1</epc.gson.version>
     <epc.jjwt.version>0.12.6</epc.jjwt.version>
     <!-- MEDIDO: spring-boot-dependencies 3.4.0 ya no gobierna MapStruct (la propiedad mapstruct.version no existe). -->
@@ -54,6 +54,8 @@
     <epc.pitest.version>1.2.1</epc.pitest.version>
     <epc.r2dbc-h2.version>1.0.0.RELEASE</epc.r2dbc-h2.version>
     <epc.serverless-java-container.version>2.1.4</epc.serverless-java-container.version>
+    <!-- 8.x y no 9.x: la 9.x exige Jackson 3 y el proyecto usa Jackson 2 con Boot 3.4.0. -->
+    <epc.logstash-logback-encoder.version>8.1</epc.logstash-logback-encoder.version>
   </properties>
 
   <dependencyManagement>
@@ -179,6 +181,16 @@
         <groupId>org.pitest</groupId>
         <artifactId>pitest-junit5-plugin</artifactId>
         <version>${epc.pitest.version}</version>
+      </dependency>
+
+      <!--
+        Encoder de logs en JSON. No lo declara common-log: solo se usa desde logback-base.xml,
+        luego va como dependencia runtime del microservicio.
+      -->
+      <dependency>
+        <groupId>net.logstash.logback</groupId>
+        <artifactId>logstash-logback-encoder</artifactId>
+        <version>${epc.logstash-logback-encoder.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

@@ -1,24 +1,24 @@
 package {{ PACKAGE }}.domain.usecase;
 
+import com.epc.common.log.ILogService;
 import {{ PACKAGE }}.domain.dto.SubscriptionStatusResponseDTO;
 import {{ PACKAGE }}.domain.model.Subscription;
 import {{ PACKAGE }}.domain.ports.ISubscriptionProviderPort;
 import {{ PACKAGE }}.domain.ports.SubscriptionPort;
 import {{ PACKAGE }}.domain.servicePorts.ISubscriptionServicePort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
 public class SubscriptionUseCase implements ISubscriptionServicePort {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SubscriptionUseCase.class);
-
+    private final ILogService log;
     private final SubscriptionPort subscriptionPort;
     private final ISubscriptionProviderPort subscriptionProvider;
 
-    public SubscriptionUseCase(SubscriptionPort subscriptionPort, ISubscriptionProviderPort subscriptionProvider) {
+    public SubscriptionUseCase(SubscriptionPort subscriptionPort, ISubscriptionProviderPort subscriptionProvider, ILogService log) {
+        this.log = log;
         this.subscriptionPort = subscriptionPort;
         this.subscriptionProvider = subscriptionProvider;
     }
@@ -30,22 +30,22 @@ public class SubscriptionUseCase implements ISubscriptionServicePort {
      */
     @Override
     public Mono<SubscriptionStatusResponseDTO> getStatus(String userId) {
-        LOG.info("Consultando estado de suscripcion para userId={}", userId);
+        log.info(DomainLogMessages.SUBSCRIPTION_STATUS_QUERYING, userId);
         return subscriptionPort.findSubscriptionByUserId(userId)
             .filter(Subscription::isActive)
             .switchIfEmpty(fetchAndCacheFromProvider(userId))
             .map(this::toResponse)
-            .doOnNext(response -> LOG.debug("Estado resuelto para userId={}: isActive={}",
+            .doOnNext(response -> log.debug(DomainLogMessages.SUBSCRIPTION_STATUS_RESOLVED,
                 userId, response.isActive()));
     }
 
     @Override
     public Mono<SubscriptionStatusResponseDTO> syncFromProvider(String userId) {
-        LOG.info("Sincronizando suscripcion con el proveedor para userId={}", userId);
+        log.info(DomainLogMessages.SUBSCRIPTION_SYNCING, userId);
         return subscriptionProvider.fetchSubscription(userId)
             .flatMap(this::saveAndMap)
             .switchIfEmpty(saveInactive(userId).map(this::toResponse))
-            .doOnNext(response -> LOG.debug("Sincronizacion terminada para userId={}: isActive={}",
+            .doOnNext(response -> log.debug(DomainLogMessages.SUBSCRIPTION_SYNC_DONE,
                 userId, response.isActive()));
     }
 

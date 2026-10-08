@@ -1,8 +1,7 @@
 package com.epc.samples.logonly;
 
-import com.epc.common.log.MdcCorrelation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.epc.common.log.ILogService;
+import com.epc.common.log.LogMessages;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,15 +18,17 @@ public class LogOnlySampleApplication {
   @Component
   static class CorrelationDemo implements CommandLineRunner {
 
-    private static final Logger log = LoggerFactory.getLogger(CorrelationDemo.class);
+    private final ILogService log;
+
+    CorrelationDemo(ILogService log) {
+      this.log = log;
+    }
 
     @Override
     public void run(String... args) {
       log.info("Microservicio sin web: arranca sin common-web en el classpath");
-      MdcCorrelation.put("sample-request-id");
-      log.info("Linea correlacionada");
-      MdcCorrelation.clear();
-      log.info("Linea sin correlacionar");
+      log.withRequestId("sample-request-id", () -> log.info(LogMessages.METHOD_ENTER, "sample"));
+      log.info(LogMessages.METHOD_EXIT, "sample");
     }
   }
 }

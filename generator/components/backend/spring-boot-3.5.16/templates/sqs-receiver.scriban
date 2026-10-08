@@ -1,7 +1,7 @@
 {{- if ConsumedEvents.size > 0 }}package {{ PACKAGE }}.infrastructure.configuration.cloud.aws;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.epc.common.log.ILogService;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -18,31 +18,31 @@ import java.util.List;
 @Service
 public class SqsReceiver {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SqsReceiver.class);
-
+    private final ILogService log;
     private final SqsClient sqsClient;
 
     @Value("${aws.sqs.url}")
     private String queueUrl;
 
-    public SqsReceiver(SqsClient sqsClient) {
+    public SqsReceiver(SqsClient sqsClient, ILogService log) {
+        this.log = log;
         this.sqsClient = sqsClient;
     }
 
     public void sendMessage(String messageBody) {
-        LOG.info("Enviando mensaje a SQS ({} caracteres)", messageBody.length());
-        LOG.debug("Cola: {}", queueUrl);
+        log.info(DomainLogMessages.SQS_SENDING, messageBody.length());
+        log.debug(DomainLogMessages.SQS_QUEUE, queueUrl);
         SendMessageRequest sendRequest = SendMessageRequest.builder()
                 .queueUrl(queueUrl)
                 .messageBody(messageBody)
                 .build();
         sqsClient.sendMessage(sendRequest);
-        LOG.debug("Mensaje enviado a SQS");
+        log.debug(DomainLogMessages.SQS_SENT);
     }
 
     public List<String> receiveMessages() {
-        LOG.info("Recibiendo mensajes de SQS");
-        LOG.debug("Cola: {}", queueUrl);
+        log.info(DomainLogMessages.SQS_RECEIVING);
+        log.debug("Cola: {}", queueUrl);
         ReceiveMessageRequest request = ReceiveMessageRequest.builder()
                 .queueUrl(queueUrl)
                 .maxNumberOfMessages(10)
@@ -50,7 +50,7 @@ public class SqsReceiver {
                 .build();
 
         List<Message> messages = sqsClient.receiveMessage(request).messages();
-        LOG.debug("SQS devolvio {} mensajes", messages.size());
+        log.debug(DomainLogMessages.SQS_RECEIVED_COUNT, messages.size());
 
         for (Message message : messages) {
             deleteMessage(message.receiptHandle());
@@ -60,7 +60,7 @@ public class SqsReceiver {
     }
 
     private void deleteMessage(String receiptHandle) {
-        LOG.debug("Confirmando mensaje recibido (receiptHandle de {} caracteres)", receiptHandle.length());
+        log.debug(DomainLogMessages.SQS_RECEIPT_ACK, receiptHandle.length());
         DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
                 .queueUrl(queueUrl)
                 .receiptHandle(receiptHandle)

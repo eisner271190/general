@@ -1,7 +1,7 @@
 {{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.configuration.authentication.jwt;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.epc.common.log.ILogService;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextImpl;
@@ -13,28 +13,28 @@ import reactor.core.publisher.Mono;
 @Component
 public class SecurityContextRepository implements ServerSecurityContextRepository {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SecurityContextRepository.class);
-
+    private final ILogService log;
     private final JwtAuthenticationManager jwtAuthenticationManager;
 
-    public SecurityContextRepository(JwtAuthenticationManager jwtAuthenticationManager) {
+    public SecurityContextRepository(JwtAuthenticationManager jwtAuthenticationManager, ILogService log) {
+        this.log = log;
         this.jwtAuthenticationManager = jwtAuthenticationManager;
     }
 
     /** No se persiste el contexto: la Lambda es stateless y el token viaja en cada peticion. */
     @Override
     public Mono<Void> save(ServerWebExchange exchange, SecurityContext context) {
-        LOG.debug("SecurityContext no persistido (lambda stateless)");
+        log.debug(DomainLogMessages.SECURITY_CONTEXT_NOT_STORED);
         return Mono.empty();
     }
 
     @Override
     public Mono<SecurityContext> load(ServerWebExchange exchange) {
         String token = exchange.getAttribute("token");
-        LOG.debug("Cargando contexto de seguridad (token presente: {})", token != null);
+        log.debug(DomainLogMessages.SECURITY_CONTEXT_LOADING, token != null);
         return jwtAuthenticationManager.authenticate(new UsernamePasswordAuthenticationToken(token, token))
                 .map(SecurityContextImpl::new)
-                .doOnNext(context -> LOG.debug("Contexto de seguridad cargado"));
+                .doOnNext(context -> log.debug(DomainLogMessages.SECURITY_CONTEXT_LOADED));
     }
 }
 {{ end }}

@@ -1,13 +1,13 @@
 package {{ PACKAGE }}.infrastructure.controllers;
 
+import com.epc.common.log.ILogService;
 import {{ PACKAGE }}.application.dto.AiGenerateRequestDTO;
 import {{ PACKAGE }}.domain.servicePorts.IAiServicePort;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import {{ PACKAGE }}.infrastructure.configuration.AiConstants;
 import {{ PACKAGE }}.infrastructure.configuration.AiMessages;
 import com.epc.common.error.ApiResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,11 +29,11 @@ import java.util.Map;
 @RequestMapping("/api/v1/ai")
 public class AiController {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AiController.class);
-
+    private final ILogService log;
     private final IAiServicePort aiService;
 
-    public AiController(IAiServicePort aiService) {
+    public AiController(IAiServicePort aiService, ILogService log) {
+        this.log = log;
         this.aiService = aiService;
     }
 
@@ -47,10 +47,10 @@ public class AiController {
     public Mono<ResponseEntity<ApiResponse>> generate(
             @RequestBody(required = false) AiGenerateRequestDTO request) {
         String prompt = extractPrompt(request);
-        LOG.info("POST /api/v1/ai/generate recibido");
-        LOG.debug("Longitud del prompt: {}", prompt == null ? 0 : prompt.length());
+        log.info(DomainLogMessages.AI_ENDPOINT_RECEIVED);
+        log.debug(DomainLogMessages.AI_PROMPT_LENGTH, prompt == null ? 0 : prompt.length());
         if (isPromptInvalid(prompt)) {
-            LOG.warn("Prompt rechazado: ausente, vacio o mayor que {}",
+            log.warn(DomainLogMessages.AI_PROMPT_REJECTED,
                 AiConstants.MAX_PROMPT_LENGTH);
             return Mono.just(badRequest());
         }
@@ -85,7 +85,7 @@ public class AiController {
     private Mono<ResponseEntity<ApiResponse>> handleError(Throwable error) {
         // El mensaje real puede traer la URL del proveedor: dato de infraestructura
         // que no debe viajar al cliente de un endpoint publico. Se registra aqui.
-        LOG.error("Fallo al generar texto con IA", error);
+        log.error(DomainLogMessages.AI_GENERATION_FAILED, error);
         Map<String, Object> noData = null;
         return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(new ApiResponse(noData, AiMessages.GENERATION_ERROR, AiConstants.STATUS_INTERNAL_ERROR)));

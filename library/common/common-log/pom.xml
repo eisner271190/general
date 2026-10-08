@@ -7,17 +7,28 @@
   <parent>
     <groupId>com.epc.common</groupId>
     <artifactId>common-parent</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.5</version>
   </parent>
 
   <artifactId>common-log</artifactId>
   <name>common-log</name>
-  <description>Correlacion de logs (MDC) sin dependencia de web.</description>
+  <description>Puerto de logging (ILogService), textos communes, correlacion MDC y configuracion base de logs en JSON.</description>
 
   <dependencies>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+    <!--
+      provided + optional: solo hace falta para compilar la auto-configuracion que registra el
+      puerto. Quien solo consume MdcCorrelation no arrastra Spring.
+    -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
     </dependency>
   </dependencies>
 </project>

@@ -1,22 +1,22 @@
 package {{ PACKAGE }}.domain.usecase.strategies;
 
+import com.epc.common.log.ILogService;
 import {{ PACKAGE }}.domain.dto.WebhookEventDTO;
 import {{ PACKAGE }}.domain.model.Subscription;
 import {{ PACKAGE }}.domain.ports.SubscriptionPort;
 import {{ PACKAGE }}.domain.usecase.IWebhookStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
 public class UncancellationStrategy implements IWebhookStrategy {
 
-    private static final Logger LOG = LoggerFactory.getLogger(UncancellationStrategy.class);
-
+    private final ILogService log;
     private final SubscriptionPort subscriptionPort;
 
-    public UncancellationStrategy(SubscriptionPort subscriptionPort) {
+    public UncancellationStrategy(SubscriptionPort subscriptionPort, ILogService log) {
+        this.log = log;
         this.subscriptionPort = subscriptionPort;
     }
 
@@ -27,13 +27,13 @@ public class UncancellationStrategy implements IWebhookStrategy {
 
     @Override
     public Mono<Void> handle(WebhookEventDTO event) {
-        LOG.info("Procesando evento {}", eventType());
-        LOG.debug("userId={}", event.userId());
+        log.info(DomainLogMessages.WEBHOOK_PROCESSING_EVENT, eventType());
+        log.debug(DomainLogMessages.WEBHOOK_USER_ID, event.userId());
         return subscriptionPort.findSubscriptionByUserId(event.userId())
             .flatMap(subscription -> subscriptionPort.saveSubscription(
                 subscription.withStatus("ACTIVE")
             ))
             .then()
-            .doOnSuccess(done -> LOG.debug("Evento UNCANCELLATION aplicado"));
+            .doOnSuccess(done -> log.debug(DomainLogMessages.WEBHOOK_EVENT_APPLIED_SHORT, eventType()));
     }
 }

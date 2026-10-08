@@ -57,13 +57,13 @@ if (-not $SkipBuild) {
     Write-Host "`n[1/5] Building imagen Docker..." -ForegroundColor Green
     if (-not $WhatIf) {
         $env:DOCKER_BUILDKIT = "0"
-        $result = docker build --platform linux/amd64 -t "${EcrUri}:$Tag" -f "$DockerfilePath" .
+        $result = docker build --no-cache --platform linux/amd64 -t "${EcrUri}:$Tag" -f "$DockerfilePath" .
         if ($LASTEXITCODE -ne 0) {
             Write-Error "docker build falló"
             exit $LASTEXITCODE
         }
     } else {
-        Write-Host "  docker build --platform linux/amd64 -t ${EcrUri}:$Tag -f $DockerfilePath ." -ForegroundColor Yellow
+        Write-Host "  docker build --no-cache --platform linux/amd64 -t ${EcrUri}:$Tag -f $DockerfilePath ." -ForegroundColor Yellow
     }
 } else {
     Write-Host "`n[1/5] Saltando build (--SkipBuild)" -ForegroundColor Yellow

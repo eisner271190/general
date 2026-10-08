@@ -1,6 +1,7 @@
 package com.epc.common.web;
 
 import com.epc.common.error.ApiResponse;
+import com.epc.common.log.ILogService;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -23,13 +24,13 @@ public class WebAutoConfiguration {
   /** El advice propio del microservicio gana: basta con declarar un bean de este tipo. */
   @Bean
   @ConditionalOnMissingBean(GlobalExceptionHandler.class)
-  public GlobalExceptionHandler globalExceptionHandler() {
-    return new GlobalExceptionHandler();
+  public GlobalExceptionHandler globalExceptionHandler(ILogService log) {
+    return new GlobalExceptionHandler(log);
   }
 
   @Bean
   @ConditionalOnMissingBean(name = "requestCorrelationFilter")
-  public RequestCorrelationFilter requestCorrelationFilter() {
-    return new RequestCorrelationFilter();
+  public RequestCorrelationFilter requestCorrelationFilter(ILogService log) {
+    return new RequestCorrelationFilter(log);
   }
 }

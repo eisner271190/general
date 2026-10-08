@@ -1,9 +1,10 @@
 {{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.configuration.cloud.aws;
 
 import {{ PACKAGE }}.domain.model.*;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 
+import com.epc.common.log.ILogService;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.*;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderAsyncClient;
@@ -20,12 +21,12 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-@Slf4j
 @Component
 public class CognitoClient {
 
     private final CognitoIdentityProviderAsyncClient cognitoClient;
     private final WebClient webClient;
+    private final ILogService log;
 
     private static final String HMACSHA256 = "HmacSHA256";
 
@@ -35,7 +36,8 @@ public class CognitoClient {
     private static final String CLIENT_SECRET = null;
     private static final String COGNITO_DOMAIN = System.getenv("AWS_COGNITO_DOMAIN");
 
-    public CognitoClient() {
+    public CognitoClient(ILogService log) {
+        this.log = log;
         this.cognitoClient = CognitoIdentityProviderAsyncClient.create();
         this.webClient = WebClient.builder().build();
     }
@@ -128,9 +130,9 @@ public class CognitoClient {
                 .build();
 
         return Mono.fromFuture(() -> cognitoClient.confirmSignUp(confirmSignUpRequest))
-        .doOnTerminate(() -> System.out.println("Usuario confirmado: " + username))
+        .doOnTerminate(() -> log.info(DomainLogMessages.USER_CONFIRMED, username))
         .onErrorResume(e -> {
-            System.out.println("Error al confirmar el usuario: " + e.getMessage());
+            log.error(DomainLogMessages.USER_CONFIRM_FAILED, e);
             return Mono.error(new RuntimeException("Error al confirmar el usuario", e));
         }).then();
     }
@@ -218,12 +220,14 @@ public class CognitoClient {
                             String codeErr = err.getError();
                             String desc = err.getError_description();
                             String message = buildErrorMessage(response.statusCode().value(), codeErr, desc);
-                            log.error("Error al intercambiar el código: status={} error={} desc={}", response.statusCode().value(), codeErr, desc);
+                            log.error(DomainLogMessages.TOKEN_EXCHANGE_FAILED, response.statusCode().value(), codeErr, desc);
                             return Mono.<Throwable>error(new RuntimeException(message));
                         })
                 )
                 .bodyToMono(CognitoTokenResponse.class)
-                .doOnSuccess(cognito -> log.info("CognitoTokenResponse: {}", cognito))
+                // El cuerpo lleva access_token, id_token y refresh_token: no se registra. El
+                // enmascarado por nombre de campo no alcanzaria, porque aqui el token se
+                // interpolaria dentro del texto del mensaje, no como campo JSON.
                 .map(tokenResp -> new ExchangeResponse(
                         tokenResp.getAccessToken(),
                         tokenResp.getIdToken(),
@@ -231,7 +235,8 @@ public class CognitoClient {
                         tokenResp.getExpiresIn(),
                         tokenResp.getTokenType()
                 ))
-                .doOnSuccess(resp -> log.info("ExchangeResponse: {}", resp));
+                .doOnSuccess(resp -> log.info(DomainLogMessages.TOKEN_EXCHANGE_COMPLETED,
+                        resp.getExpiresIn(), resp.getTokenType()));
 
     }
 

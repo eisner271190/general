@@ -1,10 +1,10 @@
 {{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.configuration.authentication.jwt;
 
+import com.epc.common.log.ILogService;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -21,7 +21,11 @@ import java.util.Date;
 @Component
 public class JwtProvider {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JwtProvider.class);
+    private final ILogService log;
+
+    public JwtProvider(ILogService log) {
+        this.log = log;
+    }
 
     @Value("${jwt.secret}")
     private String secret;
@@ -29,8 +33,8 @@ public class JwtProvider {
     private Integer expiration;
 
     public String generateToken(UserDetails userDetails) {
-        LOG.info("Generando token para {}", userDetails.getUsername());
-        LOG.debug("Authorities: {}", userDetails.getAuthorities());
+        log.info(DomainLogMessages.TOKEN_GENERATING, userDetails.getUsername());
+        log.debug(DomainLogMessages.TOKEN_AUTHORITIES, userDetails.getAuthorities());
         String token = Jwts.builder()
                 .subject(userDetails.getUsername())
                 .claim("roles", userDetails.getAuthorities())
@@ -38,12 +42,12 @@ public class JwtProvider {
                 .expiration(new Date(new Date().getTime() + expiration))
                 .signWith(getKey(secret))
                 .compact();
-        LOG.debug("Token generado para {}", userDetails.getUsername());
+        log.debug(DomainLogMessages.TOKEN_GENERATED, userDetails.getUsername());
         return token;
     }
 
     public Claims getClaims(String token) {
-        LOG.debug("Extrayendo claims del token");
+        log.debug(DomainLogMessages.TOKEN_CLAIMS_EXTRACTING);
         return Jwts.parser()
                 .verifyWith(getKey(secret))
                 .build()
@@ -52,7 +56,7 @@ public class JwtProvider {
     }
 
     public String getSubject(String token) {
-        LOG.debug("Extrayendo subject del token");
+        log.debug(DomainLogMessages.TOKEN_SUBJECT_EXTRACTING);
         return Jwts.parser()
                 .verifyWith(getKey(secret))
                 .build()
@@ -62,7 +66,7 @@ public class JwtProvider {
     }
 
     public boolean validate(String token) {
-        LOG.debug("Validando token");
+        log.debug(DomainLogMessages.TOKEN_VALIDATING);
         try {
             Jwts.parser()
                     .verifyWith(getKey(secret))
@@ -70,12 +74,12 @@ public class JwtProvider {
                     .parseSignedClaims(token)
                     .getPayload()
                     .getSubject();
-            LOG.debug("Token valido");
+            log.debug(DomainLogMessages.TOKEN_VALID);
             return true;
         } catch (Exception e) {
             // Motivo de fallo: expiracion, firma invalida o formato. No se propaga porque
             // quien llama solo necesita el booleano; el motivo queda en la traza.
-            LOG.debug("Token invalido: {}", e.getMessage());
+            log.debug(DomainLogMessages.TOKEN_INVALID, e.getMessage());
             return false;
         }
     }

@@ -1,13 +1,13 @@
 package {{ PACKAGE }}.infrastructure.adapters;
 
+import com.epc.common.log.ILogService;
 import {{ PACKAGE }}.domain.model.AiGeneration;
 import {{ PACKAGE }}.domain.ports.IAProviderPort;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import {{ PACKAGE }}.infrastructure.configuration.AiConstants;
 import {{ PACKAGE }}.infrastructure.configuration.AiMessages;
 import {{ PACKAGE }}.infrastructure.configuration.AiProperties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -31,8 +31,6 @@ import java.util.Map;
 @Component
 public class OpenRouterAdapter implements IAProviderPort {
 
-    private static final Logger LOG = LoggerFactory.getLogger(OpenRouterAdapter.class);
-
     private static final String ROLE_USER = "user";
     private static final String PATH_CHAT_COMPLETIONS = "/chat/completions";
     private static final String HEADER_AUTHORIZATION = "Authorization";
@@ -44,10 +42,12 @@ public class OpenRouterAdapter implements IAProviderPort {
     private static final Duration PROVIDER_TIMEOUT =
         Duration.ofSeconds(AiConstants.PROVIDER_TIMEOUT_SECONDS);
 
+    private final ILogService log;
     private final WebClient webClient;
     private final AiProperties properties;
 
-    public OpenRouterAdapter(WebClient.Builder webClientBuilder, AiProperties properties) {
+    public OpenRouterAdapter(WebClient.Builder webClientBuilder, AiProperties properties, ILogService log) {
+        this.log = log;
         this.properties = properties;
         this.webClient = webClientBuilder.baseUrl(properties.getApiBaseUrl()).build();
     }
@@ -55,9 +55,9 @@ public class OpenRouterAdapter implements IAProviderPort {
     /** Fachada: valida, arma la peticion, la envia y traduce la respuesta. */
     @Override
     public Mono<AiGeneration> generate(String prompt) {
-        LOG.info("Generando texto con IA: modelo={}, temperature={}, maxTokens={}",
+        log.info(DomainLogMessages.AI_REQUEST_SUMMARY,
             properties.getModel(), properties.getTemperature(), properties.getMaxTokens());
-        LOG.debug("Prompt recibido: {}", abbreviate(prompt));
+        log.debug(DomainLogMessages.AI_PROMPT_LENGTH, abbreviate(prompt));
         if (isApiKeyMissing()) {
             return Mono.error(new IllegalStateException(AiMessages.MISSING_API_KEY));
         }
@@ -89,7 +89,7 @@ public class OpenRouterAdapter implements IAProviderPort {
             // que modelo habia rechazado el proveedor ni por que.
             .onStatus(HttpStatusCode::isError, response -> providerError(response, request))
             .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
-            // defer es obligatorio: timeoutError() lleva el LOG.error dentro y como argumento
+            // defer es obligatorio: timeoutError() lleva el log.error dentro y como argumento
             // se evaluaria en el ensamblado, no al expirar. Sin esto cada peticion loguea un
             // timeout falso aunque la respuesta llegue bien.
             .timeout(PROVIDER_TIMEOUT, Mono.defer(() -> Mono.error(timeoutError(request))));
@@ -105,7 +105,7 @@ public class OpenRouterAdapter implements IAProviderPort {
                 String detail = "OpenRouter respondio " + response.statusCode().value()
                     + " para el modelo " + request.model()
                     + " (" + AiConstants.PARAMETER_PREFIX + "model): " + body;
-                LOG.error(detail);
+                log.error(detail);
                 return Mono.error(new IllegalStateException(detail));
             });
     }
@@ -117,7 +117,7 @@ public class OpenRouterAdapter implements IAProviderPort {
 private Throwable timeoutError(OpenRouterChatRequest request) {
         String detail = AiMessages.TIMEOUT + AiConstants.PROVIDER_TIMEOUT_SECONDS + " s"
             + " (modelo " + request.model() + ")";
-        LOG.error(detail);
+        log.error(detail);
         return new IllegalStateException(detail);
     }
 
@@ -165,7 +165,7 @@ private Throwable timeoutError(OpenRouterChatRequest request) {
     }
 
     private void logGeneration(AiGeneration generation) {
-        LOG.info("Generacion recibida: modelo={}", generation.model());
+        log.info(DomainLogMessages.AI_GENERATION_COMPLETED, generation.model());
     }
 
     private String abbreviate(String prompt) {

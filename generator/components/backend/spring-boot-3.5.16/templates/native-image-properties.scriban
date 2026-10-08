@@ -16,6 +16,10 @@
 -H:TraceClassInitialization=org.apache.logging.log4j.util.PropertyFilePropertySource
 -H:TraceClassInitialization=org.apache.logging.log4j.util.LoaderUtil
 
+# Encoder de logs en JSON: logback lo instancia por nombre al arrancar.
+-H:TraceClassInitialization=net.logstash.logback.encoder.LogstashEncoder
+-H:TraceClassInitialization=net.logstash.logback.mask.MaskingJsonGeneratorDecorator
+
 # Inicializar algunas clases en tiempo de ejecución
 -H:ClassInitialization=org.apache.logging.log4j.LogManager:run_time
 -H:ClassInitialization=org.apache.logging.log4j.status.StatusLogger:run_time

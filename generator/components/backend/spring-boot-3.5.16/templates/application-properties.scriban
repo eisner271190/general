@@ -31,7 +31,8 @@ jwt.secret=${JWT_SECRET:${jwt-secret:}}
 jwt.expiration=${JWT_EXPIRATION}
 
 spring.main.web-application-type=reactive
-logging.level.software.amazon.awssdk=DEBUG
+# El SDK en DEBUG imprime cabeceras de autenticacion: se queda en INFO.
+logging.level.software.amazon.awssdk=INFO
 
 {{- if ConsumedEvents.size > 0 }}
 aws.sqs.url=${AWS_SQS_URL_{{ Name }}}

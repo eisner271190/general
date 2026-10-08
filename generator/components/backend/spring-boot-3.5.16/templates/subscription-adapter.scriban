@@ -1,12 +1,12 @@
 package {{ PACKAGE }}.infrastructure.adapters;
 
+import com.epc.common.log.ILogService;
 import {{ PACKAGE }}.domain.model.Subscription;
 import {{ PACKAGE }}.domain.ports.SubscriptionPort;
 import {{ PACKAGE }}.infrastructure.persistence.dynamos.tableschema.SubscriptionTableSchema;
 import {{ PACKAGE }}.infrastructure.persistence.entities.SubscriptionEntity;
+import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -16,11 +16,11 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 @Component
 public class SubscriptionAdapter implements SubscriptionPort {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SubscriptionAdapter.class);
-
+    private final ILogService log;
     private final DynamoDbTable<SubscriptionEntity> table;
 
-    public SubscriptionAdapter(SubscriptionTableSchema subscriptionTableSchema) {
+    public SubscriptionAdapter(SubscriptionTableSchema subscriptionTableSchema, ILogService log) {
+        this.log = log;
         this.table = subscriptionTableSchema.getTable();
     }
 
@@ -31,18 +31,18 @@ public class SubscriptionAdapter implements SubscriptionPort {
      */
     @Override
     public Mono<Subscription> findSubscriptionByUserId(String userId) {
-        LOG.info("Buscando suscripcion en DynamoDB para userId={}", userId);
+        log.info(DomainLogMessages.SUBSCRIPTION_NOT_FOUND_IN_DB, userId);
         return Mono.fromCallable(() -> table.getItem(keyFor(userId)))
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(this::toDomain)
-                .doOnNext(subscription -> LOG.debug("Suscripcion encontrada con estado {}",
+                .doOnNext(subscription -> log.debug(DomainLogMessages.SUBSCRIPTION_FOUND,
                     subscription == null ? null : subscription.getStatus()));
     }
 
     @Override
     public Mono<Subscription> saveSubscription(Subscription subscription) {
-        LOG.info("Guardando suscripcion en DynamoDB para userId={}", subscription.getUserId());
-        LOG.debug("Estado a persistir: {}", subscription.getStatus());
+        log.info(DomainLogMessages.SUBSCRIPTION_SAVING, subscription.getUserId());
+        log.debug(DomainLogMessages.SUBSCRIPTION_STATUS_PERSISTED, subscription.getStatus());
         return Mono.fromRunnable(() -> table.putItem(toEntity(subscription)))
                 .subscribeOn(Schedulers.boundedElastic())
                 .thenReturn(subscription);
@@ -50,7 +50,7 @@ public class SubscriptionAdapter implements SubscriptionPort {
 
     @Override
     public Mono<Subscription> updateStatus(String userId, String status) {
-        LOG.info("Actualizando suscripcion a {} para userId={}", status, userId);
+        log.info(DomainLogMessages.SUBSCRIPTION_UPDATING, status, userId);
         return findSubscriptionByUserId(userId)
                 .map(subscription -> subscription.withStatus(status))
                 .flatMap(this::saveSubscription);
