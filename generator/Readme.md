@@ -43,7 +43,8 @@ Así, el generador resuelve este problema al convertir esas decisiones iniciales
 
 ## Objetivo
 
-Automatizar la creación de carpetas, archivos y archivos predeterminados para generar una estructura de proyecto completa.
+- Principal: Crear un MVP de una idea de app en muy poco tiempo
+- Automatizar la creación de carpetas, archivos y archivos predeterminados para generar una estructura de proyecto completa.
 
 ## Flujo principal
 
