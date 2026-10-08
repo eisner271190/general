@@ -8,6 +8,10 @@
 - DELIVERABLES: `docs/deliverables`
 - DECISIONS: `docs/adr`
 - GENERATOR: `generator`
+- UP: `projects/com.quizsmart.app/up.ps1`
+- UPDATEALL: `projects/com.quizsmart.app/backend/update-all.ps1`
+- GETAWS: `.opencode/scripts/get-services-aws.ps1`
+- DELETEALL: `.opencode/scripts/delete-all-services-aws.ps1`
 
 ## Referencias
 - Haz el cambio mínimo necesario, sin refactors ajenos.

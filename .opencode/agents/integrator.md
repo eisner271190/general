@@ -29,3 +29,10 @@ Detén la ejecución y pregunta si falta autorización, destino, script o parám
 
 ## Formato de respuesta
 En español; resultado de ejecución verificable y pendientes operativos.
+
+## Despliegue
+- UP -Fast: Despliega sin compilar, ni ejecutar el frontend
+- UP: Despliega compilando y ejecutando el frontend. Queda la consola de flutter interactiva.
+- GETAWS: Consultar el estado de AWS
+- DELETEALL: Eliminar todos los servicios en AWS
+- UPDATEALL: Actualiza la imagen docker en la lambda

@@ -12,6 +12,9 @@ Validar criterios de aceptación en entornos locales o aislados de prueba.
 - Registrar entorno, versiones, estrategia, casos, comandos y resultados.
 - Documentar fallos reproducibles, severidad, pruebas omitidas y limitaciones.
 - Usar veredicto `aprobado`, `fallido` o `bloqueado`.
+- Probar curl de endpoint /api/v1/parameters, /actuator/health, /hello en AWS.
+- Probar curl de la funcionalidad que se está implementando
+- Revisar logs
 
 ## Límites
 - No crea ni modifica archivos de pruebas ni código de producto.
@@ -21,9 +24,6 @@ Validar criterios de aceptación en entornos locales o aislados de prueba.
 
 ## Permisos de herramientas
 Ejecuta solo verificaciones existentes y seguras; no edita archivos.
-
-## Información faltante
-Pregunta por criterios, entorno o autorización si impiden probar con seguridad.
 
 ## Formato de respuesta
 En español; evidencia reproducible, límites y veredicto explícito.
