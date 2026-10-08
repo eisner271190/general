@@ -52,6 +52,21 @@ Creación de skills, commands, agents con viñetas y corto
 	- Monolito modular
 	- Probar gemini live 
 	- Gestionar los Beans
+	- Agregar en common
+		- SOAP
+		- API Rest
+		- MongoDB
+		- FileSystem (Excel, PDF)
+		- AWS (ParameterStore, DynamoDb, SecretManager, ElastiCache, Cognito, SQS, SNS, SES, S3, EventBridge)
+		- PushNotifications
+		- Image
+		- TextToSpeech
+		- SpeechToText
+		- Realtime
+		- Chat
+		- Biometric
+		- Multi-tenancy
+		- Cache Strategy
 
 ## Herramientas externas
 	- AWS
@@ -75,3 +90,166 @@ obj-003:
 	- Se debe crear una clase con los texto de los logs
 	- Solo aplica a common y generator
 	- No aplica al código generado. Se elimina y vuelve a regenerar
+
+
+Crear un ADR
+Actualmente se generando proyecto con una estructura de carpetas con arquitectura hexagonal pero horizontal.
+Se quiere pasar a vertical slice
+
+	
+domain - pascalCase
+usecase - pascalCase
+module - pascalCase
+
+projects\{APPLICATION_ID}\backend\{MICROSERVICE_NAME}\src\main\java\{APPLICATION_PACKAGE}\
+{domain}
+	modules
+		{usecase}
+			domain
+				{module}Command (record)
+			application
+				{module}Handler
+			infrastructure
+				rest
+					{module}Endpoint
+					{module}RequestDto
+					{module}ResponseDto
+				
+				
+				
+Necesito la estructura completa del siguiente dominio/caso de uso:
+Domain: pedido
+Module: Consultar pedidos por cliente. Se debe mostrar:
+- Datos del cliente
+- Listado de pedidos
+- Lista de productos
+- Items por producto
+
+Redis
+MongoDB
+RDS
+API
+SOAP
+Filesystem
+Parameter Store
+Secret Manager
+DynamoDb
+
+src/main/java/com/company/pedidos/
+├── ConsultarPedidosPorCliente/
+│   │
+│   ├── Domain/
+│   │   ├── Cliente.java
+│   │   ├── ClienteId.java
+│   │   ├── Pedido.java
+│   │   ├── PedidoId.java
+│   │   ├── Producto.java
+│   │   ├── ProductoId.java
+│   │   ├── Item.java
+│   │   └── ItemId.java
+│   │
+│   ├── Application/
+│   │   │
+│   │   ├── ConsultarPedidosPorClienteHandler.java
+│   │   │
+│   │   ├── Query/
+│   │   │   └── ConsultarPedidosPorClienteQuery.java
+│   │   │
+│   │   ├── Response/
+│   │   │   ├── ConsultarPedidosPorClienteResponse.java
+│   │   │   ├── ClienteResponse.java
+│   │   │   ├── PedidoResponse.java
+│   │   │   ├── ProductoResponse.java
+│   │   │   └── ItemResponse.java
+│   │   │
+│   │   └── Ports/
+│   │       ├── In/
+│   │       │   └── ConsultarPedidosPorClienteUseCase.java
+│   │       │
+│   │       └── Out/
+│   │           ├── ClienteRepository.java
+│   │           ├── PedidoRepository.java
+│   │           ├── ProductoRepository.java
+│   │           ├── ItemRepository.java
+│   │           ├── PedidoCache.java
+│   │           ├── PedidoDocumentRepository.java
+│   │           ├── PedidoReadRepository.java
+│   │           ├── ClienteApi.java
+│   │           ├── ProductoSoapService.java
+│   │           ├── FileStorage.java
+│   │           ├── ParameterProvider.java
+│   │           └── SecretProvider.java
+│   │
+│   └── Infrastructure/
+│       │
+│       ├── In/
+│       │   └── Rest/
+│       │       ├── ConsultarPedidosPorClienteController.java
+│       │       ├── ConsultarPedidosPorClienteRequestDTO.java
+│       │       ├── ConsultarPedidosPorClienteResponseDTO.java
+│       │       └── ConsultarPedidosPorClienteRestMapper.java
+│       │
+│       └── Out/
+│           │
+│           ├── RDS/
+│           │   ├── RdsClienteRepository.java
+│           │   ├── RdsPedidoRepository.java
+│           │   ├── RdsProductoRepository.java
+│           │   ├── RdsItemRepository.java
+│           │   ├── ClienteJpaEntity.java
+│           │   ├── PedidoJpaEntity.java
+│           │   ├── ProductoJpaEntity.java
+│           │   ├── ItemJpaEntity.java
+│           │   └── RdsMapper.java
+│           │
+│           ├── Redis/
+│           │   ├── RedisPedidoCache.java
+│           │   ├── PedidoRedisEntity.java
+│           │   └── RedisMapper.java
+│           │
+│           ├── MongoDB/
+│           │   ├── MongoPedidoDocumentRepository.java
+│           │   ├── PedidoMongoDocument.java
+│           │   └── MongoMapper.java
+│           │
+│           ├── DynamoDB/
+│           │   ├── DynamoPedidoReadRepository.java
+│           │   ├── PedidoDynamoEntity.java
+│           │   └── DynamoMapper.java
+│           │
+│           ├── API/
+│           │   ├── ClienteApiAdapter.java
+│           │   ├── ClienteApiClient.java
+│           │   ├── ClienteApiRequestDTO.java
+│           │   ├── ClienteApiResponseDTO.java
+│           │   └── ClienteApiMapper.java
+│           │
+│           ├── SOAP/
+│           │   ├── ProductoSoapAdapter.java
+│           │   ├── ProductoSoapClient.java
+│           │   ├── ProductoSoapRequest.java
+│           │   ├── ProductoSoapResponse.java
+│           │   ├── ProductoSoapMapper.java
+│           │   └── wsdl/
+│           │
+│           ├── FileSystem/
+│           │   ├── FileSystemAdapter.java
+│           │   └── FileMapper.java
+│           │
+│           ├── ParameterStore/
+│           │   └── AwsParameterStoreAdapter.java
+│           │
+│           └── SecretManager/
+│               └── AwsSecretManagerAdapter.java
+│
+└── Configuration/
+    ├── RdsConfiguration.java
+    ├── RedisConfiguration.java
+    ├── MongoConfiguration.java
+    ├── DynamoDbConfiguration.java
+    ├── ApiConfiguration.java
+    ├── SoapConfiguration.java
+    ├── FileSystemConfiguration.java
+    ├── ParameterStoreConfiguration.java
+    ├── SecretManagerConfiguration.java
+    └── BeanConfiguration.java
