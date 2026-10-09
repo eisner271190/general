@@ -1,0 +1,70 @@
+package {{ PACKAGE }}.subscription.subscription.application;
+
+import {{ PACKAGE }}.subscription.subscription.infrastructure.configuration.SubscriptionLogMessages;
+import {{ PACKAGE }}.subscription.subscription.domain.GetSubscriptionStatusCommand;
+import {{ PACKAGE }}.subscription.subscription.domain.model.Subscription;
+import {{ PACKAGE }}.subscription.subscription.domain.port.ISubscriptionPort;
+import {{ PACKAGE }}.subscription.subscription.domain.port.ISubscriptionProviderPort;
+import {{ PACKAGE }}.subscription.subscription.domain.SyncSubscriptionCommand;
+
+
+import com.epc.common.log.ILogService;
+
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+@Service
+public class SubscriptionHandler {
+
+    private final ILogService log;
+    private final ISubscriptionPort subscriptionPort;
+    private final ISubscriptionProviderPort subscriptionProvider;
+
+    public SubscriptionHandler(ISubscriptionPort subscriptionPort, ISubscriptionProviderPort subscriptionProvider, ILogService log) {
+        this.log = log;
+        this.subscriptionPort = subscriptionPort;
+        this.subscriptionProvider = subscriptionProvider;
+    }
+
+    /**
+     * Solo sirve de cache la suscripcion que da acceso. Un registro INACTIVE (guardado en una
+     * consulta anterior) no enmascara: si no, una compra posterior quedaria oculta hasta que
+     * un webhook la corrigiera.
+     */
+    public Mono<Subscription> getStatus(GetSubscriptionStatusCommand command) {
+        String userId = command.userId();
+        log.info(SubscriptionLogMessages.SUBSCRIPTION_STATUS_QUERYING, userId);
+        return subscriptionPort.findSubscriptionByUserId(userId)
+            .filter(Subscription::isActive)
+            .switchIfEmpty(fetchAndCacheFromProvider(userId))
+            .doOnNext(subscription -> log.debug(SubscriptionLogMessages.SUBSCRIPTION_STATUS_RESOLVED,
+                userId, subscription.isActive()));
+    }
+
+    public Mono<Subscription> syncFromProvider(SyncSubscriptionCommand command) {
+        String userId = command.userId();
+        log.info(SubscriptionLogMessages.SUBSCRIPTION_SYNCING, userId);
+        return subscriptionProvider.fetchSubscription(userId)
+            .flatMap(subscriptionPort::saveSubscription)
+            .switchIfEmpty(saveInactive(userId))
+            .doOnNext(subscription -> log.debug(SubscriptionLogMessages.SUBSCRIPTION_SYNC_DONE,
+                userId, subscription.isActive()));
+    }
+
+    /**
+     * Cachea lo que diga el proveedor. Si no hay suscripcion, deja INACTIVE en almacenamiento
+     * para que las siguientes consultas no vuelvan a llamar a la API (plan 5.4).
+     *
+     * <p>Sin este ultimo {@code switchIfEmpty} el Mono quedaba vacio y el endpoint respondia
+     * sin {@code data} en lugar de {@code isActive:false}.
+     */
+    private Mono<Subscription> fetchAndCacheFromProvider(String userId) {
+        return subscriptionProvider.fetchSubscription(userId)
+            .flatMap(subscriptionPort::saveSubscription)
+            .switchIfEmpty(saveInactive(userId));
+    }
+
+    private Mono<Subscription> saveInactive(String userId) {
+        return subscriptionPort.saveSubscription(Subscription.inactive(userId));
+    }
+}

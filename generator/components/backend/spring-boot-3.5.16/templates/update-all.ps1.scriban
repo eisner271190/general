@@ -25,8 +25,8 @@ param(
 
 $ApplicationId = "{{ APPLICATION_ID }}"
 
-# Leer microservicios desde el JSON de configuración (ruta absoluta del generador)
-$ConfigPath = "C:\epc\general\generator\target\com.quizsmart.app\com.quizsmart.app.json"
+# Leer microservicios desde el JSON de configuración (relativa a backend/, en generator/target)
+$ConfigPath = Join-Path $PSScriptRoot "..\..\..\generator\target\$ApplicationId\$ApplicationId.json"
 if (-not (Test-Path $ConfigPath)) {
     Write-Error "No se encuentra $ConfigPath. Ejecuta el generador primero."
     exit 1

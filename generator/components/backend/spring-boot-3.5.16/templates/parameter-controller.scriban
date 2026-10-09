@@ -1,6 +1,9 @@
-package {{ PACKAGE }}.infrastructure.controllers;
+package {{ PACKAGE }}.parameter.parameter.infrastructure.rest;
 
-import {{ PACKAGE }}.infrastructure.configuration.ParameterProperties;
+import {{ PACKAGE }}.parameter.parameter.infrastructure.configuration.ParameterProperties;
+
+
+
 import com.epc.common.error.ApiResponse;
 
 import org.springframework.http.HttpStatus;

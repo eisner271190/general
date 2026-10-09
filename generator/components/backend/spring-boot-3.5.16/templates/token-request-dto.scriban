@@ -1,14 +1,14 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.application.dto;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.infrastructure.rest;
 
-public class TokenRequestDTO {
+public class TokenRequestDto {
     private String username;
     private String password;
     
-    public TokenRequestDTO()
+    public TokenRequestDto()
     {
     }
 
-    public TokenRequestDTO(String username, String password)
+    public TokenRequestDto(String username, String password)
     {
         this.username = username;
         this.password = password;

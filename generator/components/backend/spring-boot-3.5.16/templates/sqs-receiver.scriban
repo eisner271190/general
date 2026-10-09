@@ -1,7 +1,7 @@
-{{- if ConsumedEvents.size > 0 }}package {{ PACKAGE }}.infrastructure.configuration.cloud.aws;
+{{- if ConsumedEvents.size > 0 }}package {{ PACKAGE }}.test.sqs.infrastructure.adapters;
 
 import com.epc.common.log.ILogService;
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
+import {{ PACKAGE }}.test.sqs.infrastructure.configuration.SqsLogMessages;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -30,18 +30,18 @@ public class SqsReceiver {
     }
 
     public void sendMessage(String messageBody) {
-        log.info(DomainLogMessages.SQS_SENDING, messageBody.length());
-        log.debug(DomainLogMessages.SQS_QUEUE, queueUrl);
+        log.info(SqsLogMessages.SQS_SENDING, messageBody.length());
+        log.debug(SqsLogMessages.SQS_QUEUE, queueUrl);
         SendMessageRequest sendRequest = SendMessageRequest.builder()
                 .queueUrl(queueUrl)
                 .messageBody(messageBody)
                 .build();
         sqsClient.sendMessage(sendRequest);
-        log.debug(DomainLogMessages.SQS_SENT);
+        log.debug(SqsLogMessages.SQS_SENT);
     }
 
     public List<String> receiveMessages() {
-        log.info(DomainLogMessages.SQS_RECEIVING);
+        log.info(SqsLogMessages.SQS_RECEIVING);
         log.debug("Cola: {}", queueUrl);
         ReceiveMessageRequest request = ReceiveMessageRequest.builder()
                 .queueUrl(queueUrl)
@@ -50,7 +50,7 @@ public class SqsReceiver {
                 .build();
 
         List<Message> messages = sqsClient.receiveMessage(request).messages();
-        log.debug(DomainLogMessages.SQS_RECEIVED_COUNT, messages.size());
+        log.debug(SqsLogMessages.SQS_RECEIVED_COUNT, messages.size());
 
         for (Message message : messages) {
             deleteMessage(message.receiptHandle());
@@ -60,7 +60,7 @@ public class SqsReceiver {
     }
 
     private void deleteMessage(String receiptHandle) {
-        log.debug(DomainLogMessages.SQS_RECEIPT_ACK, receiptHandle.length());
+        log.debug(SqsLogMessages.SQS_RECEIPT_ACK, receiptHandle.length());
         DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
                 .queueUrl(queueUrl)
                 .receiptHandle(receiptHandle)

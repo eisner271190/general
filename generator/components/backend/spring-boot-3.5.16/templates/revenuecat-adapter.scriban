@@ -1,8 +1,11 @@
-package {{ PACKAGE }}.infrastructure.adapters;
+package {{ PACKAGE }}.subscription.subscription.infrastructure.adapters;
 
-import {{ PACKAGE }}.domain.model.Subscription;
-import {{ PACKAGE }}.domain.ports.ISubscriptionProviderPort;
-import {{ PACKAGE }}.infrastructure.adapters.RevenueCatSubscriberResponse.SubscriptionInfo;
+import {{ PACKAGE }}.subscription.subscription.domain.model.Subscription;
+import {{ PACKAGE }}.subscription.subscription.domain.port.ISubscriptionProviderPort;
+import {{ PACKAGE }}.subscription.subscription.infrastructure.adapters.RevenueCatSubscriberResponse.SubscriptionInfo;
+
+
+
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

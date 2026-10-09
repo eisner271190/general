@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.domain.model;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.domain.model;
 
 public class TokenRequest {
     private String username;

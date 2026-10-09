@@ -1,0 +1,35 @@
+package {{ PACKAGE }}.subscription.webhook.infrastructure.rest;
+
+import {{ PACKAGE }}.subscription.webhook.infrastructure.configuration.WebhookLogMessages;
+import {{ PACKAGE }}.subscription.webhook.domain.ProcessWebhookCommand;
+import {{ PACKAGE }}.subscription.webhook.domain.port.IWebhookPort;
+import {{ PACKAGE }}.subscription.webhook.infrastructure.adapters.RevenueCatWebhookPayload;
+
+
+
+import com.epc.common.log.ILogService;
+import com.epc.common.error.ApiResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequestMapping("/api/v1/subscriptions")
+public class WebhookController {
+
+    private final ILogService log;
+    private final IWebhookPort webhookHandler;
+
+    public WebhookController(IWebhookPort webhookHandler, ILogService log) {
+        this.log = log;
+        this.webhookHandler = webhookHandler;
+    }
+
+    @PostMapping("/webhook")
+    public Mono<ResponseEntity<ApiResponse>> handleWebhook(@RequestBody RevenueCatWebhookPayload payload) {
+        log.info(WebhookLogMessages.WEBHOOK_CONTROLLER_RECEIVED);
+        return webhookHandler.processWebhook(new ProcessWebhookCommand(payload.toWebhookEvent()))
+            .then(Mono.just(ResponseEntity.ok(new ApiResponse(null, "Webhook processed", 200))))
+            .doOnSuccess(response -> log.debug(WebhookLogMessages.WEBHOOK_CONTROLLER_PROCESSED));
+    }
+}

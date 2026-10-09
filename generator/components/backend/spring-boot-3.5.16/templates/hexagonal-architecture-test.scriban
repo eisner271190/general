@@ -27,12 +27,12 @@ public class HexagonalArchitectureTest {
         .allowEmptyShould(true);
 
     /**
-     * Detecta ciclos de dependencia entre capas (p. ej. {@code domain} -> {@code application}
-     * -> {@code domain}). La regla anterior solo comprobaba que nadie dependiera de esta
-     * propia clase de test, por lo que pasaba siempre y no aportaba nada.
+     * Detecta ciclos de dependencia entre slices por feature (vertical slice): cada
+     * {@code {domain}.{usecase}} debe depender solo de otros slices sin volver a
+     * depender de el. {@code common} no es slice y queda fuera de esta regla.
      */
     @ArchTest
     static final ArchRule noCircularDependencies = slices()
-        .matching("{{ PACKAGE }}.(*)..")
+        .matching("{{ PACKAGE }}.(*).(*)..")
         .should().beFreeOfCycles();
 }

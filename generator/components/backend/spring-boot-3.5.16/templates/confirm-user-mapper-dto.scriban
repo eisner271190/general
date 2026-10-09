@@ -1,7 +1,9 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.application.mappers;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.infrastructure.rest;
 
-import {{ PACKAGE }}.application.dto.ConfirmUserRequestDTO;
-import {{ PACKAGE }}.domain.model.ConfirmUser;
+import {{ PACKAGE }}.security.registration.domain.model.ConfirmUser;
+
+
+
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -9,7 +11,7 @@ import org.mapstruct.factory.Mappers;
 public interface ConfirmUserMapperDto {
     ConfirmUserMapperDto INSTANCE = Mappers.getMapper(ConfirmUserMapperDto.class);
 
-    ConfirmUserRequestDTO toDTO(ConfirmUser model);
-    ConfirmUser toModel(ConfirmUserRequestDTO dto);
+    ConfirmUserRequestDto toDTO(ConfirmUser model);
+    ConfirmUser toModel(ConfirmUserRequestDto dto);
 }
 {{ end }}

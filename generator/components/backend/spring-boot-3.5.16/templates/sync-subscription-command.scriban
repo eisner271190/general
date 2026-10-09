@@ -1,0 +1,4 @@
+package {{ PACKAGE }}.subscription.subscription.domain;
+
+public record SyncSubscriptionCommand(String userId) {
+}

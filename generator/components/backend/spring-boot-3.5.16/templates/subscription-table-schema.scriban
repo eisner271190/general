@@ -1,6 +1,10 @@
-package {{ PACKAGE }}.infrastructure.persistence.dynamos.tableschema;
+package {{ PACKAGE }}.subscription.subscription.infrastructure.persistence.dynamos.tableschema;
 
-import {{ PACKAGE }}.infrastructure.persistence.entities.SubscriptionEntity;
+import {{ PACKAGE }}.subscription.subscription.domain.model.Subscription;
+import {{ PACKAGE }}.subscription.subscription.infrastructure.persistence.entities.SubscriptionEntity;
+
+
+
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;

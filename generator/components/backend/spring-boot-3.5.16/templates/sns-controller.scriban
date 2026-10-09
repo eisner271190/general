@@ -1,8 +1,11 @@
-package {{ PACKAGE }}.infrastructure.controllers;
+package {{ PACKAGE }}.test.sns.infrastructure.rest;
+
+import {{ PACKAGE }}.test.sns.infrastructure.configuration.SnsLogMessages;
+import {{ PACKAGE }}.test.sns.infrastructure.adapters.SnsEventPublisher;
+
+
 
 import com.epc.common.log.ILogService;
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
-import {{ PACKAGE }}.infrastructure.configuration.cloud.aws.SnsEventPublisher;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
@@ -20,9 +23,9 @@ public class SNSController {
 
     @PostMapping("/publish")
     public ResponseEntity<String> publish(@RequestParam("message") String message) {
-        log.info(DomainLogMessages.SNS_PUBLISH_ENDPOINT, message.length());
+        log.info(SnsLogMessages.SNS_PUBLISH_CONTROLLER, message.length());
         snsEventPublisher.publishEvent("product.created", message);
-        log.debug(DomainLogMessages.SNS_PUBLISH_DONE);
+        log.debug(SnsLogMessages.SNS_PUBLISH_DONE);
         return ResponseEntity.ok("Mensaje enviado a SNS.");
     }
 }

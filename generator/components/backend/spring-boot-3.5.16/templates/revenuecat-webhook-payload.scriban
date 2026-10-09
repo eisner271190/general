@@ -1,6 +1,9 @@
-package {{ PACKAGE }}.infrastructure.adapters;
+package {{ PACKAGE }}.subscription.webhook.infrastructure.adapters;
 
-import {{ PACKAGE }}.domain.dto.WebhookEventDTO;
+import {{ PACKAGE }}.subscription.webhook.domain.model.WebhookEventDto;
+
+
+
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -11,7 +14,7 @@ import java.util.Objects;
  * Payload real que RevenueCat envia a POST /api/v1/subscriptions/webhook: anidado bajo
  * {@code event} y en snake_case.
  *
- * <p>Se traduce al contrato agnostico {@link WebhookEventDTO} antes de entrar en dominio,
+ * <p>Se traduce al contrato agnostico {@link WebhookEventDto} antes de entrar en dominio,
  * de modo que cambiar de proveedor solo exige sustituir esta clase y su traduccion.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -24,8 +27,8 @@ public record RevenueCatWebhookPayload(
         Objects.requireNonNull(event, "event es obligatorio en el payload del webhook");
     }
 
-    public WebhookEventDTO toWebhookEvent() {
-        return new WebhookEventDTO(
+    public WebhookEventDto toWebhookEvent() {
+        return new WebhookEventDto(
             event.id(),
             event.type(),
             event.appUserId(),

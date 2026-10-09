@@ -1,6 +1,0 @@
-package {{ PACKAGE }}.infrastructure.persistence.providers.dynamodb;
-
-public interface IMapperEntity<P, E> {
-    P toPersistenceModel(E entity);
-    E toEntity(P persistenceModel);
-}

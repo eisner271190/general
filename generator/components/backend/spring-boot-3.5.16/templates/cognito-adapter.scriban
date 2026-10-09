@@ -1,7 +1,12 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.configuration.cloud.aws;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.infrastructure.adapters;
 
-import {{ PACKAGE }}.domain.model.*;
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
+import {{ PACKAGE }}.security.auth.infrastructure.configuration.AuthLogMessages;
+import {{ PACKAGE }}.security.auth.domain.model.TokenResponse;
+import {{ PACKAGE }}.security.exchange.domain.model.ExchangeResponse;
+import {{ PACKAGE }}.security.registration.domain.model.RegisterUser;
+
+
+
 
 import com.epc.common.log.ILogService;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -22,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-public class CognitoClient {
+public class CognitoAdapter {
 
     private final CognitoIdentityProviderAsyncClient cognitoClient;
     private final WebClient webClient;
@@ -36,7 +41,7 @@ public class CognitoClient {
     private static final String CLIENT_SECRET = null;
     private static final String COGNITO_DOMAIN = System.getenv("AWS_COGNITO_DOMAIN");
 
-    public CognitoClient(ILogService log) {
+    public CognitoAdapter(ILogService log) {
         this.log = log;
         this.cognitoClient = CognitoIdentityProviderAsyncClient.create();
         this.webClient = WebClient.builder().build();
@@ -130,9 +135,9 @@ public class CognitoClient {
                 .build();
 
         return Mono.fromFuture(() -> cognitoClient.confirmSignUp(confirmSignUpRequest))
-        .doOnTerminate(() -> log.info(DomainLogMessages.USER_CONFIRMED, username))
+        .doOnTerminate(() -> log.info(AuthLogMessages.USER_CONFIRMED, username))
         .onErrorResume(e -> {
-            log.error(DomainLogMessages.USER_CONFIRM_FAILED, e);
+            log.error(AuthLogMessages.USER_CONFIRM_FAILED, e);
             return Mono.error(new RuntimeException("Error al confirmar el usuario", e));
         }).then();
     }
@@ -220,7 +225,7 @@ public class CognitoClient {
                             String codeErr = err.getError();
                             String desc = err.getError_description();
                             String message = buildErrorMessage(response.statusCode().value(), codeErr, desc);
-                            log.error(DomainLogMessages.TOKEN_EXCHANGE_FAILED, response.statusCode().value(), codeErr, desc);
+                            log.error(AuthLogMessages.TOKEN_EXCHANGE_FAILED, response.statusCode().value(), codeErr, desc);
                             return Mono.<Throwable>error(new RuntimeException(message));
                         })
                 )
@@ -235,7 +240,7 @@ public class CognitoClient {
                         tokenResp.getExpiresIn(),
                         tokenResp.getTokenType()
                 ))
-                .doOnSuccess(resp -> log.info(DomainLogMessages.TOKEN_EXCHANGE_COMPLETED,
+                .doOnSuccess(resp -> log.info(AuthLogMessages.TOKEN_EXCHANGE_COMPLETED,
                         resp.getExpiresIn(), resp.getTokenType()));
 
     }

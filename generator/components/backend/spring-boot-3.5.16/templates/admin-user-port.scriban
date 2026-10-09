@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.domain.ports;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.adminuser.domain.port;
 
 import reactor.core.publisher.Mono;
 

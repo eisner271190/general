@@ -1,6 +1,10 @@
-package {{ PACKAGE }}.domain.ports;
+package {{ PACKAGE }}.ai.ai.domain.port;
 
-import {{ PACKAGE }}.domain.model.AiGeneration;
+import {{ PACKAGE }}.ai.ai.domain.model.AiGeneration;
+import {{ PACKAGE }}.ai.ai.infrastructure.adapters.OpenRouterAdapter;
+
+
+
 
 import reactor.core.publisher.Mono;
 

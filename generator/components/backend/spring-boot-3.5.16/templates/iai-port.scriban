@@ -1,0 +1,17 @@
+package {{ PACKAGE }}.ai.ai.domain.port;
+
+import {{ PACKAGE }}.ai.ai.domain.GenerateAiCommand;
+import {{ PACKAGE }}.ai.ai.domain.model.AiGeneration;
+
+import reactor.core.publisher.Mono;
+
+/**
+ * Puerto del modulo IA que consume el controlador.
+ *
+ * <p>Permite que el controlador dependa del Handler y no del adaptador del proveedor.
+ */
+public interface IAiPort {
+
+    /** Genera texto con IA a partir del comando recibido. */
+    Mono<AiGeneration> generate(GenerateAiCommand command);
+}

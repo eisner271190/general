@@ -1,7 +1,9 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.application.mappers;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.infrastructure.rest;
 
-import {{ PACKAGE }}.application.dto.RegisterUserRequestDTO;
-import {{ PACKAGE }}.domain.model.RegisterUser;
+import {{ PACKAGE }}.security.registration.domain.model.RegisterUser;
+
+
+
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -9,7 +11,7 @@ import org.mapstruct.factory.Mappers;
 public interface RegisterUserMapperDto {
     RegisterUserMapperDto INSTANCE = Mappers.getMapper(RegisterUserMapperDto.class);
 
-    RegisterUserRequestDTO toDTO(RegisterUser model);
-    RegisterUser toModel(RegisterUserRequestDTO dto);
+    RegisterUserRequestDto toDTO(RegisterUser model);
+    RegisterUser toModel(RegisterUserRequestDto dto);
 }
 {{ end }}

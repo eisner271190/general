@@ -1,6 +1,15 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.domain.servicePorts;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.user.domain.port;
 
-import {{ PACKAGE }}.domain.model.*;
+import {{ PACKAGE }}.security.adminuser.domain.model.ForcePasswordReset;
+import {{ PACKAGE }}.security.auth.domain.model.TokenRequest;
+import {{ PACKAGE }}.security.auth.domain.model.TokenResponse;
+import {{ PACKAGE }}.security.password.domain.model.ChangePassword;
+import {{ PACKAGE }}.security.password.domain.model.RecoverPassword;
+import {{ PACKAGE }}.security.registration.domain.model.ConfirmUser;
+import {{ PACKAGE }}.security.registration.domain.model.RegisterUser;
+
+
+
 
 import reactor.core.publisher.Mono;
 

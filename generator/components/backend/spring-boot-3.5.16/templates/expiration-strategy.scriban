@@ -1,11 +1,13 @@
-package {{ PACKAGE }}.domain.usecase.strategies;
+package {{ PACKAGE }}.subscription.webhook.application.strategies;
+
+import {{ PACKAGE }}.subscription.webhook.infrastructure.configuration.WebhookLogMessages;
+import {{ PACKAGE }}.subscription.subscription.domain.port.ISubscriptionPort;
+import {{ PACKAGE }}.subscription.webhook.application.IWebhookStrategy;
+import {{ PACKAGE }}.subscription.webhook.domain.model.WebhookEventDto;
+
+
 
 import com.epc.common.log.ILogService;
-import {{ PACKAGE }}.domain.dto.WebhookEventDTO;
-import {{ PACKAGE }}.domain.model.Subscription;
-import {{ PACKAGE }}.domain.ports.SubscriptionPort;
-import {{ PACKAGE }}.domain.usecase.IWebhookStrategy;
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -13,9 +15,9 @@ import reactor.core.publisher.Mono;
 public class ExpirationStrategy implements IWebhookStrategy {
 
     private final ILogService log;
-    private final SubscriptionPort subscriptionPort;
+    private final ISubscriptionPort subscriptionPort;
 
-    public ExpirationStrategy(SubscriptionPort subscriptionPort, ILogService log) {
+    public ExpirationStrategy(ISubscriptionPort subscriptionPort, ILogService log) {
         this.log = log;
         this.subscriptionPort = subscriptionPort;
     }
@@ -26,14 +28,14 @@ public class ExpirationStrategy implements IWebhookStrategy {
     }
 
     @Override
-    public Mono<Void> handle(WebhookEventDTO event) {
-        log.info(DomainLogMessages.WEBHOOK_PROCESSING_EVENT, eventType());
-        log.debug(DomainLogMessages.WEBHOOK_USER_ID, event.userId());
+    public Mono<Void> handle(WebhookEventDto event) {
+        log.info(WebhookLogMessages.WEBHOOK_PROCESSING_EVENT, eventType());
+        log.debug(WebhookLogMessages.WEBHOOK_USER_ID, event.userId());
         return subscriptionPort.findSubscriptionByUserId(event.userId())
             .flatMap(subscription -> subscriptionPort.saveSubscription(
                 subscription.withStatus("EXPIRED")
             ))
             .then()
-            .doOnSuccess(done -> log.debug(DomainLogMessages.WEBHOOK_EVENT_APPLIED_SHORT, eventType()));
+            .doOnSuccess(done -> log.debug(WebhookLogMessages.WEBHOOK_EVENT_APPLIED_SHORT, eventType()));
     }
 }

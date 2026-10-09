@@ -1,11 +1,14 @@
-package {{ PACKAGE }}.infrastructure.controllers;
+package {{ PACKAGE }}.ai.ai.infrastructure.rest;
+
+import {{ PACKAGE }}.ai.ai.domain.GenerateAiCommand;
+import {{ PACKAGE }}.ai.ai.domain.port.IAiPort;
+import {{ PACKAGE }}.ai.ai.infrastructure.configuration.AiConstants;
+import {{ PACKAGE }}.ai.ai.infrastructure.configuration.AiMessages;
+import {{ PACKAGE }}.ai.ai.infrastructure.configuration.AiLogMessages;
+
+
 
 import com.epc.common.log.ILogService;
-import {{ PACKAGE }}.application.dto.AiGenerateRequestDTO;
-import {{ PACKAGE }}.domain.servicePorts.IAiServicePort;
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
-import {{ PACKAGE }}.infrastructure.configuration.AiConstants;
-import {{ PACKAGE }}.infrastructure.configuration.AiMessages;
 import com.epc.common.error.ApiResponse;
 
 import org.springframework.http.HttpStatus;
@@ -20,7 +23,7 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 
 /**
- * Endpoint de IA generativa agnostico al proveedor: el cliente solo envia el prompt.
+ * Controller de IA generativa agnostico al proveedor: el cliente solo envia el prompt.
  *
  * <p>El modelo, la temperatura y las credenciales los resuelve el backend, de modo que el
  * frontend no conoce ningun proveedor de IA.
@@ -30,11 +33,11 @@ import java.util.Map;
 public class AiController {
 
     private final ILogService log;
-    private final IAiServicePort aiService;
+    private final IAiPort aiHandler;
 
-    public AiController(IAiServicePort aiService, ILogService log) {
+    public AiController(IAiPort aiHandler, ILogService log) {
         this.log = log;
-        this.aiService = aiService;
+        this.aiHandler = aiHandler;
     }
 
     /**
@@ -45,21 +48,21 @@ public class AiController {
      */
     @PostMapping("/generate")
     public Mono<ResponseEntity<ApiResponse>> generate(
-            @RequestBody(required = false) AiGenerateRequestDTO request) {
+            @RequestBody(required = false) AiGenerateRequestDto request) {
         String prompt = extractPrompt(request);
-        log.info(DomainLogMessages.AI_ENDPOINT_RECEIVED);
-        log.debug(DomainLogMessages.AI_PROMPT_LENGTH, prompt == null ? 0 : prompt.length());
+        log.info(AiLogMessages.AI_CONTROLLER_RECEIVED);
+        log.debug(AiLogMessages.AI_PROMPT_LENGTH, prompt == null ? 0 : prompt.length());
         if (isPromptInvalid(prompt)) {
-            log.warn(DomainLogMessages.AI_PROMPT_REJECTED,
+            log.warn(AiLogMessages.AI_PROMPT_REJECTED,
                 AiConstants.MAX_PROMPT_LENGTH);
             return Mono.just(badRequest());
         }
-        return aiService.generate(prompt)
+        return aiHandler.generate(new GenerateAiCommand(prompt))
             .map(generation -> okResponse(generation.providerPayload()))
             .onErrorResume(this::handleError);
     }
 
-    private String extractPrompt(AiGenerateRequestDTO request) {
+    private String extractPrompt(AiGenerateRequestDto request) {
         return request == null ? null : request.prompt();
     }
 
@@ -85,7 +88,7 @@ public class AiController {
     private Mono<ResponseEntity<ApiResponse>> handleError(Throwable error) {
         // El mensaje real puede traer la URL del proveedor: dato de infraestructura
         // que no debe viajar al cliente de un endpoint publico. Se registra aqui.
-        log.error(DomainLogMessages.AI_GENERATION_FAILED, error);
+        log.error(AiLogMessages.AI_GENERATION_FAILED, error);
         Map<String, Object> noData = null;
         return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(new ApiResponse(noData, AiMessages.GENERATION_ERROR, AiConstants.STATUS_INTERNAL_ERROR)));

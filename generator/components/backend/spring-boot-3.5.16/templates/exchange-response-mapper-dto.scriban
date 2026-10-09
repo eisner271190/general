@@ -1,7 +1,9 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.application.mappers;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.exchange.infrastructure.rest;
 
-import {{ PACKAGE }}.application.dto.ExchangeResponseDTO;
-import {{ PACKAGE }}.domain.model.ExchangeResponse;
+import {{ PACKAGE }}.security.exchange.domain.model.ExchangeResponse;
+
+
+
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -9,7 +11,7 @@ import org.mapstruct.factory.Mappers;
 public interface ExchangeResponseMapperDto {
     ExchangeResponseMapperDto INSTANCE = Mappers.getMapper(ExchangeResponseMapperDto.class);
 
-    ExchangeResponseDTO toDTO(ExchangeResponse model);
-    ExchangeResponse toModel(ExchangeResponseDTO dto);
+    ExchangeResponseDto toDTO(ExchangeResponse model);
+    ExchangeResponse toModel(ExchangeResponseDto dto);
 }
 {{ end }}

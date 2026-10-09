@@ -1,0 +1,40 @@
+package {{ PACKAGE }}.ai.ai.application;
+
+import {{ PACKAGE }}.ai.ai.domain.GenerateAiCommand;
+import {{ PACKAGE }}.ai.ai.domain.model.AiGeneration;
+import {{ PACKAGE }}.ai.ai.domain.port.IAiPort;
+import {{ PACKAGE }}.ai.ai.domain.port.IAProviderPort;
+import {{ PACKAGE }}.ai.ai.infrastructure.configuration.AiLogMessages;
+
+import com.epc.common.log.ILogService;
+
+import org.springframework.stereotype.Service;
+
+import reactor.core.publisher.Mono;
+
+/**
+ * Handler de generacion con IA: delega en el puerto agnostico del proveedor.
+ *
+ * <p>Punto de extension para guardarrailes de prompt, registro y rate limiting futuros.
+ */
+@Service
+public class AiHandler implements IAiPort {
+
+    private final ILogService log;
+    private final IAProviderPort aiProvider;
+
+    public AiHandler(IAProviderPort aiProvider, ILogService log) {
+        this.log = log;
+        this.aiProvider = aiProvider;
+    }
+
+    @Override
+    public Mono<AiGeneration> generate(GenerateAiCommand command) {
+        String prompt = command.prompt();
+        log.info(AiLogMessages.AI_GENERATION_REQUESTED);
+        log.debug(AiLogMessages.AI_PROMPT_LENGTH, prompt == null ? 0 : prompt.length());
+        return aiProvider.generate(prompt)
+            .doOnNext(generation -> log.debug(
+                AiLogMessages.AI_GENERATION_COMPLETED, generation.model()));
+    }
+}

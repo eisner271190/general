@@ -1,6 +1,6 @@
-package {{ PACKAGE }}.domain.dto;
+package {{ PACKAGE }}.subscription.webhook.domain.model;
 
-public record WebhookEventDTO(
+public record WebhookEventDto(
     String eventId,
     String type,
     String userId,

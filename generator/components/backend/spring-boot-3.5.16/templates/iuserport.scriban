@@ -1,4 +1,11 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.domain.ports;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.user.domain.port;
+
+import {{ PACKAGE }}.security.adminuser.domain.port.AdminUserPort;
+import {{ PACKAGE }}.security.auth.domain.port.AuthPort;
+import {{ PACKAGE }}.security.password.domain.port.PasswordPort;
+import {{ PACKAGE }}.security.registration.domain.port.RegistrationPort;
+
+
 
 public interface IUserPort extends AuthPort, RegistrationPort, PasswordPort, AdminUserPort {
 }

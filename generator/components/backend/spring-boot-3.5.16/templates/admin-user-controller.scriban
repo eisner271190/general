@@ -1,6 +1,9 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.controllers;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.adminuser.infrastructure.rest;
 
-import {{ PACKAGE }}.application.services.IAdminUserService;
+import {{ PACKAGE }}.security.adminuser.application.IAdminUserService;
+
+
+
 import com.epc.common.error.ApiResponse;
 import com.epc.common.error.ErrorApiResponse;
 

@@ -1,0 +1,16 @@
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.infrastructure.configuration;
+
+/** Textos de log del caso de uso {@code auth} (adaptador Cognito). */
+public final class AuthLogMessages {
+
+    private AuthLogMessages() {
+    }
+
+    public static final String USER_CONFIRMED = "Usuario confirmado: {}";
+    public static final String USER_CONFIRM_FAILED = "Error al confirmar el usuario";
+    public static final String TOKEN_EXCHANGE_FAILED =
+            "Error al intercambiar el codigo: status={} error={} desc={}";
+    public static final String TOKEN_EXCHANGE_COMPLETED =
+            "Codigo de autorizacion canjeado: expiresIn={} tokenType={}";
+}
+{{ end }}

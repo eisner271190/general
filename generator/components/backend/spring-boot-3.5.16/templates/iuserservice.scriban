@@ -1,24 +1,33 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.application.services;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.user.application;
 
-import {{ PACKAGE }}.application.dto.*;
+import {{ PACKAGE }}.security.adminuser.infrastructure.rest.ForcePasswordResetRequestDto;
+import {{ PACKAGE }}.security.auth.infrastructure.rest.TokenRequestDto;
+import {{ PACKAGE }}.security.auth.infrastructure.rest.TokenResponseDto;
+import {{ PACKAGE }}.security.password.infrastructure.rest.ChangePasswordRequestDto;
+import {{ PACKAGE }}.security.password.infrastructure.rest.RecoverPasswordRequestDto;
+import {{ PACKAGE }}.security.registration.infrastructure.rest.ConfirmUserRequestDto;
+import {{ PACKAGE }}.security.registration.infrastructure.rest.RegisterUserRequestDto;
+
+
+
 
 import reactor.core.publisher.Mono;
 
 public interface IUserService {
 
-    Mono<TokenResponseDTO> generateToken(TokenRequestDTO request);
+    Mono<TokenResponseDto> generateToken(TokenRequestDto request);
 
-    Mono<Void> registerUserByAdmin(RegisterUserRequestDTO request);
+    Mono<Void> registerUserByAdmin(RegisterUserRequestDto request);
 
-    Mono<Void> registerUser(RegisterUserRequestDTO request);
+    Mono<Void> registerUser(RegisterUserRequestDto request);
     
-    Mono<Void> confirmUser(ConfirmUserRequestDTO request);
+    Mono<Void> confirmUser(ConfirmUserRequestDto request);
 
-    Mono<Void> forcePasswordReset(ForcePasswordResetRequestDTO request);
+    Mono<Void> forcePasswordReset(ForcePasswordResetRequestDto request);
 
-    Mono<Void> changePassword(ChangePasswordRequestDTO request);
+    Mono<Void> changePassword(ChangePasswordRequestDto request);
 
-    Mono<Void> recoverPassword(RecoverPasswordRequestDTO request);
+    Mono<Void> recoverPassword(RecoverPasswordRequestDto request);
 
     Mono<Void> deleteUser(String username);
 

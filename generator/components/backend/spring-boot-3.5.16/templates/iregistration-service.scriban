@@ -1,11 +1,15 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.application.services;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.application;
 
-import {{ PACKAGE }}.application.dto.*;
+import {{ PACKAGE }}.security.registration.infrastructure.rest.ConfirmUserRequestDto;
+import {{ PACKAGE }}.security.registration.infrastructure.rest.RegisterUserRequestDto;
+
+
+
 import reactor.core.publisher.Mono;
 
 public interface IRegistrationService {
-    Mono<Void> registerUserByAdmin(RegisterUserRequestDTO request);
-    Mono<Void> registerUser(RegisterUserRequestDTO request);
-    Mono<Void> confirmUser(ConfirmUserRequestDTO request);
+    Mono<Void> registerUserByAdmin(RegisterUserRequestDto request);
+    Mono<Void> registerUser(RegisterUserRequestDto request);
+    Mono<Void> confirmUser(ConfirmUserRequestDto request);
 }
 {{ end }}

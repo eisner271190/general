@@ -7,40 +7,6 @@
     "{{MICROSERVICE_NAME}}/src/main",
     "{{MICROSERVICE_NAME}}/src/main/java",
     "{{MICROSERVICE_NAME}}/src/main/java/com",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/mappers",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/services",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/dto",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/ports",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/servicePorts",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/beans",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/cloud/aws",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/webfilters",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/handlers",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/dynamos",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/dynamos/tableschema",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/entities",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/mappers",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/mappers/dynamos",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/mappers/entities",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/mappers/models",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/models",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/providers",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/providers/dynamodb",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/repositories",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/rest",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/rest/response",
-    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/routers",
     "{{MICROSERVICE_NAME}}/src/main/resources",
     "{{MICROSERVICE_NAME}}/src/main/resources/META-INF",
     "{{MICROSERVICE_NAME}}/src/main/resources/META-INF/native-image",
@@ -48,167 +14,724 @@
     "{{MICROSERVICE_NAME}}/src/main/resources/public",
     "{{MICROSERVICE_NAME}}/src/test",
     "{{MICROSERVICE_NAME}}/src/test/java",
-    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}",
-    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/application/services",
-    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/domain/usecase",
-    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters",
-    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers",
     "{{MICROSERVICE_NAME}}/src/test/resources",
     "{{MICROSERVICE_NAME}}/src/test/resources/performance",
     "{{MICROSERVICE_NAME}}/.mvn/wrapper",
-    "{{MICROSERVICE_NAME}}/postman"
+    "{{MICROSERVICE_NAME}}/postman",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/application",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/domain",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/domain/model",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/domain/port",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/infrastructure/adapters",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/infrastructure/configuration",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/parameter",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/parameter",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/parameter/parameter",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/parameter/parameter/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/parameter/parameter/infrastructure/configuration",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/parameter/parameter/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/application",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/domain",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/domain/model",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/domain/port",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/infrastructure/adapters",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/application",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/domain",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/domain/model",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/domain/port",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/infrastructure/adapters",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/infrastructure/configuration",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/application",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/domain",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/domain/model",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/domain/port",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/infrastructure/adapters",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/application",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/domain",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/domain/model",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/domain/port",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/infrastructure/adapters",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/application",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/domain",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/domain/model",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/domain/port",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/infrastructure/adapters",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/application",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/domain",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/domain/port",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/infrastructure/adapters",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/application",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/domain",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/domain/model",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/domain/port",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/adapters",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/configuration",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/persistence",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/persistence/dynamos",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/persistence/dynamos/tableschema",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/persistence/entities",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/application",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/application/strategies",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/domain",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/domain/model",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/domain/port",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure/adapters",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure/configuration",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure/persistence",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure/persistence/dynamos",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure/persistence/dynamos/tableschema",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure/persistence/entities",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure/webfilters",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/holamundo",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/holamundo/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/holamundo/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sns",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sns/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sns/infrastructure/adapters",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sns/infrastructure/configuration",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sns/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sqs",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sqs/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sqs/infrastructure/adapters",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sqs/infrastructure/configuration",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sqs/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}",
+    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/parameter",
+    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/parameter",
+    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/parameter/parameter",
+    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/parameter/parameter/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/parameter/parameter/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/test",
+    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/test",
+    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/test/holamundo",
+    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/test/holamundo/infrastructure",
+    "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/test/holamundo/infrastructure/rest"
   ],
   "files": [
-    { "key": "{{MICROSERVICE_NAME}}/.gitignore", "value": "templates/gitignore.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/Dockerfile", "value": "templates/Dockerfile.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/up.ps1", "value": "templates/up.ps1.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/down.ps1", "value": "templates/down.ps1.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/update-ms.ps1", "value": "templates/update-ms.ps1.scriban" },
-    { "key": "update-all.ps1", "value": "templates/update-all.ps1.scriban" },
-    
-    { "key": "{{MICROSERVICE_NAME}}/pom.xml", "value": "templates/pom.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/sonar-project.properties", "value": "templates/sonar-properties.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/bootstrap", "value": "templates/bootstrap.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/Application.java", "value": "templates/application-java.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/LambdaHandler.java", "value": "templates/LambdaHandler.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/resources/application.properties", "value": "templates/application-properties.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/resources/application-cloud.properties", "value": "templates/application-cloud-properties.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/resources/logback.xml", "value": "templates/logback.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/resources/META-INF/native-image/native-image.properties", "value": "templates/native-image-properties.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/HexagonalArchitectureTest.java", "value": "templates/hexagonal-architecture-test.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/ApplicationContextTest.java", "value": "templates/application-context-test.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/test/resources/performance/performance.jmx", "value": "templates/performance.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model/ChangePassword.java", "value": "templates/change-password.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/mappers/ChangePasswordMapperDto.java", "value": "templates/change-password-mapper-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/ChangePasswordRequestDTO.java", "value": "templates/change-password-request-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/cloud/aws/CognitoClient.java", "value": "templates/cognito-client.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/CorsConfig.java", "value": "templates/cors-config.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model/ConfirmUser.java", "value": "templates/confirm-user.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/mappers/ConfirmUserMapperDto.java", "value": "templates/confirm-user-mapper-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/ConfirmUserRequestDTO.java", "value": "templates/confirm-user-request-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/cloud/aws/DynamoDBConfig.java", "value": "templates/dynamodb-config.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/providers/dynamodb/DynamoDbGenericPersistence.java", "value": "templates/dynamodb-generic-persistence.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/providers/dynamodb/DynamoTable.java", "value": "templates/dynamo-table.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model/ForcePasswordReset.java", "value": "templates/force-password-reset.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/mappers/ForcePasswordResetMapperDto.java", "value": "templates/force-password-reset-mapper-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/ForcePasswordResetRequestDTO.java", "value": "templates/force-password-reset-request-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/HolaMundoController.java", "value": "templates/hola-mundo-controller.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/HolaMundoControllerTest.java", "value": "templates/hola-mundo-controller-test.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/providers/dynamodb/IMapperDynamo.java", "value": "templates/imapperdynamo.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/providers/dynamodb/IMapperEntity.java", "value": "templates/imapperentity.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/providers/IProviderPersistence.java", "value": "templates/iproviderpersistence.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/MapperClass.java", "value": "templates/mapper-class.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/MapperInfo.java", "value": "templates/mapper-info.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/ParameterController.java", "value": "templates/parameter-controller.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/ParameterControllerTest.java", "value": "templates/parameter-controller-test.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/ParameterProperties.java", "value": "templates/parameter-properties.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model/RecoverPassword.java", "value": "templates/recover-password.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/mappers/RecoverPasswordMapperDto.java", "value": "templates/recover-password-mapper-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/RecoverPasswordRequestDTO.java", "value": "templates/recover-password-request-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model/RegisterUser.java", "value": "templates/register-user.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/mappers/RegisterUserMapperDto.java", "value": "templates/register-user-mapper-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/RegisterUserRequestDTO.java", "value": "templates/register-user-request-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/cloud/aws/SnsConfig.java", "value": "templates/sns-config.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/SNSController.java", "value": "templates/sns-controller.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/cloud/aws/SnsEventPublisher.java", "value": "templates/sns-event-publisher.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/cloud/aws/SqsConfig.java", "value": "templates/sqs-config.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/SQSController.java", "value": "templates/sqs-controller.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/cloud/aws/SqsReceiver.java", "value": "templates/sqs-receiver.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model/TokenRequest.java", "value": "templates/token-request.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/TokenRequestDTO.java", "value": "templates/token-request-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/mappers/TokenRequestMapperDto.java", "value": "templates/token-request-mapper-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model/TokenResponse.java", "value": "templates/token-response.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/TokenResponseDTO.java", "value": "templates/token-response-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/mappers/TokenResponseMapperDto.java", "value": "templates/token-response-mapper-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model/ExchangeRequest.java", "value": "templates/exchange-request.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/ExchangeRequestDTO.java", "value": "templates/exchange-request-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/mappers/ExchangeRequestMapperDto.java", "value": "templates/exchange-request-mapper-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model/ExchangeResponse.java", "value": "templates/exchange-response.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/ExchangeResponseDTO.java", "value": "templates/exchange-response-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/mappers/ExchangeResponseMapperDto.java", "value": "templates/exchange-response-mapper-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/ExchangeAdapter.java", "value": "templates/exchange-adapter.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/ports/ExchangePort.java", "value": "templates/exchange-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/servicePorts/ExchangeServicePort.java", "value": "templates/exchange-service-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/ExchangeUseCase.java", "value": "templates/exchange-usecase.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/UserAdapter.java", "value": "templates/user-adapter.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/AuthAdapter.java", "value": "templates/auth-adapter.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/RegistrationAdapter.java", "value": "templates/registration-adapter.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/PasswordAdapter.java", "value": "templates/password-adapter.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/AdminUserAdapter.java", "value": "templates/admin-user-adapter.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/UserController.java", "value": "templates/user-controller.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/services/UserService.java", "value": "templates/user-service.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/UserUseCase.java", "value": "templates/user-usecase.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/ports/IUserPort.java", "value": "templates/iuserport.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/ports/AuthPort.java", "value": "templates/auth-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/ports/RegistrationPort.java", "value": "templates/registration-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/ports/PasswordPort.java", "value": "templates/password-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/ports/AdminUserPort.java", "value": "templates/admin-user-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/servicePorts/IUserServicePort.java", "value": "templates/iuserserviceport.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/services/IUserService.java", "value": "templates/iuserservice.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/AuthController.java", "value": "templates/auth-controller.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/services/AuthService.java", "value": "templates/auth-service.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/services/IAuthService.java", "value": "templates/iauth-service.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/servicePorts/AuthServicePort.java", "value": "templates/auth-service-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/AuthUseCase.java", "value": "templates/auth-usecase.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/RegistrationController.java", "value": "templates/registration-controller.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/services/RegistrationService.java", "value": "templates/registration-service.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/services/IRegistrationService.java", "value": "templates/iregistration-service.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/servicePorts/RegistrationServicePort.java", "value": "templates/registration-service-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/RegistrationUseCase.java", "value": "templates/registration-usecase.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/PasswordController.java", "value": "templates/password-controller.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/services/PasswordService.java", "value": "templates/password-service.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/services/IPasswordService.java", "value": "templates/ipassword-service.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/servicePorts/PasswordServicePort.java", "value": "templates/password-service-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/PasswordUseCase.java", "value": "templates/password-usecase.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/AdminUserController.java", "value": "templates/admin-user-controller.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/services/AdminUserService.java", "value": "templates/admin-user-service.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/services/IAdminUserService.java", "value": "templates/iadmin-user-service.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/servicePorts/AdminUserServicePort.java", "value": "templates/admin-user-service-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/AdminUserUseCase.java", "value": "templates/admin-user-usecase.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/sonar-scanner.properties", "value": "templates/sonar-scanner-properties.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/GraalHints.java", "value": "templates/graalvm-hints.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/DomainLogMessages.java", "value": "templates/domain-log-messages.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/postman/{{MICROSERVICE_NAME}}.postman_collection.json", "value": "templates/postman-collection.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/entities/SubscriptionEntity.java", "value": "templates/subscription-entity.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/entities/WebhookEventEntity.java", "value": "templates/webhook-event-entity.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/dynamos/tableschema/SubscriptionTableSchema.java", "value": "templates/subscription-table-schema.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/persistence/dynamos/tableschema/WebhookEventTableSchema.java", "value": "templates/webhook-event-table-schema.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model/Subscription.java", "value": "templates/subscription-model.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/ports/SubscriptionPort.java", "value": "templates/subscription-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/ports/ISubscriptionProviderPort.java", "value": "templates/isubscription-provider-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/servicePorts/ISubscriptionServicePort.java", "value": "templates/isubscription-service-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/servicePorts/IWebhookServicePort.java", "value": "templates/iwebhook-service-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/SubscriptionUseCase.java", "value": "templates/subscription-usecase.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/WebhookUseCase.java", "value": "templates/webhook-usecase.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/IWebhookStrategy.java", "value": "templates/webhook-strategy.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/strategies/RenewalStrategy.java", "value": "templates/renewal-strategy.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/strategies/CancellationStrategy.java", "value": "templates/cancellation-strategy.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/strategies/ExpirationStrategy.java", "value": "templates/expiration-strategy.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/strategies/BillingIssueStrategy.java", "value": "templates/billing-issue-strategy.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/strategies/UncancellationStrategy.java", "value": "templates/uncancellation-strategy.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/strategies/InitialPurchaseStrategy.java", "value": "templates/initial-purchase-strategy.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/strategies/NonRenewingPurchaseStrategy.java", "value": "templates/non-renewing-purchase-strategy.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/strategies/ProductChangeStrategy.java", "value": "templates/product-change-strategy.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/strategies/UnknownEventStrategy.java", "value": "templates/unknown-event-strategy.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/dto/SubscriptionStatusResponseDTO.java", "value": "templates/subscription-status-response-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/dto/WebhookEventDTO.java", "value": "templates/webhook-event-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/RevenueCatAdapter.java", "value": "templates/revenuecat-adapter.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/RevenueCatWebhookPayload.java", "value": "templates/revenuecat-webhook-payload.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/RevenueCatSubscriberResponse.java", "value": "templates/revenuecat-subscriber-response.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/SubscriptionAdapter.java", "value": "templates/subscription-adapter.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/webfilters/RevenueCatWebhookFilter.java", "value": "templates/revenuecat-webhook-filter.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/SubscriptionController.java", "value": "templates/subscription-controller.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/model/AiGeneration.java", "value": "templates/ai-generation.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/ports/IAProviderPort.java", "value": "templates/ia-provider-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/servicePorts/IAiServicePort.java", "value": "templates/iai-service-port.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/domain/usecase/AiUseCase.java", "value": "templates/ai-usecase.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/application/dto/AiGenerateRequestDTO.java", "value": "templates/ai-generate-request-dto.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/OpenRouterAdapter.java", "value": "templates/openrouter-adapter.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/adapters/OpenRouterChatRequest.java", "value": "templates/openrouter-chat-request.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/controllers/AiController.java", "value": "templates/ai-controller.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/AiConstants.java", "value": "templates/ai-constants.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/AiMessages.java", "value": "templates/ai-messages.scriban" },
-    { "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/infrastructure/configuration/AiProperties.java", "value": "templates/ai-properties.scriban" }
+    {
+      "key": "{{MICROSERVICE_NAME}}/.gitignore",
+      "value": "templates/gitignore.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/Dockerfile",
+      "value": "templates/Dockerfile.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/up.ps1",
+      "value": "templates/up.ps1.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/down.ps1",
+      "value": "templates/down.ps1.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/update-ms.ps1",
+      "value": "templates/update-ms.ps1.scriban"
+    },
+    {
+      "key": "update-all.ps1",
+      "value": "templates/update-all.ps1.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/pom.xml",
+      "value": "templates/pom.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/sonar-project.properties",
+      "value": "templates/sonar-properties.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/bootstrap",
+      "value": "templates/bootstrap.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/Application.java",
+      "value": "templates/application-java.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ApplicationConfig.java",
+      "value": "templates/application-config-java.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/LambdaHandler.java",
+      "value": "templates/LambdaHandler.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/resources/application.properties",
+      "value": "templates/application-properties.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/resources/application-cloud.properties",
+      "value": "templates/application-cloud-properties.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/resources/logback.xml",
+      "value": "templates/logback.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/resources/META-INF/native-image/native-image.properties",
+      "value": "templates/native-image-properties.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/HexagonalArchitectureTest.java",
+      "value": "templates/hexagonal-architecture-test.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/ApplicationContextTest.java",
+      "value": "templates/application-context-test.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/test/resources/performance/performance.jmx",
+      "value": "templates/performance.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/domain/model/ChangePassword.java",
+      "value": "templates/change-password.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/infrastructure/rest/ChangePasswordMapperDto.java",
+      "value": "templates/change-password-mapper-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/infrastructure/rest/ChangePasswordRequestDto.java",
+      "value": "templates/change-password-request-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/domain/model/ConfirmUser.java",
+      "value": "templates/confirm-user.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/infrastructure/rest/ConfirmUserMapperDto.java",
+      "value": "templates/confirm-user-mapper-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/infrastructure/rest/ConfirmUserRequestDto.java",
+      "value": "templates/confirm-user-request-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/domain/model/ForcePasswordReset.java",
+      "value": "templates/force-password-reset.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/infrastructure/rest/ForcePasswordResetMapperDto.java",
+      "value": "templates/force-password-reset-mapper-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/infrastructure/rest/ForcePasswordResetRequestDto.java",
+      "value": "templates/force-password-reset-request-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/holamundo/infrastructure/rest/HolaMundoController.java",
+      "value": "templates/hola-mundo-controller.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/test/holamundo/infrastructure/rest/HolaMundoControllerTest.java",
+      "value": "templates/hola-mundo-controller-test.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/parameter/parameter/infrastructure/rest/ParameterController.java",
+      "value": "templates/parameter-controller.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/test/java/{{APPLICATION_PACKAGE}}/parameter/parameter/infrastructure/rest/ParameterControllerTest.java",
+      "value": "templates/parameter-controller-test.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/parameter/parameter/infrastructure/configuration/ParameterProperties.java",
+      "value": "templates/parameter-properties.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/domain/model/RecoverPassword.java",
+      "value": "templates/recover-password.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/infrastructure/rest/RecoverPasswordMapperDto.java",
+      "value": "templates/recover-password-mapper-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/infrastructure/rest/RecoverPasswordRequestDto.java",
+      "value": "templates/recover-password-request-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/domain/model/RegisterUser.java",
+      "value": "templates/register-user.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/infrastructure/rest/RegisterUserMapperDto.java",
+      "value": "templates/register-user-mapper-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/infrastructure/rest/RegisterUserRequestDto.java",
+      "value": "templates/register-user-request-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sns/infrastructure/rest/SNSController.java",
+      "value": "templates/sns-controller.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sns/infrastructure/adapters/SnsEventPublisher.java",
+      "value": "templates/sns-event-publisher.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sqs/infrastructure/rest/SQSController.java",
+      "value": "templates/sqs-controller.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sqs/infrastructure/adapters/SqsReceiver.java",
+      "value": "templates/sqs-receiver.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/domain/model/TokenRequest.java",
+      "value": "templates/token-request.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/infrastructure/rest/TokenRequestDto.java",
+      "value": "templates/token-request-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/infrastructure/rest/TokenRequestMapperDto.java",
+      "value": "templates/token-request-mapper-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/domain/model/TokenResponse.java",
+      "value": "templates/token-response.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/infrastructure/rest/TokenResponseDto.java",
+      "value": "templates/token-response-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/infrastructure/rest/TokenResponseMapperDto.java",
+      "value": "templates/token-response-mapper-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/domain/model/ExchangeRequest.java",
+      "value": "templates/exchange-request.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/infrastructure/rest/ExchangeRequestDto.java",
+      "value": "templates/exchange-request-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/infrastructure/rest/ExchangeRequestMapperDto.java",
+      "value": "templates/exchange-request-mapper-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/domain/model/ExchangeResponse.java",
+      "value": "templates/exchange-response.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/infrastructure/rest/ExchangeResponseDto.java",
+      "value": "templates/exchange-response-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/infrastructure/rest/ExchangeResponseMapperDto.java",
+      "value": "templates/exchange-response-mapper-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/infrastructure/adapters/ExchangeAdapter.java",
+      "value": "templates/exchange-adapter.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/domain/port/ExchangePort.java",
+      "value": "templates/exchange-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/domain/port/ExchangeServicePort.java",
+      "value": "templates/exchange-service-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/application/ExchangeUseCase.java",
+      "value": "templates/exchange-usecase.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/infrastructure/adapters/UserAdapter.java",
+      "value": "templates/user-adapter.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/infrastructure/adapters/AuthAdapter.java",
+      "value": "templates/auth-adapter.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/infrastructure/adapters/RegistrationAdapter.java",
+      "value": "templates/registration-adapter.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/infrastructure/adapters/PasswordAdapter.java",
+      "value": "templates/password-adapter.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/infrastructure/adapters/AdminUserAdapter.java",
+      "value": "templates/admin-user-adapter.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/infrastructure/rest/UserController.java",
+      "value": "templates/user-controller.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/application/UserService.java",
+      "value": "templates/user-service.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/application/UserUseCase.java",
+      "value": "templates/user-usecase.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/domain/port/IUserPort.java",
+      "value": "templates/iuserport.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/domain/port/AuthPort.java",
+      "value": "templates/auth-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/domain/port/RegistrationPort.java",
+      "value": "templates/registration-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/domain/port/PasswordPort.java",
+      "value": "templates/password-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/domain/port/AdminUserPort.java",
+      "value": "templates/admin-user-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/domain/port/IUserServicePort.java",
+      "value": "templates/iuserserviceport.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/application/IUserService.java",
+      "value": "templates/iuserservice.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/infrastructure/rest/AuthController.java",
+      "value": "templates/auth-controller.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/application/AuthService.java",
+      "value": "templates/auth-service.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/application/IAuthService.java",
+      "value": "templates/iauth-service.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/domain/port/AuthServicePort.java",
+      "value": "templates/auth-service-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/application/AuthUseCase.java",
+      "value": "templates/auth-usecase.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/infrastructure/rest/RegistrationController.java",
+      "value": "templates/registration-controller.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/application/RegistrationService.java",
+      "value": "templates/registration-service.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/application/IRegistrationService.java",
+      "value": "templates/iregistration-service.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/domain/port/RegistrationServicePort.java",
+      "value": "templates/registration-service-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/application/RegistrationUseCase.java",
+      "value": "templates/registration-usecase.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/infrastructure/rest/PasswordController.java",
+      "value": "templates/password-controller.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/application/PasswordService.java",
+      "value": "templates/password-service.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/application/IPasswordService.java",
+      "value": "templates/ipassword-service.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/domain/port/PasswordServicePort.java",
+      "value": "templates/password-service-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/application/PasswordUseCase.java",
+      "value": "templates/password-usecase.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/infrastructure/rest/AdminUserController.java",
+      "value": "templates/admin-user-controller.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/application/AdminUserService.java",
+      "value": "templates/admin-user-service.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/application/IAdminUserService.java",
+      "value": "templates/iadmin-user-service.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/domain/port/AdminUserServicePort.java",
+      "value": "templates/admin-user-service-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/application/AdminUserUseCase.java",
+      "value": "templates/admin-user-usecase.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/sonar-scanner.properties",
+      "value": "templates/sonar-scanner-properties.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/postman/{{MICROSERVICE_NAME}}.postman_collection.json",
+      "value": "templates/postman-collection.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/persistence/entities/SubscriptionEntity.java",
+      "value": "templates/subscription-entity.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure/persistence/entities/WebhookEventEntity.java",
+      "value": "templates/webhook-event-entity.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/persistence/dynamos/tableschema/SubscriptionTableSchema.java",
+      "value": "templates/subscription-table-schema.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure/persistence/dynamos/tableschema/WebhookEventTableSchema.java",
+      "value": "templates/webhook-event-table-schema.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/domain/model/Subscription.java",
+      "value": "templates/subscription-model.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/domain/port/ISubscriptionPort.java",
+      "value": "templates/subscription-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/domain/port/ISubscriptionProviderPort.java",
+      "value": "templates/isubscription-provider-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/domain/port/IWebhookPort.java",
+      "value": "templates/iwebhook-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/domain/ProcessWebhookCommand.java",
+      "value": "templates/process-webhook-command.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/application/SubscriptionHandler.java",
+      "value": "templates/subscription-handler.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/domain/GetSubscriptionStatusCommand.java",
+      "value": "templates/get-subscription-status-command.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/domain/SyncSubscriptionCommand.java",
+      "value": "templates/sync-subscription-command.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/application/WebhookHandler.java",
+      "value": "templates/webhook-handler.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/application/IWebhookStrategy.java",
+      "value": "templates/webhook-strategy.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/application/strategies/RenewalStrategy.java",
+      "value": "templates/renewal-strategy.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/application/strategies/CancellationStrategy.java",
+      "value": "templates/cancellation-strategy.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/application/strategies/ExpirationStrategy.java",
+      "value": "templates/expiration-strategy.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/application/strategies/BillingIssueStrategy.java",
+      "value": "templates/billing-issue-strategy.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/application/strategies/UncancellationStrategy.java",
+      "value": "templates/uncancellation-strategy.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/application/strategies/InitialPurchaseStrategy.java",
+      "value": "templates/initial-purchase-strategy.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/application/strategies/NonRenewingPurchaseStrategy.java",
+      "value": "templates/non-renewing-purchase-strategy.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/application/strategies/ProductChangeStrategy.java",
+      "value": "templates/product-change-strategy.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/application/strategies/UnknownEventStrategy.java",
+      "value": "templates/unknown-event-strategy.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/rest/SubscriptionStatusResponseDto.java",
+      "value": "templates/subscription-status-response-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/domain/model/WebhookEventDto.java",
+      "value": "templates/webhook-event-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/adapters/RevenueCatAdapter.java",
+      "value": "templates/revenuecat-adapter.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure/adapters/RevenueCatWebhookPayload.java",
+      "value": "templates/revenuecat-webhook-payload.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/adapters/RevenueCatSubscriberResponse.java",
+      "value": "templates/revenuecat-subscriber-response.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/adapters/SubscriptionAdapter.java",
+      "value": "templates/subscription-adapter.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure/webfilters/RevenueCatWebhookFilter.java",
+      "value": "templates/revenuecat-webhook-filter.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/rest/SubscriptionController.java",
+      "value": "templates/subscription-controller.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure/rest/WebhookController.java",
+      "value": "templates/webhook-controller.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/domain/model/AiGeneration.java",
+      "value": "templates/ai-generation.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/domain/port/IAProviderPort.java",
+      "value": "templates/ia-provider-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/domain/port/IAiPort.java",
+      "value": "templates/iai-port.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/domain/GenerateAiCommand.java",
+      "value": "templates/generate-ai-command.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/application/AiHandler.java",
+      "value": "templates/ai-handler.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/infrastructure/rest/AiGenerateRequestDto.java",
+      "value": "templates/ai-generate-request-dto.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/infrastructure/adapters/OpenRouterAdapter.java",
+      "value": "templates/openrouter-adapter.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/infrastructure/adapters/OpenRouterChatRequest.java",
+      "value": "templates/openrouter-chat-request.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/infrastructure/rest/AiController.java",
+      "value": "templates/ai-controller.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/infrastructure/configuration/AiConstants.java",
+      "value": "templates/ai-constants.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/infrastructure/configuration/AiMessages.java",
+      "value": "templates/ai-messages.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/infrastructure/configuration/AiProperties.java",
+      "value": "templates/ai-properties.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription/infrastructure/configuration/SubscriptionLogMessages.java",
+      "value": "templates/subscription-log-messages.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/webhook/infrastructure/configuration/WebhookLogMessages.java",
+      "value": "templates/webhook-log-messages.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/ai/ai/infrastructure/configuration/AiLogMessages.java",
+      "value": "templates/ai-log-messages.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sns/infrastructure/configuration/SnsLogMessages.java",
+      "value": "templates/sns-log-messages.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/test/sqs/infrastructure/configuration/SqsLogMessages.java",
+      "value": "templates/sqs-log-messages.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/infrastructure/configuration/AuthLogMessages.java",
+      "value": "templates/auth-log-messages.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/infrastructure/adapters/CognitoAdapter.java",
+      "value": "templates/cognito-adapter.scriban"
+    }
   ],
   "defaultFiles": []
 }

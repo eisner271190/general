@@ -1,4 +1,4 @@
-package {{ PACKAGE }}.infrastructure.persistence.entities;
+package {{ PACKAGE }}.subscription.webhook.infrastructure.persistence.entities;
 
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;

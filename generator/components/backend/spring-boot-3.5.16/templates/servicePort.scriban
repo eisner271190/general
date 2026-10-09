@@ -1,9 +1,0 @@
-package {{ PACKAGE }}.domain.servicePorts;
-
-import {{ PACKAGE }}.domain.model.{{ EntityCapital }};
-
-import reactor.core.publisher.Mono;
-
-public interface {{ EntityCapital }}ServicePort {
-    Mono<{{ EntityCapital }}> get{{ EntityCapital }}Id(Long id);
-}

@@ -1,8 +1,0 @@
-package {{ PACKAGE }}.domain.servicePorts;
-
-import {{ PACKAGE }}.domain.dto.WebhookEventDTO;
-import reactor.core.publisher.Mono;
-
-public interface IWebhookServicePort {
-    Mono<Void> processWebhook(WebhookEventDTO event);
-}

@@ -1,9 +1,0 @@
-package {{ PACKAGE }}.application.services;
-
-import reactor.core.publisher.Mono;
-
-import {{ PACKAGE }}.application.dto.{{ EntityCapital }}DTO;
-
-public interface I{{ EntityCapital }}Service {
-    public Mono<{{ EntityCapital }}DTO> get{{ EntityCapital }}(Long id);
-}

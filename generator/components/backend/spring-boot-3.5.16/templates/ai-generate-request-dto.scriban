@@ -1,4 +1,4 @@
-package {{ PACKAGE }}.application.dto;
+package {{ PACKAGE }}.ai.ai.infrastructure.rest;
 
 /**
  * Cuerpo de POST /api/v1/ai/generate.
@@ -6,5 +6,5 @@ package {{ PACKAGE }}.application.dto;
  * <p>Sin anotaciones de validacion: {@code spring-boot-starter-validation} no esta en el
  * microservicio. La validacion (presencia y longitud) vive en AiController.
  */
-public record AiGenerateRequestDTO(String prompt) {
+public record AiGenerateRequestDto(String prompt) {
 }

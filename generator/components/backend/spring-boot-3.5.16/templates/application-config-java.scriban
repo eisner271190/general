@@ -1,0 +1,24 @@
+package {{ PACKAGE }};
+
+import com.epc.common.aws.DynamoDBConfig;
+import com.epc.common.aws.SnsConfig;{{ if ConsumedEvents.size > 0 }}
+import com.epc.common.aws.SqsConfig;{{ end }}{{ if(Name == "security") }}
+import com.epc.common.config.CorsConfig;{{ end }}
+import com.epc.common.persistence.MapperClass;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
+/**
+ * Beans de library fuera del paquete de la aplicacion; no los detecta el escaneo.
+ * Se registran aqui y no en {@code Application}.
+ */
+@Configuration
+@Import({
+        DynamoDBConfig.class,
+        SnsConfig.class,
+        MapperClass.class{{ if ConsumedEvents.size > 0 }},
+        SqsConfig.class{{ end }}{{ if(Name == "security") }},
+        CorsConfig.class{{ end }}
+})
+public class ApplicationConfig {
+}

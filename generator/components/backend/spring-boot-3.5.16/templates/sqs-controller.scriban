@@ -1,8 +1,8 @@
-{{- if ConsumedEvents.size > 0 }}package {{ PACKAGE }}.infrastructure.controllers;
+{{- if ConsumedEvents.size > 0 }}package {{ PACKAGE }}.test.sqs.infrastructure.rest;
 
 import com.epc.common.log.ILogService;
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
-import {{ PACKAGE }}.infrastructure.configuration.cloud.aws.SqsReceiver;
+import {{ PACKAGE }}.test.sqs.infrastructure.configuration.SqsLogMessages;
+import {{ PACKAGE }}.test.sqs.infrastructure.adapters.SqsReceiver;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
@@ -22,17 +22,17 @@ public class SQSController {
 
     @PostMapping("/send")
     public ResponseEntity<String> sendMessage(@RequestParam("message") String message) {
-        log.info(DomainLogMessages.SQS_SEND_ENDPOINT, message.length());
+        log.info(SqsLogMessages.SQS_SEND_CONTROLLER, message.length());
         sqsReceiver.sendMessage(message);
-        log.debug(DomainLogMessages.SQS_QUEUED);
+        log.debug(SqsLogMessages.SQS_QUEUED);
         return ResponseEntity.ok("Mensaje enviado a SQS.");
     }
 
     @GetMapping("/consume")
     public ResponseEntity<List<String>> consumeMessages() {
-        log.info(DomainLogMessages.SQS_CONSUME_ENDPOINT);
+        log.info(SqsLogMessages.SQS_CONSUME_CONTROLLER);
         List<String> messages = sqsReceiver.receiveMessages();
-        log.debug(DomainLogMessages.SQS_RECEIVED_COUNT, messages.size());
+        log.debug(SqsLogMessages.SQS_RECEIVED_COUNT, messages.size());
         return ResponseEntity.ok(messages);
     }
 }{{ end }}
