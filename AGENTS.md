@@ -2,9 +2,9 @@
 
 # Rutas
 - TEMPLATES: `docs/templates`
-- AGENTS: `.opencode/agents/templates`
-- COMMANDS: `.opencode/commands/templates`
-- SKILLS: `.opencode/skills/templates`
+- AGENTS: `.opencode/agents`
+- COMMANDS: `.opencode/commands`
+- SKILLS: `.opencode/skills`
 - DELIVERABLES: `docs/deliverables`
 - DECISIONS: `docs/adr`
 - GENERATOR: `generator`
@@ -49,3 +49,6 @@
 - Antes de crear un command, lee y sigue `TEMPLATES/command.md`.
 - Antes de crear una skill, lee y sigue `TEMPLATES/skill.md`.
 - Todos los subagentes deben leer `DELIVERABLES/obj-NNN/obj-NNN.md`.
+- Durante el proceso, si se identifican nuevos criterios de aceptación se deben ir agregando.
+- Durante el proceso, se deben ir agregando casos de prueba en `DELIVERABLES/obj-NNN/use-cases.md`.
+- Durante el proceso, se debe identificar pregunta por pregunta, porque no se identificó este problema antes y como se puede hacer para que se identifique desde antes de la implementación. Registrarlo en `DELIVERABLES/obj-NNN/improvements.md`.
