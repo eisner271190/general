@@ -1,6 +1,6 @@
 # Mejoras obj-004: preguntas Q1–Q16 e I1–I77
 
-- Fecha: 2026-10-08. Hora (UTC-5): pendiente.
+- Fecha: 2026-10-08. Hora (UTC-5): 2026-10-09 05:23:14.
 - Fuente: `questions.md` (Q1–Q16 sin número; I1–I77; decisiones D1–D87).
 - Agentes válidos: architect, developer-scriban, reviewer, tester, explorer.
 - Objetivo: identificar, por pregunta, por qué no se detectó antes de implementar y cómo prevenirlo.

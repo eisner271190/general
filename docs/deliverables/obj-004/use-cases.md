@@ -24,7 +24,7 @@
 - TC-08 Generador sin cambios de código (2026-10-08): `git status` en `generator` sin `.cs`.
   - Resultado: OK (0 archivos `.cs` modificados).
 - TC-09 Ciclos entre slices (2026-10-08): `HexagonalArchitectureTest.noCircularDependencies`
-  sobre `{{ PACKAGE }}.(*).modules.(*)..`.
+  sobre `{{ PACKAGE }}.(*).(*)..` (D87; antes `{{ PACKAGE }}.(*).modules.(*)..`).
   - Resultado: OK (3/3 tests de la clase).
 - TC-10 Tests D23 (2026-10-08): solo cambian `package` e imports en `parameter-controller-test`
   y `hola-mundo-controller-test`; `application-context-test` sin cambios.

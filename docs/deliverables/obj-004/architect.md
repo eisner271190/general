@@ -20,7 +20,8 @@
   - `docs/adr/0025-*.md` y `docs/adr/README.md`.
   - `docs/templates/deliverables/adr.md`.
 - Requisitos (obj-004):
-  - Estructura por feature: `{domain}/modules/{usecase}/{capa}`.
+  - Estructura por feature: `{domain}/modules/{usecase}/{capa}` (original, obj-004).
+  - Estructura por feature tras D87: `{domain}/{usecase}/{capa}`.
   - Clases: `{Module}Command` (record), `{Module}Handler`, `{Module}Controller`,
     `{Module}RequestDto`, `{Module}ResponseDto`.
   - `common`: conexiones, beans, `Configuration`, infraestructura reusable.
@@ -51,7 +52,7 @@
 
 - Componentes y responsabilidades:
   - `{{ PACKAGE }}.common.infrastructure/`: `configuration/`, `beans/`, `connections/`.
-  - `{{ PACKAGE }}.{subscription|ai|parameter|security|test}.modules.{usecase}/`:
+  - `{{ PACKAGE }}.{subscription|ai|parameter|security|test}.{usecase}/` (D87):
     - `domain/{Module}Command.java` (record).
     - `application/{Module}Handler.java`.
     - `application/port/I{Module}Port.java` (ubicación propuesta, pendiente I1).
@@ -92,7 +93,7 @@ flowchart TB
     BEANS[beans]
     PERS[connections]
   end
-  subgraph slice_subscription[subscription/modules/UseCase]
+  subgraph slice_subscription[subscription/UseCase]
     EP[Controller]
     RQ[RequestDto]
     RS[ResponseDto]
@@ -169,7 +170,8 @@ sequenceDiagram
 - Contenido del ADR:
   - Título: `ADR-0026: Backend generado en vertical slice por feature`.
   - Decisión:
-    - Estructura `{{ PACKAGE }}.{domain}.modules.{usecase}.{domain|application|infrastructure.rest}`.
+    - Estructura `{{ PACKAGE }}.{domain}.{usecase}.{domain|application|infrastructure.rest}`
+      (D87; original con `modules` en ADR-0026).
     - Dominios: `subscription`, `ai`, `parameter`, `security`, `test`; sin `quiz`.
     - Puertos siempre creados.
     - `common/infrastructure/{configuration,beans,connections}`.
@@ -229,7 +231,7 @@ sequenceDiagram
   - `CAWS` = `{{ PACKAGE }}.common.aws` (D52).
   - `CCFG` = `{{ PACKAGE }}.common.config` (D54).
   - `CPERS` = `{{ PACKAGE }}.common.persistence` (D53).
-  - `SLICE` = `{{ PACKAGE }}.{domain}.modules.{usecase}.infrastructure.configuration` (D39, I53).
+  - `SLICE` = `{{ PACKAGE }}.{domain}.{usecase}.infrastructure.configuration` (D39, I53, D87).
 - Ámbito: clases registradas en `component.json` bajo `common/infrastructure`.
 
 | Clase | Template | AWS | Otros slices | Destino (D52–D54) | Duda |

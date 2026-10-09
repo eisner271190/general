@@ -59,7 +59,7 @@ Ningún archivo de `generator/` fue modificado.
 - `component.json` (spring-boot): reescribir rutas `directories` y `files`; el número de
   entradas cambia, pero la lista sigue siendo la única fuente.
 - Cada template con `package {{ PACKAGE }}.infrastructure...` o `.domain...`: cambiar
-  declaración `package` e `import` a `{{ PACKAGE }}.{domain}.modules.{usecase}.<capa>`.
+  declaración `package` e `import` a `{{ PACKAGE }}.{domain}.{usecase}.<capa>` (D87).
 - Templates de common: cambiar a `{{ PACKAGE }}.common...`.
 - `hexagonal-architecture-test.scriban`: codifica reglas hexagonales; NO modificar sin
   autorización (regla: no crear ni modificar tests).

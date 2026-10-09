@@ -907,3 +907,14 @@
 
 - Aplicado: D87 en `templates` (backend) y `component.json` (backend).
 - Bloqueado: tests en `projects/` por I78; arranque cloud por I79.
+## Cierre I78 (developer-scriban, 2026-10-09 05:25:09 UTC-5)
+
+- I78 CERRADA. Autorizada por usuario: borrar src/**/modules de quizapi.
+- Verificación previa (05:23:23): 0 directorios modules y 0 archivos bajo src/ con modules.
+- Borrado: no ejecutado; no había archivos que borrar. Los 55 citados ya no existían.
+- Regeneración dotnet run --project generator\Generator.csproj (05:24:12): OK=1, sin errores.
+- Post-regeneración: 0 modules en src/; el generador no recrea esos archivos.
+- Tests mvn -B clean test (05:24:56): 10/10, 0 fallos, 0 errores, BUILD SUCCESS.
+- Pendiente: I79 (arranque cloud), sin ejecutar. Sin commit, push, deploy ni AWS.
+- Duda: origen de la discrepancia de 55 archivos (¿borrados antes por otro proceso?).
+  - Recomendación: no bloquea; confirmar si se quiere trazabilidad en improvements.md.

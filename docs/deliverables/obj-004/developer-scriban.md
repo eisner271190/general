@@ -38,9 +38,9 @@
 
 ## Decisiones y desviaciones
 
-- Paquetes: `{domain}.modules.{usecase}.{domain|application|infrastructure}` (ADR-0026).
+- Paquetes: `{domain}.{usecase}.{domain|application|infrastructure}` (ADR-0026, D87).
 - Modelos en `domain.model`; puertos en `domain.port` (D9, D30).
-- Commands en `{domain}.modules.{usecase}.domain` (D41).
+- Commands en `{domain}.{usecase}.domain` (D41, D87).
 - Adaptadores en `infrastructure.adapters`; persistencia en `infrastructure.persistence` (D33).
 - Configuración de feature en `infrastructure.configuration` (D39).
 - Beans AWS en `common.infrastructure.beans` (D28); persistencia genérica en `connections`.
@@ -513,3 +513,16 @@ Estado: bloqueado en I47. Sin cambios en templates.
 - `generator/components/backend/spring-boot-3.5.16/component.json`
 - `projects/com.quizsmart.app/backend/quizapi/` (salida regenerada, D44)
 - `docs/deliverables/obj-004/developer-scriban.md`, `questions.md`, `improvements.md`
+## Registro I78 (developer-scriban, 2026-10-09 05:25:09 UTC-5)
+
+- Resultado: I78 cerrada sin borrado; la salida modules ya no existía.
+- Verificado en projects/com.quizsmart.app/backend/quizapi:
+  - Antes: 0 directorios modules; 0 archivos */modules/* bajo src/.
+  - Después de regenerar: 0 directorios modules; 0 archivos */modules/*.
+  - Archivos Java bajo src/main/java: 56.
+- Generador: dotnet run --project generator\Generator.csproj OK=1, sin errores.
+- Tests: mvn -B clean test 10/10 OK (sin modificar tests).
+- Ruido: aviso JaCoCo al instrumentar AWS SSM en ApplicationContextTest; no es fallo.
+- Restricciones cumplidas: sin perfil cloud, sin commit, push, deploy ni AWS.
+- Pendiente: I79 (arranque cloud), abierta en questions.md.
+- Dependencias: ninguna nueva.
