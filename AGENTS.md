@@ -33,7 +33,7 @@
 - Las dependencias van a la seccion `Dependencias` del mismo archivo.
 
 ## Estándares de código
-- Siempre cargar skills `clean-code`.
+- Siempre cargar skills `clean-code`, `checklist`.
 
 ## Estilo de redacción
 - Prioriza listas sobre párrafos.
@@ -49,6 +49,15 @@
 - Antes de crear un command, lee y sigue `TEMPLATES/command.md`.
 - Antes de crear una skill, lee y sigue `TEMPLATES/skill.md`.
 - Todos los subagentes deben leer `DELIVERABLES/obj-NNN/obj-NNN.md`.
-- Durante el proceso, si se identifican nuevos criterios de aceptación se deben ir agregando.
-- Durante el proceso, se deben ir agregando casos de prueba en `DELIVERABLES/obj-NNN/use-cases.md`.
-- Durante el proceso, se debe identificar pregunta por pregunta, porque no se identificó este problema antes y como se puede hacer para que se identifique desde antes de la implementación. Registrarlo en `DELIVERABLES/obj-NNN/improvements.md`.
+- Queda fuera del alcance hacer modificaciones en /projects. Agregarlo en todos los obj-NNN.
+
+## Durante el proceso
+- Si se identifican nuevos criterios de aceptación se deben ir agregando.
+- Se deben ir agregando casos de prueba en `DELIVERABLES/obj-NNN/use-cases.md`.
+- Por cada duda, registrar su causa y el tipo de problema para que no se repita. Registrarlo en `DELIVERABLES/obj-NNN/improvements.md`.
+- Siempre que se resuelta una duda se debe actualizar la documentación del objetivo `DELIVERABLES/obj-NNN/*.md`.
+- Se debe crear y actualizar `DELIVERABLES/obj-NNN/checklist.md`.
+
+## Restricciones
+- No se puede iniciar la implementar sin la autorización explicita del usuario
+- No se puede iniciar la implementación, sin cumplir el checklist
