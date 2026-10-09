@@ -1,0 +1,9 @@
+package com.epc.common.persistence;
+
+import reactor.core.publisher.Mono;
+
+public interface IProviderPersistence<T> {
+    Mono<T> findById(Long id);
+    Mono<Void> save(T entity);
+    Mono<Void> delete(Long id);
+}

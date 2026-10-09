@@ -10,9 +10,9 @@
     <version>1.1.6</version>
   </parent>
 
-  <artifactId>common-web</artifactId>
-  <name>common-web</name>
-  <description>Capa reactiva (WebFlux): manejo de errores y filtro de correlacion, por auto-configuracion.</description>
+  <artifactId>common-config</artifactId>
+  <name>common-config</name>
+  <description>Configuracion transversal de microservicios: CORS y pistas de GraalVM.</description>
 
   <dependencies>
     <dependency>
@@ -20,19 +20,14 @@
       <artifactId>common-log</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>com.epc.common</groupId>
-      <artifactId>common-error</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
     <!--
       provided + optional: el microservicio aporta su spring-boot-starter-webflux.
-     (common-web no arrastra reactor-netty ni ningun starter.)
+      GraalHints usa spring-core (aot hints) y commons-logging, que llegan con Spring.
     -->
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-autoconfigure</artifactId>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
     </dependency>
@@ -41,10 +36,6 @@
       <artifactId>spring-webflux</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
     </dependency>
   </dependencies>
 </project>

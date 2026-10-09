@@ -1,0 +1,32 @@
+package com.epc.common.persistence;
+
+import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Component
+public class MapperClass {
+
+    private final Map<Class<?>, MapperInfo> registry = new HashMap<>();
+
+    public void register(MapperInfo mapperInfo) {
+        registry.put(mapperInfo.getPersistenceModelClass(), mapperInfo);
+    }
+
+    public String getTableName(Class persistenceModelClass) {
+        return registry.get(persistenceModelClass).getTableName();
+    }
+
+    public Class getDynamoModel(Class persistenceModelClass) {
+        return registry.get(persistenceModelClass).getDynamoModelClass();
+    }
+
+    public IMapperDynamo getMapperDynamo(Class persistenceModelClass) {
+        return registry.get(persistenceModelClass).getMapperDynamo();
+    }
+
+    public IMapperEntity getMapperEntity(Class persistenceModelClass) {
+        return registry.get(persistenceModelClass).getMapperEntity();
+    }
+}
