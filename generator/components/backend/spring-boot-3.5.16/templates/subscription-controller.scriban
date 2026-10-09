@@ -1,11 +1,14 @@
-package {{ PACKAGE }}.infrastructure.controllers;
+package {{ PACKAGE }}.subscription.subscription.infrastructure.rest;
+
+import {{ PACKAGE }}.subscription.subscription.infrastructure.configuration.SubscriptionLogMessages;
+import {{ PACKAGE }}.subscription.subscription.application.SubscriptionHandler;
+import {{ PACKAGE }}.subscription.subscription.domain.GetSubscriptionStatusCommand;
+import {{ PACKAGE }}.subscription.subscription.domain.model.Subscription;
+import {{ PACKAGE }}.subscription.subscription.domain.SyncSubscriptionCommand;
+
+
 
 import com.epc.common.log.ILogService;
-import {{ PACKAGE }}.domain.dto.SubscriptionStatusResponseDTO;
-import {{ PACKAGE }}.domain.servicePorts.ISubscriptionServicePort;
-import {{ PACKAGE }}.domain.servicePorts.IWebhookServicePort;
-import {{ PACKAGE }}.infrastructure.adapters.RevenueCatWebhookPayload;
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import com.epc.common.error.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,36 +19,34 @@ import reactor.core.publisher.Mono;
 public class SubscriptionController {
 
     private final ILogService log;
-    private final ISubscriptionServicePort subscriptionService;
-    private final IWebhookServicePort webhookService;
+    private final SubscriptionHandler subscriptionHandler;
 
-    public SubscriptionController(ISubscriptionServicePort subscriptionService, IWebhookServicePort webhookService, ILogService log) {
+    public SubscriptionController(SubscriptionHandler subscriptionHandler, ILogService log) {
         this.log = log;
-        this.subscriptionService = subscriptionService;
-        this.webhookService = webhookService;
-    }
-
-    @PostMapping("/webhook")
-    public Mono<ResponseEntity<ApiResponse>> handleWebhook(@RequestBody RevenueCatWebhookPayload payload) {
-        log.info(DomainLogMessages.WEBHOOK_ENDPOINT_RECEIVED);
-        return webhookService.processWebhook(payload.toWebhookEvent())
-            .then(Mono.just(ResponseEntity.ok(new ApiResponse(null, "Webhook processed", 200))))
-            .doOnSuccess(response -> log.debug(DomainLogMessages.WEBHOOK_ENDPOINT_PROCESSED));
+        this.subscriptionHandler = subscriptionHandler;
     }
 
     @GetMapping("/status")
     public Mono<ResponseEntity<ApiResponse>> getStatus(@RequestHeader("X-User-Id") String userId) {
-        log.info(DomainLogMessages.SUBSCRIPTION_STATUS_ENDPOINT, userId);
-        return subscriptionService.getStatus(userId)
-            .map(response -> ResponseEntity.ok(new ApiResponse(response, "Status retrieved", 200)))
-            .doOnSuccess(response -> log.debug(DomainLogMessages.SUBSCRIPTION_STATUS_RETURNED, userId));
+        log.info(SubscriptionLogMessages.SUBSCRIPTION_STATUS_CONTROLLER, userId);
+        return subscriptionHandler.getStatus(new GetSubscriptionStatusCommand(userId))
+            .map(subscription -> ResponseEntity.ok(new ApiResponse(toStatusResponse(subscription), "Status retrieved", 200)))
+            .doOnSuccess(response -> log.debug(SubscriptionLogMessages.SUBSCRIPTION_STATUS_RETURNED, userId));
     }
 
     @PostMapping("/sync")
     public Mono<ResponseEntity<ApiResponse>> sync(@RequestHeader("X-User-Id") String userId) {
-        log.info(DomainLogMessages.SUBSCRIPTION_SYNC_ENDPOINT, userId);
-        return subscriptionService.syncFromProvider(userId)
-            .map(response -> ResponseEntity.ok(new ApiResponse(response, "Sync completed", 200)))
-            .doOnSuccess(response -> log.debug(DomainLogMessages.SUBSCRIPTION_SYNC_RETURNED, userId));
+        log.info(SubscriptionLogMessages.SUBSCRIPTION_SYNC_CONTROLLER, userId);
+        return subscriptionHandler.syncFromProvider(new SyncSubscriptionCommand(userId))
+            .map(subscription -> ResponseEntity.ok(new ApiResponse(toStatusResponse(subscription), "Sync completed", 200)))
+            .doOnSuccess(response -> log.debug(SubscriptionLogMessages.SUBSCRIPTION_SYNC_RETURNED, userId));
+    }
+
+    private SubscriptionStatusResponseDto toStatusResponse(Subscription subscription) {
+        return new SubscriptionStatusResponseDto(
+            subscription.isActive(),
+            subscription.getProductId(),
+            subscription.getExpirationAtMs()
+        );
     }
 }

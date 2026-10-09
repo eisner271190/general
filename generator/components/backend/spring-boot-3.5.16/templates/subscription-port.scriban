@@ -1,9 +1,12 @@
-package {{ PACKAGE }}.domain.ports;
+package {{ PACKAGE }}.subscription.subscription.domain.port;
 
-import {{ PACKAGE }}.domain.model.Subscription;
+import {{ PACKAGE }}.subscription.subscription.domain.model.Subscription;
+
+
+
 import reactor.core.publisher.Mono;
 
-public interface SubscriptionPort {
+public interface ISubscriptionPort {
     /**
      * Devuelve la suscripcion registrada del usuario, sea cual sea su estado.
      * No filtra: las estrategias de webhook deben localizar la fila inactiva

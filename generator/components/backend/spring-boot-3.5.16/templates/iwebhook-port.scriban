@@ -1,0 +1,9 @@
+package {{ PACKAGE }}.subscription.webhook.domain.port;
+
+import {{ PACKAGE }}.subscription.webhook.domain.ProcessWebhookCommand;
+
+import reactor.core.publisher.Mono;
+
+public interface IWebhookPort {
+    Mono<Void> processWebhook(ProcessWebhookCommand command);
+}

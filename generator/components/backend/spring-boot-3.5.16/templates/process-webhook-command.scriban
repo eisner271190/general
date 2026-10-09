@@ -1,0 +1,6 @@
+package {{ PACKAGE }}.subscription.webhook.domain;
+
+import {{ PACKAGE }}.subscription.webhook.domain.model.WebhookEventDto;
+
+public record ProcessWebhookCommand(WebhookEventDto event) {
+}

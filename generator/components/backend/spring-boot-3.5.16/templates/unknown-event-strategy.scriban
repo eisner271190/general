@@ -1,9 +1,12 @@
-package {{ PACKAGE }}.domain.usecase.strategies;
+package {{ PACKAGE }}.subscription.webhook.application.strategies;
+
+import {{ PACKAGE }}.subscription.webhook.infrastructure.configuration.WebhookLogMessages;
+import {{ PACKAGE }}.subscription.webhook.application.IWebhookStrategy;
+import {{ PACKAGE }}.subscription.webhook.domain.model.WebhookEventDto;
+
+
 
 import com.epc.common.log.ILogService;
-import {{ PACKAGE }}.domain.dto.WebhookEventDTO;
-import {{ PACKAGE }}.domain.usecase.IWebhookStrategy;
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -22,8 +25,8 @@ public class UnknownEventStrategy implements IWebhookStrategy {
     }
 
     @Override
-    public Mono<Void> handle(WebhookEventDTO event) {
-        log.warn(DomainLogMessages.WEBHOOK_EVENT_UNKNOWN, event.type());
+    public Mono<Void> handle(WebhookEventDto event) {
+        log.warn(WebhookLogMessages.WEBHOOK_EVENT_UNKNOWN, event.type());
         return Mono.empty();
     }
 }

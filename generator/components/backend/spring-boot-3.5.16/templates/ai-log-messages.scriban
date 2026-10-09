@@ -1,0 +1,27 @@
+package {{ PACKAGE }}.ai.ai.infrastructure.configuration;
+
+/**
+ * Textos de log del caso de uso {@code ai}. Centralizarlos evita que el mismo texto cambie entre
+ * el controller, el handler y el adaptador. Ningun mensaje debe incluir el valor de una
+ * credencial.
+ */
+public final class AiLogMessages {
+
+    private AiLogMessages() {
+    }
+
+    public static final String AI_GENERATION_REQUESTED = "Generacion de texto con IA solicitada";
+    public static final String AI_CONTROLLER_RECEIVED = "POST /api/v1/ai/generate recibido";
+    public static final String AI_PROMPT_REJECTED = "Prompt rechazado: ausente, vacio o mayor que {}";
+    public static final String AI_PROMPT_LENGTH = "Longitud del prompt: {}";
+    public static final String AI_GENERATION_COMPLETED = "Generacion completada con el modelo {}";
+    public static final String AI_GENERATION_FAILED = "Fallo al generar texto con IA";
+    public static final String AI_CONFIGURATION_LOADED =
+            "Configuracion de IA cargada: model={}, apiBaseUrl={}, temperature={}, maxTokens={}, "
+                    + "apiKey presente={}";
+    public static final String AI_REQUEST_SUMMARY =
+            "Generando texto con IA: modelo={}, temperature={}, maxTokens={}";
+    public static final String AI_PROVIDER_ERROR =
+            "OpenRouter respondio {} para el modelo {} ({}model): {}";
+    public static final String AI_TIMEOUT = "El proveedor de IA no respondio en {} s (modelo {})";
+}

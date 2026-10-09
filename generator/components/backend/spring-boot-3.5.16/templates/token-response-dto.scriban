@@ -1,13 +1,13 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.application.dto;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.infrastructure.rest;
 
-public class TokenResponseDTO {
+public class TokenResponseDto {
     private String accessToken;
     
-    public TokenResponseDTO()
+    public TokenResponseDto()
     {
     }
 
-    public TokenResponseDTO(String accessToken)
+    public TokenResponseDto(String accessToken)
     {
         this.accessToken = accessToken;
     }

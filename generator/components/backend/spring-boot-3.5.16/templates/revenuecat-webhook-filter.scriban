@@ -1,7 +1,10 @@
-package {{ PACKAGE }}.infrastructure.configuration.webfilters;
+package {{ PACKAGE }}.subscription.webhook.infrastructure.webfilters;
+
+import {{ PACKAGE }}.subscription.webhook.infrastructure.configuration.WebhookLogMessages;
 
 
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
+
+
 import com.epc.common.log.ILogService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,7 +62,7 @@ public class RevenueCatWebhookFilter implements WebFilter {
      */
     @PostConstruct
     void logResolvedSecret() {
-        log.info(DomainLogMessages.WEBHOOK_SECRET_RESOLVED, secretLength());
+        log.info(WebhookLogMessages.WEBHOOK_SECRET_RESOLVED, secretLength());
     }
 
     private int secretLength() {
@@ -80,7 +83,7 @@ public class RevenueCatWebhookFilter implements WebFilter {
         }
         String header = signatureHeader(exchange);
         log.info(
-            DomainLogMessages.WEBHOOK_REQUEST_RECEIVED,
+            WebhookLogMessages.WEBHOOK_REQUEST_RECEIVED,
             exchange.getRequest().getPath().value(),
             signatureValues(exchange).size(),
             signatureValues(exchange).stream().map(String::length).toList(),
@@ -144,11 +147,11 @@ public class RevenueCatWebhookFilter implements WebFilter {
         long nowSeconds = System.currentTimeMillis() / 1000;
         if (valid) {
             log.info(
-                DomainLogMessages.WEBHOOK_SIGNATURE_VALID, rawBody.length, secretLength());
+                WebhookLogMessages.WEBHOOK_SIGNATURE_VALID, rawBody.length, secretLength());
             return;
         }
         log.warn(
-            DomainLogMessages.WEBHOOK_SIGNATURE_REJECTED,
+            WebhookLogMessages.WEBHOOK_SIGNATURE_REJECTED,
             rejectReason(header, signature),
             header != null,
             header == null ? 0 : header.length(),

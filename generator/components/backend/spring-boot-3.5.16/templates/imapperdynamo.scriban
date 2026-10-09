@@ -1,6 +1,0 @@
-package {{ PACKAGE }}.infrastructure.persistence.providers.dynamodb;
-
-public interface IMapperDynamo<P, D> {
-    P toPersistenceModel(D dynamo);
-    D toDynamo(P persistenceModel);
-}

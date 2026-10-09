@@ -1,4 +1,4 @@
-package {{ PACKAGE }}.infrastructure.controllers;
+package {{ PACKAGE }}.test.holamundo.infrastructure.rest;
 
 import com.epc.common.error.ApiResponse;
 import com.epc.common.error.ErrorApiResponse;

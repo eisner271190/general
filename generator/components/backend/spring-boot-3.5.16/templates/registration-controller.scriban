@@ -1,7 +1,9 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.controllers;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.infrastructure.rest;
 
-import {{ PACKAGE }}.application.services.IRegistrationService;
-import {{ PACKAGE }}.application.dto.*;
+import {{ PACKAGE }}.security.registration.application.IRegistrationService;
+
+
+
 import com.epc.common.error.ApiResponse;
 import com.epc.common.error.ErrorApiResponse;
 
@@ -22,7 +24,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/admin/users")
-    public Mono<ResponseEntity<ApiResponse>> registerUserByAdmin(@Valid @RequestBody RegisterUserRequestDTO request) {
+    public Mono<ResponseEntity<ApiResponse>> registerUserByAdmin(@Valid @RequestBody RegisterUserRequestDto request) {
         return registrationService.registerUserByAdmin(request)
                 .then(Mono.fromCallable(() -> {
                     ApiResponse response = new ApiResponse(null, "Usuario creado exitosamente por administrador", HttpStatus.CREATED.value());
@@ -39,7 +41,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/signup")
-    public Mono<ResponseEntity<ApiResponse>> signUpUser(@Valid @RequestBody RegisterUserRequestDTO request) {
+    public Mono<ResponseEntity<ApiResponse>> signUpUser(@Valid @RequestBody RegisterUserRequestDto request) {
         return registrationService.registerUser(request)
                 .then(Mono.fromCallable(() -> {
                     ApiResponse response = new ApiResponse(null, "Usuario registrado exitosamente. Verifica tu correo para confirmar la cuenta.", HttpStatus.CREATED.value());
@@ -56,7 +58,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/confirm")
-    public Mono<ResponseEntity<ApiResponse>> confirmUser(@Valid @RequestBody ConfirmUserRequestDTO request) {
+    public Mono<ResponseEntity<ApiResponse>> confirmUser(@Valid @RequestBody ConfirmUserRequestDto request) {
         return registrationService.confirmUser(request)
                 .then(Mono.fromCallable(() -> {
                     ApiResponse response = new ApiResponse(null, "Usuario confirmado exitosamente", HttpStatus.OK.value());

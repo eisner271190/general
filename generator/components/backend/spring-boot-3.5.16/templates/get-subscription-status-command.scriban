@@ -1,0 +1,4 @@
+package {{ PACKAGE }}.subscription.subscription.domain;
+
+public record GetSubscriptionStatusCommand(String userId) {
+}

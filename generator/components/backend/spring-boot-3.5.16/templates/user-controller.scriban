@@ -1,7 +1,16 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.controllers;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.user.infrastructure.rest;
 
-import {{ PACKAGE }}.application.services.IUserService;
-import {{ PACKAGE }}.application.dto.*;
+import {{ PACKAGE }}.security.adminuser.infrastructure.rest.ForcePasswordResetRequestDto;
+import {{ PACKAGE }}.security.auth.infrastructure.rest.TokenRequestDto;
+import {{ PACKAGE }}.security.auth.infrastructure.rest.TokenResponseDto;
+import {{ PACKAGE }}.security.password.infrastructure.rest.ChangePasswordRequestDto;
+import {{ PACKAGE }}.security.password.infrastructure.rest.RecoverPasswordRequestDto;
+import {{ PACKAGE }}.security.registration.infrastructure.rest.ConfirmUserRequestDto;
+import {{ PACKAGE }}.security.registration.infrastructure.rest.RegisterUserRequestDto;
+import {{ PACKAGE }}.security.user.application.IUserService;
+
+
+
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,43 +28,43 @@ public class UserController {
     }
 
     @PostMapping("/token")
-    public Mono<ResponseEntity<TokenResponseDTO>> generateToken(@RequestBody TokenRequestDTO request) {
+    public Mono<ResponseEntity<TokenResponseDto>> generateToken(@RequestBody TokenRequestDto request) {
         return userService.generateToken(request)
                 .map(token -> ResponseEntity.ok().body(token));
     }
 
     @PostMapping("/admin/register")
-    public Mono<ResponseEntity<Void>> registerUserByAdmin(@RequestBody RegisterUserRequestDTO request) {
+    public Mono<ResponseEntity<Void>> registerUserByAdmin(@RequestBody RegisterUserRequestDto request) {
         return userService.registerUserByAdmin(request)
                 .then(Mono.just(ResponseEntity.ok().build()));
     }
 
     @PostMapping("/register")
-    public Mono<ResponseEntity<Void>> registerUser(@RequestBody RegisterUserRequestDTO request) {
+    public Mono<ResponseEntity<Void>> registerUser(@RequestBody RegisterUserRequestDto request) {
         return userService.registerUser(request)
                 .then(Mono.just(ResponseEntity.ok().build()));
     }
 
     @PostMapping("/confirm")
-    public Mono<ResponseEntity<Void>> confirmUser(@RequestBody ConfirmUserRequestDTO request) {
+    public Mono<ResponseEntity<Void>> confirmUser(@RequestBody ConfirmUserRequestDto request) {
         return userService.confirmUser(request)
                 .then(Mono.just(ResponseEntity.ok().build()));
     }
 
     @PostMapping("/admin/force-password-reset")
-    public Mono<ResponseEntity<Void>> forcePasswordReset(@RequestBody ForcePasswordResetRequestDTO request) {
+    public Mono<ResponseEntity<Void>> forcePasswordReset(@RequestBody ForcePasswordResetRequestDto request) {
         return userService.forcePasswordReset(request)
                 .then(Mono.just(ResponseEntity.ok().build()));
     }
 
     @PutMapping("/change-password")
-    public Mono<ResponseEntity<Void>> changePassword(@RequestBody ChangePasswordRequestDTO request) {
+    public Mono<ResponseEntity<Void>> changePassword(@RequestBody ChangePasswordRequestDto request) {
         return userService.changePassword(request)
                 .then(Mono.just(ResponseEntity.ok().build()));
     }
 
     @PostMapping("/recover-password")
-    public Mono<ResponseEntity<Void>> recoverPassword(@RequestBody RecoverPasswordRequestDTO request) {
+    public Mono<ResponseEntity<Void>> recoverPassword(@RequestBody RecoverPasswordRequestDto request) {
         return userService.recoverPassword(request)
                 .then(Mono.just(ResponseEntity.ok().build()));
     }

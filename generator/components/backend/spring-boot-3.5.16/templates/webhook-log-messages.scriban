@@ -1,0 +1,30 @@
+package {{ PACKAGE }}.subscription.webhook.infrastructure.configuration;
+
+/**
+ * Textos de log del caso de uso {@code webhook}. Ningun mensaje debe incluir el valor de una
+ * credencial: el secreto solo se registra por longitud.
+ */
+public final class WebhookLogMessages {
+
+    private WebhookLogMessages() {
+    }
+
+    public static final String WEBHOOK_EVENT_UNKNOWN = "Unknown webhook event type: {}";
+    public static final String WEBHOOK_PROCESSING_EVENT = "Procesando evento {}";
+    public static final String WEBHOOK_USER_ID = "userId={}";
+    public static final String WEBHOOK_EVENT_APPLIED = "Evento {} aplicado a userId={}";
+    public static final String WEBHOOK_EVENT_APPLIED_SHORT = "Evento {} aplicado";
+    public static final String WEBHOOK_RECEIVED =
+            "Webhook recibido: tipo={}, userId={}, estrategia={}";
+    public static final String WEBHOOK_PROCESSED = "Webhook {} procesado";
+    public static final String WEBHOOK_STRATEGIES_INDEXED = "Estrategias de webhook registradas: {}";
+    public static final String WEBHOOK_CONTROLLER_RECEIVED = "POST /api/v1/subscriptions/webhook recibido";
+    public static final String WEBHOOK_CONTROLLER_PROCESSED = "Webhook procesado";
+    public static final String WEBHOOK_SECRET_RESOLVED = "[WH] secreto resuelto len={}";
+    public static final String WEBHOOK_REQUEST_RECEIVED =
+            "[WH] peticion webhook path={} valoresCabecera={} longitudes={} headerLen={} secretLen={}";
+    public static final String WEBHOOK_SIGNATURE_VALID = "[WH] firma VALIDA rawBodyLen={} secretLen={}";
+    public static final String WEBHOOK_SIGNATURE_REJECTED =
+            "[WH] firma RECHAZADA motivo={} headerPresent={} headerLen={} rawBodyLen={} secretLen={}"
+                    + " t={} tAhora={} diffSeg={} v1Len={} v1Pref={} computedPref={}";
+}

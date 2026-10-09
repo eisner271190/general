@@ -3,9 +3,6 @@ description: Diseña arquitectura, contratos e integración para objetivos defin
 mode: subagent
 permissions:
   - action: edit
-    resource: "*"
-    effect: deny
-  - action: edit
     resource: "docs/deliverables/obj-*/**"
     effect: allow
   - action: edit

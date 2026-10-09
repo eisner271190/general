@@ -1,4 +1,4 @@
-package {{ PACKAGE }}.domain.model;
+package {{ PACKAGE }}.subscription.subscription.domain.model;
 
 public class Subscription {
 

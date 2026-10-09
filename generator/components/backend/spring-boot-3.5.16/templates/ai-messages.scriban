@@ -1,4 +1,8 @@
-package {{ PACKAGE }}.infrastructure.configuration;
+package {{ PACKAGE }}.ai.ai.infrastructure.configuration;
+
+import {{ PACKAGE }}.ai.ai.infrastructure.rest.AiController;
+
+
 
 /**
  * Mensajes fijos del contrato de IA generativa.

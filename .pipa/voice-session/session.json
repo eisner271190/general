@@ -1,0 +1,19 @@
+{
+  "ok": true,
+  "managed_by": "pipa-huddle-beta",
+  "script_path": "C:\\Users\\EISNE\\.agents\\skills\\pipa-huddle-beta\\scripts\\start-voice-session.mjs",
+  "mode": "local",
+  "pid": 13556,
+  "opencode_session_id": "ses_ee226f1ccffesrzZ4WejIHZLVf",
+  "opencode_model": "github-copilot/claude-haiku-5.5",
+  "huddle_session_state": "existing_huddle_session",
+  "huddle_context": "none",
+  "pid_path": "C:\\epc\\general\\.pipa\\voice-session\\bridge.pid",
+  "log_path": "C:\\epc\\general\\.pipa\\voice-session\\bridge.log",
+  "metadata_path": "C:\\epc\\general\\.pipa\\voice-session\\session.json",
+  "ready_path": "C:\\epc\\general\\.pipa\\voice-session\\ready.json",
+  "browser_url": "http://127.0.0.1:8787",
+  "relay_state": "local_ready",
+  "pairing_expires_at": null,
+  "stop_command": "kill 13556"
+}

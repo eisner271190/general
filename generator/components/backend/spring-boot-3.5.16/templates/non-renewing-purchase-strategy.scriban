@@ -1,11 +1,14 @@
-package {{ PACKAGE }}.domain.usecase.strategies;
+package {{ PACKAGE }}.subscription.webhook.application.strategies;
+
+import {{ PACKAGE }}.subscription.webhook.infrastructure.configuration.WebhookLogMessages;
+import {{ PACKAGE }}.subscription.subscription.domain.model.Subscription;
+import {{ PACKAGE }}.subscription.subscription.domain.port.ISubscriptionPort;
+import {{ PACKAGE }}.subscription.webhook.application.IWebhookStrategy;
+import {{ PACKAGE }}.subscription.webhook.domain.model.WebhookEventDto;
+
+
 
 import com.epc.common.log.ILogService;
-import {{ PACKAGE }}.domain.dto.WebhookEventDTO;
-import {{ PACKAGE }}.domain.model.Subscription;
-import {{ PACKAGE }}.domain.ports.SubscriptionPort;
-import {{ PACKAGE }}.domain.usecase.IWebhookStrategy;
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -13,9 +16,9 @@ import reactor.core.publisher.Mono;
 public class NonRenewingPurchaseStrategy implements IWebhookStrategy {
 
     private final ILogService log;
-    private final SubscriptionPort subscriptionPort;
+    private final ISubscriptionPort subscriptionPort;
 
-    public NonRenewingPurchaseStrategy(SubscriptionPort subscriptionPort, ILogService log) {
+    public NonRenewingPurchaseStrategy(ISubscriptionPort subscriptionPort, ILogService log) {
         this.log = log;
         this.subscriptionPort = subscriptionPort;
     }
@@ -30,15 +33,15 @@ public class NonRenewingPurchaseStrategy implements IWebhookStrategy {
      * no se renueva, por lo que la suscripcion queda inactiva al expirar.
      */
     @Override
-    public Mono<Void> handle(WebhookEventDTO event) {
-        log.info(DomainLogMessages.WEBHOOK_PROCESSING_EVENT, eventType());
-        log.debug(DomainLogMessages.WEBHOOK_USER_ID, event.userId());
+    public Mono<Void> handle(WebhookEventDto event) {
+        log.info(WebhookLogMessages.WEBHOOK_PROCESSING_EVENT, eventType());
+        log.debug(WebhookLogMessages.WEBHOOK_USER_ID, event.userId());
         return subscriptionPort.saveSubscription(toSubscription(event)).then()
             .doOnSuccess(done ->
-                log.debug(DomainLogMessages.WEBHOOK_EVENT_APPLIED, eventType(), event.userId()));
+                log.debug(WebhookLogMessages.WEBHOOK_EVENT_APPLIED, eventType(), event.userId()));
     }
 
-    private Subscription toSubscription(WebhookEventDTO event) {
+    private Subscription toSubscription(WebhookEventDto event) {
         return Subscription.active(event.userId(), event.productId(), event.store(),
             event.purchasedAtMs(), event.expirationAtMs());
     }

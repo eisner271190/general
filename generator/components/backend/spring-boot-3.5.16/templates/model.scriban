@@ -1,6 +1,0 @@
-package {{ PACKAGE }}.domain.model;
-
-import lombok.Builder;
-
-@Builder
-public record {{ EntityCapital }} (Long id){}

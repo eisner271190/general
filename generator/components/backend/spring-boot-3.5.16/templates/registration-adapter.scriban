@@ -1,10 +1,14 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.adapters;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.infrastructure.adapters;
+
+import {{ PACKAGE }}.security.auth.infrastructure.adapters.CognitoAdapter;
+import {{ PACKAGE }}.common.infrastructure.configuration.DomainLogMessages;
+import {{ PACKAGE }}.security.registration.domain.model.ConfirmUser;
+import {{ PACKAGE }}.security.registration.domain.model.RegisterUser;
+import {{ PACKAGE }}.security.registration.domain.port.RegistrationPort;
+
+
 
 import com.epc.common.log.ILogService;
-import {{ PACKAGE }}.domain.ports.RegistrationPort;
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
-import {{ PACKAGE }}.infrastructure.configuration.cloud.aws.CognitoClient;
-import {{ PACKAGE }}.domain.model.*;
 
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -18,9 +22,9 @@ import reactor.core.publisher.Mono;
 public class RegistrationAdapter implements RegistrationPort {
 
     private final ILogService log;
-    private final CognitoClient cognitoClient;
+    private final CognitoAdapter cognitoClient;
 
-    public RegistrationAdapter(CognitoClient cognitoClient, ILogService log) {
+    public RegistrationAdapter(CognitoAdapter cognitoClient, ILogService log) {
         this.log = log;
         this.cognitoClient = cognitoClient;
     }

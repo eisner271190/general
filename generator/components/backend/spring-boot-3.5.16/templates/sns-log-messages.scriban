@@ -1,0 +1,14 @@
+package {{ PACKAGE }}.test.sns.infrastructure.configuration;
+
+/** Textos de log del caso de uso {@code sns}. */
+public final class SnsLogMessages {
+
+    private SnsLogMessages() {
+    }
+
+    public static final String SNS_EVENT_PUBLISHING = "Publicando evento {} en SNS";
+    public static final String SNS_TOPIC_AND_PAYLOAD = "Topic: {}, carga de tipo {}";
+    public static final String SNS_EVENT_PUBLISHED = "Evento {} publicado";
+    public static final String SNS_PUBLISH_CONTROLLER = "POST /sns/publish recibido ({} caracteres)";
+    public static final String SNS_PUBLISH_DONE = "Evento product.created publicado";
+}

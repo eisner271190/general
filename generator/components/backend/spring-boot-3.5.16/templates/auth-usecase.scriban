@@ -1,8 +1,12 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.domain.usecase;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.application;
 
-import {{ PACKAGE }}.domain.servicePorts.AuthServicePort;
-import {{ PACKAGE }}.domain.ports.AuthPort;
-import {{ PACKAGE }}.domain.model.*;
+import {{ PACKAGE }}.security.auth.domain.model.TokenRequest;
+import {{ PACKAGE }}.security.auth.domain.model.TokenResponse;
+import {{ PACKAGE }}.security.auth.domain.port.AuthPort;
+import {{ PACKAGE }}.security.auth.domain.port.AuthServicePort;
+
+
+
 
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

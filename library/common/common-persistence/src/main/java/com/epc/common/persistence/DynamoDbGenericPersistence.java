@@ -1,0 +1,50 @@
+package com.epc.common.persistence;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+
+/** Persistencia generica DynamoDB; la tabla y el mapeo salen de {@link MapperClass}. */
+public class DynamoDbGenericPersistence<P, D> implements IProviderPersistence<P> {
+
+    private final Class<P> clazz;
+    private final String tableName;
+    private final DynamoDbEnhancedClient client;
+    private final DynamoDbTable<D> table;
+    private final IMapperDynamo<P, D> mapperDynamo;
+
+    public DynamoDbGenericPersistence(
+            DynamoDbEnhancedClient client,
+            Class<P> clazz,
+            MapperClass mapperClass,
+            TableSchema<D> staticTableSchema) {
+        this.client = client;
+        this.clazz = mapperClass.getDynamoModel(clazz);
+        this.tableName = mapperClass.getTableName(clazz);
+        this.table = client.table(tableName, staticTableSchema);
+        this.mapperDynamo = mapperClass.getMapperDynamo(clazz);
+    }
+
+    public Mono<P> findById(Long id) {
+        return Mono.fromCallable(() -> table.getItem(Key.builder().partitionValue(id).build()))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(item -> item != null ? Mono.just(mapperDynamo.toPersistenceModel(item)) : Mono.empty());
+    }
+
+    public Mono<Void> save(P entity) {
+        return Mono.fromRunnable(() -> {
+                D dynamo = mapperDynamo.toDynamo(entity);
+                table.putItem(dynamo);
+        }).subscribeOn(Schedulers.boundedElastic())
+          .then();
+    }
+
+    public Mono<Void> delete(Long id) {
+        return Mono.fromRunnable(() -> table.deleteItem(Key.builder().partitionValue(id).build()))
+                .subscribeOn(Schedulers.boundedElastic())
+                .then();
+    }
+}

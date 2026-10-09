@@ -1,14 +1,14 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.application.dto;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.infrastructure.rest;
 
-public class ConfirmUserRequestDTO {
+public class ConfirmUserRequestDto {
     private String username;
     private String confirmationCode;
     
-    public ConfirmUserRequestDTO()
+    public ConfirmUserRequestDto()
     {
     }
 
-    public ConfirmUserRequestDTO(String username, String confirmationCode)
+    public ConfirmUserRequestDto(String username, String confirmationCode)
     {
         this.username = username;
         this.confirmationCode = confirmationCode;

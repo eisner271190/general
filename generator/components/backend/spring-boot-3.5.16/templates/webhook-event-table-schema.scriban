@@ -1,6 +1,9 @@
-package {{ PACKAGE }}.infrastructure.persistence.dynamos.tableschema;
+package {{ PACKAGE }}.subscription.webhook.infrastructure.persistence.dynamos.tableschema;
 
-import {{ PACKAGE }}.infrastructure.persistence.entities.WebhookEventEntity;
+import {{ PACKAGE }}.subscription.webhook.infrastructure.persistence.entities.WebhookEventEntity;
+
+
+
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;

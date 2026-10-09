@@ -1,0 +1,4 @@
+package {{ PACKAGE }}.ai.ai.domain;
+
+public record GenerateAiCommand(String prompt) {
+}

@@ -1,6 +1,10 @@
-package {{ PACKAGE }}.domain.ports;
+package {{ PACKAGE }}.subscription.subscription.domain.port;
 
-import {{ PACKAGE }}.domain.model.Subscription;
+import {{ PACKAGE }}.subscription.subscription.domain.model.Subscription;
+import {{ PACKAGE }}.subscription.subscription.infrastructure.adapters.RevenueCatAdapter;
+
+
+
 import reactor.core.publisher.Mono;
 
 /**

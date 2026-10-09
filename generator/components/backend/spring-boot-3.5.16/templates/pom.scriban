@@ -26,7 +26,7 @@
       <dependency>
         <groupId>com.epc.common</groupId>
         <artifactId>common-bom</artifactId>
-        <version>1.1.5</version>
+        <version>1.1.6</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -40,6 +40,18 @@
     <dependency>
       <groupId>com.epc.common</groupId>
       <artifactId>common-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.epc.common</groupId>
+      <artifactId>common-aws</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.epc.common</groupId>
+      <artifactId>common-config</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.epc.common</groupId>
+      <artifactId>common-persistence</artifactId>
     </dependency>
     <dependency>
       <groupId>net.logstash.logback</groupId>
@@ -316,17 +328,13 @@
             <jvmArg>--add-opens=java.base/java.lang=ALL-UNNAMED</jvmArg>
           </jvmArgs>
           <excludedClasses>
-            {{ PACKAGE }}.application.dto.*,
-            {{ PACKAGE }}.application.mappers.*,
-            {{ PACKAGE }}.domain.dto.*,
-            {{ PACKAGE }}.domain.model.*,
-            {{ PACKAGE }}.domain.ports.*,
-            {{ PACKAGE }}.domain.servicePorts.*,
-            {{ PACKAGE }}.infrastructure.configuration.*,
+            {{ PACKAGE }}.**.infrastructure.rest.*,
+            {{ PACKAGE }}.**.domain.model.*,
+            {{ PACKAGE }}.**.domain.port.*,
+            {{ PACKAGE }}.**.infrastructure.configuration.*,
             {{ PACKAGE }}.infrastructure.entities.*,
             {{ PACKAGE }}.infrastructure.mappers.*,
-            {{ PACKAGE }}.infrastructure.repositories.*,
-            {{ PACKAGE }}.infrastructure.rest.*
+            {{ PACKAGE }}.infrastructure.repositories.*
           </excludedClasses>
           <features>+CLASSLIMIT(limit[3])</features>
           <threads>2</threads>

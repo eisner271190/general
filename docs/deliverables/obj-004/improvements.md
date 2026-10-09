@@ -1,0 +1,623 @@
+# Mejoras obj-004: preguntas Q1–Q16 e I1–I77
+
+- Fecha: 2026-10-08. Hora (UTC-5): 2026-10-09 05:23:14.
+- Fuente: `questions.md` (Q1–Q16 sin número; I1–I77; decisiones D1–D87).
+- Agentes válidos: architect, developer-scriban, reviewer, tester, explorer.
+- Objetivo: identificar, por pregunta, por qué no se detectó antes de implementar y cómo prevenirlo.
+
+## Preguntas sin número (Q1–Q16)
+
+- Q1: alcance de modificación del generador (código fuente frente a templates)
+  - Problema: no estaba claro si se modifica el código fuente del generador o solo templates.
+  - Por qué no se identificó antes de implementar: el alcance no listó artefactos permitidos.
+  - Solución: matriz artefacto → permitido o excluido en obj-004 (solo templates; D20).
+  - Agente: architect
+  - Instrucción: Antes de iniciar un objetivo, lista los artefactos modificables y excluidos.
+- Q2: dominio de auth, user, registration, password, admin-user, exchange, sqs, sns, hola-mundo
+  - Problema: los casos de uso no tenían dominio asignado en el objetivo.
+  - Por qué no se identificó antes de implementar: no se derivó el dominio desde component.json.
+  - Solución: tabla caso de uso → dominio: security y test (D12, D25).
+  - Agente: architect
+  - Instrucción: Antes de fijar alcance, asigna cada caso de uso a un dominio en una tabla.
+- Q3: slice vacío de Quiz o omitirlo
+  - Problema: no se decidió si crear un slice vacío para Quiz.
+  - Por qué no se identificó antes de implementar: el criterio pedía Quiz sin revisar plantillas.
+  - Solución: omitir Quiz hasta que exista plantilla (D7, D11).
+  - Agente: architect
+  - Instrucción: Antes de aceptar un dominio, verifica que existan plantillas que lo generen.
+- Q4: grafía "Suscription" frente a "Subscription"
+  - Problema: obj-004 tenía una grafía distinta de la del generador.
+  - Por qué no se identificó antes de implementar: no se comparó la grafía con el código.
+  - Solución: usar Subscription, que coincide con el código (D8).
+  - Agente: explorer
+  - Instrucción: Antes de fijar nombres de dominio, busca su grafía exacta en el código.
+- Q5: webhook y RevenueCat dentro de Subscription
+  - Problema: no se asignó webhook y RevenueCat a un dominio.
+  - Por qué no se identificó antes de implementar: no existía inventario clase → dominio.
+  - Solución: asignarlos a subscription; webhook como caso de uso (D25, D37).
+  - Agente: architect
+  - Instrucción: Asigna a cada clase un único dominio en el inventario antes de mover archivos.
+- Q6: paquetes en minúscula y clases en PascalCase
+  - Problema: la convención Java no se contrastó con la letra de obj-004.
+  - Por qué no se identificó antes de implementar: la convención Java no se revisó antes.
+  - Solución: guía de naming Java en el ADR (D13).
+  - Agente: architect
+  - Instrucción: Antes de definir nombres, consulta la guía de naming Java del ADR.
+- Q7: sufijo DTO "RequestDto" frente a "RequestDTO"
+  - Problema: obj-004 y las plantillas usan sufijos distintos.
+  - Por qué no se identificó antes de implementar: no se listaron sufijos existentes.
+  - Solución: seguir obj-004 literal, con sufijo Dto.
+  - Agente: architect
+  - Instrucción: Antes de fijar un sufijo, lista los sufijos del objetivo y de las plantillas.
+- Q8: eliminar puertos de un solo uso dentro de cada slice
+  - Problema: no se decidió si los puertos de un solo uso se eliminan.
+  - Por qué no se identificó antes de implementar: no existía regla de puertos en el ADR.
+  - Solución: siempre crear puertos, incluso de un solo uso (D6).
+  - Agente: architect
+  - Instrucción: Define en el ADR si cada tipo de clase es obligatorio antes de planear.
+- Q9: HexagonalArchitectureTest queda obsoleta
+  - Problema: el test de arquitectura hexagonal no refleja vertical slice.
+  - Por qué no se identificó antes de implementar: el test no se revisó al decidir el ADR.
+  - Solución: adaptar a vertical slice con regla de ciclos entre slices (D1, D34).
+  - Agente: architect
+  - Instrucción: Antes de cambiar la arquitectura, lista los tests que la validan y su estado.
+- Q10: sin permiso de escritura en `docs/adr/` para Architect
+  - Problema: Architect fue rechazado al escribir el ADR (permission.rejected).
+  - Por qué no se identificó antes de implementar: no se verificó el permiso antes de asignar.
+  - Solución: conceder permiso de escritura en `docs/adr/` (D10).
+  - Agente: explorer
+  - Instrucción: Antes de asignar un ADR, verifica el permiso de escritura en `docs/adr/`.
+- Q11: paquete común `{{ PACKAGE }}.common`
+  - Problema: el paquete común se propuso sin glosario aprobado.
+  - Por qué no se identificó antes de implementar: no existía glosario de paquetes comunes.
+  - Solución: glosario de paquetes comunes con estado vigente (D14, D52–D54).
+  - Agente: architect
+  - Instrucción: Antes de nombrar un paquete común, consulta el glosario y su estado vigente.
+- Q12: destino de `HexagonalArchitectureTest` y `*-test.scriban`
+  - Problema: no se decidió si eliminar, mantener o adaptar los tests de plantilla.
+  - Por qué no se identificó antes de implementar: la regla de tests no se cruzó con la
+    arquitectura.
+  - Solución: adaptar HexagonalArchitectureTest; mantener `*-test.scriban` salvo D66 (D1, D2).
+  - Agente: architect
+  - Instrucción: Antes de decidir sobre un test, registra dueño y objetivo en la matriz de tests.
+- Q13: crear paquete `quiz` vacío o no crearlo
+  - Problema: no se decidió si crear el paquete `quiz` sin plantillas.
+  - Por qué no se identificó antes de implementar: no se verificó si existían plantillas Quiz.
+  - Solución: no crear paquete ni plantillas Quiz (D7).
+  - Agente: explorer
+  - Instrucción: Antes de crear un paquete, verifica que existan plantillas que lo generen.
+- Q14: ruta absoluta en `update-all.ps1.scriban`
+  - Problema: la plantilla tiene una ruta absoluta en lugar de relativa.
+  - Por qué no se identificó antes de implementar: no se buscaron rutas absolutas antes de editar.
+  - Solución: `Join-Path $PSScriptRoot` con ruta relativa (D17, D29).
+  - Agente: explorer
+  - Instrucción: Antes de editar plantillas, busca rutas absolutas y define su base.
+- Q15: `revenuecat-webhook-filter` en subscription o en common
+  - Problema: el filtro no tenía dominio ni slice asignado.
+  - Por qué no se identificó antes de implementar: la clase no se asignó en el inventario.
+  - Solución: subscription, y dentro del slice webhook (respuesta Q15 y D37).
+  - Agente: architect
+  - Instrucción: Asigna a cada clase un único slice en el inventario antes de mover archivos.
+- Q16: aprobar `developer.md` para el rol PowerShell
+  - Problema: se asumió que `developer.md` servía al rol PowerShell de Scriban.
+  - Por qué no se identificó antes de implementar: no se verificó el contenido de la plantilla.
+  - Solución: crear `developer-scriban.md` (D4) y no añadir anexo a `developer.md` (D16).
+  - Agente: explorer
+  - Instrucción: Antes de aprobar una plantilla para un rol, verifica su contenido y alcance.
+
+## Ubicación
+
+- I1: puertos en `domain.port` frente a `application.port`
+  - Problema: ADR-0026 quedó con `application.port` antes de cerrar D9.
+  - Por qué no se identificó antes de implementar: el ADR se escribió antes de cerrar D9.
+  - Solución: tabla clase → paquete en el ADR, contrastada con D9 y D30.
+  - Agente: architect
+  - Instrucción: Antes de fijar un paquete, contrasta el ADR con todas las decisiones D#.
+- I6: carpeta común `connections` frente a `persistence`
+  - Problema: dos agentes propusieron nombres distintos para la carpeta común.
+  - Por qué no se identificó antes de implementar: no existía glosario único de paquetes.
+  - Solución: glosario de paquetes comunes aprobado antes de asignar ubicaciones (D14).
+  - Agente: architect
+  - Instrucción: Antes de nombrar un paquete común, consulta y actualiza el glosario.
+- I19: persistencia común `persistence` o `connections`
+  - Problema: ADR-0026 quedó Aceptada sin reflejar D14, posterior.
+  - Por qué no se identificó antes de implementar: no se contrastó con D14 antes de aceptarlo.
+  - Solución: contrastar el ADR con decisiones posteriores antes de marcar su estado (D26).
+  - Agente: reviewer
+  - Instrucción: Antes de aprobar un ADR, contrástalo con todas las decisiones posteriores.
+- I20: ubicación de modelos, entidades, mappers y DTO
+  - Problema: la regla por tipo de clase no se definió antes de migrar.
+  - Por qué no se identificó antes de implementar: no existía inventario clase → destino.
+  - Solución: inventario clase → destino por tipo antes de mover archivos (D27).
+  - Agente: architect
+  - Instrucción: Antes de migrar, genera inventario clase → destino por tipo de clase.
+- I21: ubicación de beans AWS
+  - Problema: no había matriz de destinos para los beans AWS.
+  - Por qué no se identificó antes de implementar: los beans no estaban en ningún inventario.
+  - Solución: incluir beans en el inventario clase → destino (D28).
+  - Agente: architect
+  - Instrucción: Incluye beans y configuraciones en el inventario antes de mover clases.
+- I27: subpaquetes de adaptadores y persistencia por slice
+  - Problema: el ADR indicó "su infrastructure/" sin subpaquetes definidos.
+  - Por qué no se identificó antes de implementar: el ADR no definió el árbol de paquetes.
+  - Solución: árbol de adapters y persistence por slice en el ADR (D33).
+  - Agente: architect
+  - Instrucción: Define el árbol completo de paquetes de cada slice en el ADR antes de codificar.
+- I31: `RevenueCatWebhookFilter` en el slice webhook
+  - Problema: el filtro no tenía slice asignado en el inventario.
+  - Por qué no se identificó antes de implementar: la clase no se asignó a un slice.
+  - Solución: asignar la clase a `subscription.modules.webhook` en el inventario (D37).
+  - Agente: architect
+  - Instrucción: Asigna a cada clase un único slice en el inventario antes de mover archivos.
+- I32: controllers por slice con misma ruta base
+  - Problema: el contrato REST por slice no estaba definido.
+  - Por qué no se identificó antes de implementar: no existía tabla de rutas por slice.
+  - Solución: tabla de controllers y rutas bajo `/api/v1/subscriptions` (D38, D49).
+  - Agente: architect
+  - Instrucción: Antes de crear controllers, define la tabla de rutas por slice con ruta base.
+- I47: paquete de `common` frente a `library\common`
+  - Problema: el destino de `common` se fijó sin revisar `library\common`.
+  - Por qué no se identificó antes de implementar: no se listaron paquetes de `library\common`.
+  - Solución: revisar paquetes existentes de la librería antes de definir destino (D50).
+  - Agente: explorer
+  - Instrucción: Antes de fijar destino, lista paquetes y clases existentes del módulo destino.
+- I48: paquete de `common-aws`
+  - Problema: el módulo `common-aws` no existía y no se validó antes de decidir.
+  - Por qué no se identificó antes de implementar: no se verificaron módulos existentes de library.
+  - Solución: verificar módulos y paquetes existentes antes de proponer destino (D52, D64).
+  - Agente: explorer
+  - Instrucción: Antes de proponer un módulo o paquete nuevo, verifica si ya existe en el repo.
+- I53: subpaquete de `DomainLogMessages` por módulo
+  - Problema: D54 no fijó el subpaquete de destino de cada parte.
+  - Por qué no se identificó antes de implementar: D54 no indicó el destino por parte.
+  - Solución: aplicar D39 y registrar el destino de cada parte en el ADR (D55).
+  - Agente: architect
+  - Instrucción: Al dividir una clase, registra en el ADR el destino de cada parte.
+- I54: destino de persistencia AWS (`DynamoDbGenericPersistence`, `DynamoTable`, etc.)
+  - Problema: D51, D52 y D65 se sucedieron sin declarar qué superan.
+  - Por qué no se identificó antes de implementar: las decisiones no declaraban lo que superan.
+  - Solución: cada decisión declara la decisión que supera; revisar conflictos antes de cerrar.
+  - Agente: architect
+  - Instrucción: Cada decisión nueva debe declarar qué decisión anterior supera, o "ninguna".
+- I58: `CorsConfig` y `GraalHints` en library o en la app
+  - Problema: D54 y D67 dieron destinos distintos para las mismas clases.
+  - Por qué no se identificó antes de implementar: no hubo matriz library frente a app.
+  - Solución: matriz library frente a app antes de decidir (D68).
+  - Agente: architect
+  - Instrucción: Antes de decidir destino de una clase, compara library y app en una matriz.
+- I66: `MapperInfo` en `common-persistence`
+  - Problema: D69 no listó `MapperInfo`; la instrucción de registro sí la incluía.
+  - Por qué no se identificó antes de implementar: no se cruzó D69 con las instrucciones.
+  - Solución: inventario completo cruzado con todas las instrucciones de registro (D76).
+  - Agente: architect
+  - Instrucción: Antes de crear un módulo, cruza su lista de clases con todas las instrucciones.
+- I67: subpaquete de `CognitoClient` dentro de `security`
+  - Problema: D70 indicó solo el dominio, no el subpaquete.
+  - Por qué no se identificó antes de implementar: D70 no definió el subpaquete.
+  - Solución: árbol de paquetes de security en el ADR con `CognitoAdapter` (D77).
+  - Agente: architect
+  - Instrucción: Toda decisión de ubicación debe incluir el paquete completo, con subpaquete.
+- I70: `USER_CONFIRMED` y `USER_CONFIRM_FAILED` en `AuthLogMessages`
+  - Problema: constantes usadas por dos slices sin mapa de uso cruzado.
+  - Por qué no se identificó antes de implementar: no se buscaron consumidores de la constante.
+  - Solución: grep de consumidores de cada constante antes de asignar clase (D80).
+  - Agente: explorer
+  - Instrucción: Antes de asignar una constante a una clase, busca todos sus consumidores.
+
+## Naming
+
+- I77: nivel `modules` en la estructura de paquetes (D87)
+  - Problema: el paquete `modules` no aporta valor.
+  - Por qué no se identificó antes: no se cuestionó la capa `modules` al fijar la estructura.
+  - Solución: validar cada nivel de paquete contra la necesidad real antes de aprobar el ADR
+    (D87: `{domain}.{usecase}`).
+  - Agente: architect
+  - Instrucción: Antes de aprobar un ADR, lista cada nivel de paquete y justifica su existencia.
+
+## Naming
+
+- I5: paquetes en minúscula y clases en PascalCase
+  - Problema: la convención Java no se contrastó con la letra de obj-004.
+  - Por qué no se identificó antes de implementar: la convención Java no se revisó antes.
+  - Solución: guía de naming Java en el ADR antes de escribir plantillas (D13).
+  - Agente: architect
+  - Instrucción: Antes de definir nombres, consulta la guía de naming Java del ADR.
+- I17: guiones en paquetes (`admin-user`, `hola-mundo`)
+  - Problema: nombres de paquete con guion no son válidos en Java.
+  - Por qué no se identificó antes de implementar: no se validaron identificadores Java.
+  - Solución: restricciones de identificadores Java en el glosario (D24).
+  - Agente: architect
+  - Instrucción: Valida cada nombre de paquete o clase contra las reglas Java antes de usarlo.
+- I24: renombrado de `persistence` a `connections`
+  - Problema: el cambio de término se hizo a mano en varios archivos.
+  - Por qué no se identificó antes de implementar: el cambio se hizo a mano en varios archivos.
+  - Solución: grep de términos obsoletos tras cada decisión (D14).
+  - Agente: explorer
+  - Instrucción: Tras cada renombrado de término, busca el término antiguo en todo el repo.
+- I26: valor de `{Module}`
+  - Problema: el placeholder `{Module}` no tenía definición ni ejemplo.
+  - Por qué no se identificó antes de implementar: el placeholder no tenía definición.
+  - Solución: glosario de placeholders con ejemplo (`{Module}` = Auth, D32).
+  - Agente: architect
+  - Instrucción: Antes de crear plantillas, define cada placeholder en un glosario con ejemplo.
+- I35: `{Module}Command` por caso de uso u operación
+  - Problema: D32 (por caso de uso) y la práctica (por operación) divergieron.
+  - Por qué no se identificó antes de implementar: la unidad de Command no estaba definida.
+  - Solución: unidad por operación con ejemplos en el ADR (D41).
+  - Agente: architect
+  - Instrucción: Define en el ADR la unidad exacta de cada clase, con ejemplo, antes de codificar.
+- I46: "Endpoint" en prosa y nombres de función
+  - Problema: la regla de sufijo no delimitó si aplicaba a prosa, funciones o clases.
+  - Por qué no se identificó antes de implementar: el término no tenía alcance definido.
+  - Solución: glosario con el alcance de cada término antes de renombrar (D61).
+  - Agente: architect
+  - Instrucción: Antes de renombrar un término, define en el glosario su alcance exacto.
+- I56: paquete de `library/common/common-aws`
+  - Problema: no existía convención de paquete para módulos library.
+  - Por qué no se identificó antes de implementar: no existía convención para módulos library.
+  - Solución: convención `com.epc.common.*` en el ADR antes de crear módulos (D67).
+  - Agente: architect
+  - Instrucción: Antes de crear un módulo library, documenta su convención de paquete en el ADR.
+- I63: nombre de `{Module}LogMessages`
+  - Problema: el nombre de la clase de mensajes no estaba definido.
+  - Por qué no se identificó antes de implementar: el nombre no estaba definido antes de dividir.
+  - Solución: convención `{Module}LogMessages` por slice en el ADR (D73).
+  - Agente: architect
+  - Instrucción: Define en el ADR la convención de nombre de cada clase nueva antes de dividir.
+- I64: nombres de Command y puerto de webhook y ai
+  - Problema: la convención `{Operation}{Module}Command` no estaba documentada.
+  - Por qué no se identificó antes de implementar: la convención no estaba documentada.
+  - Solución: documentar la convención y sus puertos en el ADR antes de implementar (D74).
+  - Agente: architect
+  - Instrucción: Documenta en el ADR la convención de nombres de Command y puertos primero.
+- I65: constantes `*_ENDPOINT` de `DomainLogMessages`
+  - Problema: D61 no cubrió constantes; el alcance del renombrado era ambiguo.
+  - Por qué no se identificó antes de implementar: el glosario no cubría constantes.
+  - Solución: glosario con alcance de constantes, igual que I46 (D75).
+  - Agente: architect
+  - Instrucción: En cada regla de renombrado, indica si aplica a clases, funciones y constantes.
+- I73: "Endpoint" en nombres técnicos
+  - Problema: D61, literal, era ambiguo para nombres técnicos.
+  - Por qué no se identificó antes de implementar: el alcance no se definió antes de decidir.
+  - Solución: fijar en el glosario que los nombres técnicos no se renombran (D83).
+  - Agente: architect
+  - Instrucción: Antes de renombrar, lista los nombres técnicos que quedan fuera del alcance.
+
+## Dependencias
+
+- I15: `Handler` reemplaza `Service` y `UseCase`
+  - Problema: el mapeo de clases antiguas a nuevas no estaba en el ADR.
+  - Por qué no se identificó antes de implementar: el mapeo antiguo → nuevo no estaba definido.
+  - Solución: tabla Service y UseCase → Handler en el ADR antes de implementar (D22).
+  - Agente: architect
+  - Instrucción: Antes de fusionar o eliminar clases, añade tabla antigua → nueva al ADR.
+- I29: `IUserPort` extiende puertos de otros slices
+  - Problema: la herencia entre slices no se revisó contra un grafo de dependencias.
+  - Por qué no se identificó antes de implementar: no se dibujó el grafo entre slices.
+  - Solución: grafo entre slices antes de definir puertos (D35).
+  - Agente: architect
+  - Instrucción: Antes de definir puertos, dibuja el grafo de dependencias entre slices.
+- I30: `AuthHandler` depende de `IExchangePort`
+  - Problema: la dependencia auth → exchange no estaba modelada.
+  - Por qué no se identificó antes de implementar: la dependencia auth → exchange no se modeló.
+  - Solución: validar aciclicidad en el grafo antes de implementar (D36).
+  - Agente: architect
+  - Instrucción: Antes de añadir una dependencia entre slices, comprueba que no cree ciclos.
+- I40: eliminar o mantener `ExchangeUseCase`
+  - Problema: la decisión se tomó sin revisar consumidores de exchange.
+  - Por qué no se identificó antes de implementar: no se revisaron consumidores de exchange.
+  - Solución: listar referencias de la clase antes de eliminarla (D46).
+  - Agente: explorer
+  - Instrucción: Antes de eliminar o mantener una clase, lista todas sus referencias en el repo.
+- I44: puerto sin adaptador (webhook, ai)
+  - Problema: la regla "siempre puerto" no se comprobó en slices sin adaptador.
+  - Por qué no se identificó antes de implementar: no se listó puerto/adaptador por slice.
+  - Solución: lista por slice de puerto, adaptador e implementación antes de codificar (D59).
+  - Agente: architect
+  - Instrucción: Antes de codificar, lista por slice puerto, adaptador e implementación.
+- I50: clases sin consumidores fuera de `common`
+  - Problema: no se analizaron referencias antes de decidir conservar las clases.
+  - Por qué no se identificó antes de implementar: no se buscaron referencias antes de decidir.
+  - Solución: grep de referencias antes de conservar o eliminar (D52, D53).
+  - Agente: explorer
+  - Instrucción: Antes de conservar o eliminar una clase, busca sus referencias en todo el repo.
+- I59: `DynamoDbGenericPersistence` usa tipos de la app
+  - Problema: la dependencia de tipos de la app no se verificó antes de mover a library.
+  - Por qué no se identificó antes de implementar: no se verificó el uso de tipos de la app.
+  - Solución: grafo de dependencias por clase antes de mover (D69).
+  - Agente: architect
+  - Instrucción: Antes de mover una clase a library, documenta sus dependencias de tipos.
+- I60: `CorsConfig` usa `DomainLogMessages`
+  - Problema: la dependencia de la app no se revisó antes de mover a library.
+  - Por qué no se identificó antes de implementar: no se revisaron los imports de la app.
+  - Solución: revisar dependencias antes de mover; constantes de log locales (D72).
+  - Agente: architect
+  - Instrucción: Antes de mover una clase a library, lista cada import de la app y su alternativa.
+- I61: `CognitoClient` usa modelos de `security`
+  - Problema: la dependencia de security no se revisó antes de decidir librería o app.
+  - Por qué no se identificó antes de implementar: no se revisaron dependencias antes de decidir.
+  - Solución: revisar dependencias antes de decidir librería o app (D70).
+  - Agente: architect
+  - Instrucción: Antes de elegir librería o app, revisa las dependencias de cada clase.
+- I68: `common-persistence` depende de `common-aws`
+  - Problema: la dependencia entre módulos library no se mapeó al decidir el SDK.
+  - Por qué no se identificó antes de implementar: no se mapeó la dependencia entre módulos.
+  - Solución: matriz de dependencias entre módulos antes de crear el pom (D78).
+  - Agente: architect
+  - Instrucción: Antes de crear un módulo, dibuja su matriz de dependencias con otros módulos.
+
+## Configuración
+
+- I2: permiso de escritura en `docs/adr/`
+  - Problema: el permiso de Architect no se verificó antes de asignar la tarea.
+  - Por qué no se identificó antes de implementar: no hubo matriz agente → ruta → permiso.
+  - Solución: matriz agente → ruta → permiso antes de asignar (D10).
+  - Agente: explorer
+  - Instrucción: Antes de asignar una tarea, verifica el permiso en la matriz agente → ruta.
+- I13: permiso de edición en `generator/**/*.scriban`
+  - Problema: los permisos no se derivaron del alcance del agente.
+  - Por qué no se identificó antes de implementar: los permisos no se derivaron del alcance.
+  - Solución: matriz agente → ruta → permiso antes de asignar (D20).
+  - Agente: explorer
+  - Instrucción: Antes de asignar un agente, deriva sus permisos de escritura de su alcance.
+- I25: edición de `component.json`
+  - Problema: el alcance de escritura omitió `component.json`.
+  - Por qué no se identificó antes de implementar: no se listaron artefactos antes de editar.
+  - Solución: lista de artefactos a modificar revisada antes de empezar (D31).
+  - Agente: developer-scriban
+  - Instrucción: Antes de editar, lista todos los artefactos afectados, incluidos de configuración.
+- I22: ruta relativa en `update-all.ps1.scriban`
+  - Problema: ruta absoluta en plantilla; la base de la ruta no estaba definida.
+  - Por qué no se identificó antes de implementar: no se buscaron rutas absolutas antes de editar.
+  - Solución: grep de rutas absolutas y base definida con `Join-Path` (D17, D29).
+  - Agente: explorer
+  - Instrucción: Antes de editar plantillas, busca rutas absolutas y define su base.
+- I33: configuración de feature frente a `common`
+  - Problema: criterio transversal frente a feature no explícito en el ADR.
+  - Por qué no se identificó antes de implementar: el criterio no estaba fijado en el ADR.
+  - Solución: criterio transversal o feature en el ADR antes de plantillas (D39).
+  - Agente: architect
+  - Instrucción: Define en el ADR el criterio transversal o de feature antes de crear plantillas.
+- I38: generación en `projects/` con sobrescritura
+  - Problema: el efecto de sobrescritura no se evaluó antes de ejecutar.
+  - Por qué no se identificó antes de implementar: no se listaron archivos a sobrescribir.
+  - Solución: listar archivos de `projects/<appId>` a sobrescribir antes de ejecutar (D44).
+  - Agente: explorer
+  - Instrucción: Antes de ejecutar un generador sobre carpetas existentes, lista lo sobrescrito.
+- I41: `security` no se genera con el target actual
+  - Problema: el guard por `Name` no se probó con el target.
+  - Por qué no se identificó antes de implementar: no se generó por target antes de fijar alcance.
+  - Solución: generar por target antes de fijar alcance; security en objetivo aparte (D48).
+  - Agente: tester
+  - Instrucción: Antes de fijar alcance de un dominio, genera con cada target y valida guards.
+- I49: guardas `Name == "security"` en clases comunes
+  - Problema: las guardas no se validaron contra el target.
+  - Por qué no se identificó antes de implementar: las guardas no se probaron por target.
+  - Solución: generar por target antes de fijar alcance, igual que I41 (D70).
+  - Agente: tester
+  - Instrucción: Antes de aceptar una guarda por `Name`, verifica su resultado con cada target.
+- I51: `DomainLogMessages` centralizado o dividido
+  - Problema: la decisión de centralizar se tomó sin conteo de consumidores.
+  - Por qué no se identificó antes de implementar: no se contaron consumidores antes de decidir.
+  - Solución: conteo de consumidores por slice antes de decidir (D54).
+  - Agente: explorer
+  - Instrucción: Antes de centralizar o dividir una clase, cuenta sus consumidores por slice.
+- I52: plantillas de seguridad, JWT y persistencia sin registro
+  - Problema: no había inventario de plantillas no registradas.
+  - Por qué no se identificó antes de implementar: no se comparó con `component.json`.
+  - Solución: inventario de plantillas frente a `component.json` antes de decidir (D62).
+  - Agente: explorer
+  - Instrucción: Antes de decidir sobre plantillas, compara el directorio con `component.json`.
+- I69: constantes de seguridad de `DomainLogMessages`
+  - Problema: consumidores de security, fuera de alcance, no se mapearon.
+  - Por qué no se identificó antes de implementar: no se mapearon consumidores de security.
+  - Solución: mapear consumidores y generar por target antes de dividir (D79).
+  - Agente: explorer
+  - Instrucción: Antes de dividir una clase compartida, mapea consumidores aunque estén fuera.
+
+## Tests
+
+- I16: imports de tests con paquetes que cambian
+  - Problema: el cambio de paquete se hizo sin inventario de imports afectados.
+  - Por qué no se identificó antes de implementar: no se buscaron imports afectados.
+  - Solución: grep de imports por clase movida antes de mover (D23).
+  - Agente: explorer
+  - Instrucción: Antes de mover una clase, busca sus imports en todos los tests.
+- I28: `HexagonalArchitectureTest` en obj-004 o en objetivo aparte
+  - Problema: la regla de tests no se cruzó con el alcance del objetivo.
+  - Por qué no se identificó antes de implementar: la regla de tests no se cruzó con el alcance.
+  - Solución: matriz de artefactos de test con dueño y objetivo (D34).
+  - Agente: architect
+  - Instrucción: Antes de asignar un test, registra dueño y objetivo en la matriz de tests.
+- I36: nombres de controller en el cuerpo de tests
+  - Problema: referencias a nombres de clase en tests no se buscaron antes de nombrar.
+  - Por qué no se identificó antes de implementar: no se buscó el nombre en el cuerpo de tests.
+  - Solución: grep de nombres de clase en tests antes de renombrar (D42, D63).
+  - Agente: explorer
+  - Instrucción: Antes de renombrar una clase, busca su nombre en el cuerpo de los tests.
+- I55: eliminar `adapter-test` y similares (D2 frente a D57)
+  - Problema: D2 y D57 entraron en conflicto sin matriz por artefacto.
+  - Por qué no se identificó antes de implementar: D2 y D66 no se cruzaron por artefacto.
+  - Solución: matriz decisión → artefacto de test antes de eliminar (D66).
+  - Agente: architect
+  - Instrucción: Antes de decidir sobre un test, cruza todas las decisiones que lo citan.
+- I57: criterio "no usada" para plantillas de test
+  - Problema: el criterio de eliminación no se definió antes de decidir.
+  - Por qué no se identificó antes de implementar: D66 usó "no usada" sin definirlo.
+  - Solución: criterio explícito en el ADR antes de eliminar (confirmado en questions.md).
+  - Agente: architect
+  - Instrucción: Define en el ADR el criterio de eliminación de cada artefacto antes de decidir.
+
+## Versiones
+
+- I62: versión 1.1.5 frente a módulos nuevos
+  - Problema: la versión estaba fijada en docs sin prever módulos nuevos.
+  - Por qué no se identificó antes de implementar: no se listaron lugares donde figura la versión.
+  - Solución: lista de versiones en parent, BOM y pom antes de subir a 1.1.6 (D71).
+  - Agente: explorer
+  - Instrucción: Antes de crear módulos, lista todos los lugares donde figura la versión.
+- I72: instalación local `1.1.6` en `~/.m2`
+  - Problema: el impacto en la caché local no se evaluó antes de instalar.
+  - Por qué no se identificó antes de implementar: no se listaron artefactos sobrescritos.
+  - Solución: lista de artefactos de `~/.m2` a sobrescribir revisada antes (D82).
+  - Agente: tester
+  - Instrucción: Antes de instalar artefactos locales, lista los que se sobrescribirían.
+
+## Documentación
+
+- I7: nombre de archivo del ADR
+  - Problema: la convención de `docs/adr` no se consultó antes de crear el ADR.
+  - Por qué no se identificó antes de implementar: no se consultó la convención de docs/adr.
+  - Solución: revisar convención de nombres antes de crear (D18).
+  - Agente: explorer
+  - Instrucción: Antes de crear un documento, revisa la convención de nombres del directorio.
+- I8: estados del ADR (Propuesta, Aprobada, Aceptada)
+  - Problema: plantilla y README usaban estados distintos sin validación.
+  - Por qué no se identificó antes de implementar: no se unificó la tabla de estados.
+  - Solución: tabla única de estados validada antes de crear el ADR (D15).
+  - Agente: architect
+  - Instrucción: Antes de crear un ADR, valida su estado contra la tabla única del README.
+- I9: README de ADR sin tabla de ADR
+  - Problema: el README no se revisó antes de planear un índice.
+  - Por qué no se identificó antes de implementar: el README no se leyó antes de planear.
+  - Solución: leer README antes de planear cambios; no crear tabla (D19).
+  - Agente: explorer
+  - Instrucción: Antes de planear cambios en un índice, lee el README del directorio.
+- I10: estado `Aprobada` en README
+  - Problema: el README no se contrastó con el estado del ADR.
+  - Por qué no se identificó antes de implementar: el estado no se contrastó con el README.
+  - Solución: tabla única de estados y contraste con el ADR; estado Aceptada (D15).
+  - Agente: architect
+  - Instrucción: Antes de fijar estado, contrasta el ADR con la tabla de estados del README.
+- I11: `developer.md` sin anexo Scriban
+  - Problema: se asumió que la plantilla tenía anexo Scriban.
+  - Por qué no se identificó antes de implementar: se asumió que la plantilla existía.
+  - Solución: verificar que las plantillas citadas existen antes de citarlas (D16).
+  - Agente: explorer
+  - Instrucción: Antes de citar una plantilla o sección, confirma que existe en el archivo.
+- I12: dependencias del objetivo desactualizadas
+  - Problema: el estado de artefactos no se sincronizó con obj-004.
+  - Por qué no se identificó antes de implementar: el estado no se sincronizó con obj-004.
+  - Solución: verificar estado real de artefactos al inicio de cada sesión.
+  - Agente: explorer
+  - Instrucción: Al iniciar, compara el estado real de artefactos con la sección Dependencias.
+- I14: ruta `.opencode/agents` inexistente en AGENTS
+  - Problema: las rutas declaradas en AGENTS no se validaron.
+  - Por qué no se identificó antes de implementar: las rutas de AGENTS no se comprobaron.
+  - Solución: validar rutas declaradas antes de usarlas; AGENTS corregido (D21).
+  - Agente: explorer
+  - Instrucción: Antes de usar una ruta declarada en AGENTS.md, comprueba que existe.
+- I23: ADR con puerto en `application` frente a D9
+  - Problema: el ADR no se sincronizó con una decisión posterior.
+  - Por qué no se identificó antes de implementar: el ADR no se contrastó con D9.
+  - Solución: contrastar el ADR con decisiones antes de marcar Aceptada (D30).
+  - Agente: reviewer
+  - Instrucción: Antes de marcar un ADR como Aceptada, contrástalo con cada decisión posterior.
+- I74: ADR y docs de library sin D76–D78
+  - Problema: no había paso de sincronización de docs por módulo nuevo.
+  - Por qué no se identificó antes de implementar: el proceso no incluía docs por módulo.
+  - Solución: lista de docs afectadas por cada módulo nuevo antes de cerrar (D84).
+  - Agente: architect
+  - Instrucción: Al crear un módulo, lista las docs que lo referencian y actualízalas.
+
+## Arranque
+
+- I71: registro de beans de library
+  - Problema: la estrategia de registro (escaneo o import) no estaba definida.
+  - Por qué no se identificó antes de implementar: no se decidió la estrategia de registro.
+  - Solución: `@Import` en `ApplicationConfig`, sin escaneo de `com.epc.common` (D81, D85).
+  - Agente: architect
+  - Instrucción: Define en el ADR cómo se registran los beans de library antes de implementarlos.
+- I75: ubicación de `ApplicationConfig.java`
+  - Problema: el ADR decía `common`; no se verificó contra el escaneo de Spring.
+  - Por qué no se identificó antes de implementar: no se validó el escaneo de Spring.
+  - Solución: paquete raíz `{{ PACKAGE }}`, junto a `Application` (D86).
+  - Agente: reviewer
+  - Instrucción: Antes de fijar la ubicación de una clase Spring, verifica el paquete de escaneo.
+- I76: perfil cloud o local en arranque (`mvn spring-boot:run` sin perfil `cloud`)
+  - Problema: el perfil por defecto exige `AI_*` y falla con placeholders sin resolver.
+  - Por qué no se identificó antes de implementar: no se decidió si el arranque local aplica.
+  - Solución: ADR-0012: A (cloud, requiere AWS) o B (perfil local, requiere `ai-api-key`).
+  - Agente: architect
+  - Instrucción: Define el perfil local en el ADR antes de exigir propiedades obligatorias.
+
+## Alcance
+
+- I3: Quiz en criterio de aceptación frente a D7
+  - Problema: los criterios no se conciliaron con decisiones previas.
+  - Por qué no se identificó antes de implementar: los criterios no se conciliaron con D7.
+  - Solución: matriz criterio → decisión antes de aceptar el objetivo; Quiz fuera (D11).
+  - Agente: architect
+  - Instrucción: Antes de aceptar un objetivo, cruza cada criterio con las decisiones vigentes.
+- I4: cuatro dominios frente a cinco
+  - Problema: el inventario de dominios no cubrió `security` ni `test`.
+  - Por qué no se identificó antes de implementar: no se listaron grupos de component.json.
+  - Solución: listar grupos de `component.json` antes de fijar alcance (D12).
+  - Agente: architect
+  - Instrucción: Antes de fijar alcance, lista todos los grupos de `component.json`.
+- I18: usecases por grupo
+  - Problema: la agrupación de usecases no se definió antes del ADR.
+  - Por qué no se identificó antes de implementar: el inventario no se derivó de component.json.
+  - Solución: inventario de usecases derivado de `component.json` antes del ADR (D25).
+  - Agente: architect
+  - Instrucción: Deriva los usecases por grupo de `component.json` antes de escribir el ADR.
+- I34: migración en una o varias fases
+  - Problema: la estrategia de corte no se definió al iniciar.
+  - Por qué no se identificó antes de implementar: la verificación no se planificó antes.
+  - Solución: plan con criterio de verificación de generación (D40).
+  - Agente: architect
+  - Instrucción: Antes de iniciar una migración, define fases con criterio de verificación.
+- I37: mapeo DTO ↔ Command
+  - Problema: la responsabilidad de mapeo no se definió por capa.
+  - Por qué no se identificó antes de implementar: no se definió responsabilidad por capa.
+  - Solución: tabla de responsabilidades por capa en el ADR; Controller mapea (D43, D49).
+  - Agente: architect
+  - Instrucción: Antes de codificar, asigna en el ADR qué capa realiza cada mapeo.
+- I39: eliminar plantillas reemplazadas
+  - Problema: las plantillas sobrantes no se listaron antes de migrar.
+  - Por qué no se identificó antes de implementar: no se hizo inventario de huérfanas.
+  - Solución: inventario de plantillas huérfanas antes de migrar (D45).
+  - Agente: explorer
+  - Instrucción: Antes de migrar, lista plantillas que quedarán sin uso o sin registro.
+- I42: plantillas con nombres antiguos no listadas
+  - Problema: no hubo inventario de plantillas no registradas.
+  - Por qué no se identificó antes de implementar: no se comparó con component.json.
+  - Solución: inventario frente a `component.json` y referencias antes de migrar (D57).
+  - Agente: explorer
+  - Instrucción: Antes de migrar, compara plantillas con `component.json` y sus referencias.
+- I43: un DTO por operación frente a `{Module}RequestDto` único
+  - Problema: la granularidad de DTO no se definió.
+  - Por qué no se identificó antes de implementar: no se fijó tabla de contratos por operación.
+  - Solución: tabla de contratos por operación antes de codificar (D58).
+  - Agente: architect
+  - Instrucción: Antes de codificar DTOs, define en tabla un contrato por operación.
+- I45: paso 2 (webhook y ai) dentro del mismo objetivo
+  - Problema: el alcance por pasos no tenía criterio de completitud.
+  - Por qué no se identificó antes de implementar: los pasos no tenían criterio de cierre.
+  - Solución: criterio de completitud por paso al crear el objetivo (D60).
+  - Agente: architect
+  - Instrucción: Al crear un objetivo con pasos, define criterio de completitud de cada paso.
+
+## Control de cobertura
+
+- Preguntas en `questions.md`: 93 (Q1–Q16 sin número; I1–I77).
+- Preguntas en `improvements.md`: 93 (Q1–Q16; I1–I77).
+- Omitidos: ninguno.
+- Verificación: I1–I77 presentes una vez cada una; Q1–Q16 en orden de aparición.
+
+## Registro 2026-10-09 (developer-scriban, D87)
+
+- I78: salida previa no se limpia al cambiar paquetes.
+  - Problema: al regenerar tras D87, quedan clases en `*/modules/` y generan beans duplicados.
+  - Por qué no se identificó antes de implementar: el generador no lista ni borra salida obsoleta.
+  - Solución: antes de regenerar, listar directorios de salida con paquete antiguo.
+    Decidir borrado.
+  - Agente: developer-scriban
+  - Instrucción: Tras renombrar paquetes, busca directorios antiguos en `projects/<appId>`.
+    Hazlo antes de compilar.
+- I79: arranque cloud requiere acceso AWS.
+  - Problema: la verificación de arranque depende de SSM y Secrets Manager.
+  - Por qué no se identificó antes de implementar: no se separó verificación local de AWS.
+  - Solución: definir antes de implementar qué verificaciones requieren AWS y su autorización.
+  - Agente: architect
+  - Instrucción: Marca en el plan cada verificación que toque AWS y pide autorización antes.

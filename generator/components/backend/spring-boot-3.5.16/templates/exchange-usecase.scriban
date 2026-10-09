@@ -1,8 +1,12 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.domain.usecase;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.exchange.application;
 
-import {{ PACKAGE }}.domain.servicePorts.ExchangeServicePort;
-import {{ PACKAGE }}.domain.ports.ExchangePort;
-import {{ PACKAGE }}.domain.model.*;
+import {{ PACKAGE }}.security.exchange.domain.model.ExchangeRequest;
+import {{ PACKAGE }}.security.exchange.domain.model.ExchangeResponse;
+import {{ PACKAGE }}.security.exchange.domain.port.ExchangePort;
+import {{ PACKAGE }}.security.exchange.domain.port.ExchangeServicePort;
+
+
+
 
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

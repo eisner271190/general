@@ -1,9 +1,9 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.application.dto;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.exchange.infrastructure.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 
-public class ExchangeRequestDTO {
+public class ExchangeRequestDto {
     @NotBlank(message = "El código de autorización es requerido")
     @JsonProperty("code")
     private String code;
@@ -16,10 +16,10 @@ public class ExchangeRequestDTO {
     @JsonProperty("redirect_uri")
     private String redirectUri;
     
-    public ExchangeRequestDTO() {
+    public ExchangeRequestDto() {
     }
 
-    public ExchangeRequestDTO(String code, String codeVerifier, String redirectUri) {
+    public ExchangeRequestDto(String code, String codeVerifier, String redirectUri) {
         this.code = code;
         this.codeVerifier = codeVerifier;
         this.redirectUri = redirectUri;

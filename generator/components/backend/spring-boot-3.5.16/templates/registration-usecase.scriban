@@ -1,8 +1,12 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.domain.usecase;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.application;
 
-import {{ PACKAGE }}.domain.servicePorts.RegistrationServicePort;
-import {{ PACKAGE }}.domain.ports.RegistrationPort;
-import {{ PACKAGE }}.domain.model.*;
+import {{ PACKAGE }}.security.registration.domain.model.ConfirmUser;
+import {{ PACKAGE }}.security.registration.domain.model.RegisterUser;
+import {{ PACKAGE }}.security.registration.domain.port.RegistrationPort;
+import {{ PACKAGE }}.security.registration.domain.port.RegistrationServicePort;
+
+
+
 
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

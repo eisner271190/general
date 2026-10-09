@@ -1,6 +1,6 @@
-package {{ PACKAGE }}.domain.dto;
+package {{ PACKAGE }}.subscription.subscription.infrastructure.rest;
 
-public record SubscriptionStatusResponseDTO(
+public record SubscriptionStatusResponseDto(
     Boolean isActive,
     String productId,
     Long expirationAtMs

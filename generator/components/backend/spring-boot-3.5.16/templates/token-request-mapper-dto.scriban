@@ -1,7 +1,9 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.application.mappers;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.infrastructure.rest;
 
-import {{ PACKAGE }}.application.dto.TokenRequestDTO;
-import {{ PACKAGE }}.domain.model.TokenRequest;
+import {{ PACKAGE }}.security.auth.domain.model.TokenRequest;
+
+
+
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -9,7 +11,7 @@ import org.mapstruct.factory.Mappers;
 public interface TokenRequestMapperDto {
     TokenRequestMapperDto INSTANCE = Mappers.getMapper(TokenRequestMapperDto.class);
 
-    TokenRequestDTO toDTO(TokenRequest model);
-    TokenRequest toModel(TokenRequestDTO dto);
+    TokenRequestDto toDTO(TokenRequest model);
+    TokenRequest toModel(TokenRequestDto dto);
 }
 {{ end }}

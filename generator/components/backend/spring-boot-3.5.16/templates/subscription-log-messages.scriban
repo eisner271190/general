@@ -1,0 +1,29 @@
+package {{ PACKAGE }}.subscription.subscription.infrastructure.configuration;
+
+/**
+ * Textos de log del caso de uso {@code subscription}. Ningun mensaje debe incluir el valor de una
+ * credencial.
+ */
+public final class SubscriptionLogMessages {
+
+    private SubscriptionLogMessages() {
+    }
+
+    public static final String SUBSCRIPTION_NOT_FOUND_IN_DB = "Buscando suscripcion en DynamoDB para userId={}";
+    public static final String SUBSCRIPTION_FOUND = "Suscripcion encontrada con estado {}";
+    public static final String SUBSCRIPTION_SAVING = "Guardando suscripcion en DynamoDB para userId={}";
+    public static final String SUBSCRIPTION_STATUS_PERSISTED = "Estado a persistir: {}";
+    public static final String SUBSCRIPTION_UPDATING = "Actualizando suscripcion a {} para userId={}";
+    public static final String SUBSCRIPTION_STATUS_QUERYING =
+            "Consultando estado de suscripcion para userId={}";
+    public static final String SUBSCRIPTION_STATUS_RESOLVED =
+            "Estado resuelto para userId={}: isActive={}";
+    public static final String SUBSCRIPTION_SYNCING =
+            "Sincronizando suscripcion con el proveedor para userId={}";
+    public static final String SUBSCRIPTION_SYNC_DONE =
+            "Sincronizacion terminada para userId={}: isActive={}";
+    public static final String SUBSCRIPTION_STATUS_CONTROLLER = "GET /api/v1/subscriptions/status para userId={}";
+    public static final String SUBSCRIPTION_STATUS_RETURNED = "Estado devuelto para userId={}";
+    public static final String SUBSCRIPTION_SYNC_CONTROLLER = "POST /api/v1/subscriptions/sync para userId={}";
+    public static final String SUBSCRIPTION_SYNC_RETURNED = "Sincronizacion devuelta para userId={}";
+}

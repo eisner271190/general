@@ -1,0 +1,20 @@
+{{- if ConsumedEvents.size > 0 }}package {{ PACKAGE }}.test.sqs.infrastructure.configuration;
+
+/** Textos de log del caso de uso {@code sqs}. */
+public final class SqsLogMessages {
+
+    private SqsLogMessages() {
+    }
+
+    public static final String SQS_SENDING = "Enviando mensaje a SQS ({} caracteres)";
+    public static final String SQS_QUEUE = "Cola: {}";
+    public static final String SQS_SENT = "Mensaje enviado a SQS";
+    public static final String SQS_RECEIVING = "Recibiendo mensajes de SQS";
+    public static final String SQS_RECEIVED_COUNT = "SQS devolvio {} mensajes";
+    public static final String SQS_RECEIPT_ACK =
+            "Confirmando mensaje recibido (receiptHandle de {} caracteres)";
+    public static final String SQS_SEND_CONTROLLER = "POST /sqs/send recibido ({} caracteres)";
+    public static final String SQS_QUEUED = "Mensaje encolado en SQS";
+    public static final String SQS_CONSUME_CONTROLLER = "GET /sqs/consume recibido";
+}
+{{- end }}

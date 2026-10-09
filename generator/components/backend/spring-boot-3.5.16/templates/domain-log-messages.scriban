@@ -1,33 +1,14 @@
-package {{ PACKAGE }}.infrastructure.configuration;
+package {{ PACKAGE }}.common.infrastructure.configuration;
 
 /**
- * Textos de log propios del microservicio. Lo transversal vive en
- * {@code com.epc.common.log.LogMessages}; aqui solo lo de este dominio.
- *
- * <p>Centralizarlos evita que el mismo texto cambie entre el endpoint, el caso de uso y el
- * adaptador, y permite revisarlos de un vistazo. Ningun mensaje debe incluir el valor de una
- * credencial: el enmascarado por nombre de campo lo resuelve el encoder.
+ * Textos de log de seguridad. Pendiente de migrar a slices de security (D48, D62): no esta en
+ * component.json y no se genera. Lo de cada caso de uso de subscription, ai, test y auth vive
+ * en su {@code {Module}LogMessages}; CORS vive en {@code com.epc.common.config.CorsConfig}.
  */
 public final class DomainLogMessages {
 
     private DomainLogMessages() {
     }
-
-    // --- IA generativa ---
-    public static final String AI_GENERATION_REQUESTED = "Generacion de texto con IA solicitada";
-    public static final String AI_ENDPOINT_RECEIVED = "POST /api/v1/ai/generate recibido";
-    public static final String AI_PROMPT_REJECTED = "Prompt rechazado: ausente, vacio o mayor que {}";
-    public static final String AI_PROMPT_LENGTH = "Longitud del prompt: {}";
-    public static final String AI_GENERATION_COMPLETED = "Generacion completada con el modelo {}";
-    public static final String AI_GENERATION_FAILED = "Fallo al generar texto con IA";
-    public static final String AI_CONFIGURATION_LOADED =
-            "Configuracion de IA cargada: model={}, apiBaseUrl={}, temperature={}, maxTokens={}, "
-                    + "apiKey presente={}";
-    public static final String AI_REQUEST_SUMMARY =
-            "Generando texto con IA: modelo={}, temperature={}, maxTokens={}";
-    public static final String AI_PROVIDER_ERROR =
-            "OpenRouter respondio {} para el modelo {} ({}model): {}";
-    public static final String AI_TIMEOUT = "El proveedor de IA no respondio en {} s (modelo {})";
 
     // --- Autenticacion y usuarios (Cognito) ---
     public static final String USER_DELETING = "Eliminando usuario {} en Cognito";
@@ -41,8 +22,6 @@ public final class DomainLogMessages {
     public static final String USER_CREATING_BY_ADMIN = "Creando usuario {} por administrador";
     public static final String USER_CREATED = "Usuario {} creado";
     public static final String USER_CONFIRMING = "Confirmando usuario {}";
-    public static final String USER_CONFIRMED = "Usuario confirmado: {}";
-    public static final String USER_CONFIRM_FAILED = "Error al confirmar el usuario";
     public static final String PASSWORD_FORCE_RESET = "Forzando restablecimiento de contrasena para {}";
     public static final String PASSWORD_FORCE_RESET_DONE = "Restablecimiento forzado para {}";
     public static final String PASSWORD_CHANGE_REQUESTED = "Cambio de contrasena solicitado";
@@ -69,67 +48,4 @@ public final class DomainLogMessages {
     public static final String SECURITY_CONTEXT_LOADING =
             "Cargando contexto de seguridad (token presente: {})";
     public static final String SECURITY_CONTEXT_LOADED = "Contexto de seguridad cargado";
-    public static final String TOKEN_EXCHANGE_FAILED =
-            "Error al intercambiar el codigo: status={} error={} desc={}";
-    public static final String TOKEN_EXCHANGE_COMPLETED =
-            "Codigo de autorizacion canjeado: expiresIn={} tokenType={}";
-
-    // --- CORS ---
-    public static final String CORS_MAPPINGS_CONFIGURED =
-            "Configuring CORS mappings via WebFluxConfigurer.addCorsMappings";
-    public static final String CORS_FILTER_CREATED = "Creating CorsWebFilter bean";
-
-    // --- Suscripciones y webhooks ---
-    public static final String WEBHOOK_EVENT_UNKNOWN = "Unknown webhook event type: {}";
-    public static final String WEBHOOK_PROCESSING_EVENT = "Procesando evento {}";
-    public static final String WEBHOOK_USER_ID = "userId={}";
-    public static final String WEBHOOK_EVENT_APPLIED = "Evento {} aplicado a userId={}";
-    public static final String WEBHOOK_EVENT_APPLIED_SHORT = "Evento {} aplicado";
-    public static final String WEBHOOK_RECEIVED =
-            "Webhook recibido: tipo={}, userId={}, estrategia={}";
-    public static final String WEBHOOK_PROCESSED = "Webhook {} procesado";
-    public static final String WEBHOOK_STRATEGIES_INDEXED = "Estrategias de webhook registradas: {}";
-    public static final String WEBHOOK_ENDPOINT_RECEIVED = "POST /api/v1/subscriptions/webhook recibido";
-    public static final String WEBHOOK_ENDPOINT_PROCESSED = "Webhook procesado";
-    public static final String SUBSCRIPTION_NOT_FOUND_IN_DB = "Buscando suscripcion en DynamoDB para userId={}";
-    public static final String SUBSCRIPTION_FOUND = "Suscripcion encontrada con estado {}";
-    public static final String SUBSCRIPTION_SAVING = "Guardando suscripcion en DynamoDB para userId={}";
-    public static final String SUBSCRIPTION_STATUS_PERSISTED = "Estado a persistir: {}";
-    public static final String SUBSCRIPTION_UPDATING = "Actualizando suscripcion a {} para userId={}";
-    public static final String SUBSCRIPTION_STATUS_QUERYING =
-            "Consultando estado de suscripcion para userId={}";
-    public static final String SUBSCRIPTION_STATUS_RESOLVED =
-            "Estado resuelto para userId={}: isActive={}";
-    public static final String SUBSCRIPTION_SYNCING =
-            "Sincronizando suscripcion con el proveedor para userId={}";
-    public static final String SUBSCRIPTION_SYNC_DONE =
-            "Sincronizacion terminada para userId={}: isActive={}";
-    public static final String SUBSCRIPTION_STATUS_ENDPOINT = "GET /api/v1/subscriptions/status para userId={}";
-    public static final String SUBSCRIPTION_STATUS_RETURNED = "Estado devuelto para userId={}";
-    public static final String SUBSCRIPTION_SYNC_ENDPOINT = "POST /api/v1/subscriptions/sync para userId={}";
-    public static final String SUBSCRIPTION_SYNC_RETURNED = "Sincronizacion devuelta para userId={}";
-    public static final String WEBHOOK_SECRET_RESOLVED = "[WH] secreto resuelto len={}";
-    public static final String WEBHOOK_REQUEST_RECEIVED =
-            "[WH] peticion webhook path={} valoresCabecera={} longitudes={} headerLen={} secretLen={}";
-    public static final String WEBHOOK_SIGNATURE_VALID = "[WH] firma VALIDA rawBodyLen={} secretLen={}";
-    public static final String WEBHOOK_SIGNATURE_REJECTED =
-            "[WH] firma RECHAZADA motivo={} headerPresent={} headerLen={} rawBodyLen={} secretLen={}"
-                    + " t={} tAhora={} diffSeg={} v1Len={} v1Pref={} computedPref={}";
-
-    // --- AWS: SNS y SQS ---
-    public static final String SNS_EVENT_PUBLISHING = "Publicando evento {} en SNS";
-    public static final String SNS_TOPIC_AND_PAYLOAD = "Topic: {}, carga de tipo {}";
-    public static final String SNS_EVENT_PUBLISHED = "Evento {} publicado";
-    public static final String SNS_PUBLISH_ENDPOINT = "POST /sns/publish recibido ({} caracteres)";
-    public static final String SNS_PUBLISH_DONE = "Evento product.created publicado";
-    public static final String SQS_SENDING = "Enviando mensaje a SQS ({} caracteres)";
-    public static final String SQS_QUEUE = "Cola: {}";
-    public static final String SQS_SENT = "Mensaje enviado a SQS";
-    public static final String SQS_RECEIVING = "Recibiendo mensajes de SQS";
-    public static final String SQS_RECEIVED_COUNT = "SQS devolvio {} mensajes";
-    public static final String SQS_RECEIPT_ACK =
-            "Confirmando mensaje recibido (receiptHandle de {} caracteres)";
-    public static final String SQS_SEND_ENDPOINT = "POST /sqs/send recibido ({} caracteres)";
-    public static final String SQS_QUEUED = "Mensaje encolado en SQS";
-    public static final String SQS_CONSUME_ENDPOINT = "GET /sqs/consume recibido";
 }

@@ -1,7 +1,10 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.controllers;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.infrastructure.rest;
 
-import {{ PACKAGE }}.application.services.IAuthService;
-import {{ PACKAGE }}.application.dto.*;
+import {{ PACKAGE }}.security.auth.application.IAuthService;
+import {{ PACKAGE }}.security.exchange.infrastructure.rest.ExchangeRequestDto;
+
+
+
 import com.epc.common.error.ApiResponse;
 import com.epc.common.error.ErrorApiResponse;
 
@@ -22,7 +25,7 @@ public class AuthController {
     }
 
     @PostMapping("/token")
-    public Mono<ResponseEntity<ApiResponse>> generateToken(@Valid @RequestBody TokenRequestDTO request) {
+    public Mono<ResponseEntity<ApiResponse>> generateToken(@Valid @RequestBody TokenRequestDto request) {
         return authService.generateToken(request)
                 .map(token -> {
                     ApiResponse response = new ApiResponse(token, "Token generado exitosamente", HttpStatus.OK.value());
@@ -39,7 +42,7 @@ public class AuthController {
     }
 
     @PostMapping("/exchange")
-    public Mono<ResponseEntity<ApiResponse>> exchangeCodeForTokens(@Valid @RequestBody ExchangeRequestDTO request) {
+    public Mono<ResponseEntity<ApiResponse>> exchangeCodeForTokens(@Valid @RequestBody ExchangeRequestDto request) {
         return authService.exchangeCodeForTokens(request)
                 .map(tokens -> {
                     ApiResponse response = new ApiResponse(tokens, "Código intercambiado exitosamente", HttpStatus.OK.value());

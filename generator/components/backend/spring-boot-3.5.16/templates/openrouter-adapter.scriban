@@ -1,12 +1,15 @@
-package {{ PACKAGE }}.infrastructure.adapters;
+package {{ PACKAGE }}.ai.ai.infrastructure.adapters;
+
+import {{ PACKAGE }}.ai.ai.domain.model.AiGeneration;
+import {{ PACKAGE }}.ai.ai.domain.port.IAProviderPort;
+import {{ PACKAGE }}.ai.ai.infrastructure.configuration.AiConstants;
+import {{ PACKAGE }}.ai.ai.infrastructure.configuration.AiMessages;
+import {{ PACKAGE }}.ai.ai.infrastructure.configuration.AiProperties;
+import {{ PACKAGE }}.ai.ai.infrastructure.configuration.AiLogMessages;
+
+
 
 import com.epc.common.log.ILogService;
-import {{ PACKAGE }}.domain.model.AiGeneration;
-import {{ PACKAGE }}.domain.ports.IAProviderPort;
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
-import {{ PACKAGE }}.infrastructure.configuration.AiConstants;
-import {{ PACKAGE }}.infrastructure.configuration.AiMessages;
-import {{ PACKAGE }}.infrastructure.configuration.AiProperties;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
@@ -55,9 +58,9 @@ public class OpenRouterAdapter implements IAProviderPort {
     /** Fachada: valida, arma la peticion, la envia y traduce la respuesta. */
     @Override
     public Mono<AiGeneration> generate(String prompt) {
-        log.info(DomainLogMessages.AI_REQUEST_SUMMARY,
+        log.info(AiLogMessages.AI_REQUEST_SUMMARY,
             properties.getModel(), properties.getTemperature(), properties.getMaxTokens());
-        log.debug(DomainLogMessages.AI_PROMPT_LENGTH, abbreviate(prompt));
+        log.debug(AiLogMessages.AI_PROMPT_LENGTH, abbreviate(prompt));
         if (isApiKeyMissing()) {
             return Mono.error(new IllegalStateException(AiMessages.MISSING_API_KEY));
         }
@@ -165,7 +168,7 @@ private Throwable timeoutError(OpenRouterChatRequest request) {
     }
 
     private void logGeneration(AiGeneration generation) {
-        log.info(DomainLogMessages.AI_GENERATION_COMPLETED, generation.model());
+        log.info(AiLogMessages.AI_GENERATION_COMPLETED, generation.model());
     }
 
     private String abbreviate(String prompt) {

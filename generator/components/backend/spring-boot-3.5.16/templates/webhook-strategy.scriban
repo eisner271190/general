@@ -1,9 +1,12 @@
-package {{ PACKAGE }}.domain.usecase;
+package {{ PACKAGE }}.subscription.webhook.application;
 
-import {{ PACKAGE }}.domain.dto.WebhookEventDTO;
+import {{ PACKAGE }}.subscription.webhook.domain.model.WebhookEventDto;
+
+
+
 import reactor.core.publisher.Mono;
 
 public interface IWebhookStrategy {
     String eventType();
-    Mono<Void> handle(WebhookEventDTO event);
+    Mono<Void> handle(WebhookEventDto event);
 }

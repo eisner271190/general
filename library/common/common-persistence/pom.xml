@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.epc.common</groupId>
+    <artifactId>common-parent</artifactId>
+    <version>1.1.6</version>
+  </parent>
+
+  <artifactId>common-persistence</artifactId>
+  <name>common-persistence</name>
+  <description>Contratos y registro de mapeo de persistencia; genérico DynamoDB sobre common-aws.</description>
+
+  <dependencies>
+    <!-- D78: reutiliza DynamoTable y DynamoDBConfig; el SDK DynamoDB llega por aqui. -->
+    <dependency>
+      <groupId>com.epc.common</groupId>
+      <artifactId>common-aws</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!--
+      provided + optional: el microservicio aporta Spring, Reactor y Lombok en compilacion.
+    -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-core</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
+</project>

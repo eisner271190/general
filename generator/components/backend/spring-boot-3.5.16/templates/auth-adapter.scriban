@@ -1,8 +1,12 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.adapters;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.infrastructure.adapters;
 
-import {{ PACKAGE }}.domain.ports.AuthPort;
-import {{ PACKAGE }}.infrastructure.configuration.cloud.aws.CognitoClient;
-import {{ PACKAGE }}.domain.model.*;
+import {{ PACKAGE }}.security.auth.infrastructure.adapters.CognitoAdapter;
+import {{ PACKAGE }}.security.auth.domain.model.TokenRequest;
+import {{ PACKAGE }}.security.auth.domain.model.TokenResponse;
+import {{ PACKAGE }}.security.auth.domain.port.AuthPort;
+
+
+
 
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -10,9 +14,9 @@ import reactor.core.publisher.Mono;
 @Component
 public class AuthAdapter implements AuthPort {
 
-    private final CognitoClient cognitoClient;
+    private final CognitoAdapter cognitoClient;
 
-    public AuthAdapter(CognitoClient cognitoClient) {
+    public AuthAdapter(CognitoAdapter cognitoClient) {
         this.cognitoClient = cognitoClient;
     }
 

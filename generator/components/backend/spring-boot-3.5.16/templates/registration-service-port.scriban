@@ -1,6 +1,10 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.domain.servicePorts;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.domain.port;
 
-import {{ PACKAGE }}.domain.model.*;
+import {{ PACKAGE }}.security.registration.domain.model.ConfirmUser;
+import {{ PACKAGE }}.security.registration.domain.model.RegisterUser;
+
+
+
 import reactor.core.publisher.Mono;
 
 public interface RegistrationServicePort {

@@ -1,7 +1,10 @@
-package {{ PACKAGE }}.infrastructure.configuration.cloud.aws;
+package {{ PACKAGE }}.test.sns.infrastructure.adapters;
+
+import {{ PACKAGE }}.test.sns.infrastructure.configuration.SnsLogMessages;
 
 
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
+
+
 import com.epc.common.log.ILogService;
 import com.google.gson.Gson;
 import org.springframework.stereotype.Service;
@@ -33,8 +36,8 @@ public class SnsEventPublisher {
     }
 
     public void publishEvent(String eventType, Object payload) {
-        log.info(DomainLogMessages.SNS_EVENT_PUBLISHING, eventType);
-        log.debug(DomainLogMessages.SNS_TOPIC_AND_PAYLOAD, topicArn,
+        log.info(SnsLogMessages.SNS_EVENT_PUBLISHING, eventType);
+        log.debug(SnsLogMessages.SNS_TOPIC_AND_PAYLOAD, topicArn,
             payload == null ? "null" : payload.getClass().getSimpleName());
         PublishRequest request = PublishRequest.builder()
             .topicArn(topicArn)
@@ -48,6 +51,6 @@ public class SnsEventPublisher {
             .build();
 
         snsClient.publish(request);
-        log.debug(DomainLogMessages.SNS_EVENT_PUBLISHED, eventType);
+        log.debug(SnsLogMessages.SNS_EVENT_PUBLISHED, eventType);
     }
 }

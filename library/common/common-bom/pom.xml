@@ -7,7 +7,7 @@
   <parent>
     <groupId>com.epc.common</groupId>
     <artifactId>common-parent</artifactId>
-    <version>1.1.5</version>
+    <version>1.1.6</version>
   </parent>
 
   <artifactId>common-bom</artifactId>
@@ -74,6 +74,21 @@
       <dependency>
         <groupId>com.epc.common</groupId>
         <artifactId>common-web</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.epc.common</groupId>
+        <artifactId>common-aws</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.epc.common</groupId>
+        <artifactId>common-config</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.epc.common</groupId>
+        <artifactId>common-persistence</artifactId>
         <version>${project.version}</version>
       </dependency>
 

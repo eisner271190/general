@@ -1,6 +1,10 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.domain.ports;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.domain.port;
 
-import {{ PACKAGE }}.domain.model.*;
+import {{ PACKAGE }}.security.auth.domain.model.TokenRequest;
+import {{ PACKAGE }}.security.auth.domain.model.TokenResponse;
+
+
+
 
 import reactor.core.publisher.Mono;
 

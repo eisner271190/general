@@ -1,4 +1,4 @@
-package {{ PACKAGE }}.infrastructure.configuration;
+package {{ PACKAGE }}.parameter.parameter.infrastructure.configuration;
 
 import io.awspring.cloud.parameterstore.ParameterStorePropertySource;
 

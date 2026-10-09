@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.domain.model;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.domain.model;
 
 public class ConfirmUser {
     private String username;

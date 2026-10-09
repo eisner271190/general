@@ -1,6 +1,10 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.domain.servicePorts;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.exchange.domain.port;
 
-import {{ PACKAGE }}.domain.model.*;
+import {{ PACKAGE }}.security.exchange.domain.model.ExchangeRequest;
+import {{ PACKAGE }}.security.exchange.domain.model.ExchangeResponse;
+
+
+
 import reactor.core.publisher.Mono;
 
 public interface ExchangeServicePort {

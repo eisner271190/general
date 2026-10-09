@@ -1,18 +1,20 @@
-package {{ PACKAGE }}.domain.usecase.strategies;
+package {{ PACKAGE }}.subscription.webhook.application.strategies;
 
-import {{ PACKAGE }}.domain.dto.WebhookEventDTO;
-import {{ PACKAGE }}.domain.model.Subscription;
-import {{ PACKAGE }}.domain.ports.SubscriptionPort;
-import {{ PACKAGE }}.domain.usecase.IWebhookStrategy;
+import {{ PACKAGE }}.subscription.subscription.domain.port.ISubscriptionPort;
+import {{ PACKAGE }}.subscription.webhook.application.IWebhookStrategy;
+import {{ PACKAGE }}.subscription.webhook.domain.model.WebhookEventDto;
+
+
+
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
 public class BillingIssueStrategy implements IWebhookStrategy {
 
-    private final SubscriptionPort subscriptionPort;
+    private final ISubscriptionPort subscriptionPort;
 
-    public BillingIssueStrategy(SubscriptionPort subscriptionPort) {
+    public BillingIssueStrategy(ISubscriptionPort subscriptionPort) {
         this.subscriptionPort = subscriptionPort;
     }
 
@@ -22,7 +24,7 @@ public class BillingIssueStrategy implements IWebhookStrategy {
     }
 
     @Override
-    public Mono<Void> handle(WebhookEventDTO event) {
+    public Mono<Void> handle(WebhookEventDto event) {
         return subscriptionPort.findSubscriptionByUserId(event.userId())
             .flatMap(subscription -> subscriptionPort.saveSubscription(
                 subscription.withStatus("GRACE_PERIOD")

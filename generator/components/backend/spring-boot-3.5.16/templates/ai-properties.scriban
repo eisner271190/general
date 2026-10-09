@@ -1,6 +1,8 @@
-package {{ PACKAGE }}.infrastructure.configuration;
+package {{ PACKAGE }}.ai.ai.infrastructure.configuration;
 
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
+
+
+
 import com.epc.common.log.ILogService;
 import jakarta.annotation.PostConstruct;
 
@@ -41,7 +43,7 @@ public class AiProperties {
      */
     @PostConstruct
     void logResolvedConfiguration() {
-        log.info(DomainLogMessages.AI_CONFIGURATION_LOADED,
+        log.info(AiLogMessages.AI_CONFIGURATION_LOADED,
             model, apiBaseUrl, temperature, maxTokens, apiKey != null && !apiKey.isBlank());
     }
 

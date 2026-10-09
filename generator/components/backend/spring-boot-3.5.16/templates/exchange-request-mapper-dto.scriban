@@ -1,7 +1,9 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.application.mappers;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.exchange.infrastructure.rest;
 
-import {{ PACKAGE }}.application.dto.ExchangeRequestDTO;
-import {{ PACKAGE }}.domain.model.ExchangeRequest;
+import {{ PACKAGE }}.security.exchange.domain.model.ExchangeRequest;
+
+
+
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -9,7 +11,7 @@ import org.mapstruct.factory.Mappers;
 public interface ExchangeRequestMapperDto {
     ExchangeRequestMapperDto INSTANCE = Mappers.getMapper(ExchangeRequestMapperDto.class);
 
-    ExchangeRequestDTO toDTO(ExchangeRequest model);
-    ExchangeRequest toModel(ExchangeRequestDTO dto);
+    ExchangeRequestDto toDTO(ExchangeRequest model);
+    ExchangeRequest toModel(ExchangeRequestDto dto);
 }
 {{ end }}

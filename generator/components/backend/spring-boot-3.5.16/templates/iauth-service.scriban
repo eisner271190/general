@@ -1,10 +1,16 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.application.services;
+{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.application;
 
-import {{ PACKAGE }}.application.dto.*;
+import {{ PACKAGE }}.security.auth.infrastructure.rest.TokenRequestDto;
+import {{ PACKAGE }}.security.auth.infrastructure.rest.TokenResponseDto;
+import {{ PACKAGE }}.security.exchange.infrastructure.rest.ExchangeRequestDto;
+import {{ PACKAGE }}.security.exchange.infrastructure.rest.ExchangeResponseDto;
+
+
+
 import reactor.core.publisher.Mono;
 
 public interface IAuthService {
-    Mono<TokenResponseDTO> generateToken(TokenRequestDTO request);
-    Mono<ExchangeResponseDTO> exchangeCodeForTokens(ExchangeRequestDTO request);
+    Mono<TokenResponseDto> generateToken(TokenRequestDto request);
+    Mono<ExchangeResponseDto> exchangeCodeForTokens(ExchangeRequestDto request);
 }
 {{ end }}
