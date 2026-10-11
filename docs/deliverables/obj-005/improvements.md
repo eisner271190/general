@@ -58,3 +58,119 @@
   - Causa: migración no contemplada; obj-005 excluía migración de valores.
   - Tipo: alcance incompleto (dato sensible duplicado).
   - Acción: Q57.
+- **D13** Keystore actual puede no existir (secreto eliminado, Q49) y `up.ps1 -Sign` lo regenera.
+  - Causa: decisión de borrado sin plan de recuperación; generación automática sin guarda.
+  - Tipo: riesgo de datos, requisito faltante.
+  - Acción: Q63, Q64.
+- **D14** obj-005:28-29 y :65 dan S3 a Lambda y CodeBuild; Q59 lo niega.
+  - Causa: obj-005 no actualizado tras Q59.
+  - Tipo: contradicción de alcance.
+  - Acción: corregir obj-005; sin nueva pregunta.
+- **D15** Q61 responde "borrar" frente a recomendación "conservar"; subpregunta de versiones abierta.
+  - Causa: decisión con riesgo registrada sin confirmación de alcance.
+  - Tipo: decisión pendiente.
+  - Acción: Q65.
+- **D16** Criterio 4 KB dice "medido"; Q62 acepta estimación de esqueleto sin valores.
+  - Causa: criterio no alineado con Q43 y Q62.
+  - Tipo: criterio ambiguo.
+  - Acción: Q71.
+- **D17** Bucket "por app" (obj-005:27) frente a "por entorno" (Q56).
+  - Causa: obj-005 no actualizado tras Q56.
+  - Tipo: contradicción de alcance.
+  - Acción: Q68.
+- **D18** Q6-Q11 y Q39 sin enunciado en `questions.md`; Q7/Q8 solo referenciadas en Q5.
+  - Causa: edición de respuestas sin conservar el enunciado.
+  - Tipo: trazabilidad.
+  - Acción: reconstruir enunciados (sin cambiar respuestas).
+- **D19** Excepción a "no modificar tests" (Q39) frente a AGENTS y obj-005:45.
+  - Causa: regla dura sin excepción documentada.
+  - Tipo: regla ambigua.
+  - Acción: Q72.
+- **D20** Estado de preguntas inconsistente (cabecera "respondidas", obj-005 "abiertas").
+  - Causa: estado escrito sin confirmación del usuario.
+  - Tipo: estado documental.
+  - Acción: no cerrar hasta confirmación explícita; corregir cabeceras.
+- **D21** Coste "0 USD" con S3; Q14 cita obj-005.md:76 (no es coste).
+  - Causa: cita de línea errónea; coste incompleto.
+  - Tipo: dato incorrecto.
+  - Acción: Q70.
+- **D22** `aws_ssm_parameter` exige `value` (inferencia); Q18 pide SecureString vacío.
+  - Causa: diferencia entre contenedor de Secrets Manager y parámetro SSM.
+  - Tipo: requisito técnico no verificado.
+  - Acción: Q69.
+- **D23** Criterios S3 incompletos (versionado, SSE, bloqueo público) y falta integrator.
+  - Causa: decisiones de Q44, Q58, Q60 no trasladadas a obj-005.
+  - Tipo: criterio faltante.
+  - Acción: Q73; añadir integrator a entregables.
+
+## Revisión checklist · 2026-10-10 19:05:13 (UTC-5)
+- **D24** Q30 "sin sobrescribir" y obj-005:31 "`put-parameter --overwrite`" se contradicen.
+  - Causa: obj-005 no actualizado tras Q30.
+  - Tipo: contradicción de requisito.
+  - Acción: Q77.
+- **D25** Q69 (placeholder) choca con Q30 (no sobrescribir): el placeholder nunca se reemplaza.
+  - Causa: decisiones de Q30 y Q69 tomadas sin cruzarlas.
+  - Tipo: contradicción de requisito.
+  - Acción: Q77.
+- **D26** Q74 tiene dos respuestas contrarias (aprobada y "No, sin caché").
+  - Causa: respuesta nueva añadida sin borrar la anterior.
+  - Tipo: decisión duplicada.
+  - Acción: Q75.
+- **D27** Q71 contradice en su texto: "usar JSON real" frente a "sin medición".
+  - Causa: edición de respuesta sin revisar la decisión.
+  - Tipo: criterio ambiguo.
+  - Acción: Q76.
+- **D28** Keystore regenerado (Q64) puede romper actualizaciones si la app está publicada.
+  - Causa: decisión de regenerar sin verificar estado en Play.
+  - Tipo: riesgo de negocio, dato faltante.
+  - Acción: Q78.
+- **D29** Q65 no aclara si se borra el bucket; la recomendación dice no borrar.
+  - Causa: respuesta sin alcance completo de destrucción.
+  - Tipo: decisión pendiente.
+  - Acción: Q79.
+- **D30** Verificación de hash en pipeline (Q74) sin origen del hash de referencia.
+  - Causa: propuesta sin definir fuente de confianza.
+  - Tipo: requisito faltante.
+  - Acción: Q80.
+- **D31** Respuestas dadas sin marcar `[x]` en questions.md (Q64, Q66-Q69, Q72, Q73).
+  - Causa: estado documental no sincronizado.
+  - Tipo: estado documental.
+  - Acción: sincronizar tras cierre de Q75-Q81; no cerrar ahora.
+- **D32** obj-005 desactualizado: 4 KB "medido" (l.56), IAM Lambda (l.64), bucket (l.20, l.27).
+  - Causa: criterios no actualizados tras Q56, Q66, Q68 y Q76.
+  - Tipo: contradicción de alcance.
+  - Acción: corregir obj-005 tras Q76 y Q78.
+- **D33** Q6-Q11 y Q39 sin enunciado; no está claro qué respuesta corresponde a cada una.
+  - Causa: mismo que D18, sin reconstrucción confirmada.
+  - Tipo: trazabilidad.
+  - Acción: Q81.
+
+## Revisión fase 4 · 2026-10-10 19:18:41 (UTC-5)
+- **D34** Q79 atribuye el borrado del bucket a "Terraform destroy"; el encargo indica down.ps1.
+  - Causa: respuesta sin sujeto claro.
+  - Tipo: decisión ambigua.
+  - Acción: Q82.
+- **D35** Q81 tiene "mapeo confirmado" y una línea "pendiente" en la misma respuesta.
+  - Causa: edición sin limpiar la respuesta anterior.
+  - Tipo: estado documental.
+  - Acción: marcar [x] por confirmación explícita; la línea "pendiente" queda obsoleta.
+- **D36** Q63 dice "sin backup externo" y "debe registrarse backup antes del despliegue".
+  - Causa: respuesta mezcla decisión y recomendación.
+  - Tipo: decisión contradictoria.
+  - Acción: Q83.
+- **D37** Q74 proponía README con caché local; Q75 elimina la caché.
+  - Causa: propuesta no retirada del alcance al cambiar la decisión.
+  - Tipo: alcance desactualizado.
+  - Acción: README sin sección de caché (inferencia); confirmar en implementación.
+- **D38** Q76 deja el criterio de 4 KB sin medición.
+  - Causa: decisión de no medir con esqueleto de 210 bytes como referencia.
+  - Tipo: riesgo aceptado.
+  - Acción: registrado en riesgos de obj-005.md; sin pregunta nueva.
+- **D39** Q23, Q47 y Q53 están delegadas a architect y no son decisiones del usuario.
+  - Causa: delegación registrada como respuesta.
+  - Tipo: estado.
+  - Acción: quedan [ ] en checklist.md hasta el informe de architect.
+- **D40** eviewer.md y xplorer.md siguen con estado de fase 3 (B1-B4, "todas abiertas").
+  - Causa: fuera del encargo de fase 4.
+  - Tipo: documentación desactualizada.
+  - Acción: decidir con el orquestador si se actualizan.

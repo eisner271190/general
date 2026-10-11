@@ -1,6 +1,6 @@
 # Preguntas OBJ-005 (explorer, grilling)
 
-- Estado: `respondidas` (Q1–Q62). Pendiente: autorización explícita por escrito para implementar (Q48).
+- Estado: Q1–Q81 decididas (Q23, Q47, Q53 delegadas a architect). Abiertas: Q82, Q83 y Q48.
 - Fuente única de preguntas del objetivo. Cada respuesta se registra en la fila correspondiente.
 
 ## Alcance y documentación
@@ -56,13 +56,14 @@
   ✅ Respuesta: Mantener el nombre actual salvo motivo.
 - **Q18** ¿El SecureString se crea vacío o con valor?
   ➡️ Sin valor, igual que el contenedor actual (ADR-0010, línea 18).
-  ✅ Respuesta: Sin valor, igual que el contenedor actual.
+  ✅ Respuesta: Sustituida por Q69: placeholder + `ignore_changes`. La decisión final es no dejarlo vacío.
 - **Q19** ¿El valor entra en `terraform.tfstate`?
   ➡️ No. Sembrar desde script, no desde Terraform.
   ✅ Respuesta: No entra en tfstate. Se siembra desde script, no desde Terraform.
 - **Q20** Módulo `cloud/terraform/modules/secrets-manager`: ¿se renombra?
   ➡️ No, salvo que obj-005 lo pida. Cambio mínimo.
-  ✅ Respuesta: Sí, renombrar el módulo a `secure-parameters`.
+  ✅ Respuesta: Sí, renombrar el módulo a `secure-parameters` y propagarlo a `component.json` y a la documentación/cloud del generador.
+  ✔️ Decisión del usuario (conflicto 2): renombrar a `secure-parameters`. Alcance: carpeta, `source` en `terraform-secrets.scriban`, `component.json` (10, 37-38) y `cloud/aws/AGENTS.md` (4).
 - **Q21** `terraform-secrets-manager-variables.scriban` (no leído): ¿se elimina o se adapta?
   ➡️ Leer y decidir con developer-terraform.
   ✅ Respuesta: Adaptarlo sin más.
@@ -99,7 +100,7 @@
 ## Scripts PowerShell
 - **Q30** Siembra con `put-parameter --overwrite`: ¿solo al crear claves faltantes?
   ➡️ Sí. Mantener "no sobrescribir" (ADR-0010 línea 19).
-  ✅ Respuesta: Sí, solo al crear claves faltantes, sin sobrescribir.
+  ✅ Respuesta: Sí, solo al crear claves faltantes, sin sobrescribir. Precisada por Q77.
 - **Q31** `down.ps1`: ¿borrar el parámetro con `delete-parameter`?
   ➡️ Sí. SSM no tiene ventana de recuperación.
   ✅ Respuesta: Sí, borrar con delete-parameter.
@@ -161,6 +162,7 @@
 - **Q48** Autorización explícita para implementar: ¿cuándo?
   ➡️ Tras cerrar questions.md y checklist.md. Pedir por escrito.
   ✅ Respuesta: Tras cerrar questions.md y checklist.md, pedida por escrito.
+  ✔️ Decisión del usuario: no autorizar todavía; mantener análisis.
 - **Q49** Limpieza de secretos AWS: ¿antes o después de desplegar?
   ➡️ Después de validar `develop`; el usuario avisa.
   ✅ Respuesta: Ya no existen; el usuario los eliminó manualmente.
@@ -213,7 +215,117 @@
   ✅ Respuesta: Sí, activar versionado.
 - **Q61** Borrado en `down.ps1`: ¿se borra el objeto keystore o se conserva?
   ➡️ Conservar.
-  ✅ Respuesta: Borrar el objeto keystore en `down.ps1`. Confirma Q56. Riesgo (contradice la recomendación): sin copia, el keystore perdido rompe las actualizaciones en Play. El versionado (Q60) es la única mitigación; decidir si `down.ps1` borra también las versiones antiguas.
+  ✅ Respuesta: Q65 prevalece: se borran todas las versiones del keystore. Q60 queda como mitigación parcial, no como salvavidas; se debe documentar backup/restore y no depender del bucket versionado como única garantía.
 - **Q62** JSON nuevo sin keystore: ¿se mide ya el tamaño real?
   ➡️ Sí. Medir igualmente aunque sea muy inferior a 4 KB.
   ✅ Respuesta: La estimación basta. Esqueleto medido: 210 bytes sin valores (muy por debajo de 4 KB). Resuelve el conflicto con Q43 (estimación suficiente). Queda pendiente solo el tamaño con keystore, que no aplica (el keystore va en S3, Q56).
+
+## Reviewer · 2026-10-10 (hora no disponible)
+
+- [x] Q63 ¿Dónde está el `.jks` actual si el secreto fue eliminado (Q49)?
+  - Decisión del usuario: sin backup externo; solo versionado de S3 (Q60).
+  - Riesgo: con Q65 (`down.ps1` borra todas las versiones) no queda recuperación tras `down.ps1`.
+  - Confirmado por el usuario: combinación Q60 + Q65 aceptada con este riesgo.
+  - rec: confirmar copia local o backup antes de desplegar.
+  ✅ Respuesta: No hay copia; hay que generar uno nuevo. Debe registrarse backup antes del despliegue.
+- [x] Q64 ¿`Get-OrCreateAndroidSigning` debe generar keystore nuevo si S3 no tiene objeto?
+  - rec: no; error explícito si la app ya está publicada.
+  ✅ Respuesta: Generar siempre, como hoy (igual que el comportamiento actual del secreto).
+- [x] Q65 ¿`down.ps1` borra solo el objeto actual, sus versiones o nada (Q61)?
+  - Decisión del usuario (conflicto 1): borrar objeto y todas sus versiones. Q61 sustituida.
+  - rec: objeto actual; conservar versiones; no borrar bucket.
+  ✅ Respuesta: Se borran todas las versiones.
+- [x] Q66 ¿Corregir obj-005:64 a `GetParameter` + `GetParametersByPath` + `kms:Decrypt` (Lambda)?
+  - rec: sí, solo lectura (Q25, Q27, Q28).
+  ✅ Respuesta: Sí, solo lectura en Lambda: `ssm:GetParameter` + `ssm:GetParametersByPath` + `kms:Decrypt` sobre `aws/ssm`; sin `PutParameter`. CodeBuild de siembra usa `PutParameter`.
+- [x] Q67 ¿CodeBuild Flutter necesita `ssm:PutParameter` sobre la ruta (Q35, Q59) y `kms:Encrypt`?
+  - rec: sí; architect verifica.
+  ✅ Respuesta: Sí, necesita `ssm:PutParameter` sobre `/{{ENV}}/{{APP}}/secrets`; `kms:Encrypt` no aplica con `aws/ssm` (la clave la gestiona AWS). Sí requiere `kms:Decrypt` para `get-parameter --with-decryption`. También necesita `s3:GetObject` + `s3:PutObject` sobre `keystore/{{APPLICATION_ID}}/*`.
+- [x] Q68 ¿Bucket por entorno (Q56) y corregir obj-005:27 "por app"?
+  - rec: sí, por entorno.
+  ✅ Respuesta: Sí a ambas: bucket por entorno, con prefijo por app (`keystore/{{APPLICATION_ID}}/keystore.jks`). El texto de obj-005:27 debe corregirse.
+- [x] Q69 ¿SecureString con placeholder + `ignore_changes` en lugar de vacío (Q18)?
+  - rec: sí; developer-terraform verifica provider.
+  ✅ Respuesta: Sí, placeholder + `ignore_changes`; mejor que dejarlo vacío. Evita que Terraform vuelva a reescribir el valor y deja el parámetro siempre con un valor legible.
+- [x] Q70 ¿Sustituir "0 USD/mes" por "coste bajo (S3)" y corregir cita de Q14?
+  - Decisión del usuario (conflicto 4): coste bajo (S3), ≈ 0,005 USD/mes por app. obj-005.md actualizado.
+  - rec: sí.
+  ✅ Respuesta: No. El coste real no es 0 USD; hay S3 y el coste de ejecución. Lo correcto es mantener el principio de costo bajo y usar el JSON real para validar el 4 KB.
+- [x] Q71 ¿Aceptas estimar el 4 KB con valores de longitud máxima, no con JSON real?
+  - rec: sí, por escrito.
+  ✅ Respuesta: No, usar el JSON real. El caso de prueba real se mide con el contenido final; la estimación solo sirve como referencia.
+  ✔️ Decisión del usuario (conflicto 3): el JSON nunca llegará a 4 KB; basta la estimación. Sin medición ni validación de tamaño. Q43/Q62 prevalecen.
+- [x] Q72 ¿Confirmas excepción a "no modificar tests" para `application-context-test.scriban`?
+  - rec: sí y registrar en AGENTS/obj-005; si no, excluir.
+  ✅ Respuesta: Sí, excepción autorizada. Se ajusta el filtro de `application-context-test.scriban` sin modificar el resto de tests.
+- [x] Q73 ¿Añadir a criterios: versionado (Q60), SSE-S3 y bloqueo público (Q58)?
+  - rec: sí.
+  ✅ Respuesta: Sí, añadimos al criterio de aceptación que el bucket de keystore tenga versionado, cifrado con SSE-S3 y bloqueo total de acceso público.
+
+## Cambio 2026-10-10: caché local y pipeline (fuente única)
+- [x] Q74 ¿Caché local del `.jks` y descarga en pipeline?
+  - Decisión del usuario: aprobada la propuesta.
+  - Local: si `android/upload-keystore.jks` existe, se usa sin descargar de S3.
+  - Pipeline: descarga siempre y verifica hash antes de firmar.
+  - README Flutter: explicar caché local y cómo invalidarla (borrar el `.jks`).
+- [x] Q74 ¿Se usa caché local (sustituida por Q75) del `.jks` para acelerar `-Sign` con verificación de hash?
+  - rec: sí, local temporal, pero pipeline siempre valida.
+  ✅ Respuesta: No, sin caché local.
+
+## Revisión checklist · 2026-10-10 19:05:13 (UTC-5)
+
+- [x] Q75 ¿Caché local del `.jks`? Q74 tiene dos respuestas contrarias (aprobada / no).
+  - rec: no; la última respuesta dice sin caché. Pipeline siempre descarga y verifica.
+  ✅ Respuesta: Sin caché local. Pipeline siempre descarga y verifica hash. Q74 queda sustituida.
+- [x] Q76 ¿4 KB con JSON real o sin medición? Q71 dice "usar JSON real" y "sin medición".
+  - rec: sin medición; registrar esqueleto de 210 bytes sin valores (Q62) como referencia.
+  ✅ Respuesta: Sin medición. Esqueleto de 210 bytes como referencia. Q71 queda sustituida.
+- [x] Q77 ¿El script de siembra sobrescribe el placeholder? Q30 "sin sobrescribir" vs Q69.
+  - rec: sí, solo si falta el parámetro o su valor es el placeholder. Corrige obj-005:31.
+  ✅ Respuesta: Sí, solo si falta el parámetro o su valor es el placeholder. Q30 se precisa.
+- [x] Q78 ¿La app ya está publicada en Play? Keystore nuevo (Q64) impide actualizar.
+  - rec: confirmar antes de desplegar; si está publicada, parar.
+  ✅ Respuesta: Asumir que no está publicada y continuar. Riesgo: si lo está, el keystore nuevo
+    bloquea las actualizaciones en Play.
+- [x] Q79 ¿`down.ps1` o Terraform destruyen el bucket keystore o solo sus versiones?
+  - rec: solo versiones; el bucket se conserva (rec de Q65).
+  ✅ Respuesta: Destruir también el bucket (Terraform destroy), además de objeto y versiones.
+    Riesgo: pérdida total del keystore si se ejecuta destroy.
+- [x] Q80 ¿De dónde sale el hash de verificación de la pipeline (Q74)?
+  - rec: SHA-256 guardado como metadato del objeto S3 al subirlo con `-Sign`.
+  ✅ Respuesta: SHA-256 como metadato del objeto S3, guardado al subir el `.jks` con `-Sign`.
+- [x] Q81 ¿Confirmas el mapeo de Q6-Q11 y Q39 (enunciados perdidos, D18)?
+  - Enunciados restaurados desde el commit `4192aed` (`questions.md`):
+    - Q6 Número del ADR nuevo: ¿cuál? → Respuesta: ADR-0027.
+    - Q7 ADR-0023 citado en 0022 (línea 70) no existe: ¿qué hacer? → Respuesta: ADR-0027.
+    - Q8 ADR-0023 desaparecido: ¿se corrige en el ADR nuevo? → Respuesta: ADR-0027.
+    - Q9 `docs/adr/README.md` no lista 0010/0012/0022: ¿se actualiza? → Respuesta: no.
+    - Q10 Un SecureString por app con ruta `/{{ENV}}/{{APP}}/secrets`: ¿confirmado? → Sí.
+    - Q11 Claves kebab-case (`android-signing`, `jwt-secret`, `api-key`): ¿cambian? → No.
+    - Q39 ¿Plantilla de test cuenta como "test"? → No cuenta; se puede modificar.
+  - ✅ Respuesta: mapeo confirmado por el usuario.
+  - rec: reconstruir enunciados desde obj-005.md y confirmar cada respuesta.
+  ✅ Respuesta: pendiente. (Línea obsoleta: el usuario confirmó el mapeo arriba; ver D35.)
+
+## Cambio 2026-10-10 19:18:41 (UTC-5): preguntas nuevas
+
+- [ ] Q82 ¿`down.ps1` borra también el bucket keystore, o solo el objeto y sus versiones?
+  - Causa: Q79 responde "Terraform destroy" para el bucket; no indica si `down.ps1` lo borra.
+  - rec: `down.ps1` borra objeto y versiones (Q65); el bucket solo con Terraform destroy (Q79).
+  - ✅ Respuesta: pendiente.
+- [ ] Q83 ¿Se exige backup del keystore antes del despliegue?
+  - Causa: Q63 dice "sin backup externo" y también "debe registrarse backup antes del despliegue".
+  - rec: aceptar sin backup externo y registrar riesgo; si se exige, definir destino.
+  - ✅ Respuesta: pendiente.
+
+## Dependencias
+
+- Q75 bloquea README Flutter y `up.ps1` (caché local).
+- Q76 bloquea criterio de 4 KB.
+- Q77 bloquea script de siembra y `down.ps1`.
+- Q78 bloquea subida inicial del keystore y despliegue.
+- Q79 bloquea `down.ps1` y Terraform destroy del bucket.
+- Q80 bloquea verificación de hash en pipeline.
+- Q48 bloquea implementación; va al final.
+- Q82 bloquea alcance de `down.ps1` y destrucción del bucket (Q79).
+- Q83 bloquea documentación de backup/restore (Q63, Q65).
