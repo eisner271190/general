@@ -82,4 +82,7 @@ Problema, se están generando demasiadas preguntas
 He identificado
 
 - Hay preguntas que se repiten
-- 
+- Veo preguntas que preguntan algo que ya se preguntó
+- Se puede actualizar la documentación en background?
+- Se puede ir generando mas preguntas nuevas a medida que voy respondiendo?
+- Veo que se generan muchos conflictos

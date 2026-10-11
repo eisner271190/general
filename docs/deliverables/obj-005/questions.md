@@ -1,9 +1,11 @@
 # Preguntas OBJ-005 (explorer, grilling)
 
-- Estado: Q1–Q85 resueltas por el usuario, salvo Q48 (último, pendiente).
+- Estado: Q1–Q93 resueltas por el usuario, salvo Q48 (último, pendiente).
 - Delegadas a architect (sin decisión del usuario): Q23, Q47, Q53.
-- Abiertas: Q48. Dudas en `improvements.md` (D41–D49, todas resueltas).
+- Abiertas: Q48. Dudas `improvements.md`: D41 y D42 abiertas (architect); D43–D49 resueltas.
 - Fuente única de preguntas del objetivo. Cada respuesta se registra en la fila correspondiente.
+- Sustituciones: Q2→Q84, Q15→Q76, Q61→Q86, Q63→Q83, Q71→Q76, Q74→Q75, Q51→Q91,
+  Q64→Q88, Q79→Q90.
 
 ## Alcance y documentación
 - **Q1** Alcance generador: ¿OBJ-005 toca solo el generador y no `/projects`?
@@ -12,6 +14,7 @@
 - **Q2** `.opencode/scripts/`: ¿entran `get-services-aws.ps1` y `delete-all-services-aws.ps1`?
   ➡️ No. Son herramientas del workspace.
   ✅ Respuesta: No entran; quedan fuera.
+  ❌ Sustituida por Q84: `.opencode/scripts/*` sí entran (excepción a "solo generador").
 - **Q3** `library/platform` y `library/common/settings.xml`: ¿entran en alcance?
   ➡️ Sí, solo comentarios y README que mencionen Secrets Manager.
   ✅ Respuesta: Sí, solo comentarios y README que mencionen Secrets Manager.
@@ -48,6 +51,7 @@
 - **Q15** Límite de tamaño: ¿qué pasa si el JSON actual supera 4 KB?
   ➡️ Parar y consultar; no pasar a Advanced sin autorización.
   ✅ Respuesta: No supera 4 KB; queda por debajo del 20 % del límite Standard.
+  ❌ Sustituida por Q76: sin medición; esqueleto de 210 bytes como referencia.
 - **Q16** Fuentes SCA en perfil cloud: ¿se mantiene `aws-parameterstore` de microservicio?
   ➡️ Sí. Sustituir `aws-secretsmanager:` por la ruta SSM del secreto.
   ✅ Respuesta: Sí. Sustituir `aws-secretsmanager:` por la ruta SSM del secreto.
@@ -97,7 +101,8 @@
   ✅ Respuesta: Sustituir SecretsManagerAccess por:
     - `ssm:GetParameter` + `kms:Decrypt` sobre `/{{ENV}}/{{APP}}/secrets`.
     - `s3:GetObject` / `s3:PutObject` sobre `keystore/{{APPLICATION_ID}}/*`.
-  ⚠️ Conflicto a revisar con Q59: `s3:PutObject` en pipeline vs. "escritura solo en up.ps1".
+  ✅ Resuelto: Q59/Q67 dan `s3:GetObject`/`s3:PutObject` al pipeline sobre
+    `keystore/{{APPLICATION_ID}}/*`; `up.ps1 -Sign` local sigue siendo el único generador.
 
 ## Scripts PowerShell
 - **Q30** Siembra con `put-parameter --overwrite`: ¿solo al crear claves faltantes?
@@ -174,6 +179,7 @@
 - **Q51** Entornos distintos de `develop`: ¿fuera?
   ➡️ Sí, según obj-005.md:25.
   ✅ Respuesta: Sí, fuera de alcance; solo develop.
+  ❌ Sustituida por Q91: `delete-all-services-aws.ps1` borra buckets de todos los entornos.
 - **Q52** Commit o push: ¿cuándo?
   ➡️ Nunca sin autorización explícita (AGENTS.md).
   ✅ Respuesta: Nunca sin autorización explícita.
@@ -196,11 +202,13 @@
     - Terraform crea el bucket vacío (igual que el contenedor del secreto).
     - Subida del `.jks` solo desde `frontend/up.ps1` con `-Sign` (ver Q59).
     - Versionado + SSE + bloqueo de acceso público, como el bucket de artefactos.
-    - ⚠️ Usuario indica que `down.ps1` SÍ borra el objeto: conflicto con Q61 (conservar).
+    - ✅ Resuelto (Q65, Q82): `down.ps1` (cloud) borra objeto, versiones y bucket; ya no
+      contradice a Q61 (sustituida por Q86).
 - **Q57** Keystore actual dentro del secreto: ¿lo subes tú a S3 antes del despliegue?
   ➡️ Sí, fuera de código (igual que Q50). Confirmar.
   ✅ Respuesta: No lo subo desde el secreto. Se sube vía `frontend/up.ps1` con `-Sign` tras el despliegue.
-    - ⚠️ El secreto ya fue eliminado (Q49): verificar que el keystore sigue recuperable.
+    - ✅ Resuelto (Q49, Q63, Q88): no hay secreto ni copia; si falta el objeto, `up.ps1 -Sign`
+      genera uno nuevo.
 - **Q58** Cifrado y acceso del bucket: ¿SSE-S3 o SSE-KMS, y bloqueo de acceso público?
   ➡️ SSE-S3 y bloqueo de acceso público total. Confirmar.
   ✅ Respuesta: SSE-S3 y bloqueo de acceso público total.
@@ -218,9 +226,10 @@
 - **Q61** Borrado en `down.ps1`: ¿se borra el objeto keystore o se conserva?
   ➡️ Conservar.
   ✅ Respuesta: Q65 prevalece: se borran todas las versiones del keystore. Q60 queda como mitigación parcial, no como salvavidas; se debe documentar backup/restore y no depender del bucket versionado como única garantía.
+  ❌ Sustituida por Q86: sin documentación de backup/restore; solo riesgo y versionado S3.
 - **Q62** JSON nuevo sin keystore: ¿se mide ya el tamaño real?
   ➡️ Sí. Medir igualmente aunque sea muy inferior a 4 KB.
-  ✅ Respuesta: La estimación basta. Esqueleto medido: 210 bytes sin valores (muy por debajo de 4 KB). Resuelve el conflicto con Q43 (estimación suficiente). Queda pendiente solo el tamaño con keystore, que no aplica (el keystore va en S3, Q56).
+  ✅ Respuesta: La estimación basta. Esqueleto medido: 210 bytes sin valores (muy por debajo de 4 KB). Resuelve el conflicto con Q43 (estimación suficiente). Sin pendiente: el tamaño con keystore no aplica (Q56).
 
 ## Reviewer · 2026-10-10 (hora no disponible)
 
@@ -230,10 +239,12 @@
   - Confirmado por el usuario: combinación Q60 + Q65 aceptada con este riesgo.
   - rec: confirmar copia local o backup antes de desplegar.
   ✅ Respuesta: No hay copia; hay que generar uno nuevo. Debe registrarse backup antes del despliegue.
+  ❌ Sustituida por Q83: no se exige backup previo; solo versionado S3.
     - Q83 sustituye "backup antes del despliegue": no se exige backup previo.
 - [x] Q64 ¿`Get-OrCreateAndroidSigning` debe generar keystore nuevo si S3 no tiene objeto?
   - rec: no; error explícito si la app ya está publicada.
   ✅ Respuesta: Generar siempre, como hoy (igual que el comportamiento actual del secreto).
+  ❌ Sustituida por Q88: generar solo si falta el objeto en S3; nunca sobrescribir.
 - [x] Q65 ¿`down.ps1` borra solo el objeto actual, sus versiones o nada (Q61)?
   - Decisión del usuario (conflicto 1): borrar objeto y todas sus versiones. Q61 sustituida.
   - rec: objeto actual; conservar versiones; no borrar bucket.
@@ -257,6 +268,7 @@
 - [x] Q71 ¿Aceptas estimar el 4 KB con valores de longitud máxima, no con JSON real?
   - rec: sí, por escrito.
   ✅ Respuesta: No, usar el JSON real. El caso de prueba real se mide con el contenido final; la estimación solo sirve como referencia.
+  ❌ Sustituida por Q76: sin medición; esqueleto de 210 bytes como referencia.
   ✔️ Decisión del usuario (conflicto 3): el JSON nunca llegará a 4 KB; basta la estimación. Sin medición ni validación de tamaño. Q43/Q62 prevalecen.
 - [x] Q72 ¿Confirmas excepción a "no modificar tests" para `application-context-test.scriban`?
   - rec: sí y registrar en AGENTS/obj-005; si no, excluir.
@@ -271,6 +283,7 @@
   - Local: si `android/upload-keystore.jks` existe, se usa sin descargar de S3.
   - Pipeline: descarga siempre y verifica hash antes de firmar.
   - README Flutter: explicar caché local y cómo invalidarla (borrar el `.jks`).
+  - ❌ Sustituida por Q75: sin caché local; pipeline siempre descarga y verifica hash.
 - [x] Q74 ¿Se usa caché local (sustituida por Q75) del `.jks` para acelerar `-Sign` con verificación de hash?
   - rec: sí, local temporal, pero pipeline siempre valida.
   ✅ Respuesta: No, sin caché local.
@@ -294,6 +307,7 @@
   - rec: solo versiones; el bucket se conserva (rec de Q65).
   ✅ Respuesta: Destruir también el bucket (Terraform destroy), además de objeto y versiones.
     Riesgo: pérdida total del keystore si se ejecuta destroy.
+  ❌ Sustituida por Q90: primero `terraform destroy` del bucket, luego CLI para lo que quede.
 - [x] Q80 ¿De dónde sale el hash de verificación de la pipeline (Q74)?
   - rec: SHA-256 guardado como metadato del objeto S3 al subirlo con `-Sign`.
   ✅ Respuesta: SHA-256 como metadato del objeto S3, guardado al subir el `.jks` con `-Sign`.
@@ -334,15 +348,36 @@
   - Causa: Q83 retira el backup previo; Q61 pedía documentar backup/restore.
   - rec: documentar solo el riesgo "sin copia externa" y el versionado S3; sin guía de restore.
 
+## Revisión reviewer · 2026-10-11 (preguntas Q87-Q93)
+
+- [x] Q87 ¿Qué significa "checklist completo" (Q46, Q48)?
+  - ✅ Respuesta: Opción 1 del usuario: ítems definidos y trazados; `[ ]` solo en implementación
+    y verificación.
+- [x] Q88 ¿Q64 "generar siempre" significa generar el keystore solo si falta el objeto en S3?
+  - ✅ Respuesta: Opción 1 del usuario: generar solo si falta; nunca sobrescribir objeto existente.
+    Q64 queda sustituida.
+- [x] Q89 ¿Qué `down.ps1` borra el bucket keystore: cloud o Flutter?
+  - ✅ Respuesta: Opción 1 del usuario: el de cloud (`down.ps1.scriban`).
+- [x] Q90 ¿Orden de borrado CLI frente a `terraform destroy`, con `state rm`?
+  - ✅ Respuesta: Opción 2 del usuario: primero `terraform destroy` del recurso bucket, luego CLI
+    para lo que quede.
+- [x] Q91 ¿`delete-all-services-aws.ps1` borra el bucket de todos los entornos o solo `develop`?
+  - ✅ Respuesta: Opción 2 del usuario: todos los entornos.
+  - ✅ Resuelto: Q51 queda sustituida por Q91.
+- [x] Q92 ¿Qué muestra `get-services-aws.ps1` del bucket?
+  - ✅ Respuesta: Opción 2 del usuario: solo existencia del bucket.
+- [x] Q93 ¿Cómo obtienen los scripts el nombre del bucket sin hardcodearlo?
+  - ✅ Respuesta: Opción 1 del usuario: derivarlo de `environment` + `project_name` con el mismo
+    patrón de nombres que Terraform.
+  - Q87-Q93 cerradas el 2026-10-11.
+
 ## Dependencias
 
-- Q75 bloquea README Flutter y `up.ps1` (caché local).
-- Q76 bloquea criterio de 4 KB.
-- Q77 bloquea script de siembra y `down.ps1`.
-- Q78 bloquea subida inicial del keystore y despliegue.
-- Q79 bloquea `down.ps1` y Terraform destroy del bucket.
-- Q80 bloquea verificación de hash en pipeline.
+- Q75-Q80 resueltas: no bloquean (caché, 4 KB, siembra, publicación, bucket, hash).
+- Q87-Q93 resueltas: no bloquean (checklist, keystore, orden, entornos, consulta, nombre).
+- Q23, Q47, Q53: delegadas a architect; pendientes de su informe.
+- D41 y D42: abiertas, de architect (orden de borrado y vaciado del bucket).
 - Q48 bloquea implementación; va al final.
-- Q82 resuelta: alcance de `down.ps1` y destrucción del bucket (Q79).
+- Q82 resuelta: alcance de `down.ps1` y destrucción del bucket (Q79 sustituida por Q90).
 - Q83 resuelta: no exige backup previo. Q86 resuelta: sin documentación backup/restore.
 

@@ -195,3 +195,15 @@
 
 - `requiere cambios`
 - Motivo: H1-H3 (altas). No avanzar al usuario ni solicitar autorización (Q48) hasta cerrar H1-H3.
+
+## Fase 4 (documental) · 2026-10-11 02:48:01 (UTC-5)
+
+- Agente: reviewer. Solo documentación; sin producto, tests ni work items.
+- Atendidos: H1 (D41/D42 abiertas; D43-D47 cerradas), H3 (Q78 alineado), H5/H6 (sustituciones
+  marcadas), H7 (pendientes M5 en checklist), H8 (`use-cases.md`), H9 (Q88), H11 (cabeceras,
+  Dependencias, avisos ⚠️).
+- Archivos modificados: `obj-005.md`, `checklist.md`, `questions.md`, `improvements.md`,
+  `use-cases.md` (nuevo), `reviewer.md` (esta sección).
+- Q87-Q93 registradas y reflejadas en `obj-005.md` y `checklist.md`.
+- Q48 sigue abierta; sin autorización para implementar.
+- No actualizado: `explorer.md` (H14; decisión del orquestador).

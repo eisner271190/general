@@ -1,9 +1,11 @@
 # Checklist OBJ-005: SSM Parameter Store SecureString
 
-- Fecha: `2026-10-10` · Actualizado: `2026-10-10 19:33:23` (UTC-5)
-- Fuentes: `obj-005.md`, `questions.md` (Q1-Q86 decididas salvo Q48; Q82-Q86 resueltas).
-- Delegadas a architect: Q23, Q47, Q53. Sin preguntas nuevas abiertas.
+- Fecha: `2026-10-10` · Actualizado: `2026-10-11 02:48:01` (UTC-5)
+- Fuentes: `obj-005.md`, `questions.md` (Q1-Q93 decididas salvo Q48; Q87-Q93 resueltas).
+- Delegadas a architect: Q23, Q47, Q53. Dudas abiertas: D41 y D42 (architect).
 - Regla: `[x]` solo decisión explícita del usuario. Implementación y verificación quedan `[ ]`.
+- "Checklist completo" = ítems definidos y trazados; `[ ]` solo en implementación y
+  verificación (Q87).
 - Estado: análisis. Sin implementación. Sin autorización (Q48, último punto).
 
 ## 1. Criterios de aceptación (obj-005.md)
@@ -11,6 +13,7 @@
 - [ ] JSON nuevo sin keystore: esqueleto 210 bytes como referencia; sin medición (Q76).
 - [ ] JSON del secreto no contiene `keystore-base64`.
 - [ ] Keystore sube y descarga como binario en `keystore/{{APPLICATION_ID}}/keystore.jks`.
+- [ ] Keystore generado solo si falta el objeto en S3; nunca sobrescribir (Q88).
 - [ ] `application-cloud-properties.scriban` no referencia `aws-secretsmanager:` (Q16).
 - [ ] `pom.scriban` no incluye `spring-cloud-aws-starter-secrets-manager` (Q37).
 - [ ] Terraform no crea `aws_secretsmanager_secret` y sí `aws_ssm_parameter` SecureString.
@@ -26,12 +29,14 @@
 - [ ] Bucket keystore con versionado, SSE-S3 y bloqueo total de acceso público (Q58, Q60, Q73).
 - [ ] Pipeline descarga y verifica SHA-256 antes de firmar; sin caché local (Q75, Q80).
 - [ ] Siembra solo si falta el parámetro o es placeholder (Q77).
-- [ ] `down.ps1` borra objeto keystore, todas sus versiones y el bucket por CLI (Q65, Q82).
-- [ ] `delete-all-services-aws.ps1` borra el bucket keystore vaciando objetos y versiones (Q82,
-      Q84).
-- [ ] `get-services-aws.ps1` consulta S3 del bucket keystore (Q84).
+- [ ] `down.ps1` (cloud) borra objeto, versiones y bucket; orden: `terraform destroy` del
+      bucket primero y CLI después (Q65, Q82, Q89, Q90).
+- [ ] `delete-all-services-aws.ps1` borra el bucket keystore de todos los entornos, vaciando
+      objetos y versiones (Q82, Q84, Q91).
+- [ ] `get-services-aws.ps1` muestra solo la existencia del bucket (Q84, Q92).
+- [ ] Nombre del bucket derivado de `environment` + `project_name`, sin hardcodear (Q93).
 - [ ] Excepción a "solo generador" registrada solo en obj-005 para los dos scripts (Q84, Q85).
-- [ ] `checklist.md` completo antes de implementar (Q46).
+- [ ] `checklist.md` completo (ítems definidos y trazados) antes de implementar (Q46, Q87).
 
 ## 2. Decisiones del usuario y trabajo derivado
 
@@ -44,7 +49,8 @@
 - [x] `postman-collection.scriban` solo si nombra Secrets Manager o secretsmanager (Q41).
 - [x] Docs históricos obj-003 y obj-004 no se tocan (Q42).
 - [x] Migración de valores fuera; el usuario re-siembra y lo confirma (Q50).
-- [x] Solo entorno `develop` (Q51).
+- [x] Solo entorno `develop` en alcance (Q51); `delete-all` borra buckets de todos los
+      entornos (Q91, sustituye a Q51 en ese script).
 - [x] Sin commit ni push sin autorización explícita (Q52).
 - [x] Sin crear ni modificar tests (AGENTS.md).
 - [x] Excepción autorizada: filtro de `application-context-test.scriban` líneas 74-76 (Q38, Q72).
@@ -98,7 +104,8 @@
 - [x] Versionado activado (Q60, Q73).
 - [x] SSE-S3 y bloqueo total de acceso público (Q58, Q73).
 - [x] Único lector y escritor: `up.ps1 -Sign` en local y CodeBuild Flutter (Q59).
-- [x] Si falta el objeto, `up.ps1 -Sign` genera y sube keystore nuevo (Q59, Q64).
+- [x] Si falta el objeto, `up.ps1 -Sign` genera y sube keystore nuevo; nunca sobrescribir (Q59,
+      Q88, sustituye Q64).
 - [x] `down.ps1` borra el objeto y todas sus versiones (Q65, sustituye Q61).
 - [x] Sin backup externo; solo versionado de S3 (Q63, Q60).
 - [x] Q83: no se exige backup previo; solo versionado S3 (Q63, Q65).
@@ -110,7 +117,7 @@
 - [x] `up.ps1` Flutter con `-Sign` sin secreto: error explícito (Q34).
 - [x] `up.ps1` Flutter: crea `android-signing` si falta, sin cambio de comportamiento (Q35).
 - [x] `up.ps1` Flutter: sube y baja keystore de S3, no del secreto (Q57, Q59).
-- [x] `up.ps1` Flutter: genera keystore nuevo si falta el objeto en S3 (Q64).
+- [x] `up.ps1` Flutter: genera keystore nuevo si falta el objeto en S3; sin sobrescribir (Q88).
 - [x] `down.ps1`: borrar parámetro con `delete-parameter` (Q31).
 - [x] `down.ps1`: eliminar lógica `restore-secret` (Q32).
 - [x] Sin caché local de `android/upload-keystore.jks` (Q75; sustituye Q74).
@@ -149,26 +156,37 @@
 - [x] Integrator añadido a la tabla de entregables de obj-005.md (Q73, D23).
 - [x] Sin implementación sin checklist completo (Q46).
 - [x] Secretos AWS eliminados por el usuario (Q49).
+- [x] "Checklist completo" = ítems definidos y trazados; `[ ]` solo en implementación y
+      verificación (Q87).
+- [ ] Verificar si `library/platform/terraform/pipeline/main.tf:30` y
+      `library/platform/buildspecs/java-ci.yml:7` son código o comentario (M5).
 - [x] Tamaño 4 KB: sin medición; esqueleto de 210 bytes como referencia (Q76, Q62).
-- [x] Migración del keystore: no hay copia; se genera uno nuevo (Q57, Q63, Q64).
+- [x] Migración del keystore: no hay copia; se genera uno nuevo si falta (Q57, Q63, Q88).
 
 ### 2.10 Scripts del workspace (excepción Q84)
 
 - [x] Excepción a "solo generador": incluye `.opencode/scripts/*` (Q84).
 - [x] Excepción no se registra en AGENTS.md; vive solo en obj-005 (Q85).
-- [x] `down.ps1` borra objeto, versiones y bucket por CLI, fuera de Terraform (Q82).
-- [ ] `delete-all-services-aws.ps1`: borra bucket keystore vaciando objetos y versiones (Q82, Q84).
-- [ ] `get-services-aws.ps1`: consulta S3 del bucket keystore (Q84).
-- [ ] Formato de salida de `get-services-aws.ps1` sin definir (ver improvements.md).
+- [x] `down.ps1` (cloud) borra objeto, versiones y bucket por CLI, fuera de Terraform (Q82,
+      Q89). Orden: `terraform destroy` primero, CLI después (Q90); D41 y D42 abiertas (architect).
+- [ ] `delete-all-services-aws.ps1`: borra bucket keystore de todos los entornos, vaciando
+      objetos y versiones (Q82, Q84, Q91).
+- [ ] `get-services-aws.ps1`: muestra solo la existencia del bucket (Q84, Q92).
+- [x] Nombre del bucket en scripts: derivado de `environment` + `project_name`, sin hardcodear
+      (Q93).
+- [x] Formato de salida de `get-services-aws.ps1`: solo existencia del bucket (Q92).
 
 ## 3. Riesgos a vigilar (obj-005.md)
 
 - [ ] JSON real supera 4 KB: parar y consultar; no pasar a Advanced (Q76).
 - [ ] Keystore no subido antes del despliegue: tester valida firma (Q57).
-- [ ] Keystore nuevo generado: se asume app no publicada; confirmar antes de subir a Play (Q78).
-- [ ] Pérdida total del keystore por borrado de objeto, versiones y bucket (Q65, Q79, Q82).
-- [ ] Borrado total del keystore por `down.ps1` o `delete-all-services-aws.ps1` (Q79, Q82, Q84).
-- [ ] Estado de Terraform desincronizado si el bucket se borra por CLI antes de `destroy` (Q82).
+- [ ] Keystore nuevo generado: app asumida no publicada y se continúa (Q78); si está
+      publicada, el keystore nuevo bloquea las actualizaciones en Play.
+- [ ] Pérdida total del keystore por borrado de objeto, versiones y bucket (Q65, Q82, Q90).
+- [ ] Borrado total del keystore por `down.ps1` (cloud) o `delete-all-services-aws.ps1`
+      (todos los entornos) (Q82, Q84, Q89, Q91).
+- [ ] Estado de Terraform desincronizado si el bucket se borra por CLI: orden fijado en Q90
+      (destroy primero); vaciado previo en D42 (architect).
 - [ ] Sin backup previo ni externo; solo versionado S3, que `down.ps1` borra (Q63, Q65, Q83).
 - [ ] Lambda o CodeBuild sin permiso SSM, KMS o S3: verificación en tester (Q44).
 - [ ] Bucket sin cifrado o con acceso público: bloqueado en Terraform (Q58, Q73).
@@ -180,16 +198,27 @@
 - [x] Q75: sin caché local; pipeline descarga y verifica hash (Q74 sustituida).
 - [x] Q76: 4 KB sin medición; esqueleto de 210 bytes como referencia (Q71 sustituida).
 - [x] Q77: siembra solo si falta el parámetro o es placeholder (precisa Q30).
-- [x] Q78: asumir app no publicada; riesgo de keystore nuevo registrado.
-- [x] Q79: bucket destruido en destroy; alcance de `down.ps1` en Q82 (orden: D41, architect).
+- [x] Q78: app asumida no publicada y se continúa; riesgo registrado si está publicada.
+- [x] Q79: sustituida por Q90 (orden: `terraform destroy` del bucket primero, CLI después).
 - [x] Q80: SHA-256 como metadato del objeto S3 al subir con `-Sign`.
 - [x] Q81: mapeo de Q6-Q11 y Q39 confirmado por el usuario (D35 resuelta).
 - [ ] Q23, Q47, Q53: delegados a architect; pendientes de su informe.
+- [ ] D41 y D42: abiertas; de architect (orden destrucción/CLI y vaciado del bucket).
 - [x] Q82: `down.ps1` borra objeto, versiones y bucket por CLI (fuera de Terraform).
-- [x] Q83: no se exige backup previo; solo versionado S3.
-- [x] Q84: excepción "solo generador" para `.opencode/scripts/*`.
+- [x] Q83: no se exige backup previo; solo versionado S3 (sustituye a Q63).
+- [x] Q84: excepción "solo generador" para `.opencode/scripts/*` (sustituye a Q2).
 - [x] Q85: excepción no se registra en AGENTS.md; solo en obj-005.
-- [x] Q86: documentación backup/restore eliminada tras Q83 (sin guía de restore).
+- [x] Q86: documentación backup/restore eliminada tras Q83 (sustituye a Q61).
+- [x] Q87: "checklist completo" = ítems definidos y trazados; `[ ]` en implementación y
+      verificación.
+- [x] Q88: keystore generado solo si falta el objeto en S3; nunca sobrescribir (sustituye a
+      Q64).
+- [x] Q89: el `down.ps1` que borra el bucket es el de cloud (`down.ps1.scriban`).
+- [x] Q90: primero `terraform destroy` del bucket, luego CLI para lo que quede (sustituye a
+      Q79; D41/D42 siguen abiertas).
+- [x] Q91: `delete-all-services-aws.ps1` borra buckets de todos los entornos (sustituye a Q51).
+- [x] Q92: `get-services-aws.ps1` muestra solo la existencia del bucket.
+- [x] Q93: nombre del bucket derivado de `environment` + `project_name`, sin hardcodear.
 - [ ] Q48: último punto; no cerrar hasta autorización escrita.
 
 ## 5. Autorización

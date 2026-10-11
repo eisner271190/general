@@ -182,18 +182,23 @@
   - Causa: dos rutas de borrado del mismo recurso sin orden definido.
   - Tipo: riesgo técnico, estado de Terraform desincronizado.
   - Acción: definir orden (CLI antes o después de destroy; `state rm` si aplica). Architect.
+  - Estado: abierta; responsabilidad de architect (Q90 fija el orden: destroy primero, CLI
+    después; D41 conserva la comprobación de `state rm`).
 - **D42** Vaciado del bucket versionado antes de borrarlo.
   - Causa: `delete-all-services-aws.ps1` ya purga versiones (líneas 405-430); `down.ps1` no.
   - Tipo: requisito técnico faltante.
   - Acción: confirmar si `down.ps1` repite la purga o reutiliza un patrón común.
+  - Estado: abierta; responsabilidad de architect (bucket no vacío requiere vaciado previo).
 - **D43** Alcance de `delete-all-services-aws.ps1` por entorno.
   - Causa: Q51 limita a `develop`; el script no indica entorno del bucket keystore.
   - Tipo: alcance ambiguo.
   - Acción: confirmar si borra solo el bucket de `develop` o todos los entornos.
+  - Estado: resuelta por Q91 (borra buckets de todos los entornos; Q51 sustituida).
 - **D44** Consulta S3 en `get-services-aws.ps1` sin formato ni datos definidos.
   - Causa: el script no consulta S3 hoy (grep sin coincidencias de `s3`).
   - Tipo: requisito incompleto.
   - Acción: confirmar qué mostrar (existencia, objetos, versiones, cifrado, bloqueo).
+  - Estado: resuelta por Q92 (solo existencia del bucket).
 - **D45** Excepción a "solo generador" registrada solo en obj-005.
   - Causa: AGENTS.md (regla dura) no recoge la excepción de Q84.
   - Tipo: regla ambigua.
@@ -203,10 +208,12 @@
   - Causa: el bucket se define como `${var.project_name}-keystore-${var.environment}`.
   - Tipo: requisito técnico (AGENTS: no hardcodear rutas).
   - Acción: confirmar cómo obtener el nombre (parámetro, convención o salida de Terraform).
+  - Estado: resuelta por Q93 (derivado de `environment` + `project_name`; sin hardcodear).
 - **D47** Qué `down.ps1` borra el bucket: cloud o Flutter.
   - Causa: Q82 dice "down.ps1" sin indicar plantilla; obj-005 cita `down.ps1.scriban` (cloud).
   - Tipo: alcance ambiguo.
   - Acción: confirmar plantilla(s) afectada(s).
+  - Estado: resuelta por Q89 (el `down.ps1` de cloud, `down.ps1.scriban`).
 - **D48** Residuo "pendiente" bajo Q84 en `questions.md`.
   - Causa: línea de Q79 quedó bajo Q84 sin limpiar (mismo tipo que D35).
   - Tipo: estado documental.
