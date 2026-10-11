@@ -1,7 +1,8 @@
 # Checklist OBJ-005: SSM Parameter Store SecureString
 
-- Fecha: `2026-10-10` · Actualizado: `2026-10-10 19:18:41` (UTC-5)
-- Fuentes: `obj-005.md`, `questions.md` (Q1-Q81 decididas; Q82-Q83 nuevas, abiertas).
+- Fecha: `2026-10-10` · Actualizado: `2026-10-10 19:33:23` (UTC-5)
+- Fuentes: `obj-005.md`, `questions.md` (Q1-Q86 decididas salvo Q48; Q82-Q86 resueltas).
+- Delegadas a architect: Q23, Q47, Q53. Sin preguntas nuevas abiertas.
 - Regla: `[x]` solo decisión explícita del usuario. Implementación y verificación quedan `[ ]`.
 - Estado: análisis. Sin implementación. Sin autorización (Q48, último punto).
 
@@ -25,14 +26,19 @@
 - [ ] Bucket keystore con versionado, SSE-S3 y bloqueo total de acceso público (Q58, Q60, Q73).
 - [ ] Pipeline descarga y verifica SHA-256 antes de firmar; sin caché local (Q75, Q80).
 - [ ] Siembra solo si falta el parámetro o es placeholder (Q77).
-- [ ] `checklist.md` completo antes de implementar.
+- [ ] `down.ps1` borra objeto keystore, todas sus versiones y el bucket por CLI (Q65, Q82).
+- [ ] `delete-all-services-aws.ps1` borra el bucket keystore vaciando objetos y versiones (Q82,
+      Q84).
+- [ ] `get-services-aws.ps1` consulta S3 del bucket keystore (Q84).
+- [ ] Excepción a "solo generador" registrada solo en obj-005 para los dos scripts (Q84, Q85).
+- [ ] `checklist.md` completo antes de implementar (Q46).
 
 ## 2. Decisiones del usuario y trabajo derivado
 
 ### 2.1 Alcance y regla de tests
 
 - [x] Solo generador y documentación; `/projects` fuera (Q1).
-- [x] `.opencode/scripts/*` fuera de alcance (Q2).
+- [x] `.opencode/scripts/*` dentro de alcance por excepción a "solo generador" (Q84, sustituye Q2).
 - [x] `library/platform` y `settings.xml`: solo comentarios y README con Secrets Manager (Q3).
 - [x] Comentarios Java con Secrets Manager se actualizan (Q40).
 - [x] `postman-collection.scriban` solo si nombra Secrets Manager o secretsmanager (Q41).
@@ -95,11 +101,8 @@
 - [x] Si falta el objeto, `up.ps1 -Sign` genera y sube keystore nuevo (Q59, Q64).
 - [x] `down.ps1` borra el objeto y todas sus versiones (Q65, sustituye Q61).
 - [x] Sin backup externo; solo versionado de S3 (Q63, Q60).
-- [x] Asumir app no publicada; riesgo de keystore nuevo registrado (Q78).
-- [ ] Destino del bucket en destroy y en `down.ps1`: Q79 vs. Q82 (pendiente).
-- [ ] Confirmar si se exige backup antes del despliegue: Q63 vs. Q83 (pendiente).
+- [x] Q83: no se exige backup previo; solo versionado S3 (Q63, Q65).
 - [ ] Subir keystore tras despliegue vía `up.ps1 -Sign` (Q57).
-- [ ] Documentar backup y restore; el versionado no es garantía única (Q61 vigente en Q65).
 
 ### 2.6 Scripts PowerShell (Flutter y cloud)
 
@@ -115,7 +118,7 @@
 - [x] SHA-256 guardado como metadato del objeto S3 al subir con `-Sign` (Q80).
 - [x] README Flutter: IAM y texto a `ssm:GetParameter` y `ssm:PutParameter` (Q36).
 - [x] README Flutter sin sección de caché (inferencia de Q75; confirmar, D37).
-- [ ] Alcance de `down.ps1` (cloud, Flutter o ambos) y del bucket: Q82 (pendiente).
+- [x] Alcance de `down.ps1`: borra objeto, versiones y bucket por CLI, fuera de Terraform (Q82).
 
 ### 2.7 Backend Spring
 
@@ -149,13 +152,24 @@
 - [x] Tamaño 4 KB: sin medición; esqueleto de 210 bytes como referencia (Q76, Q62).
 - [x] Migración del keystore: no hay copia; se genera uno nuevo (Q57, Q63, Q64).
 
+### 2.10 Scripts del workspace (excepción Q84)
+
+- [x] Excepción a "solo generador": incluye `.opencode/scripts/*` (Q84).
+- [x] Excepción no se registra en AGENTS.md; vive solo en obj-005 (Q85).
+- [x] `down.ps1` borra objeto, versiones y bucket por CLI, fuera de Terraform (Q82).
+- [ ] `delete-all-services-aws.ps1`: borra bucket keystore vaciando objetos y versiones (Q82, Q84).
+- [ ] `get-services-aws.ps1`: consulta S3 del bucket keystore (Q84).
+- [ ] Formato de salida de `get-services-aws.ps1` sin definir (ver improvements.md).
+
 ## 3. Riesgos a vigilar (obj-005.md)
 
 - [ ] JSON real supera 4 KB: parar y consultar; no pasar a Advanced (Q76).
 - [ ] Keystore no subido antes del despliegue: tester valida firma (Q57).
 - [ ] Keystore nuevo generado: se asume app no publicada; confirmar antes de subir a Play (Q78).
-- [ ] Pérdida total del keystore por borrado de objeto, versiones y bucket (Q65, Q79).
-- [ ] Sin backup externo; solo versionado S3, que `down.ps1` borra (Q63, Q65).
+- [ ] Pérdida total del keystore por borrado de objeto, versiones y bucket (Q65, Q79, Q82).
+- [ ] Borrado total del keystore por `down.ps1` o `delete-all-services-aws.ps1` (Q79, Q82, Q84).
+- [ ] Estado de Terraform desincronizado si el bucket se borra por CLI antes de `destroy` (Q82).
+- [ ] Sin backup previo ni externo; solo versionado S3, que `down.ps1` borra (Q63, Q65, Q83).
 - [ ] Lambda o CodeBuild sin permiso SSM, KMS o S3: verificación en tester (Q44).
 - [ ] Bucket sin cifrado o con acceso público: bloqueado en Terraform (Q58, Q73).
 - [x] Secretos AWS no borrados a tiempo: resuelto por el usuario (Q49).
@@ -167,12 +181,16 @@
 - [x] Q76: 4 KB sin medición; esqueleto de 210 bytes como referencia (Q71 sustituida).
 - [x] Q77: siembra solo si falta el parámetro o es placeholder (precisa Q30).
 - [x] Q78: asumir app no publicada; riesgo de keystore nuevo registrado.
-- [x] Q79: bucket destruido en destroy; alcance exacto pendiente en Q82.
+- [x] Q79: bucket destruido en destroy; alcance de `down.ps1` en Q82 (orden: D41, architect).
 - [x] Q80: SHA-256 como metadato del objeto S3 al subir con `-Sign`.
-- [x] Q81: mapeo de Q6-Q11 y Q39 confirmado por el usuario (D35: línea "pendiente" obsoleta).
+- [x] Q81: mapeo de Q6-Q11 y Q39 confirmado por el usuario (D35 resuelta).
 - [ ] Q23, Q47, Q53: delegados a architect; pendientes de su informe.
-- [ ] Q82: alcance de `down.ps1` y destrucción del bucket (nueva).
-- [ ] Q83: backup del keystore antes del despliegue (nueva).
+- [x] Q82: `down.ps1` borra objeto, versiones y bucket por CLI (fuera de Terraform).
+- [x] Q83: no se exige backup previo; solo versionado S3.
+- [x] Q84: excepción "solo generador" para `.opencode/scripts/*`.
+- [x] Q85: excepción no se registra en AGENTS.md; solo en obj-005.
+- [x] Q86: documentación backup/restore eliminada tras Q83 (sin guía de restore).
+- [ ] Q48: último punto; no cerrar hasta autorización escrita.
 
 ## 5. Autorización
 

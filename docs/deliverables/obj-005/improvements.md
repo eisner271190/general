@@ -154,10 +154,12 @@
   - Causa: edición sin limpiar la respuesta anterior.
   - Tipo: estado documental.
   - Acción: marcar [x] por confirmación explícita; la línea "pendiente" queda obsoleta.
+  - Estado: resuelta; línea "pendiente" de Q81 retirada.
 - **D36** Q63 dice "sin backup externo" y "debe registrarse backup antes del despliegue".
   - Causa: respuesta mezcla decisión y recomendación.
   - Tipo: decisión contradictoria.
   - Acción: Q83.
+  - Estado: resuelta por Q83 (no se exige backup previo; solo versionado S3).
 - **D37** Q74 proponía README con caché local; Q75 elimina la caché.
   - Causa: propuesta no retirada del alcance al cambiar la decisión.
   - Tipo: alcance desactualizado.
@@ -174,3 +176,44 @@
   - Causa: fuera del encargo de fase 4.
   - Tipo: documentación desactualizada.
   - Acción: decidir con el orquestador si se actualizan.
+
+## Cambio 2026-10-10 19:25:32 (UTC-5): alcance scripts y down.ps1
+- **D41** Q82 borra el bucket por CLI en `down.ps1`; Q79 lo borra también con `terraform destroy`.
+  - Causa: dos rutas de borrado del mismo recurso sin orden definido.
+  - Tipo: riesgo técnico, estado de Terraform desincronizado.
+  - Acción: definir orden (CLI antes o después de destroy; `state rm` si aplica). Architect.
+- **D42** Vaciado del bucket versionado antes de borrarlo.
+  - Causa: `delete-all-services-aws.ps1` ya purga versiones (líneas 405-430); `down.ps1` no.
+  - Tipo: requisito técnico faltante.
+  - Acción: confirmar si `down.ps1` repite la purga o reutiliza un patrón común.
+- **D43** Alcance de `delete-all-services-aws.ps1` por entorno.
+  - Causa: Q51 limita a `develop`; el script no indica entorno del bucket keystore.
+  - Tipo: alcance ambiguo.
+  - Acción: confirmar si borra solo el bucket de `develop` o todos los entornos.
+- **D44** Consulta S3 en `get-services-aws.ps1` sin formato ni datos definidos.
+  - Causa: el script no consulta S3 hoy (grep sin coincidencias de `s3`).
+  - Tipo: requisito incompleto.
+  - Acción: confirmar qué mostrar (existencia, objetos, versiones, cifrado, bloqueo).
+- **D45** Excepción a "solo generador" registrada solo en obj-005.
+  - Causa: AGENTS.md (regla dura) no recoge la excepción de Q84.
+  - Tipo: regla ambigua.
+  - Acción: confirmar si se añade excepción también en `AGENTS.md`. No se modifica ahora.
+  - Estado: resuelta por Q85 (no se registra en AGENTS.md; excepción solo en obj-005).
+- **D46** Nombre del bucket en scripts CLI frente a "no hardcodear".
+  - Causa: el bucket se define como `${var.project_name}-keystore-${var.environment}`.
+  - Tipo: requisito técnico (AGENTS: no hardcodear rutas).
+  - Acción: confirmar cómo obtener el nombre (parámetro, convención o salida de Terraform).
+- **D47** Qué `down.ps1` borra el bucket: cloud o Flutter.
+  - Causa: Q82 dice "down.ps1" sin indicar plantilla; obj-005 cita `down.ps1.scriban` (cloud).
+  - Tipo: alcance ambiguo.
+  - Acción: confirmar plantilla(s) afectada(s).
+- **D48** Residuo "pendiente" bajo Q84 en `questions.md`.
+  - Causa: línea de Q79 quedó bajo Q84 sin limpiar (mismo tipo que D35).
+  - Tipo: estado documental.
+  - Acción: confirmar Q84 resuelta y retirar la línea obsoleta.
+  - Estado: resuelta; línea "pendiente" bajo Q84 retirada.
+- **D49** Q83 retira el backup previo, pero Q61 pedía documentar backup/restore.
+  - Causa: Q61 y Q83 no se cruzaron tras la decisión de Q83.
+  - Tipo: requisito ambiguo, documentación.
+  - Acción: Q86.
+  - Estado: resuelta por Q86 (sin documentación de backup/restore; solo riesgo y versionado S3).

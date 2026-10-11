@@ -1,6 +1,8 @@
 # Preguntas OBJ-005 (explorer, grilling)
 
-- Estado: Q1–Q81 decididas (Q23, Q47, Q53 delegadas a architect). Abiertas: Q82, Q83 y Q48.
+- Estado: Q1–Q85 resueltas por el usuario, salvo Q48 (último, pendiente).
+- Delegadas a architect (sin decisión del usuario): Q23, Q47, Q53.
+- Abiertas: Q48. Dudas en `improvements.md` (D41–D49, todas resueltas).
 - Fuente única de preguntas del objetivo. Cada respuesta se registra en la fila correspondiente.
 
 ## Alcance y documentación
@@ -228,6 +230,7 @@
   - Confirmado por el usuario: combinación Q60 + Q65 aceptada con este riesgo.
   - rec: confirmar copia local o backup antes de desplegar.
   ✅ Respuesta: No hay copia; hay que generar uno nuevo. Debe registrarse backup antes del despliegue.
+    - Q83 sustituye "backup antes del despliegue": no se exige backup previo.
 - [x] Q64 ¿`Get-OrCreateAndroidSigning` debe generar keystore nuevo si S3 no tiene objeto?
   - rec: no; error explícito si la app ya está publicada.
   ✅ Respuesta: Generar siempre, como hoy (igual que el comportamiento actual del secreto).
@@ -305,18 +308,31 @@
     - Q39 ¿Plantilla de test cuenta como "test"? → No cuenta; se puede modificar.
   - ✅ Respuesta: mapeo confirmado por el usuario.
   - rec: reconstruir enunciados desde obj-005.md y confirmar cada respuesta.
-  ✅ Respuesta: pendiente. (Línea obsoleta: el usuario confirmó el mapeo arriba; ver D35.)
 
 ## Cambio 2026-10-10 19:18:41 (UTC-5): preguntas nuevas
 
-- [ ] Q82 ¿`down.ps1` borra también el bucket keystore, o solo el objeto y sus versiones?
+- [x] Q82 ¿`down.ps1` borra también el bucket keystore, o solo el objeto y sus versiones?
+  - ✅ Respuesta: Opción 2 del usuario: `down.ps1` borra objeto, versiones y bucket (CLI, fuera de Terraform).
+    Además pide borrado en `.opencode/scripts/delete-all-services-aws.ps1` y consulta S3 en
+    `.opencode/scripts/get-services-aws.ps1`. Ver nueva pregunta Q84 (conflicto con AGENTS).
+- [x] Q84 ¿Incluir `.opencode/scripts/` en obj-005 pese a "solo generador" (AGENTS) y Q2?
+  - ✅ Respuesta: Opción 1 del usuario: incluir ambos scripts y registrar la excepción a "solo generador".
+    Q2 queda sustituida.
   - Causa: Q79 responde "Terraform destroy" para el bucket; no indica si `down.ps1` lo borra.
   - rec: `down.ps1` borra objeto y versiones (Q65); el bucket solo con Terraform destroy (Q79).
-  - ✅ Respuesta: pendiente.
-- [ ] Q83 ¿Se exige backup del keystore antes del despliegue?
+- [x] Q83 ¿Se exige backup del keystore antes del despliegue?
+  - ✅ Respuesta: Opción 1 del usuario: no se exige backup previo; solo versionado S3 (Q63).
+- [x] Q85 ¿Registrar la excepción "solo generador" en AGENTS.md para `.opencode/scripts/`?
+  - ✅ Respuesta: Opción 2 del usuario: no registrar en AGENTS.md; la excepción vive solo en obj-005.
   - Causa: Q63 dice "sin backup externo" y también "debe registrarse backup antes del despliegue".
   - rec: aceptar sin backup externo y registrar riesgo; si se exige, definir destino.
-  - ✅ Respuesta: pendiente.
+
+## Cambio 2026-10-10 19:30:14 (UTC-5): duda tras Q83
+
+- [x] Q86 ¿Q83 elimina también la documentación de backup/restore exigida en Q61?
+  - ✅ Respuesta: Opción 1 del usuario: sí; se elimina la documentación de backup/restore.
+  - Causa: Q83 retira el backup previo; Q61 pedía documentar backup/restore.
+  - rec: documentar solo el riesgo "sin copia externa" y el versionado S3; sin guía de restore.
 
 ## Dependencias
 
@@ -327,5 +343,6 @@
 - Q79 bloquea `down.ps1` y Terraform destroy del bucket.
 - Q80 bloquea verificación de hash en pipeline.
 - Q48 bloquea implementación; va al final.
-- Q82 bloquea alcance de `down.ps1` y destrucción del bucket (Q79).
-- Q83 bloquea documentación de backup/restore (Q63, Q65).
+- Q82 resuelta: alcance de `down.ps1` y destrucción del bucket (Q79).
+- Q83 resuelta: no exige backup previo. Q86 resuelta: sin documentación backup/restore.
+

@@ -77,3 +77,9 @@
 - Lombok, Karate y Micrometer deben quedar en el `common-bom` para centralizar la
   gestión de sus versiones y evitar declarar versiones de estas dependencias en los
   microservicios.
+  
+Problema, se están generando demasiadas preguntas
+He identificado
+
+- Hay preguntas que se repiten
+- 
