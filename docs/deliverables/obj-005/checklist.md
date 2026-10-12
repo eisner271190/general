@@ -251,9 +251,9 @@
 - [x] `terraform validate` OK en `app`, `quizapi`, `modules/pipeline` y `modules/secure-parameters`.
 - [x] Sintaxis PowerShell OK en 4 plantillas, 2 scripts y 6 scripts generados.
 - [ ] TC-03, TC-04, TC-05, TC-06, TC-07, TC-16, TC-21, TC-23: requieren AWS o decisión del usuario.
-- [ ] Q99: 4 restos de Secrets Manager en `.opencode/scripts` (inventario genérico).
+- [x] Q99: restos de Secrets Manager eliminados de `.opencode/scripts` (Q99, opción 2).
 - [x] Q100: referencia actualizada a ≈ 300 bytes con valores por defecto (medido 113/294).
 
 ## 5. Autorización
 
-- [ ] Q48: autorización explícita y por escrito del usuario para implementar. Último punto.
+- [x] Q48: autorización explícita y por escrito del usuario para implementar (Q103, 2026-10-12).

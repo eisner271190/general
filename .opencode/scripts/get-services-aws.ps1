@@ -13,17 +13,26 @@
   publicados y el desfase del endpoint maven contra el output
   `codeartifact_endpoint` del estado de plataforma.
 
+  Incluye la fila "S3 keystore buckets", que solo informa de la EXISTENCIA del
+  bucket <applicationId>-keystore-<environment> (Q92): no lista objetos ni
+  versiones. Los entornos se toman de -KeystoreEnvironments.
+
 .EXAMPLE
   .opencode/scripts/get-services-aws.ps1
 
 .EXAMPLE
   .opencode/scripts/get-services-aws.ps1 -AsJson
+
+.EXAMPLE
+  .opencode/scripts/get-services-aws.ps1 -Detail
 #>
 [CmdletBinding()]
 param(
   [string]$Region = $(if ($env:AWS_REGION) { $env:AWS_REGION } else { 'us-east-1' }),
   [string]$SsmPrefix = '/develop/com.quizsmart.app/',
-  [string]$SecretPrefix = 'develop/com.quizsmart.app',
+  # Bucket del keystore: mismo nombre que genera Terraform (Q56, Q93).
+  [string]$ApplicationId = 'com.quizsmart.app',
+  [string[]]$KeystoreEnvironments = @('develop'),
   [string[]]$RoleNames = @('quizapi', 'CognitoAuthenticatedRole'),
   [string[]]$PolicyNames = @('CognitoPolicy'),
   [string]$TerraformRoot = (Join-Path $PSScriptRoot '..' '..' 'projects' 'com.quizsmart.app' 'cloud' 'terraform'),
@@ -31,7 +40,8 @@ param(
   [string]$CodeArtifactDomain = 'epc',
   [string]$CodeArtifactRepository = 'common',
   [string]$CodeArtifactTerraformRoot = (Join-Path $PSScriptRoot '..' '..' 'library' 'platform' 'terraform'),
-  [switch]$AsJson
+  [switch]$AsJson,
+  [switch]$Detail
 )
 
 # --- utilidades -------------------------------------------------------------
@@ -95,16 +105,27 @@ $awsCalls = [ordered]@{
   Sqs       = @('sqs', 'list-queues')
   Cognito   = @('cognito-idp', 'list-user-pools', '--max-results', '60')
   Ssm       = @('ssm', 'describe-parameters', '--parameter-filters', "Key=Name,Option=BeginsWith,Values=$SsmPrefix")
-  Secrets   = @('secretsmanager', 'list-secrets')
   IamRoles  = @('iam', 'list-roles')
   IamPolicy = @('iam', 'list-policies', '--scope', 'Local')
   Tables    = @('dynamodb', 'list-tables')
   LogGroups = @('logs', 'describe-log-groups')
 }
 
+# Existencia del bucket del keystore por entorno (Q92): head-bucket no lista
+# contenido, solo responde si el bucket existe y es accesible.
+foreach ($keystoreEnvironment in $KeystoreEnvironments) {
+  $bucketName = "$ApplicationId-keystore-$keystoreEnvironment"
+  $awsCalls["Keystore$keystoreEnvironment"] = @('s3api', 'head-bucket', '--bucket', $bucketName)
+}
+
+# Salida simple (por defecto): solo existencia; sin Sts ni estados Terraform.
+# -AsJson siempre devuelve el detalle completo.
+$showDetail = $Detail -or $AsJson
+if (-not $showDetail) { $awsCalls.Remove('Sts') }
+
 # Estados de Terraform locales (solo rutas, sin red)
 $tfDirectories = @()
-if (Test-Path -Path $TerraformRoot) {
+if ($showDetail -and (Test-Path -Path $TerraformRoot)) {
   $tfDirectories = @(Get-ChildItem -Path $TerraformRoot -Directory |
     Where-Object { $_.Name -ne 'modules' -and (Test-Path -Path (Join-Path $_.FullName '*.tf')) } |
     ForEach-Object FullName)
@@ -126,7 +147,11 @@ $results = $tasks | ForEach-Object -Parallel {
     $exitCode = $LASTEXITCODE
     $payload = $null
     if ($exitCode -eq 0) {
-      try { $payload = ($raw -join [Environment]::NewLine) | ConvertFrom-Json } catch { $exitCode = -1 }
+      # head-bucket responde sin cuerpo: ExitCode 0 ya es "existe" (Q92).
+      $text = ($raw -join [Environment]::NewLine)
+      if (-not [string]::IsNullOrWhiteSpace($text)) {
+        try { $payload = $text | ConvertFrom-Json } catch { $exitCode = -1 }
+      }
     }
     return [pscustomobject]@{ Kind = 'aws'; Name = $task.Name; ExitCode = $exitCode; Data = $payload; Total = 0; Types = $null }
   }
@@ -154,7 +179,9 @@ $states = @($results | Where-Object { $_.Kind -eq 'tf' } | ForEach-Object {
     [pscustomobject]@{ Directory = $_.Name; Total = $_.Total; Types = $_.Types }
   })
 
-$failures = @($results | Where-Object { $_.Kind -eq 'aws' -and $_.ExitCode -ne 0 })
+$failures = @($results | Where-Object {
+    $_.Kind -eq 'aws' -and $_.ExitCode -ne 0 -and -not $_.Name.StartsWith('Keystore')
+  })
 if ($failures.Count -gt 0) {
   Write-Warning ("Fallos de AWS CLI: " + (($failures | ForEach-Object Name) -join ', '))
 }
@@ -172,8 +199,6 @@ $topicArns = Select-SafeArray (Select-Values (Get-ObjectProperty $data.Sns.Data 
 $queueUrls = Select-SafeArray (Get-ObjectProperty $data.Sqs.Data @('QueueUrls', 'QueueURLs'))
 $poolNames = Select-SafeArray (Select-Values (Get-ObjectProperty $data.Cognito.Data @('UserPools')) 'Name')
 $ssmNames = Select-SafeArray (Select-Values (Get-ObjectProperty $data.Ssm.Data @('Parameters')) 'Name')
-$secretNames = Select-SafeArray (Select-Values (Get-ObjectProperty $data.Secrets.Data @('SecretList', 'Secrets')) 'Name') |
-  Where-Object { $_ -like "$SecretPrefix*" }
 $roleNamesFound = Select-SafeArray (Select-Values (Get-ObjectProperty $data.IamRoles.Data @('Roles')) 'RoleName') |
   Where-Object { $RoleNames -contains $_ }
 $policyNamesFound = Select-SafeArray (Select-Values (Get-ObjectProperty $data.IamPolicy.Data @('Policies')) 'PolicyName') |
@@ -181,6 +206,15 @@ $policyNamesFound = Select-SafeArray (Select-Values (Get-ObjectProperty $data.Ia
 $tableNames = Select-SafeArray (Get-ObjectProperty $data.Tables.Data @('TableNames'))
 $logGroups = Select-SafeArray (Select-Values (Get-ObjectProperty $data.LogGroups.Data @('logGroups', 'LogGroups')) 'logGroupName') |
   Where-Object { $_ -like '/aws/lambda/*' }
+
+# Solo la existencia del bucket del keystore, sin contenido ni versions (Q92).
+$keystoreBuckets = @(
+  foreach ($keystoreEnvironment in $KeystoreEnvironments) {
+    if ($data["Keystore$keystoreEnvironment"].ExitCode -eq 0) {
+      "$ApplicationId-keystore-$keystoreEnvironment"
+    }
+  }
+)
 
 # --- filas de servicios -----------------------------------------------------
 
@@ -192,12 +226,21 @@ $services = @(
   [pscustomobject]@{ Servicio = 'SQS queues';             AWS = $queueUrls.Count;     Detalle = (Format-Detail $queueUrls) }
   [pscustomobject]@{ Servicio = 'Cognito user pools';     AWS = $poolNames.Count;     Detalle = (Format-Detail $poolNames) }
   [pscustomobject]@{ Servicio = "SSM ($SsmPrefix)";       AWS = $ssmNames.Count;      Detalle = (Format-Detail $ssmNames 40) }
-  [pscustomobject]@{ Servicio = "Secrets ($SecretPrefix)"; AWS = $secretNames.Count;  Detalle = (Format-Detail $secretNames) }
   [pscustomobject]@{ Servicio = 'IAM roles (proyecto)';   AWS = $roleNamesFound.Count; Detalle = (Format-Detail $roleNamesFound) }
   [pscustomobject]@{ Servicio = 'IAM policies (proyecto)'; AWS = $policyNamesFound.Count; Detalle = (Format-Detail $policyNamesFound) }
   [pscustomobject]@{ Servicio = 'DynamoDB tables';        AWS = $tableNames.Count;    Detalle = (Format-Detail $tableNames) }
   [pscustomobject]@{ Servicio = 'CloudWatch log groups';  AWS = $logGroups.Count;     Detalle = (Format-Detail $logGroups 60) }
+  [pscustomobject]@{ Servicio = 'S3 keystore buckets';    AWS = $keystoreBuckets.Count; Detalle = (Format-Detail $keystoreBuckets) }
 )
+
+# --- salida simple (por defecto): solo SI/NO por recurso, sin CodeArtifact ---
+
+if (-not $showDetail) {
+  foreach ($row in $services) {
+    Write-Output ('{0}: {1}' -f $row.Servicio, $(if ($row.AWS -gt 0) { 'SI' } else { 'NO' }))
+  }
+  exit 0
+}
 
 # --- desfases estado vs AWS -------------------------------------------------
 
@@ -209,7 +252,6 @@ $checks = [ordered]@{
   'aws_sqs_queue'             = $queueUrls.Count
   'aws_cognito_user_pool'     = $poolNames.Count
   'aws_ssm_parameter'         = $ssmNames.Count
-  'aws_secretsmanager_secret' = $secretNames.Count
   'aws_iam_role'              = $roleNamesFound.Count
   'aws_iam_policy'            = $policyNamesFound.Count
 }

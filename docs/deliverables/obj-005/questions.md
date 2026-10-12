@@ -417,7 +417,9 @@
 
 ## Preguntas tester — 2026-10-11
 
-- [ ] Q99 `.opencode/scripts/*` conserva 4 restos de Secrets Manager. ¿Se limpian en obj-005?
+- [x] Q99 `.opencode/scripts/*` conserva 4 restos de Secrets Manager. ¿Se limpian en obj-005?
+  - ✅ Respuesta: Opción 2 del usuario: limpiar ahora dentro de obj-005 (inventario de
+    `get-services-aws.ps1` y borrado de `delete-all-services-aws.ps1`).
   - Hallazgo: `get-services-aws.ps1:105` (`secretsmanager list-secrets`),
     `get-services-aws.ps1:242` (`aws_secretsmanager_secret` en el cotejo de estado),
     `delete-all-services-aws.ps1:166` (listado) y `:271` (`secretsmanager delete-secret`).
@@ -444,11 +446,35 @@
 
 ## Dependencias
 
+- [x] Q101 get-services-aws.ps1: ¿-AsJson debe dar detalle completo? Rec: sí (hecho).
+  - ✅ Respuesta: Opción 1 del usuario: `-AsJson` devuelve el detalle completo en JSON.
+- [x] Q102 get-services-aws.ps1: ¿eliminar -Simple (sin usos externos)? Rec: sí (hecho).
+  - ✅ Respuesta: Eliminar `-Simple`. Confirmado por el usuario.
 - Q94-Q98: resueltas (2026-10-11) siguiendo las recomendaciones; verificación en tester.
 - Q75-Q80 resueltas: no bloquean (caché, 4 KB, siembra, publicación, bucket, hash).
 - Q87-Q93 resueltas: no bloquean (checklist, keystore, orden, entornos, consulta, nombre).
 - Q23, Q47, Q53, D41, D42: cerradas por architect (2026-10-11).
 - Sin preguntas abiertas.
+
+## Revisión final reviewer · 2026-10-12 (Q103-Q110)
+
+- [x] Q103 ¿Confirmas por escrito la autorización de implementar OBJ-005 (Q48)?
+  - ✅ Respuesta: Autorizado por escrito por el usuario (2026-10-12). Cierra B1 y Q48.
+  - Pendiente: opciones 1 (sí, valida el cierre; recomendado) o 2 (retirar).
+- [x] Q104 ¿El borrado `delete-all -Force` (70/72, incluida plataforma) fue confirmado por el usuario?
+  - ✅ Respuesta: Sí, confirmado por el usuario (opción 1).
+- [x] Q105 ¿Aceptas el barrido SNS de `delete-all-services-aws.ps1` (desuscribe por nombre de topic)?
+  - ✅ Respuesta: Sí, aceptado (opción 1 del usuario).
+- [x] Q106 ¿Aceptas la salida simple por defecto de `get-services-aws.ps1` (`-Detail` para completo)?
+  - ✅ Respuesta: Cerrado por el usuario: salida simple por defecto; `-Detail` para el completo.
+- [x] Q107 ¿Confirmas Q94-Q98 y Q100 como decisiones tuyas?
+  - ✅ Respuesta: Cerradas por el usuario: Q94-Q98 y Q100 confirmadas como decisiones suyas.
+- [x] Q108 ¿Apruebas ADR-0027 como `Aceptada`?
+  - ✅ Respuesta: Sí, aprobado por el usuario.
+- [x] Q109 ¿Se crean o se retiran los informes de `developer-terraform` y `developer-java`?
+  - ✅ Respuesta: Se crean.
+- [x] Q110 ¿Ningún consumidor espera `.../quizapi/secrets`?
+  - ✅ Respuesta: Confirmado por el usuario.
 - D41 y D42: abiertas, de architect (orden de borrado y vaciado del bucket).
 - Q48 bloquea implementación; va al final.
 - Q82 resuelta: alcance de `down.ps1` y destrucción del bucket (Q79 sustituida por Q90).

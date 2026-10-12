@@ -6,7 +6,8 @@
 .DESCRIPTION
   DESTRUCTIVO E IRREVERSIBLE. Solo afecta a los recursos del proyecto
   (quizsmart/app): ECR, Lambda, API Gateway, Cognito, SNS, SQS, DynamoDB, SSM,
-  Secrets Manager, IAM y los grupos de log de sus Lambdas — Y LA PLATAFORMA completa de
+  IAM, los buckets del keystore (todos los entornos) y los grupos de log de sus
+  Lambdas — Y LA PLATAFORMA completa de
   library/platform: pipeline, proyectos CodeBuild, regla de release, bucket de buildspecs,
   repos de CodeCommit (los de plataforma y el de la aplicacion), ECR de la imagen base, roles IAM
   epc-*, y el dominio con sus repos de
@@ -40,7 +41,9 @@
 param(
   [string]$Region = $(if ($env:AWS_REGION) { $env:AWS_REGION } else { 'us-east-1' }),
   [string]$SsmPrefix = '/develop/com.quizsmart.app/',
-  [string]$SecretPrefix = 'develop/com.quizsmart.app',
+  # Bucket del keystore: <applicationId>-keystore-<environment>, el mismo nombre
+  # que genera Terraform (Q56, Q93). Se borran los de TODOS los entornos (Q91).
+  [string]$ApplicationId = 'com.quizsmart.app',
   [string[]]$EcrNames = @('quizapi'),
   [string[]]$LambdaNames = @('quizapi'),
   [string]$ApiName = 'api-gateway',
@@ -156,10 +159,10 @@ $queryCalls = [ordered]@{
   Cognito   = @('cognito-idp', 'list-user-pools', '--max-results', '60')
   Lambda    = @('lambda', 'list-functions')
   Sns       = @('sns', 'list-topics')
+  SnsSubs   = @('sns', 'list-subscriptions')
   Sqs       = @('sqs', 'list-queues')
   DynamoDb  = @('dynamodb', 'list-tables')
   Ecr       = @('ecr', 'describe-repositories')
-  Secrets   = @('secretsmanager', 'list-secrets')
   Ssm       = @('ssm', 'describe-parameters', '--parameter-filters', "Key=Name,Option=BeginsWith,Values=$SsmPrefix")
   LogGroups = @('logs', 'describe-log-groups')
   IamRoles  = @('iam', 'list-roles')
@@ -229,11 +232,36 @@ foreach ($fn in @(Get-NamesFrom (Get-ListFrom $functions 'Functions') 'FunctionN
 }
 
 # SNS
+# El bucle de ejecucion recorre $targets en orden de insercion, asi que las
+# suscripciones se desuscriben ANTES de borrar el topic. Sin esto, `list-subscriptions`
+# deja suscripciones huerfanas hacia las colas ya borradas.
 $topics = $query.Sns.Data
+$unsubscribed = [System.Collections.Generic.List[string]]::new()
 foreach ($topicArn in @(Get-NamesFrom (Get-ListFrom $topics 'Topics') 'TopicArn')) {
   if ($topicArn -like "*:$TopicName") {
+    $subscriptions = Get-ListFrom (Get-AwsData -AwsArguments @('sns', 'list-subscriptions-by-topic', '--topic-arn', $topicArn)) 'Subscriptions'
+    foreach ($subscription in $subscriptions) {
+      $subscriptionArn = $subscription.PSObject.Properties['SubscriptionArn']
+      if ($null -eq $subscriptionArn -or [string]::IsNullOrWhiteSpace($subscriptionArn.Value)) { continue }
+      $unsubscribed.Add($subscriptionArn.Value) | Out-Null
+      Add-Target -Servicio 'SNS' -Recurso "$topicArn -> suscripcion $($subscriptionArn.Value)" -AwsArguments @('sns', 'unsubscribe', '--subscription-arn', $subscriptionArn.Value)
+    }
     Add-Target -Servicio 'SNS' -Recurso $topicArn -AwsArguments @('sns', 'delete-topic', '--topic-arn', $topicArn)
   }
+}
+
+# Barrido de suscripciones huerfanas: las que apuntan a un topic ya borrado no salen de
+# `list-subscriptions-by-topic` porque el topic no existe. Se recorren todas las de la cuenta
+# y se filtran por el mismo criterio de topic que el bloque anterior ($TopicName), sin
+# inventar un criterio de proyecto nuevo. Se omiten las ya desuscritas en el bucle de topics.
+foreach ($subscription in Get-ListFrom $query.SnsSubs.Data 'Subscriptions') {
+  $subscriptionArn = $subscription.PSObject.Properties['SubscriptionArn']
+  if ($null -eq $subscriptionArn -or [string]::IsNullOrWhiteSpace($subscriptionArn.Value)) { continue }
+  if ($unsubscribed.Contains($subscriptionArn.Value)) { continue }
+  $subscriptionTopicArn = $subscription.PSObject.Properties['TopicArn']
+  if ($null -eq $subscriptionTopicArn -or $subscriptionTopicArn.Value -notlike "*:$TopicName") { continue }
+  $unsubscribed.Add($subscriptionArn.Value) | Out-Null
+  Add-Target -Servicio 'SNS' -Recurso "huerfana $($subscriptionArn.Value)" -AwsArguments @('sns', 'unsubscribe', '--subscription-arn', $subscriptionArn.Value)
 }
 
 # SQS
@@ -260,18 +288,27 @@ foreach ($repoName in @(Get-NamesFrom (Get-ListFrom $repos 'repositories') 'repo
   }
 }
 
-# Secrets Manager (borrado definitivo, sin ventana de recuperacion)
-$secrets = $query.Secrets.Data
-foreach ($secretName in @(Get-NamesFrom (Get-ListFrom $secrets 'SecretList') 'Name')) {
-  if ($secretName -like "$SecretPrefix*") {
-    Add-Target -Servicio 'Secrets' -Recurso $secretName -AwsArguments @('secretsmanager', 'delete-secret', '--secret-id', $secretName, '--force-delete-without-recovery')
-  }
-}
-
 # SSM Parameter Store
 $parameters = $query.Ssm.Data
-foreach ($parameterName in @(Get-NamesFrom (Get-ListFrom $parameters 'Parameters') 'Name')) {
+$ssmNames = @(Get-NamesFrom (Get-ListFrom $parameters 'Parameters') 'Name')
+foreach ($parameterName in $ssmNames) {
   Add-Target -Servicio 'SSM' -Recurso $parameterName -AwsArguments @('ssm', 'delete-parameter', '--name', $parameterName)
+}
+
+# Buckets del keystore. Los entornos NO se hardcodean: se deducen de los
+# parámetros /<environment>/<applicationId>/... ya sembrados (Q93).
+# Todos los entornos que aparezcan se borran (Q91).
+$keystoreBuckets = [System.Collections.Generic.List[string]]::new()
+$environmentPattern = '^/(?<environment>[^/]+)/' + [regex]::Escape($ApplicationId) + '/'
+foreach ($parameterName in $ssmNames) {
+  if ($parameterName -notmatch $environmentPattern) { continue }
+  $environment = $Matches['environment']
+  if ($keystoreBuckets.Contains("$ApplicationId-keystore-$environment")) { continue }
+  $keystoreBuckets.Add("$ApplicationId-keystore-$environment") | Out-Null
+}
+Write-Output "Buckets del keystore detectados: $($keystoreBuckets.Count)"
+foreach ($keystoreBucket in $keystoreBuckets) {
+  Add-Target -Servicio 'S3 keystore' -Recurso $keystoreBucket -AwsArguments @('s3api', 'delete-bucket', '--bucket', $keystoreBucket)
 }
 
 # Grupos de log de CloudWatch
@@ -315,13 +352,13 @@ if ($includePlatform) {
   }
 
   # DeleteRule falla con ValidationException si la regla tiene targets, y remove-targets exige
-  # --targets Id=<id>. El id lo autogenera Terraform (bump_bom.tf no lo declara: sale como
-  # `common-release-terraform-XXXX` y cambia en cada apply), asi que hay que consultarlo.
+  # --ids <id> (un id por target). El id lo autogenera Terraform (bump_bom.tf no lo declara: sale
+  # como `common-release-terraform-XXXX` y cambia en cada apply), asi que hay que consultarlo.
   $ruleTargets = Get-ListFrom (Get-AwsData -AwsArguments @('events', 'list-targets-by-rule', '--rule', $ReleaseRule)) 'Targets'
   foreach ($ruleTarget in $ruleTargets) {
     $targetId = $ruleTarget.PSObject.Properties['Id']
     if ($null -eq $targetId -or $null -eq $targetId.Value) { continue }
-    Add-Target -Servicio 'EventBridge' -Recurso "$ReleaseRule -> target $($targetId.Value)" -AwsArguments @('events', 'remove-targets', '--rule', $ReleaseRule, '--targets', "Id=$($targetId.Value)")
+    Add-Target -Servicio 'EventBridge' -Recurso "$ReleaseRule -> target $($targetId.Value)" -AwsArguments @('events', 'remove-targets', '--rule', $ReleaseRule, '--ids', $targetId.Value)
   }
   Add-Target -Servicio 'EventBridge' -Recurso $ReleaseRule -AwsArguments @('events', 'delete-rule', '--name', $ReleaseRule)
 
@@ -402,33 +439,57 @@ foreach ($roleName in $roleNamesToDelete) {
   }
 }
 
-# --- bucket de buildspecs: hay que vaciarlo antes ----------------------------
+# --- buckets versionados: hay que vaciarlos antes ----------------------------
 #
-# El bucket esta versionado yTerraform lo declara con force_destroy = false. `delete-bucket`
-# no acepta un bucket con versiones: se purgan todas (con sus marcadores de borrado) en lotes
-# de 1000 y luego se borra el bucket. Es la unica operacion que no cabe en un unico target.
+# El bucket de buildspecs esta versionado y Terraform lo declara con force_destroy = false.
+# `delete-bucket` no acepta un bucket con versiones: se purgan todas (con sus marcadores de
+# borrado) en lotes de 1000 y luego se borra el bucket. Aplica al bucket de buildspecs y a los
+# buckets del keystore (Q91).
 
-if ($includePlatform -and -not $WhatIfPreference -and ($targets.Recurso -contains $BuildspecsBucket)) {
+function Remove-VersionedBucketContent {
+  param([Parameter(Mandatory)][string]$BucketName)
+
+  $versioning = Get-AwsData -AwsArguments @('s3api', 'get-bucket-versioning', '--bucket', $BucketName)
+  if ($null -eq $versioning) {
+    Write-Output "El bucket $BucketName no existe: nada que purgar."
+    return $true
+  }
+
   $keys = [System.Collections.Generic.List[object]]::new()
-  $versioning = Get-AwsData -AwsArguments @('s3api', 'get-bucket-versioning', '--bucket', $BuildspecsBucket)
-  $versions = Get-AwsData -AwsArguments @('s3api', 'list-object-versions', '--bucket', $BuildspecsBucket)
+  $versions = Get-AwsData -AwsArguments @('s3api', 'list-object-versions', '--bucket', $BucketName)
   foreach ($v in Get-ListFrom $versions 'Versions') {
     $keys.Add([pscustomobject]@{ Key = $v.Key; VersionId = $v.VersionId }) | Out-Null
   }
   foreach ($d in Get-ListFrom $versions 'DeleteMarkers') {
     $keys.Add([pscustomobject]@{ Key = $d.Key; VersionId = $d.VersionId }) | Out-Null
   }
-  Write-Output "Bucket $BuildspecsBucket versionado=$($null -ne $versioning.Status) objetos+versiones=$($keys.Count)"
+  Write-Output "Bucket $BucketName versionado=$($null -ne $versioning.Status) objetos+versiones=$($keys.Count)"
+
   for ($offset = 0; $offset -lt $keys.Count; $offset += 1000) {
     $batch = $keys[$offset..([Math]::Min($offset + 999, $keys.Count - 1))]
     $payload = @{ Objects = @($batch) } | ConvertTo-Json -Depth 4 -Compress
-    $result = Invoke-AwsRaw -AwsArguments @('s3api', 'delete-objects', '--bucket', $BuildspecsBucket, '--delete', $payload)
-    Write-Log "S3 purge $BuildspecsBucket ExitCode=$($result.ExitCode) Output=$($result.Output)"
+    $result = Invoke-AwsRaw -AwsArguments @('s3api', 'delete-objects', '--bucket', $BucketName, '--delete', $payload)
+    Write-Log "S3 purge $BucketName ExitCode=$($result.ExitCode) Output=$($result.Output)"
     if ($result.ExitCode -ne 0) {
-      Write-Output "No se pudo vaciar el bucket ${BuildspecsBucket}: $($result.Output)"
+      Write-Output "No se pudo vaciar el bucket ${BucketName}: $($result.Output)"
       Write-Output 'Se omite su borrado.'
-      $targets = @($targets | Where-Object { $_.Recurso -ne $BuildspecsBucket })
+      return $false
     }
+  }
+
+  return $true
+}
+
+if (-not $WhatIfPreference) {
+  $bucketsToPurge = @()
+  if ($includePlatform -and ($targets.Recurso -contains $BuildspecsBucket)) {
+    $bucketsToPurge += $BuildspecsBucket
+  }
+  $bucketsToPurge += @($keystoreBuckets)
+
+  foreach ($bucketToPurge in $bucketsToPurge) {
+    if (Remove-VersionedBucketContent -BucketName $bucketToPurge) { continue }
+    $targets = @($targets | Where-Object { $_.Recurso -ne $bucketToPurge })
   }
 }
 
