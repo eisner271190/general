@@ -1,16 +1,19 @@
 # Checklist OBJ-005: SSM Parameter Store SecureString
 
-- Fecha: `2026-10-10` · Actualizado: `2026-10-11 02:48:01` (UTC-5)
-- Fuentes: `obj-005.md`, `questions.md` (Q1-Q93 decididas salvo Q48; Q87-Q93 resueltas).
+- Fecha: `2026-10-10` · Actualizado: `2026-10-12 01:17:16` (UTC-5)
+- Fuentes: `obj-005.md`, `questions.md` (Q1-Q115 resueltas; abiertos según §1, §2 y §3).
 - Cerradas por architect: Q23, Q47, Q53, D41 y D42 (2026-10-11).
-- Regla: `[x]` solo decisión explícita del usuario. Implementación y verificación quedan `[ ]`.
+- Regla: `[x]` con decisión explícita del usuario o evidencia de tester, developer o integrator.
+  Verificación AWS pendiente queda `[ ]` con "pendiente de verificación".
 - "Checklist completo" = ítems definidos y trazados; `[ ]` solo en implementación y
   verificación (Q87).
-- Estado: análisis. Sin implementación. Sin autorización (Q48, último punto).
+- Estado: autorizado por escrito (Q48, Q103; 2026-10-12). Implementación ejecutada.
+  Verificación AWS pendiente.
 
 ## 1. Criterios de aceptación (obj-005.md)
 
-- [ ] JSON nuevo sin keystore: ≈ 300 bytes con valores por defecto como referencia; sin medición (Q76, Q100).
+- [ ] JSON nuevo sin keystore: ≈ 300 bytes con valores por defecto como referencia;
+      sin medición (Q76, Q100).
 - [ ] JSON del secreto no contiene `keystore-base64`.
 - [ ] Keystore sube y descarga como binario en `keystore/{{APPLICATION_ID}}/keystore.jks`.
 - [ ] Keystore generado solo si falta el objeto en S3; nunca sobrescribir (Q88).
@@ -26,13 +29,17 @@
 - [x] Ningún template referencia `secretsmanager:`, `aws secretsmanager` ni "Secrets Manager"
       (Q40, Q41, Q42). Backend, Terraform, cloud y Flutter limpios tras developer-powershell.
 - [ ] Existe `ADR-0027` que sustituye a 0010 y actualiza 0012 y 0022.
-- [x] Bucket keystore con versionado, SSE-S3 y bloqueo total de acceso público (Q58, Q60, Q73).
-- [x] Pipeline descarga y verifica SHA-256 antes de firmar; sin caché local (Q75, Q80).
-- [x] Siembra solo si falta el parámetro o es placeholder (Q77).
+- [ ] Bucket keystore con versionado, SSE-S3 y bloqueo total de acceso público (Q58, Q60, Q73).
+      Pendiente de verificación: SSE-S3 en AWS (TC-05). Versionado y bloqueo: integrator-up.
+- [ ] Pipeline descarga y verifica SHA-256 antes de firmar; sin caché local (Q75, Q80).
+      Pendiente de verificación: SHA-256 en AWS (TC-06). Sin caché: tester §7.
+- [ ] Siembra solo si falta el parámetro o es placeholder (Q77).
+      Pendiente de verificación: TC-07.
 - [x] `down.ps1` (cloud) borra objeto, versiones y bucket; orden: purga CLI → `terraform
       destroy` → CLI final idempotente (Q65, Q82, Q89, Q90, D41, D42).
-- [x] `delete-all-services-aws.ps1` borra el bucket keystore de todos los entornos, vaciando
+- [ ] `delete-all-services-aws.ps1` borra el bucket keystore de todos los entornos, vaciando
       objetos y versiones (Q82, Q84, Q91).
+      Pendiente de verificación: vaciado no ejercitado en AWS (integrator §4, N8).
 - [x] `get-services-aws.ps1` muestra solo la existencia del bucket (Q84, Q92).
 - [x] Nombre del bucket derivado de `environment` + `project_name`, sin hardcodear (Q93).
 - [ ] Excepción a "solo generador" registrada solo en obj-005 para los dos scripts (Q84, Q85).
@@ -68,8 +75,9 @@
 - [x] SecureString con placeholder y `ignore_changes` (Q69, sustituye Q18).
 - [x] Siembra solo si falta el parámetro o su valor es placeholder (Q77, precisa Q30).
 - [x] Clave `aws/secretsmanager` cambia a `aws/ssm` (Q24).
-- [x] Implementar siembra condicionada en `up.ps1` cloud (Q77). Hecho: `put-parameter
+- [ ] Implementar siembra condicionada en `up.ps1` cloud (Q77). Hecho: `put-parameter
       --overwrite` solo si falta el parámetro o si su valor es `placeholder`.
+      Pendiente de verificación: TC-07.
 
 ### 2.3 Terraform
 
@@ -101,13 +109,15 @@
 ### 2.5 Bucket S3 del keystore
 
 - [x] Bucket por entorno: `${var.project_name}-keystore-${var.environment}` (Q56, Q68).
+      Existe en AWS (integrator-up).
 - [x] Prefijo por app: `keystore/{{APPLICATION_ID}}/keystore.jks` (Q68).
 - [x] Terraform crea el bucket vacío (Q56).
 - [x] Versionado activado (Q60, Q73).
-- [x] SSE-S3 y bloqueo total de acceso público (Q58, Q73).
+- [ ] SSE-S3 y bloqueo total de acceso público (Q58, Q73). Pendiente de verificación: SSE-S3
+      en AWS (TC-05). Bloqueo: integrator-up.
 - [x] Único lector y escritor: `up.ps1 -Sign` en local y CodeBuild Flutter (Q59).
-- [x] Si falta el objeto, `up.ps1 -Sign` genera y sube keystore nuevo; nunca sobrescribir (Q59,
-      Q88, sustituye Q64).
+- [ ] Si falta el objeto, `up.ps1 -Sign` genera y sube keystore nuevo; nunca sobrescribir (Q59,
+      Q88, sustituye Q64). Pendiente de verificación: TC-04.
 - [x] `down.ps1` borra el objeto y todas sus versiones (Q65, sustituye Q61).
 - [x] Sin backup externo; solo versionado de S3 (Q63, Q60).
 - [x] Q83: no se exige backup previo; solo versionado S3 (Q63, Q65).
@@ -118,13 +128,17 @@
 - [x] `up.ps1` Flutter: `get-parameter --with-decryption` (Q33).
 - [x] `up.ps1` Flutter con `-Sign` sin secreto: error explícito (Q34).
 - [x] `up.ps1` Flutter: crea `android-signing` si falta, sin cambio de comportamiento (Q35).
-- [x] `up.ps1` Flutter: sube y baja keystore de S3, no del secreto (Q57, Q59).
-- [x] `up.ps1` Flutter: genera keystore nuevo si falta el objeto en S3; sin sobrescribir (Q88).
+- [ ] `up.ps1` Flutter: sube y baja keystore de S3, no del secreto (Q57, Q59).
+      Subida: integrator-up. Descarga pendiente de verificación (TC-06).
+- [ ] `up.ps1` Flutter: genera keystore nuevo si falta el objeto en S3; sin sobrescribir (Q88).
+      Pendiente de verificación: TC-04.
 - [x] `down.ps1`: borrar parámetro con `delete-parameter` (Q31).
 - [x] `down.ps1`: eliminar lógica `restore-secret` (Q32).
 - [x] Sin caché local de `android/upload-keystore.jks` (Q75; sustituye Q74).
-- [x] Pipeline descarga siempre y verifica SHA-256 antes de firmar (Q75, Q80).
-- [x] SHA-256 guardado como metadato del objeto S3 al subir con `-Sign` (Q80).
+- [ ] SHA-256 guardado como metadato del objeto S3 al subir con `-Sign` (Q80).
+      Pendiente de verificación: TC-03.
+- [ ] Pipeline descarga y verifica SHA-256 antes de firmar (Q75, Q80).
+      Pendiente de verificación: TC-06.
 - [x] README Flutter: IAM y texto a `ssm:GetParameter` y `ssm:PutParameter` (Q36).
 - [x] README Flutter sin sección de caché (inferencia de Q75; confirmar, D37).
 - [x] Alcance de `down.ps1`: borra objeto, versiones y bucket por CLI, fuera de Terraform (Q82).
@@ -137,34 +151,43 @@
 - [x] Filtro `aws-secretsmanager:` ajustado en `application-context-test.scriban` (Q38, Q72).
 - [x] Comentarios Java actualizados: `ai-properties:20`, `openrouter-adapter:31`,
       `parameter-properties:19,95-97` (Q40).
+- [ ] Arranque cloud: el SecureString se descifra y carga sin error, y el filtro de test
+      no falla (Q94, Q95, Q115). Nota: "verificado en AWS 2026-10-12: carga SecureString sin
+      error, health 200 (Q94)". Sin evidencia en integrator*.md ni tester.md; no marcar hasta
+      que exista.
 
 ### 2.8 ADR y documentación
 
-- [ ] ADR nuevo numerado `ADR-0027` (Q4, Q5, Q6, Q7, Q81). Tester 2026-10-11: no existe aún.
+- [x] ADR nuevo numerado `ADR-0027` (Q4, Q5, Q6, Q7, Q81). Existe; estado `Aceptada` (Q108).
 - [ ] ADR-0010: estado "Sustituida por ADR-0027" con enlace y cabecera coherente (Q4, Q54).
-      Tester 2026-10-11: la cabecera sigue con `**Sustituida por:** -` y estado `Aceptada`.
+      Pendiente: cabecera L6 sin enlace (N2).
 - [ ] ADR-0012 y 0022: solo secciones que citan Secrets Manager o `secrets-manager` (Q5).
-      Tester 2026-10-11: 0012 (16, 20) y 0022 (29, 81) siguen citando Secrets Manager.
-- [ ] ADR-0022: referencia ADR-0023 sustituida por ADR-0027 (Q5, Q8, D1).
-      Tester 2026-10-11: la línea 70 de 0022 sigue diciendo `ADR-0023 deja un único secreto`.
+      Pendiente: 0022 L29 sin decisión; L81 histórico (Q112).
+- [x] ADR-0022: referencia ADR-0023 sustituida por ADR-0027 (Q5, Q8, D1).
 - [x] No actualizar índice `docs/adr/README.md` (Q9).
 - [x] Solo se crea el ADR nuevo, más 0010, 0012 y 0022 (Q55).
 - [x] Título del ADR "SSM Parameter Store SecureString en lugar de Secrets Manager" confirmado
       por architect; número `0027` (Q53).
-- [x] Coste verificado con precios AWS vigentes antes de cerrar ADR (Q47, architect).
+- [ ] Coste verificado con precios AWS vigentes antes de cerrar ADR (Q47). Pendiente: solo
+      architect; sin confirmación.
 - [x] Coste: "coste bajo (S3)" y ≈ 0,005 USD/mes por app, no "0 USD" (Q70).
-- [x] Documentación del generador y `library/platform` actualizada (Q3, Q45).
+- [ ] Documentación del generador y `library/platform` actualizada (Q3, Q45). Pendiente:
+      comentarios de `library/` (README:44, scripts/up.ps1:13, publish-common:10) y
+      `settings.xml` L7 (Q113).
 
 ### 2.9 Verificación y proceso
 
-- [x] Integrator despliega en AWS; tester verifica el arranque cloud (Q44).
-- [x] Integrator añadido a la tabla de entregables de obj-005.md (Q73, D23).
+- [ ] Integrator despliega en AWS (Q44): hecho (integrator-up). Tester verifica el arranque
+      cloud: pendiente de verificación.
+- [x] Integrator añadido a la tabla de entregables de obj-005.md (Q44, D23).
 - [x] Sin implementación sin checklist completo (Q46).
-- [x] Secretos AWS eliminados por el usuario (Q49).
+- [ ] Secretos AWS eliminados por el usuario (Q49). Q49 se mantiene (Q114). Pendiente:
+      integrator.md L115-116 registra borrado por `delete-all -Force`.
 - [x] "Checklist completo" = ítems definidos y trazados; `[ ]` solo en implementación y
       verificación (Q87).
-- [ ] Verificar si `library/platform/terraform/pipeline/main.tf:30` y
-      `library/platform/buildspecs/java-ci.yml:7` son código o comentario (M5).
+- [x] Verificar si `library/platform/terraform/pipeline/main.tf:30` y
+      `library/platform/buildspecs/java-ci.yml:7` son código o comentario (M5). Tester TC-22:
+      comentarios.
 - [x] Tamaño 4 KB: sin medición; referencia ≈ 300 bytes con valores por defecto (Q76, Q100).
 - [x] Migración del keystore: no hay copia; se genera uno nuevo si falta (Q57, Q63, Q88).
 
@@ -174,8 +197,9 @@
 - [x] Excepción no se registra en AGENTS.md; vive solo en obj-005 (Q85).
 - [x] `down.ps1` (cloud) borra objeto, versiones y bucket (Q82, Q89). Orden efectivo: purga CLI de
       versiones y objeto → `terraform destroy` del bucket → CLI final idempotente (Q90, D41, D42).
-- [x] `delete-all-services-aws.ps1`: borra bucket keystore de todos los entornos, vaciando
+- [ ] `delete-all-services-aws.ps1`: borra el bucket keystore de todos los entornos, vaciando
       objetos y versiones (Q82, Q84, Q91). Hecho: entornos deducidos de los parámetros SSM.
+      Pendiente de verificación: vaciado no ejercitado en AWS (integrator §4, N8).
 - [x] `get-services-aws.ps1`: muestra solo la existencia del bucket (Q84, Q92). Hecho: fila
       `S3 keystore buckets` con `s3api head-bucket`.
 - [x] Nombre del bucket en scripts: derivado de `environment` + `project_name`, sin hardcodear
@@ -226,7 +250,7 @@
 - [x] Q91: `delete-all-services-aws.ps1` borra buckets de todos los entornos (sustituye a Q51).
 - [x] Q92: `get-services-aws.ps1` muestra solo la existencia del bucket.
 - [x] Q93: nombre del bucket derivado de `environment` + `project_name`, sin hardcodear.
-- [ ] Q48: último punto; no cerrar hasta autorización escrita.
+- [x] Q48: autorizada por escrito por el usuario (Q103, 2026-10-12).
 
 ## 6. Verificación de tester (2026-10-11, `tester.md`)
 

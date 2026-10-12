@@ -1,8 +1,9 @@
 # Preguntas OBJ-005 (explorer, grilling)
 
-- Estado: Q1–Q93 resueltas. Q48 autorizada por escrito (2026-10-11); checklist cerrado.
+- Estado: Q1–Q115 resueltas. Q48 y Q103 autorizadas por escrito (2026-10-12).
+- Pendientes de ejecución o verificación: ver checklist §1, §2.7-§2.10 y §3.
 - Cerradas por architect (`architect.md`, 2026-10-11): Q23, Q47, Q53, D41 y D42.
-- Abiertas: ninguna. Dudas `improvements.md`: todas resueltas.
+- Abiertas (decisión): ninguna.
 - Fuente única de preguntas del objetivo. Cada respuesta se registra en la fila correspondiente.
 - Sustituciones: Q2→Q84, Q15→Q76, Q61→Q86, Q63→Q83, Q71→Q76, Q74→Q75, Q51→Q91,
   Q64→Q88, Q79→Q90.

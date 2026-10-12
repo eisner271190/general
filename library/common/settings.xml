@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  PLANTILLA. Copiala a ~/.m2/settings.xml y sustituye <cuenta> y <region> por los del dominio
+  PLANTILLA. Copiala a ~/.m2/settings.xml y sustituye {cuenta} y {region} por los del dominio
   CodeArtifact (los devuelve `aws codeartifact get-repository-endpoint`).
 
   El token NUNCA se escribe aqui: viaja en la variable de entorno CODEARTIFACT_AUTH_TOKEN, que
@@ -23,7 +23,7 @@
       <repositories>
         <repository>
           <id>codeartifact</id>
-          <url>https://epc-<cuenta>.d.codeartifact.<region>.amazonaws.com/maven/common/</url>
+          <url>https://epc-{cuenta}.d.codeartifact.{region}.amazonaws.com/maven/common/</url>
           <releases>
             <enabled>true</enabled>
           </releases>
