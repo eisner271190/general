@@ -18,29 +18,34 @@ description: "Usa esta skill cuando el usuario pide iniciar, revisar o continuar
 4. Comprueba si existe `checklist.md`; si no, no lo crees aún (se crea en la fase 4).
 
 ### Fase 2: Análisis (paso 3)
-5. Lanza en paralelo `explorer` y `architect` para leer el objetivo.
+5. Lanza en paralelo `research`, `explorer` y `architect` para leer el objetivo.
 6. Cada subagente genera su informe en `docs/deliverables/obj-NNN/{subagente}.md`.
 7. Las preguntas van a `docs/deliverables/obj-NNN/questions.md` (fuente única),
    cortas, puntuales y con recomendación.
-8. Las dudas se registran en `docs/deliverables/obj-NNN/improvements.md` con causa y tipo.
-9. Entrega al usuario la lista de preguntas abiertas y espera sus respuestas.
+8. Las preguntas se deben clasificar por Decisión del usuario, Decisión técnica delegable, Inconsistencia documental, Dato verificable faltante
+9. Decisión técnica delegable -> architect.
+10. Inconsistencia documental -> Orquestador.
+11. Dato verificable faltante -> Orquestador. 
+12. Dejar la respuesta en `questions.md`.
+13. Entrega al usuario la lista de preguntas abiertas y espera sus respuestas.
+14. Por cada pregunta que se solucione se debe en background actualizar `questions.md` dejandola respuesta y marcándola como resuelta. Inmediatamente se debe continuar con la siguiente pregunta.
 
 ### Fase 3: Revisión de respuestas (pasos 4-7)
-10. Cuando el usuario responda y pida nueva revisión, lanza `reviewer` para validar
+14. Cuando el usuario responda y pida nueva revisión, lanza `reviewer` para validar
     respuestas, alcance y criterios.
-11. El reviewer abre nuevas preguntas si queda alguna duda; repite el ciclo de respuesta.
-12. Actualiza `questions.md` marcando resueltas las respondidas y abiertas las nuevas.
+15. El reviewer abre nuevas preguntas si queda alguna duda; repite el ciclo de respuesta.
+16. Actualiza `questions.md` marcando resueltas las respondidas y abiertas las nuevas.
 
 ### Fase 4: Checklist (pasos 8-9)
-13. Lanza `taskkeeper` para evaluar si se cumple el checklist y crearlo.
-14. Crea `docs/deliverables/obj-NNN/checklist.md` con los criterios de aceptación
+17. Lanza `taskkeeper` para evaluar si se cumple el checklist y crearlo.
+18. Crea `docs/deliverables/obj-NNN/checklist.md` con los criterios de aceptación
     del objetivo y los añadidos durante el proceso.
-15. Actualiza el checklist con el estado de cada punto.
+19. Actualiza el checklist con el estado de cada punto.
 
 ### Fase 5: Autorización (paso 10)
-16. Si el checklist está completo y no quedan preguntas abiertas, pide por escrito
+20. Si el checklist está completo y no quedan preguntas abiertas, pide por escrito
     la autorización explícita del usuario para implementar.
-17. Si quedan preguntas o el checklist está incompleto, no pidas autorización;
+21. Si quedan preguntas o el checklist está incompleto, no pidas autorización;
     informa de lo que falta.
 
 ## Requisitos y límites

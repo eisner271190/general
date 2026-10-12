@@ -2,7 +2,7 @@
 
 - Fecha: `2026-10-10` · Actualizado: `2026-10-11 02:48:01` (UTC-5)
 - Fuentes: `obj-005.md`, `questions.md` (Q1-Q93 decididas salvo Q48; Q87-Q93 resueltas).
-- Delegadas a architect: Q23, Q47, Q53. Dudas abiertas: D41 y D42 (architect).
+- Cerradas por architect: Q23, Q47, Q53, D41 y D42 (2026-10-11).
 - Regla: `[x]` solo decisión explícita del usuario. Implementación y verificación quedan `[ ]`.
 - "Checklist completo" = ítems definidos y trazados; `[ ]` solo en implementación y
   verificación (Q87).
@@ -14,27 +14,27 @@
 - [ ] JSON del secreto no contiene `keystore-base64`.
 - [ ] Keystore sube y descarga como binario en `keystore/{{APPLICATION_ID}}/keystore.jks`.
 - [ ] Keystore generado solo si falta el objeto en S3; nunca sobrescribir (Q88).
-- [ ] `application-cloud-properties.scriban` no referencia `aws-secretsmanager:` (Q16).
-- [ ] `pom.scriban` no incluye `spring-cloud-aws-starter-secrets-manager` (Q37).
-- [ ] Terraform no crea `aws_secretsmanager_secret` y sí `aws_ssm_parameter` SecureString.
-- [ ] Terraform crea bucket S3 `${var.project_name}-keystore-${var.environment}` (Q56).
-- [ ] IAM Lambda: solo `ssm:GetParameter`, `ssm:GetParametersByPath` y `kms:Decrypt` (Q66).
-- [ ] IAM Lambda: sin `ssm:PutParameter` y sin permisos S3 (Q27, Q59).
-- [ ] IAM CodeBuild cloud: `ssm:PutParameter` sobre la ruta; sin acceso S3 (Q26, Q59).
-- [ ] IAM CodeBuild Flutter: SSM (put, get, kms:Decrypt) y S3 sobre `keystore/{{APPLICATION_ID}}/*`
+- [x] `application-cloud-properties.scriban` no referencia `aws-secretsmanager:` (Q16).
+- [x] `pom.scriban` no incluye `spring-cloud-aws-starter-secrets-manager` (Q37).
+- [x] Terraform no crea `aws_secretsmanager_secret` y sí `aws_ssm_parameter` SecureString.
+- [x] Terraform crea bucket S3 `${var.project_name}-keystore-${var.environment}` (Q56).
+- [x] IAM Lambda: solo `ssm:GetParameter`, `ssm:GetParametersByPath` y `kms:Decrypt` (Q66).
+- [x] IAM Lambda: sin `ssm:PutParameter` y sin permisos S3 (Q27, Q59).
+- [x] IAM CodeBuild cloud: `ssm:PutParameter` sobre la ruta; sin acceso S3 (Q26, Q59).
+- [x] IAM CodeBuild Flutter: SSM (put, get, kms:Decrypt) y S3 sobre `keystore/{{APPLICATION_ID}}/*`
       (Q67, Q59).
-- [ ] Ningún template referencia `secretsmanager:`, `aws secretsmanager` ni "Secrets Manager"
-      (Q40, Q41, Q42).
+- [x] Ningún template referencia `secretsmanager:`, `aws secretsmanager` ni "Secrets Manager"
+      (Q40, Q41, Q42). Backend, Terraform, cloud y Flutter limpios tras developer-powershell.
 - [ ] Existe `ADR-0027` que sustituye a 0010 y actualiza 0012 y 0022.
-- [ ] Bucket keystore con versionado, SSE-S3 y bloqueo total de acceso público (Q58, Q60, Q73).
-- [ ] Pipeline descarga y verifica SHA-256 antes de firmar; sin caché local (Q75, Q80).
-- [ ] Siembra solo si falta el parámetro o es placeholder (Q77).
-- [ ] `down.ps1` (cloud) borra objeto, versiones y bucket; orden: `terraform destroy` del
-      bucket primero y CLI después (Q65, Q82, Q89, Q90).
-- [ ] `delete-all-services-aws.ps1` borra el bucket keystore de todos los entornos, vaciando
+- [x] Bucket keystore con versionado, SSE-S3 y bloqueo total de acceso público (Q58, Q60, Q73).
+- [x] Pipeline descarga y verifica SHA-256 antes de firmar; sin caché local (Q75, Q80).
+- [x] Siembra solo si falta el parámetro o es placeholder (Q77).
+- [x] `down.ps1` (cloud) borra objeto, versiones y bucket; orden: purga CLI → `terraform
+      destroy` → CLI final idempotente (Q65, Q82, Q89, Q90, D41, D42).
+- [x] `delete-all-services-aws.ps1` borra el bucket keystore de todos los entornos, vaciando
       objetos y versiones (Q82, Q84, Q91).
-- [ ] `get-services-aws.ps1` muestra solo la existencia del bucket (Q84, Q92).
-- [ ] Nombre del bucket derivado de `environment` + `project_name`, sin hardcodear (Q93).
+- [x] `get-services-aws.ps1` muestra solo la existencia del bucket (Q84, Q92).
+- [x] Nombre del bucket derivado de `environment` + `project_name`, sin hardcodear (Q93).
 - [ ] Excepción a "solo generador" registrada solo en obj-005 para los dos scripts (Q84, Q85).
 - [ ] `checklist.md` completo (ítems definidos y trazados) antes de implementar (Q46, Q87).
 
@@ -56,7 +56,7 @@
 - [x] Excepción autorizada: filtro de `application-context-test.scriban` líneas 74-76 (Q38, Q72).
 - [x] Plantilla de test no cuenta como test (Q39).
 - [x] Resto de tests no se tocan (Q72).
-- [ ] Confirmar en el diff que la plantilla de test no añade otros cambios (Q72).
+- [x] Confirmar en el diff que la plantilla de test no añade otros cambios (Q72).
 
 ### 2.2 Secreto, ruta y contenido
 
@@ -68,7 +68,8 @@
 - [x] SecureString con placeholder y `ignore_changes` (Q69, sustituye Q18).
 - [x] Siembra solo si falta el parámetro o su valor es placeholder (Q77, precisa Q30).
 - [x] Clave `aws/secretsmanager` cambia a `aws/ssm` (Q24).
-- [ ] Implementar siembra condicionada en `up.ps1` cloud (Q77).
+- [x] Implementar siembra condicionada en `up.ps1` cloud (Q77). Hecho: `put-parameter
+      --overwrite` solo si falta el parámetro o si su valor es `placeholder`.
 
 ### 2.3 Terraform
 
@@ -78,9 +79,10 @@
       (líneas 10, 37-38) y `cloud/aws/AGENTS.md` línea 4 (Q20).
 - [x] Adaptar `terraform-secrets-manager-variables.scriban` (Q21).
 - [x] Actualizar `component.json` si cambian nombres de ficheros (Q22).
-- [ ] Renombrar `terraform-secrets-manager.scriban` a `terraform-ssm-*` solo si contradice
-      el contenido; lo decide architect (Q23).
-- [ ] Verificar provider: `aws_ssm_parameter` con placeholder e `ignore_changes` (Q69, D22).
+- [x] Renombrar `terraform-secrets-manager.scriban` a `terraform-ssm-parameter.scriban` y
+      `terraform-secrets-manager-variables.scriban` a `terraform-ssm-parameter-variables.scriban`
+      (Q23, architect).
+- [x] Verificar provider: `aws_ssm_parameter` con placeholder e `ignore_changes` (Q69, D22).
 
 ### 2.4 IAM
 
@@ -138,15 +140,18 @@
 
 ### 2.8 ADR y documentación
 
-- [x] ADR nuevo numerado `ADR-0027` (Q4, Q5, Q6, Q7, Q81).
-- [x] ADR-0010: estado "Sustituida por ADR-0027" con enlace y cabecera coherente (Q4, Q54).
-- [x] ADR-0012 y 0022: solo secciones que citan Secrets Manager o `secrets-manager` (Q5).
-- [x] ADR-0022: referencia ADR-0023 sustituida por ADR-0027 (Q5, Q8, D1).
+- [ ] ADR nuevo numerado `ADR-0027` (Q4, Q5, Q6, Q7, Q81). Tester 2026-10-11: no existe aún.
+- [ ] ADR-0010: estado "Sustituida por ADR-0027" con enlace y cabecera coherente (Q4, Q54).
+      Tester 2026-10-11: la cabecera sigue con `**Sustituida por:** -` y estado `Aceptada`.
+- [ ] ADR-0012 y 0022: solo secciones que citan Secrets Manager o `secrets-manager` (Q5).
+      Tester 2026-10-11: 0012 (16, 20) y 0022 (29, 81) siguen citando Secrets Manager.
+- [ ] ADR-0022: referencia ADR-0023 sustituida por ADR-0027 (Q5, Q8, D1).
+      Tester 2026-10-11: la línea 70 de 0022 sigue diciendo `ADR-0023 deja un único secreto`.
 - [x] No actualizar índice `docs/adr/README.md` (Q9).
 - [x] Solo se crea el ADR nuevo, más 0010, 0012 y 0022 (Q55).
-- [ ] Título del ADR "SSM Parameter Store SecureString en lugar de Secrets Manager" confirmado
-      por architect (Q53).
-- [ ] Coste verificado con precios AWS vigentes antes de cerrar ADR (Q47, architect).
+- [x] Título del ADR "SSM Parameter Store SecureString en lugar de Secrets Manager" confirmado
+      por architect; número `0027` (Q53).
+- [x] Coste verificado con precios AWS vigentes antes de cerrar ADR (Q47, architect).
 - [x] Coste: "coste bajo (S3)" y ≈ 0,005 USD/mes por app, no "0 USD" (Q70).
 - [x] Documentación del generador y `library/platform` actualizada (Q3, Q45).
 
@@ -167,13 +172,15 @@
 
 - [x] Excepción a "solo generador": incluye `.opencode/scripts/*` (Q84).
 - [x] Excepción no se registra en AGENTS.md; vive solo en obj-005 (Q85).
-- [x] `down.ps1` (cloud) borra objeto, versiones y bucket por CLI, fuera de Terraform (Q82,
-      Q89). Orden: `terraform destroy` primero, CLI después (Q90); D41 y D42 abiertas (architect).
-- [ ] `delete-all-services-aws.ps1`: borra bucket keystore de todos los entornos, vaciando
-      objetos y versiones (Q82, Q84, Q91).
-- [ ] `get-services-aws.ps1`: muestra solo la existencia del bucket (Q84, Q92).
+- [x] `down.ps1` (cloud) borra objeto, versiones y bucket (Q82, Q89). Orden efectivo: purga CLI de
+      versiones y objeto → `terraform destroy` del bucket → CLI final idempotente (Q90, D41, D42).
+- [x] `delete-all-services-aws.ps1`: borra bucket keystore de todos los entornos, vaciando
+      objetos y versiones (Q82, Q84, Q91). Hecho: entornos deducidos de los parámetros SSM.
+- [x] `get-services-aws.ps1`: muestra solo la existencia del bucket (Q84, Q92). Hecho: fila
+      `S3 keystore buckets` con `s3api head-bucket`.
 - [x] Nombre del bucket en scripts: derivado de `environment` + `project_name`, sin hardcodear
-      (Q93).
+      (Q93). En `delete-all`, por regex sobre `/<env>/<app>/`; en `get-services`, por
+      `-KeystoreEnvironments` + `-ApplicationId`.
 - [x] Formato de salida de `get-services-aws.ps1`: solo existencia del bucket (Q92).
 
 ## 3. Riesgos a vigilar (obj-005.md)
@@ -185,8 +192,8 @@
 - [ ] Pérdida total del keystore por borrado de objeto, versiones y bucket (Q65, Q82, Q90).
 - [ ] Borrado total del keystore por `down.ps1` (cloud) o `delete-all-services-aws.ps1`
       (todos los entornos) (Q82, Q84, Q89, Q91).
-- [ ] Estado de Terraform desincronizado si el bucket se borra por CLI: orden fijado en Q90
-      (destroy primero); vaciado previo en D42 (architect).
+- [ ] Estado de Terraform desincronizado si el bucket se borra por CLI: evitado; orden fijado en
+      Q90 con vaciado previo (D41, D42 resueltas); verificar en tester.
 - [ ] Sin backup previo ni externo; solo versionado S3, que `down.ps1` borra (Q63, Q65, Q83).
 - [ ] Lambda o CodeBuild sin permiso SSM, KMS o S3: verificación en tester (Q44).
 - [ ] Bucket sin cifrado o con acceso público: bloqueado en Terraform (Q58, Q73).
@@ -202,8 +209,8 @@
 - [x] Q79: sustituida por Q90 (orden: `terraform destroy` del bucket primero, CLI después).
 - [x] Q80: SHA-256 como metadato del objeto S3 al subir con `-Sign`.
 - [x] Q81: mapeo de Q6-Q11 y Q39 confirmado por el usuario (D35 resuelta).
-- [ ] Q23, Q47, Q53: delegados a architect; pendientes de su informe.
-- [ ] D41 y D42: abiertas; de architect (orden destrucción/CLI y vaciado del bucket).
+- [x] Q23, Q47, Q53: cerrados por architect (`architect.md`, 2026-10-11).
+- [x] D41 y D42: resueltas por architect (purga CLI de versiones → destroy → CLI idempotente).
 - [x] Q82: `down.ps1` borra objeto, versiones y bucket por CLI (fuera de Terraform).
 - [x] Q83: no se exige backup previo; solo versionado S3 (sustituye a Q63).
 - [x] Q84: excepción "solo generador" para `.opencode/scripts/*` (sustituye a Q2).
@@ -214,12 +221,38 @@
 - [x] Q88: keystore generado solo si falta el objeto en S3; nunca sobrescribir (sustituye a
       Q64).
 - [x] Q89: el `down.ps1` que borra el bucket es el de cloud (`down.ps1.scriban`).
-- [x] Q90: primero `terraform destroy` del bucket, luego CLI para lo que quede (sustituye a
-      Q79; D41/D42 siguen abiertas).
+- [x] Q90: purga CLI de versiones y objeto → `terraform destroy` del bucket → CLI final
+      idempotente (sustituye a Q79; D41 y D42 resueltas).
 - [x] Q91: `delete-all-services-aws.ps1` borra buckets de todos los entornos (sustituye a Q51).
 - [x] Q92: `get-services-aws.ps1` muestra solo la existencia del bucket.
 - [x] Q93: nombre del bucket derivado de `environment` + `project_name`, sin hardcodear.
 - [ ] Q48: último punto; no cerrar hasta autorización escrita.
+
+## 6. Verificación de tester (2026-10-11, `tester.md`)
+
+- [x] TC-01 JSON sin `keystore-base64`: 0 coincidencias en `generator/` y en la salida generada.
+- [x] TC-02 Tamaño del esqueleto: medido 113 bytes sin valores, 294 con valores por defecto.
+      Desalineado con los 210 de referencia (Q100). Conclusión de 4 KB intacta.
+- [x] TC-08 `application-cloud-properties` importa
+      `aws-parameterstore:/develop/com.quizsmart.app/secrets`; sin `aws-secretsmanager:`.
+- [x] TC-09 `pom.xml` generado conserva `spring-cloud-aws-starter-parameter-store`.
+- [x] TC-10 `aws_ssm_parameter.app_secret` SecureString con `placeholder` e `ignore_changes`.
+- [x] TC-11 Módulo `secure-parameters` propagado; 0 referencias a `modules/secrets-manager`.
+- [x] TC-12 IAM Lambda: lectura SSM + `kms:Decrypt`, sin `PutParameter` y sin S3.
+- [x] TC-13 IAM CodeBuild cloud: `ssm:PutParameter`; sin S3.
+- [x] TC-14 IAM CodeBuild Flutter: SSM + S3 acotado a `keystore/{appId}/*`.
+- [x] TC-15 0 coincidencias de Secrets Manager en `generator/`.
+- [x] TC-17 Orden de `down.ps1`: `delete-parameter` → purga → destroy → CLI final idempotente.
+- [x] TC-18 `delete-all-services-aws.ps1` deduplica entornos por regex sobre `/<env>/<app>/`.
+- [x] TC-19 `get-services-aws.ps1` usa `head-bucket`; sin listar objetos ni versiones.
+- [x] TC-20 AGENTS.md sin cambios en el diff.
+- [x] TC-22 `library/platform/.../main.tf:30` y `buildspecs/java-ci.yml:7` son comentarios.
+- [x] Generación real del generador en sandbox fuera de `/projects`: `OK=1`, 0 restos.
+- [x] `terraform validate` OK en `app`, `quizapi`, `modules/pipeline` y `modules/secure-parameters`.
+- [x] Sintaxis PowerShell OK en 4 plantillas, 2 scripts y 6 scripts generados.
+- [ ] TC-03, TC-04, TC-05, TC-06, TC-07, TC-16, TC-21, TC-23: requieren AWS o decisión del usuario.
+- [ ] Q99: 4 restos de Secrets Manager en `.opencode/scripts` (inventario genérico).
+- [ ] Q100: referencia de 210 bytes no reproducible.
 
 ## 5. Autorización
 

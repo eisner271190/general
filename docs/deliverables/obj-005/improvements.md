@@ -182,13 +182,16 @@
   - Causa: dos rutas de borrado del mismo recurso sin orden definido.
   - Tipo: riesgo técnico, estado de Terraform desincronizado.
   - Acción: definir orden (CLI antes o después de destroy; `state rm` si aplica). Architect.
-  - Estado: abierta; responsabilidad de architect (Q90 fija el orden: destroy primero, CLI
-    después; D41 conserva la comprobación de `state rm`).
+  - Estado: resuelta por architect (2026-10-11): purga CLI → `terraform destroy` del bucket →
+    CLI final idempotente. Sin desincronización: destroy saca el recurso del estado.
+    Sin `state rm` (ya no aplica).
 - **D42** Vaciado del bucket versionado antes de borrarlo.
   - Causa: `delete-all-services-aws.ps1` ya purga versiones (líneas 405-430); `down.ps1` no.
   - Tipo: requisito técnico faltante.
   - Acción: confirmar si `down.ps1` repite la purga o reutiliza un patrón común.
-  - Estado: abierta; responsabilidad de architect (bucket no vacío requiere vaciado previo).
+  - Estado: resuelta por architect (2026-10-11): `down.ps1` (cloud) purga versiones con
+    `delete-objects` + `VersionId` y el objeto actual antes del destroy; reutiliza el patrón de
+    `delete-all-services-aws.ps1` (líneas 405-430).
 - **D43** Alcance de `delete-all-services-aws.ps1` por entorno.
   - Causa: Q51 limita a `develop`; el script no indica entorno del bucket keystore.
   - Tipo: alcance ambiguo.

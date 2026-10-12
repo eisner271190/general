@@ -1,8 +1,8 @@
 # Preguntas OBJ-005 (explorer, grilling)
 
-- Estado: Q1–Q93 resueltas por el usuario, salvo Q48 (último, pendiente).
-- Delegadas a architect (sin decisión del usuario): Q23, Q47, Q53.
-- Abiertas: Q48. Dudas `improvements.md`: D41 y D42 abiertas (architect); D43–D49 resueltas.
+- Estado: Q1–Q93 resueltas. Q48 autorizada por escrito (2026-10-11); checklist cerrado.
+- Cerradas por architect (`architect.md`, 2026-10-11): Q23, Q47, Q53, D41 y D42.
+- Abiertas: ninguna. Dudas `improvements.md`: todas resueltas.
 - Fuente única de preguntas del objetivo. Cada respuesta se registra en la fila correspondiente.
 - Sustituciones: Q2→Q84, Q15→Q76, Q61→Q86, Q63→Q83, Q71→Q76, Q74→Q75, Q51→Q91,
   Q64→Q88, Q79→Q90.
@@ -78,7 +78,8 @@
   ✅ Respuesta: Sí, actualizar component.json si cambian nombres de ficheros.
 - **Q23** `terraform-secrets-manager.scriban` (nombre): ¿se renombra a `terraform-ssm-*`?
   ➡️ Solo si el nombre contradice el contenido; decidir con architect.
-  ✅ Respuesta: Solo si el nombre contradice el contenido; decidir con architect.
+  ✅ Respuesta: Sí, renombrar a `terraform-ssm-parameter.scriban` y
+    `terraform-ssm-parameter-variables.scriban` (architect, 2026-10-11).
 - **Q24** `terraform-secrets.scriban` (clave `aws/secretsmanager`, línea 11): ¿qué clave?
   ➡️ Sustituir por la clave equivalente de SSM (`aws/ssm`) si aplica.
   ✅ Respuesta: Sustituir por la clave equivalente de SSM (`aws/ssm`) si aplica.
@@ -163,7 +164,9 @@
   ✅ Respuesta: Sí, checklist.md antes de implementar, obligatorio.
 - **Q47** Coste "0 USD/mes": ¿verificado con precios AWS vigentes?
   ➡️ Sí, architect verifica antes de cerrar ADR.
-  ✅ Respuesta: Sí, architect verifica precios AWS antes de cerrar el ADR.
+  ✅ Respuesta: Verificado (architect, 2026-10-11): Secrets Manager 0,40 USD/secreto/mes +
+    0,05 USD/10.000 llamadas; Parameter Store Standard sin coste; S3 keystore ≈ 0,005 USD/mes
+    por app (estimación). Ahorro ~99 %.
 
 ## Dependencias y proceso
 - **Q48** Autorización explícita para implementar: ¿cuándo?
@@ -186,7 +189,8 @@
 - **Q53** Nombre del ADR nuevo: ¿título?
   ➡️ Confirmar con architect; ejemplo: "SSM Parameter Store SecureString en lugar de Secrets
   Manager".
-  ✅ Respuesta: Confirmar con architect; usar como borrador "SSM Parameter Store SecureString en lugar de Secrets Manager".
+  ✅ Respuesta: `ADR-0027` "SSM Parameter Store SecureString en lugar de Secrets Manager"
+    (architect, 2026-10-11; 0027 es el número libre).
 - **Q54** Estado de ADR 0010 tras el ADR nuevo: ¿"Sustituida"?
   ➡️ Sí, con enlace al ADR nuevo.
   ✅ Respuesta: Sí, estado "Sustituida" con enlace al ADR nuevo.
@@ -361,6 +365,9 @@
 - [x] Q90 ¿Orden de borrado CLI frente a `terraform destroy`, con `state rm`?
   - ✅ Respuesta: Opción 2 del usuario: primero `terraform destroy` del recurso bucket, luego CLI
     para lo que quede.
+  - Refinado por architect (2026-10-11): AWS exige bucket vacío, así que el orden efectivo es
+    purga CLI de versiones y objeto → `terraform destroy` del bucket → CLI final idempotente.
+    `state rm` ya no aplica. Ver D41 y D42 resueltas.
 - [x] Q91 ¿`delete-all-services-aws.ps1` borra el bucket de todos los entornos o solo `develop`?
   - ✅ Respuesta: Opción 2 del usuario: todos los entornos.
   - ✅ Resuelto: Q51 queda sustituida por Q91.
@@ -371,11 +378,75 @@
     patrón de nombres que Terraform.
   - Q87-Q93 cerradas el 2026-10-11.
 
+## Preguntas developer-scriban · 2026-10-11
+
+- [x] Q94 `aws-parameterstore:` con ruta exacta (`/env/app/secrets`) carga solo ese parámetro, pero
+  Spring Cloud AWS no lo descifra sin `with-decryption`.
+  - ✅ Respuesta: Según la recomendación del usuario. Verificar en el arranque cloud (tester);
+    si no descifra, `ParameterStorePropertySource` con `withDecryption=true`.
+  - Causa: `application-cloud-properties.scriban` sustituye `aws-secretsmanager:` por un segundo
+    `aws-parameterstore:`; el SCA solo cifra/descifra SecureString si se indica.
+- [x] Q95 `name.contains("/secrets")` en `application-context-test.scriban` es más amplio que el
+  filtro original.
+  - ✅ Respuesta: Según la recomendación del usuario. Suficiente; el test solo filtra fuentes AWS.
+    Ajustar si el test falla.
+  - Causa: al desaparecer `aws-secretsmanager:`, el property source del SecureString se llama por su
+    ruta, no por un prefijo de proveedor.
+- [x] Q96 El ARN del bucket en `codepipeline.yml.scriban` y `README.md.scriban` se construye en
+  CloudFormation/README, no desde Terraform.
+  - ✅ Respuesta: Según la recomendación del usuario. Mantener `{applicationId}-keystore-
+    {environment}` (Q56, Q93) y validar en tester.
+
+## Preguntas developer-powershell · 2026-10-11
+
+- [x] Q97 ¿Quién genera y sube el keystore: `cloud/up.ps1` o `flutter/up.ps1 -Sign`?
+  - ✅ Respuesta: Según la recomendación del usuario. `flutter/up.ps1 -Sign` es el único
+    generador y escritor (Q35, Q59, Q88). `cloud/up.ps1` no genera ni sube el keystore.
+  - El encargo de la fase pide generarlo en `cloud/up.ps1.scriban`; Q35, Q59, Q88 y el informe
+    de developer-scriban lo dejan en `flutter/up.ps1 -Sign` como único lector y escritor.
+  - Implementado en `flutter/up.ps1.scriban` (único escritor), según Q35, Q59 y Q88.
+  - rec: confirmar; si se quiere en cloud, `flutter/up.ps1` deja de generar y solo verifica.
+  - Causa: el encargo mezcla el punto 2 (cloud) con el punto 4 (flutter) sobre el mismo keystore.
+- [x] Q98 ¿El bucket del keystore se purga en `cloud/down.ps1` aunque Terraform lo destruya?
+  - ✅ Respuesta: Según la recomendación del usuario. Orden aplicado (D41, D42): purga CLI →
+    `terraform destroy` → CLI final idempotente. Validar en tester que el estado queda limpio.
+  - Orden aplicado (D41, D42): purga CLI de versiones y objeto -> `terraform destroy` del
+    microservicio (que incluye el bucket) -> CLI final idempotente de restos.
+  - rec: validar en tester que el estado de Terraform queda sin el recurso del bucket.
+  - Causa: si el bucket ya no existe, el CLI final no debe fallar.
+
+## Preguntas tester — 2026-10-11
+
+- [ ] Q99 `.opencode/scripts/*` conserva 4 restos de Secrets Manager. ¿Se limpian en obj-005?
+  - Hallazgo: `get-services-aws.ps1:105` (`secretsmanager list-secrets`),
+    `get-services-aws.ps1:242` (`aws_secretsmanager_secret` en el cotejo de estado),
+    `delete-all-services-aws.ps1:166` (listado) y `:271` (`secretsmanager delete-secret`).
+  - Contexto: son el inventario genérico de servicios, no el alcance de obj-005. Los objetivos
+    del objetivo en esos scripts (bucket del keystore) sí están implementados.
+  - ➡️ Recomiendo: dejarlos y abrir objetivo aparte; tocar el inventario cambia el reporte
+    completo de `get-services-aws` y excede el cambio mínimo de obj-005.
+  - Si se limpian: quitar `Secrets` de `$awsCalls`, la fila de cotejo
+    `aws_secretsmanager_secret` y el target `Secrets` del borrado.
+  - Causa: el inventario enumera servicios genéricos que este objetivo solapa en el
+    subconjunto de la aplicación.
+- [ ] Q100 La referencia de "210 bytes" del esqueleto del SecureString no se reproduce.
+  - Hallazgo: con las 5 claves que siembra `cloud/up.ps1`, el esqueleto son 113 bytes
+    (`{"jwt-secret":"x",...}`) y 294 bytes con los valores por defecto reales
+    (`ConvertTo-Json -Compress`, UTF-8).
+  - Contexto: Q62/Q76 fijan 210 bytes como referencia sin medición (Q76).
+  - ➡️ Recomiendo: actualizar la cifra a "≈ 300 bytes con valores por defecto" en
+    `obj-005.md` y `use-cases.md` (TC-02). Los tres valores quedan muy por debajo de 4 KB, así
+    que la conclusión de Q76 no cambia; solo la referencia numérica queda desalineada.
+  - Alternativa: dejar 210 y anotar que es una estimación, no un esqueleto medido.
+  - Causa: la cifra se fijó por estimación y luego se citó como si fuera medida.
+
 ## Dependencias
 
+- Q94-Q98: resueltas (2026-10-11) siguiendo las recomendaciones; verificación en tester.
 - Q75-Q80 resueltas: no bloquean (caché, 4 KB, siembra, publicación, bucket, hash).
 - Q87-Q93 resueltas: no bloquean (checklist, keystore, orden, entornos, consulta, nombre).
-- Q23, Q47, Q53: delegadas a architect; pendientes de su informe.
+- Q23, Q47, Q53, D41, D42: cerradas por architect (2026-10-11).
+- Sin preguntas abiertas.
 - D41 y D42: abiertas, de architect (orden de borrado y vaciado del bucket).
 - Q48 bloquea implementación; va al final.
 - Q82 resuelta: alcance de `down.ps1` y destrucción del bucket (Q79 sustituida por Q90).
