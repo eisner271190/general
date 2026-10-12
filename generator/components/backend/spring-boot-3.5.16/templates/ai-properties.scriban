@@ -17,8 +17,8 @@ import org.springframework.stereotype.Component;
  * un modelo de ejemplo) produce 200 con otro modelo del que nadie se dio cuenta, y eso
  * solo aparece al revisar la facturacion del proveedor.
  *
- * <p>La API key llega desde Secrets Manager y solo se usa como cabecera Authorization:
- * nunca se registra ni se expone.
+ * <p>La API key llega desde Parameter Store (SecureString) y solo se usa como cabecera
+ * Authorization: nunca se registra ni se expone.
  */
 @Component
 @ConfigurationProperties(prefix = "ai")

@@ -71,9 +71,8 @@ class ApplicationContextTest {
     String name = propertySource.getName();
     String type = propertySource.getClass().getSimpleName();
     return name.startsWith("aws-parameterstore:")
-        || name.startsWith("aws-secretsmanager:")
-        || type.contains("ParameterStore")
-        || type.contains("SecretsManager");
+        || name.contains("/secrets")
+        || type.contains("ParameterStore");
   }
 
   private Properties applicationProperties() throws IOException {

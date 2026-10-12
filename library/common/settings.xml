@@ -4,7 +4,8 @@
   CodeArtifact (los devuelve `aws codeartifact get-repository-endpoint`).
 
   El token NUNCA se escribe aqui: viaja en la variable de entorno CODEARTIFACT_AUTH_TOKEN, que
-  caduca a las 12 h. El CI la inyecta desde Secrets Manager o desde un Secret variable group.
+  caduca a las 12 h. El CI la inyecta desde SSM Parameter Store SecureString (ADR-0027) o
+  desde un Secret variable group.
 -->
 <settings>
   <servers>

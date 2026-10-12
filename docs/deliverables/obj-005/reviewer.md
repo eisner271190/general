@@ -424,3 +424,138 @@
 - `requiere cambios`.
 - Bloqueantes: B1 (autorización). Altas: A1-A7.
 - Cuando B1 y A1-A7 estén resueltos, volver a revisar para `aprobado con observaciones`.
+
+## Revalidación OBJ-005 tras B1 · 2026-10-12 (hora no disponible; sin timestamp por paso)
+
+- Agente: reviewer. Solo lectura y este informe. Sin producto, tests, commits ni AWS.
+- Veredicto: `requiere cambios`.
+- Límite de permisos (conflicto con el encargo):
+  - El encargo pide editar `checklist.md` y registrar dudas en `questions.md`.
+  - Mi rol solo permite editar este informe. No edité esos ficheros.
+  - Las propuestas exactas están en las secciones 3 y 5 para que el responsable las aplique.
+- Leídos: AGENTS.md (raíz), obj-005.md, questions.md, checklist.md, reviewer.md, tester.md,
+  integrator.md, integrator-up.md, developer-scriban/terraform/java/powershell.md, use-cases.md,
+  ADR 0010/0012/0022/0027, y grep en `generator/`, `.opencode/scripts/`, `library/`, `docs/adr/`.
+
+### 1. B1 · autorización (Q48 / Q103)
+
+- Q103 (`questions.md` L461-462): respuesta "Autorizado por escrito (2026-10-12)". Cierra Q48.
+  - Límite: el mensaje original del usuario no consta en el repositorio; solo el registro.
+- Q48 (`questions.md` L172-175): sigue con "no autorizar todavía" (L175).
+  - Cabecera L3 dice "autorizada por escrito (2026-10-11)". Fecha y respuesta contradictorias.
+  - Falta marcar Q48 como "Sustituida por Q103" y corregir L3.
+- Implementación previa a Q103 (2026-10-11):
+  - `developer-scriban.md` L4 y `developer-powershell.md` L4: "Q48 concedida por el coordinador".
+  - `integrator-up.md` L5: "Autorizado por el usuario: UP -Fast" (despliegue, no implementación).
+  - Ninguna es autorización escrita del usuario para implementar. Ver Q111.
+- Estado B1: `parcial`. Q103 tiene respuesta del usuario; Q48 y las fechas siguen sin corregir.
+
+### 2. Tabla A1-A7
+
+- A1 · alta · pendiente
+  - Evidencia: Q104 (L464-465) e `integrator.md` L74 confirman 72 recursos.
+  - Pendiente: obj-005 L106-107 solo recoge buckets; documentar plataforma, CodeArtifact, SNS.
+- A2 · alta · pendiente
+  - Evidencia: `questions.md` L178 "ya no existen" vs `integrator.md` L115-116 (vivo, borrado).
+  - Pendiente: corregir Q49 (Q114) y `obj-005.md` L203-204.
+- A3 · alta · parcial
+  - Evidencia: Q105 (L466-467) y Q106 (L468-469) aceptadas; excepción obj-005 L93-98 solo bucket.
+  - Pendiente: ampliar excepción y checklist 2.10 (`--ids`, barrido SNS, salida simple).
+- A4 · alta · resuelto
+  - Evidencia: `developer-terraform.md` y `developer-java.md` existen (2026-10-12).
+  - Observación: N4 (texto "bloqueada por Q103").
+- A5 · alta · parcial
+  - Evidencia: Q107 (L470-471) confirma Q94-Q98 y Q100.
+  - Pendiente: `[x]` de architect en checklist L212-213, L154 y L165 (Q23, Q47, Q53, D41, D42).
+- A6 · alta · resuelto
+  - Evidencia: Q108 (L472-473) aprobado; `0027` L4 `Aceptada`.
+- A7 · alta · pendiente
+  - Pendiente: cabeceras, tabla de entregables y `[x]` (sección 3).
+
+- Detalle A1: obj-005 no registra el borrado de plataforma (`library/platform`, CodeArtifact,
+  IAM de plataforma, buildspecs). Q104 lo confirma; falta documentarlo.
+- Detalle A3: el `--ids` fue corregido en `developer-powershell-fix.md` (L38-49). El barrido SNS
+  tiene prueba `-WhatIf` en `developer-powershell-fix2.md` (L84-90, 0 suscripciones).
+- Detalle A6: 0027 existe y está `Aceptada`. Falta enlace en 0010 (N2).
+
+### 3. A7 · propuestas de cambio para checklist.md (no aplicadas)
+
+- Estado y cabeceras:
+  - `obj-005.md` L3-5 "borrador... sin autorización": actualizar a autorizado (Q103).
+  - `obj-005.md` L161-173: developer-scriban, terraform, java, integrator y adr figuran
+    "pendiente" y ya tienen informe o ejecución. Actualizar.
+  - `obj-005.md` L176 y L182 (Q48 "no autorizada"/"pendiente"): actualizar.
+  - `questions.md` L3: "Q1–Q93 resueltas" y "Q48 autorizada (2026-10-11)": corregir a Q1-Q110.
+  - `questions.md` L463: "Pendiente: opciones 1... o 2" residual en Q103: retirar.
+  - `checklist.md` L4 y L9: "Q1-Q93" y "Sin autorización": actualizar.
+  - `checklist.md` L6: regla "`[x]` solo decisión del usuario" contradicha por `[x]` de
+    implementación. Reformular: `[x]` con decisión del usuario o evidencia de developer/tester.
+- `[x]` que pasan a `[ ]` con nota "pendiente de verificación":
+  - L154 "Coste verificado con precios AWS (Q47, architect)": solo architect; sin confirmación.
+  - L156 "Documentación... library/platform actualizada (Q3, Q45)": `library/` conserva
+    menciones en `README.md:44`, `scripts/up.ps1:13`, `scripts/publish-common.ps1:10` y
+    `settings.xml:7`.
+  - L160 "Integrator despliega...; tester verifica el arranque cloud (Q44)": tester no verificó
+    arranque (`tester.md` §8; Q94 pendiente).
+  - L163 "Secretos AWS eliminados por el usuario (Q49)": contradicho (integrator.md L115-116).
+  - L212-213 Q23, Q47, Q53, D41, D42: decisiones de architect, no del usuario (A5).
+- `[ ]` que pasan a `[x]` (evidencia suficiente):
+  - L13 "JSON ≈ 300 bytes" (tester TC-02: 113/294 bytes medidos).
+  - L14 "sin keystore-base64" (tester §1 y §7: 0 coincidencias).
+  - L28 "ADR-0027 existe" (`0027` L4 `Aceptada`; Q108).
+  - L146 "ADR-0012 actualizado" (`0012` L6 y L47 citan ADR-0027; sin cabecera SM).
+  - L166 "M5 comentarios" (tester TC-22).
+  - L229 "Q48 cerrada" (Q103). Eliminar el duplicado de L259.
+- `[ ]` que se mantienen:
+  - L144 "ADR-0010": falta enlace (N2).
+  - L147-149 "ADR-0022": L81 cita Secrets Manager (Q112).
+  - L38 excepción de scripts en obj-005 (A3).
+  - Verificación AWS (TC-03, TC-04, TC-05, TC-06, TC-07, TC-21, TC-23) y restos.
+- Añadir `[ ]`:
+  - 2.7: "Q94/Q95: arranque cloud descifra el SecureString y el filtro de test" (Q115).
+  - 2.10: "delete-all: vaciado real de versiones del bucket (no ejercitado; integrator §4)".
+- Citas: L149 "(Q73, D23)" debe citar Q44 (H4 de la revisión anterior). L129 quitar
+  "(inferencia de Q75; confirmar, D37)": tester §7 verifica README sin caché.
+
+### 4. Hallazgos nuevos
+
+- N1 · media · Comentarios en `library/` sin cambiar (Q3). Ver A7 y checklist L156.
+- N2 · media · `0010` L6 "Sustituida por: ADR-0027" sin enlace. Q4 y Q54 piden enlace.
+- N3 · media · `use-cases.md`: falta TC-02 (salta de TC-01 a TC-03). TC-01 tiene dos
+  "Resultado: pendiente" (L13-14). Todos los TC figuran "pendiente" aunque `tester.md` §6 valida 15.
+- N4 · media · `developer-terraform.md` L100 y `developer-java.md` L74: "Implementación bloqueada
+  por Q103", pero los cambios ya están aplicados (`developer-scriban.md`). Texto contradictorio.
+- N5 · media · Sin ítem de verificación de Q94/Q95 en checklist (`developer-java.md` L63-64).
+- N6 · baja · `checklist.md` L229 `[ ]` y L259 `[x]` para Q48: duplicado contradictorio.
+- N7 · baja · `integrator-up.md` L95 "common-web 1.1.6" vs `integrator.md` L34 "1.1.5".
+  Informativa: versión distinta del mismo paquete.
+- N8 · informativa · `integrator.md` L117-119: el bucket keystore no existía en AWS. El vaciado
+  de versiones no se ejercitó en AWS; TC-18 solo verifica por lectura.
+
+### 5. Dudas nuevas (para `questions.md`; no registradas por el reviewer)
+
+- Q111 ¿Q103 cubre retroactivamente lo ejecutado el 2026-10-11 (generador, scripts,
+  `delete-all -Force`, `up -Fast`)? Rec: sí; registrar fecha y alcance en `questions.md`.
+- Q112 ¿`0022` L81 "no se persiste en Secrets Manager" se reformula o queda histórico?
+  Rec: reformular a "en ningún almacén de secretos" (Q5 pide actualizar esas secciones).
+- Q113 ¿`library/common/settings.xml` L7 describe la CI actual ("desde Secrets Manager")?
+  Rec: verificar en el pipeline; si no es exacto, no tocar y avisar. Si lo es, excluir de Q3.
+- Q114 ¿Corrijo Q49 a "borrado por `delete-all-services-aws -Force` el 2026-10-11"?
+  Rec: sí; el hecho consta en `integrator.md` §4.
+- Q115 ¿Añado a checklist el ítem de verificación de arranque para Q94/Q95? Rec: sí, en 2.7.
+
+### 6. Veredicto
+
+- `requiere cambios`.
+- Bloqueantes: ninguno nuevo. B1 `parcial` (Q48 sin corregir; retroactividad Q111).
+- Altas abiertas: A1, A2, A3, A5, A7 (pendientes documentales; sin defecto de producto).
+- Resueltas: A4, A6.
+- Para avanzar: responder Q111-Q115, aplicar secciones 3 y 4, y volver a revisar.
+
+### 7. Límites
+
+- No verifiqué AWS ni ejecuté `terraform`, PowerShell ni el generador.
+- Verifiqué plantillas y scripts por grep y lectura de informes; no leí cada plantilla completa.
+- No dispongo del mensaje original de autorización; solo el registro en `questions.md`.
+- Hora UTC-5 no disponible: sin timestamps por paso.
+- No edité `questions.md` ni `checklist.md` por límite de rol (ver encabezado).

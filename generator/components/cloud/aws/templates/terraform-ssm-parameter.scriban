@@ -1,12 +1,18 @@
 # -----------------------------------------------------------------------------
-# Secrets Manager - Un secreto por aplicación (contenedor, sin valor)
+# SSM Parameter Store - Un SecureString por aplicación (contenedor, sin valor)
 # El valor se siembra fuera de Terraform (cloud/up.ps1): nunca entra en el estado.
 # -----------------------------------------------------------------------------
 
-resource "aws_secretsmanager_secret" "app_secret" {
-  name        = "${var.environment}/${var.project_name}"
+resource "aws_ssm_parameter" "app_secret" {
+  name        = "/${var.environment}/${var.project_name}/secrets"
+  type        = "SecureString"
   description = "Secrets of the application ${var.project_name}"
-  kms_key_id  = var.kms_key_arn
+  value       = "placeholder"
+
+  # El valor real lo siembra cloud/up.ps1; Terraform no debe revertirlo.
+  lifecycle {
+    ignore_changes = [value]
+  }
 
   tags = {
     Environment = var.environment

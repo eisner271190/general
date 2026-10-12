@@ -5,10 +5,11 @@
 .DESCRIPTION
     Ejecuta terraform destroy en cada directorio microservicio, en orden
     inverso al de up.ps1. El directorio modules/ se excluye.
-    Antes del destroy borra el secreto de la aplicación sin ventana de
-    recuperación (si quedara programado para borrado, up.ps1 no podría volver
-    a crearlo) y después del destroy elimina de Parameter Store los parámetros
-    del microservicio.
+    Antes del destroy borra el SecureString de la aplicación con
+    delete-parameter (sin ventana de recuperación) y purga por CLI el bucket
+    del keystore (objetos y versiones), porque AWS no destruye un bucket con
+    contenido. Después del destroy elimina de Parameter Store los parámetros
+    del microservicio y, por CLI, cualquier resto del bucket del keystore.
     Consola: solo líneas con formato [yyyy-MM-dd HH:mm:ss] [etapa] mensaje
     (etapa 'Cloud Destroy').
     Archivo: logs/yyyy-MM-dd-HH-mm-ss.log con la salida real de terraform.
@@ -162,80 +163,99 @@ function Invoke-AwsCli {
     }
 }
 
-# Secreto único de la aplicación: nombre <environment>/<applicationId>.
+# SecureString único de la aplicación: /<environment>/<applicationId>/secrets.
 function Get-ApplicationSecretName {
-    return "$Environment/{{ APPLICATION_ID }}"
+    return "/$Environment/{{ APPLICATION_ID }}/secrets"
 }
 
-# Estado del secreto: 'missing' (no existe), 'scheduled' (borrado pendiente,
-# bloquea la recreación) o 'active'.
-function Get-ApplicationSecretState {
-    param([Parameter(Mandatory)][string]$SecretName)
-
-    $result = Invoke-AwsCli -Operation 'describe-secret' -Arguments @(
-        'secretsmanager', 'describe-secret', '--secret-id', $SecretName, '--query', 'DeletedDate', '--output', 'text'
-    )
-    if ($result.ExitCode -ne 0) {
-        if ($result.Output -match 'ResourceNotFoundException') {
-            return 'missing'
-        }
-
-        throw "aws secretsmanager describe-secret falló con código $($result.ExitCode) name=$SecretName"
-    }
-
-    if (([string]$result.Output).Trim() -ne 'None') {
-        return 'scheduled'
-    }
-
-    return 'active'
+# Bucket del keystore por entorno; mismo nombre que genera Terraform.
+function Get-KeystoreBucketName {
+    return "{{ APPLICATION_ID }}-keystore-$Environment"
 }
 
-# Cancela el borrado pendiente: sólo así admite un delete-secret inmediato.
-function Restore-ScheduledSecret {
-    param([Parameter(Mandatory)][string]$SecretName)
-
-    $result = Invoke-AwsCli -Operation 'restore-secret' -Arguments @(
-        'secretsmanager', 'restore-secret', '--secret-id', $SecretName
-    )
-    if ($result.ExitCode -ne 0) {
-        throw "aws secretsmanager restore-secret falló con código $($result.ExitCode) name=$SecretName"
-    }
-
-    Write-Log -Message "Borrado programado cancelado en $SecretName"
-}
-
-# Borra el secreto sin ventana de recuperación para que el siguiente up.ps1
-# pueda crearlo; se hace antes del destroy para que Terraform no encuentre un
-# secreto ya programado para borrado.
+# Borra el parámetro, que no tiene ventana de recuperación (Q31). Idempotente:
+# si ya no existe solo se anota en el log.
 function Remove-ApplicationSecret {
     param([Parameter(Mandatory)][string]$SecretName)
 
-    $state = Get-ApplicationSecretState -SecretName $SecretName
-    if ($state -eq 'missing') {
-        Write-LogDetail -Message "secreto ya eliminado name=$SecretName"
-        return
-    }
-
-    if ($state -eq 'scheduled') {
-        Restore-ScheduledSecret -SecretName $SecretName
-    }
-
-    $result = Invoke-AwsCli -Operation 'delete-secret' -Arguments @(
-        'secretsmanager', 'delete-secret', '--secret-id', $SecretName, '--force-delete-without-recovery'
+    $result = Invoke-AwsCli -Operation 'delete-parameter' -Arguments @(
+        'ssm', 'delete-parameter', '--name', $SecretName
     )
     if ($result.ExitCode -ne 0) {
-        throw "aws secretsmanager delete-secret falló con código $($result.ExitCode) name=$SecretName"
+        if ($result.Output -match 'ParameterNotFound') {
+            Write-LogDetail -Message "parámetro ya eliminado name=$SecretName"
+            return
+        }
+
+        throw "aws ssm delete-parameter falló con código $($result.ExitCode) name=$SecretName"
     }
 
-    Write-Log -Message "Secreto eliminado sin ventana de recuperación: $SecretName"
+    Write-Log -Message "Parámetro eliminado: $SecretName"
 }
 
-# El secreto de la aplicación vive en el microservicio con secrets.tf (igual
+# El parámetro de la aplicación vive en el microservicio con secrets.tf (igual
 # que el repositorio ECR vive en el que tiene ecr.tf).
 function Test-SecretDirectory {
     param([Parameter(Mandatory)][string]$WorkingDirectory)
 
     return (Test-Path -Path (Join-Path -Path $WorkingDirectory -ChildPath 'secrets.tf'))
+}
+
+# El bucket del keystore está versionado: `delete-bucket` y `terraform destroy`
+# lo rechazan con objetos o versiones. Se purgan todas (con sus marcadores de
+# borrado) en lotes de 1000 (D42). No falla si el bucket ya no existe.
+function Remove-KeystoreBucketContent {
+    param([Parameter(Mandatory)][string]$BucketName)
+
+    $versions = Invoke-AwsCli -Operation 'list-object-versions' -Arguments @(
+        's3api', 'list-object-versions', '--bucket', $BucketName, '--output', 'json'
+    )
+    if ($versions.ExitCode -ne 0) {
+        Write-LogDetail -Message "list-object-versions sin efecto bucket=$BucketName (ya no existe)"
+        return
+    }
+
+    $keys = [System.Collections.Generic.List[object]]::new()
+    foreach ($entry in @($versions.Output | ConvertFrom-Json)) {
+        foreach ($version in @($entry.Versions, $entry.DeleteMarkers)) {
+            if ($null -eq $version) {
+                continue
+            }
+
+            $keys.Add([pscustomobject]@{ Key = $version.Key; VersionId = $version.VersionId }) | Out-Null
+        }
+    }
+
+    Write-LogDetail -Message "keystore objetos+versiones bucket=$BucketName total=$($keys.Count)"
+    for ($offset = 0; $offset -lt $keys.Count; $offset += 1000) {
+        $batch = @($keys[$offset..([Math]::Min($offset + 999, $keys.Count - 1))])
+        $payload = @{ Objects = @($batch) } | ConvertTo-Json -Depth 4 -Compress
+        $result = Invoke-AwsCli -Operation 'delete-objects' -Arguments @(
+            's3api', 'delete-objects', '--bucket', $BucketName, '--delete', $payload
+        )
+        if ($result.ExitCode -ne 0) {
+            throw "aws s3api delete-objects falló con código $($result.ExitCode) bucket=$BucketName"
+        }
+    }
+}
+
+# Restos tras el destroy (D41): si el bucket sigue existiendo y ya está vacío,
+# se borra por CLI. Idempotente: no hace nada si Terraform ya lo eliminó.
+function Remove-KeystoreBucketLeftover {
+    param([Parameter(Mandatory)][string]$BucketName)
+
+    $result = Invoke-AwsCli -Operation 'delete-bucket' -Arguments @('s3api', 'delete-bucket', '--bucket', $BucketName)
+    if ($result.ExitCode -eq 0) {
+        Write-Log -Message "Bucket del keystore eliminado: $BucketName"
+        return
+    }
+
+    if ($result.Output -match 'NoSuchBucket') {
+        Write-LogDetail -Message "bucket del keystore ya destruido por Terraform bucket=$BucketName"
+        return
+    }
+
+    throw "aws s3api delete-bucket falló con código $($result.ExitCode) bucket=$BucketName"
 }
 
 # Nombres de los parámetros bajo una ruta (AWS CLI pagina la respuesta solo).
@@ -312,8 +332,13 @@ function Invoke-MicroserviceDown {
         return
     }
 
+    $keystoreBucket = $null
     if (Test-SecretDirectory -WorkingDirectory $WorkingDirectory) {
         Remove-ApplicationSecret -SecretName (Get-ApplicationSecretName)
+        $keystoreBucket = Get-KeystoreBucketName
+
+        # Antes del destroy: AWS no destruye un bucket con objetos o versiones (D42).
+        Remove-KeystoreBucketContent -BucketName $keystoreBucket
     }
 
     # La ruta se lee antes del destroy: con el estado vacío el output ya no existe.
@@ -322,6 +347,11 @@ function Invoke-MicroserviceDown {
     Write-Log -Message "Destruyendo infraestructura de $name"
     Invoke-TerraformDestroy -WorkingDirectory $WorkingDirectory
     Write-Log -Message "Infraestructura destruida $name"
+
+    # Después del destroy: restos del bucket del keystore (D41).
+    if (-not [string]::IsNullOrWhiteSpace($keystoreBucket)) {
+        Remove-KeystoreBucketLeftover -BucketName $keystoreBucket
+    }
 
     if ([string]::IsNullOrWhiteSpace($parameterPath)) {
         Write-LogDetail -Message "environment_parameter_path vacío name=$name (sin parámetros que borrar)"
@@ -340,7 +370,7 @@ function Invoke-CloudDown {
     Write-LogDetail -Message "environment=$Environment autoApprove=$AutoApprove tfvars=$script:TerraformFile"
 
     if ($null -eq (Get-Command -Name aws -ErrorAction SilentlyContinue)) {
-        Stop-WithError -Reason 'aws CLI no disponible: no se puede limpiar el secreto ni los parámetros'
+        Stop-WithError -Reason 'aws CLI no disponible: no se puede limpiar el parámetro ni el bucket'
     }
 
     $directories = @(Get-MicroserviceDirectory)

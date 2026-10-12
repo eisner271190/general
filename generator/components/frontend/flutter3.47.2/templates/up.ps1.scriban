@@ -7,12 +7,15 @@
     regenerar iconos -> firma Android -> appbundle release -> flutter run.
     dart pub add solo se ejecuta si se indican dependencias: pubspec.yaml
     ya declara flutter_launcher_icons.
-    La firma sale del secreto único de la aplicación
-    <environment>/<applicationId> (AWS Secrets Manager): siempre se lee el
-    bloque android-signing y, si todavía no existe, se genera el keystore y se
-    guarda en el secreto (también sin -Sign). El secreto nunca se crea aquí:
-    con -Sign su ausencia es un error de secuencia y se aborta; sin -Sign se
-    avisa y se continúa.
+    La firma sale del SecureString único de la aplicación
+    /<environment>/<applicationId>/secrets (SSM Parameter Store): siempre se
+    lee el bloque android-signing y, si todavía no existe, se genera el
+    keystore, se sube a S3 con su SHA-256 como metadato y se guardan key-alias,
+    store-password y key-password en el parámetro (también sin -Sign).
+    El keystore siempre se descarga de S3, sin caché local, y su SHA-256 se
+    verifica contra el metadato del objeto antes de firmar. El parámetro nunca
+    se crea aquí: con -Sign su ausencia es un error de secuencia y se aborta;
+    sin -Sign se avisa y se continúa.
     Sin -Sign se borran los archivos de firma y el .aab sale sin firmar.
     Consola: solo líneas con formato [yyyy-MM-dd HH:mm:ss] [Frontend] mensaje,
     más la salida de `flutter run` (interactivo), que también se guarda.
@@ -25,13 +28,14 @@
 .PARAMETER Dependencies
     Paquetes a añadir con `dart pub add --dev` antes de compilar.
 .PARAMETER Environment
-    Entorno cuyo secreto se usa para firmar. Por defecto el entorno con el que
-    se generó el proyecto; la variable de entorno ENVIRONMENT (pipeline) lo
-    puede sobrescribir.
+    Entorno cuyo parámetro y cuyo bucket de keystore se usan para firmar. Por
+    defecto el entorno con el que se generó el proyecto; la variable de entorno
+    ENVIRONMENT (pipeline) lo puede sobrescribir.
 .PARAMETER Sign
-    Compila el .aab firmado a partir del secreto de AWS Secrets Manager.
+    Compila el .aab firmado con el android-signing del parámetro SSM y el
+    keystore descargado de S3.
     Sin él se eliminan los archivos de firma y se compila sin firmar.
-    El bloque android-signing se garantiza en el secreto con o sin él.
+    El bloque android-signing se garantiza en el parámetro con o sin él.
     Es el modo que usa el pipeline de CI.
 .PARAMETER SkipIcons
     Omite la regeneración de los iconos de lanzamiento.
@@ -123,17 +127,27 @@ function Ensure-Prerequisites {
     Write-Log -Message 'Comprobando prerrequisitos'
     Assert-Tool -Name 'flutter' -Hint 'Instala el SDK de Flutter y añádelo al PATH.'
     if ($Sign) {
-        Assert-Tool -Name 'aws' -Hint 'Se usa para leer el secreto de la aplicación.'
+        Assert-Tool -Name 'aws' -Hint 'Se usa para leer el parámetro de la aplicación y su keystore en S3.'
         Assert-Tool -Name 'keytool' -Hint 'Se usa para generar el keystore de Android (JDK 17).'
     }
 }
 
-# Secreto único de la aplicación: <environment>/<applicationId>.
+# SecureString único de la aplicación: /<environment>/<applicationId>/secrets.
 function Get-ApplicationSecretName {
-    return "$Environment/{{ APPLICATION_ID }}"
+    return "/$Environment/{{ APPLICATION_ID }}/secrets"
 }
 
-# Texto del secreto -> hashtable. Sin valor se trata como JSON vacío.
+# Bucket del keystore por entorno; mismo nombre que genera Terraform.
+function Get-KeystoreBucketName {
+    return "{{ APPLICATION_ID }}-keystore-$Environment"
+}
+
+# Objeto del keystore dentro del bucket: un objeto por aplicación.
+function Get-KeystoreObjectKey {
+    return "keystore/{{ APPLICATION_ID }}/keystore.jks"
+}
+
+# Texto del parámetro -> hashtable. Sin valor se trata como JSON vacío.
 function ConvertTo-SecretHashtable {
     param([AllowNull()][string]$SecretString)
 
@@ -145,16 +159,16 @@ function ConvertTo-SecretHashtable {
 }
 
 # Invoca AWS CLI y devuelve el código de salida junto al texto (salida y error).
-function Invoke-AwsSecretsManager {
+function Invoke-AwsCli {
     param(
         [Parameter(Mandatory)][string]$Operation,
         [Parameter(Mandatory)][string[]]$Arguments
     )
 
-    Write-LogDetail -Message "aws secretsmanager $Operation"
+    Write-LogDetail -Message "aws $Operation"
     $output = (& aws @Arguments 2>&1 | Out-String)
     $code = $LASTEXITCODE
-    Write-LogDetail -Message "aws secretsmanager $Operation exit=$code"
+    Write-LogDetail -Message "aws $Operation exit=$code"
 
     return [pscustomobject]@{
         ExitCode = $code
@@ -162,58 +176,47 @@ function Invoke-AwsSecretsManager {
     }
 }
 
-# El secreto lo crea Terraform (componente cloud): aquí nunca se crea.
+# El parámetro lo crea Terraform (componente cloud): aquí nunca se crea.
 function Test-ApplicationSecretExists {
     param([Parameter(Mandatory)][string]$SecretName)
 
-    $result = Invoke-AwsSecretsManager -Operation 'describe-secret' -Arguments @(
-        'secretsmanager', 'describe-secret', '--secret-id', $SecretName, '--query', 'Name', '--output', 'text'
+    $result = Invoke-AwsCli -Operation 'ssm get-parameter' -Arguments @(
+        'ssm', 'get-parameter', '--name', $SecretName, '--query', 'Parameter.Name', '--output', 'text'
     )
     if ($result.ExitCode -eq 0) {
         return $true
     }
 
-    if ($result.Output -match 'ResourceNotFoundException') {
+    if ($result.Output -match 'ParameterNotFound') {
         return $false
     }
 
-    throw "aws secretsmanager describe-secret falló con código $($result.ExitCode) name=$SecretName"
+    throw "aws ssm get-parameter falló con código $($result.ExitCode) name=$SecretName"
 }
 
-# No existe -> error de secuencia; existe sin valor -> '' (Terraform sólo crea
-# el contenedor); cualquier otro fallo -> error, para no arriesgarse a
-# regenerar la firma sobre una lectura fallida.
+# No existe -> error de secuencia (Q34); existe -> valor descifrado.
 function Get-ApplicationSecretString {
     param([Parameter(Mandatory)][string]$SecretName)
 
     if (-not (Test-ApplicationSecretExists -SecretName $SecretName)) {
-        throw "El secreto $SecretName no existe: despliega antes el componente cloud (cloud/up.ps1 -Phase Apply)."
+        throw "El parámetro $SecretName no existe: despliega antes el componente cloud (cloud/up.ps1 -Phase Apply)."
     }
 
-    $result = Invoke-AwsSecretsManager -Operation 'get-secret-value' -Arguments @(
-        'secretsmanager', 'get-secret-value', '--secret-id', $SecretName, '--query', 'SecretString', '--output', 'text'
+    $result = Invoke-AwsCli -Operation 'ssm get-parameter' -Arguments @(
+        'ssm', 'get-parameter', '--name', $SecretName, '--with-decryption',
+        '--query', 'Parameter.Value', '--output', 'text'
     )
     if ($result.ExitCode -ne 0) {
-        if ($result.Output -match 'ResourceNotFoundException') {
-            Write-LogDetail -Message "secreto sin valor name=$SecretName (JSON vacío)"
-            return ''
-        }
-
-        throw "aws secretsmanager get-secret-value falló con código $($result.ExitCode) name=$SecretName"
+        throw "aws ssm get-parameter --with-decryption falló con código $($result.ExitCode) name=$SecretName"
     }
 
-    $value = ([string]$result.Output).Trim()
-    if ($value -eq 'None') {
-        return ''
-    }
-
-    return $value
+    return ([string]$result.Output).Trim()
 }
 
 function Get-ApplicationSecret {
     $secretName = Get-ApplicationSecretName
     $secret = ConvertTo-SecretHashtable -SecretString (Get-ApplicationSecretString -SecretName $SecretName)
-    Write-LogDetail -Message "secreto name=$secretName claves=$(@($secret.Keys) -join ', ')"
+    Write-LogDetail -Message "parámetro name=$secretName claves=$(@($secret.Keys) -join ', ')"
     return $secret
 }
 
@@ -225,17 +228,73 @@ function Set-ApplicationSecretString {
     )
 
     $json = $Secret | ConvertTo-Json -Depth 16 -Compress
-    Write-LogDetail -Message "aws secretsmanager put-secret-value --secret-id $SecretName (valor omitido del log)"
+    Write-LogDetail -Message "aws ssm put-parameter --name $SecretName (valor omitido del log)"
 
-    $result = Invoke-AwsSecretsManager -Operation 'put-secret-value' -Arguments @(
-        'secretsmanager', 'put-secret-value', '--secret-id', $SecretName, '--secret-string', $json
+    $result = Invoke-AwsCli -Operation 'ssm put-parameter' -Arguments @(
+        'ssm', 'put-parameter', '--name', $SecretName, '--type', 'SecureString', '--overwrite', '--value', $json
     )
     if ($result.ExitCode -ne 0) {
         Add-Content -Path $script:LogFile -Value ([string]$result.Output)
-        throw "aws secretsmanager put-secret-value falló con código $($result.ExitCode) name=$SecretName"
+        throw "aws ssm put-parameter falló con código $($result.ExitCode) name=$SecretName"
     }
 
-    Write-LogDetail -Message "secreto escrito name=$SecretName (valor omitido del log)"
+    Write-LogDetail -Message "parámetro escrito name=$SecretName (valor omitido del log)"
+}
+
+# SHA-256 en hexadecimal minúsculas, igual que el metadato del objeto S3.
+function Get-FileSha256 {
+    param([Parameter(Mandatory)][string]$Path)
+
+    return (Get-FileHash -Path $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+
+# Descarga el keystore a un temporal y devuelve el SHA-256 del metadato del
+# objeto. Sin metadato no hay verificación posible: es un error (Q80).
+function Get-KeystoreFromBucket {
+    param(
+        [Parameter(Mandatory)][string]$BucketName,
+        [Parameter(Mandatory)][string]$ObjectKey,
+        [Parameter(Mandatory)][string]$LocalPath
+    )
+
+    $download = Invoke-AwsCli -Operation 's3api get-object' -Arguments @(
+        's3api', 'get-object', '--bucket', $BucketName, '--key', $ObjectKey, $LocalPath
+    )
+    if ($download.ExitCode -ne 0) {
+        throw "aws s3api get-object falló con código $($download.ExitCode) bucket=$BucketName key=$ObjectKey"
+    }
+
+    $head = Invoke-AwsCli -Operation 's3api head-object' -Arguments @(
+        's3api', 'head-object', '--bucket', $BucketName, '--key', $ObjectKey,
+        '--query', 'Metadata.sha256', '--output', 'text'
+    )
+    if ($head.ExitCode -ne 0) {
+        throw "aws s3api head-object falló con código $($head.ExitCode) bucket=$BucketName key=$ObjectKey"
+    }
+
+    return ([string]$head.Output).Trim().ToLowerInvariant()
+}
+
+# Sube el keystore con su SHA-256 como metadato. El objeto existente nunca se
+# sobrescribe: solo se llama cuando el objeto no existe (Q88).
+function Set-KeystoreInBucket {
+    param(
+        [Parameter(Mandatory)][string]$BucketName,
+        [Parameter(Mandatory)][string]$ObjectKey,
+        [Parameter(Mandatory)][string]$LocalPath,
+        [Parameter(Mandatory)][string]$Sha256
+    )
+
+    $result = Invoke-AwsCli -Operation 's3api put-object' -Arguments @(
+        's3api', 'put-object', '--bucket', $BucketName, '--key', $ObjectKey,
+        '--body', $LocalPath, '--metadata', "sha256=$Sha256"
+    )
+    if ($result.ExitCode -ne 0) {
+        Add-Content -Path $script:LogFile -Value ([string]$result.Output)
+        throw "aws s3api put-object falló con código $($result.ExitCode) bucket=$BucketName key=$ObjectKey"
+    }
+
+    Write-LogDetail -Message "keystore subido sha256=$Sha256 bucket=$BucketName key=$ObjectKey"
 }
 
 # Contraseña para keystore/key: base64 sin /+= para poder usarla tal cual.
@@ -247,66 +306,158 @@ function New-PasswordValue {
     return (([Convert]::ToBase64String($bytes)) -replace '[/+=]', '')
 }
 
+# Genera el keystore en la ruta indicada (keytool, RSA 2048, JKS) y devuelve el
+# bloque android-signing sin el keystore: ese va a S3. Si el parámetro ya tiene
+# contraseñas se reutilizan, para que sigan siendo las que abren el keystore.
 function New-AndroidSigningMaterial {
+    param(
+        [Parameter(Mandatory)][string]$KeystorePath,
+        [string]$StorePassword,
+        [string]$KeyPassword
+    )
+
     $password = New-PasswordValue -ByteLength 24
-    $tempKeystore = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ("{0}.jks" -f ([guid]::NewGuid().ToString('N')))
-
-    try {
-        $arguments = @(
-            '-genkeypair', '-alias', '{{ APPLICATION_ID }}', '-keyalg', 'RSA', '-keysize', '2048',
-            '-validity', '10000', '-storetype', 'JKS', '-keystore', $tempKeystore,
-            '-storepass', $password, '-keypass', $password, '-dname', 'CN={{ APPLICATION_ID }}'
-        )
-        Write-LogDetail -Message 'keytool -genkeypair (credenciales omitidas del log)'
-        & keytool @arguments 2>&1 | Out-File -FilePath $script:LogFile -Append
-        $code = $LASTEXITCODE
-        Write-LogDetail -Message "keytool exit=$code"
-        if ($code -ne 0) {
-            throw "keytool falló con código $code"
-        }
-
-        $base64 = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($tempKeystore))
+    if ([string]::IsNullOrWhiteSpace($StorePassword)) {
+        $StorePassword = $password
+        $KeyPassword = $password
     }
-    finally {
-        Remove-Item -Path $tempKeystore -Force -ErrorAction SilentlyContinue
+
+    $arguments = @(
+        '-genkeypair', '-alias', '{{ APPLICATION_ID }}', '-keyalg', 'RSA', '-keysize', '2048',
+        '-validity', '10000', '-storetype', 'JKS', '-keystore', $KeystorePath,
+        '-storepass', $StorePassword, '-keypass', $KeyPassword, '-dname', 'CN={{ APPLICATION_ID }}'
+    )
+    Write-LogDetail -Message 'keytool -genkeypair (credenciales omitidas del log)'
+    & keytool @arguments 2>&1 | Out-File -FilePath $script:LogFile -Append
+    $code = $LASTEXITCODE
+    Write-LogDetail -Message "keytool exit=$code"
+    if ($code -ne 0) {
+        throw "keytool falló con código $code"
     }
 
     return [ordered]@{
-        'key-alias'       = '{{ APPLICATION_ID }}'
-        'store-password'  = $password
-        'key-password'    = $password
-        'keystore-base64' = $base64
+        'key-alias'      = '{{ APPLICATION_ID }}'
+        'store-password' = $StorePassword
+        'key-password'   = $KeyPassword
     }
 }
 
-# Devuelve el material de firma del secreto; lo crea y guarda sólo si falta.
+# Ruta temporal del keystore descargado o generado; nunca se reutiliza una
+# copia anterior: no hay caché local del .jks (Q75).
+function New-KeystoreTempPath {
+    $name = "{0}.jks" -f ([guid]::NewGuid().ToString('N'))
+    return (Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath $name)
+}
+
+# Contraseñas ya sembradas en el parámetro; '' si el bloque no existe.
+# Set-StrictMode lanza al indexar una clave ausente, de ahí el ContainsKey.
+function Get-SigningPassword {
+    param(
+        [Parameter(Mandatory)][System.Collections.IDictionary]$Secret,
+        [Parameter(Mandatory)][string]$Key
+    )
+
+    if (-not $Secret.ContainsKey('android-signing')) {
+        return ''
+    }
+
+    return [string]$Secret['android-signing'][$Key]
+}
+
+# El objeto S3 ya existe: no se regenera ni se sobrescribe nada (Q88).
+function Test-KeystoreObjectExists {
+    $result = Invoke-AwsCli -Operation 's3api head-object' -Arguments @(
+        's3api', 'head-object', '--bucket', (Get-KeystoreBucketName),
+        '--key', (Get-KeystoreObjectKey)
+    )
+    return ($result.ExitCode -eq 0)
+}
+
+# Descarga el keystore y verifica su SHA-256 contra el metadato del objeto; si
+# no coincide, se aborta (Q80).
+function Get-VerifiedKeystore {
+    param([Parameter(Mandatory)][string]$KeystorePath)
+
+    $bucket = Get-KeystoreBucketName
+    $expected = Get-KeystoreFromBucket -BucketName $bucket -ObjectKey (Get-KeystoreObjectKey) `
+        -LocalPath $KeystorePath
+    $actual = Get-FileSha256 -Path $KeystorePath
+
+    if ($expected -eq '' -or $expected -eq 'none') {
+        throw "El objeto $($bucket)/$(Get-KeystoreObjectKey) no tiene metadato sha256: no se puede verificar."
+    }
+
+    if ($expected -ne $actual) {
+        throw "SHA-256 del keystore distinto del metadado: esperado=$expected obtenido=$actual bucket=$bucket"
+    }
+
+    Write-Log -Message "Keystore verificado (sha256=$actual) en $bucket"
+    return $KeystorePath
+}
+
+# Devuelve el material de firma y la ruta local del keystore. El bloque
+# android-signing se crea y guarda solo si falta; el keystore se descarga de S3
+# siempre y, si el objeto no existe, se genera y sube sin sobrescribir nada.
 function Get-OrCreateAndroidSigning {
     param(
         [Parameter(Mandatory)][System.Collections.IDictionary]$Secret,
         [Parameter(Mandatory)][string]$SecretName
     )
 
-    if ($Secret.ContainsKey('android-signing')) {
-        Write-Log -Message "Firma Android leída de $SecretName (sólo lectura)"
-        return $Secret['android-signing']
+    $keystorePath = New-KeystoreTempPath
+    $bucket = Get-KeystoreBucketName
+    $objectKey = Get-KeystoreObjectKey
+    $exists = Test-KeystoreObjectExists
+
+    if ($exists) {
+        Get-VerifiedKeystore -KeystorePath $keystorePath | Out-Null
     }
 
-    Write-Log -Message "Generando keystore de Android: falta android-signing en $SecretName"
-    $signing = New-AndroidSigningMaterial
-    $Secret['android-signing'] = $signing
-    Set-ApplicationSecretString -SecretName $SecretName -Secret $Secret
-    Write-Log -Message "Firma Android añadida a $SecretName"
-    return $signing
+    if ($exists -and -not $Secret.ContainsKey('android-signing')) {
+        # El keystore existe pero el parámetro no: sin contraseñas no hay forma
+        # de firmar. Es una inconsistencia que solo se arregla a mano.
+        throw ("El keystore $bucket/$objectKey existe pero $SecretName no tiene android-signing: " +
+            'las contraseñas no se pueden recuperar; siembra el parámetro de nuevo.')
+    }
+
+    if ($exists) {
+        Write-Log -Message "Firma Android leída de $SecretName (sólo lectura)"
+    }
+    else {
+        # El objeto no existe: se genera y se sube. Si el parámetro ya trae
+        # contraseñas se reutilizan, o el keystore nuevo no abriría con ellas.
+        Write-Log -Message "Generando keystore de Android: falta el objeto $bucket/$objectKey"
+        $signing = New-AndroidSigningMaterial -KeystorePath $keystorePath `
+            -StorePassword (Get-SigningPassword -Secret $Secret -Key 'store-password') `
+            -KeyPassword (Get-SigningPassword -Secret $Secret -Key 'key-password')
+        $sha256 = Get-FileSha256 -Path $keystorePath
+        Set-KeystoreInBucket -BucketName $bucket -ObjectKey $objectKey -LocalPath $keystorePath -Sha256 $sha256
+        Write-Log -Message "Keystore de Android subido a $bucket/$objectKey"
+
+        if (-not $Secret.ContainsKey('android-signing')) {
+            $Secret['android-signing'] = $signing
+            Set-ApplicationSecretString -SecretName $SecretName -Secret $Secret
+            Write-Log -Message "Firma Android añadida a $SecretName"
+        }
+    }
+
+    return [pscustomobject]@{
+        Signing      = $Secret['android-signing']
+        KeystorePath = $keystorePath
+    }
 }
 
 # Escribe el keystore y el key.properties que Gradle usa para release.
 function Write-AndroidSigningArtifacts {
-    param([Parameter(Mandatory)][System.Collections.IDictionary]$Signing)
+    param(
+        [Parameter(Mandatory)][System.Collections.IDictionary]$Signing,
+        [Parameter(Mandatory)][string]$KeystorePath
+    )
 
-    $keystorePath = Join-Path -Path $script:AndroidDirectory -ChildPath 'upload-keystore.jks'
+    $keystoreTarget = Join-Path -Path $script:AndroidDirectory -ChildPath 'upload-keystore.jks'
     $propertiesPath = Join-Path -Path $script:AndroidDirectory -ChildPath 'key.properties'
 
-    [System.IO.File]::WriteAllBytes($keystorePath, [Convert]::FromBase64String([string]$Signing['keystore-base64']))
+    Copy-Item -Path $KeystorePath -Destination $keystoreTarget -Force
     $properties = @(
         "storePassword=$([string]$Signing['store-password'])",
         "keyPassword=$([string]$Signing['key-password'])",
@@ -329,19 +480,33 @@ function Remove-AndroidSigningArtifacts {
     }
 }
 
-# Garantiza el bloque android-signing en el secreto, con o sin -Sign (el
-# secreto no se crea aquí: lo hace Terraform). Devuelve el material de firma,
-# o $null si el secreto no existe y se ejecuta sin -Sign.
+# Garantiza el bloque android-signing en el parámetro, con o sin -Sign (el
+# parámetro no se crea aquí: lo hace Terraform). Devuelve el material de firma
+# con la ruta local del keystore descargado de S3, o $null si el parámetro no
+# existe y se ejecuta sin -Sign (Q34).
 function Sync-AndroidSigningSecret {
     $secretName = Get-ApplicationSecretName
     if (-not $Sign -and -not (Test-ApplicationSecretExists -SecretName $secretName)) {
-        Write-Log -Message "Secreto $secretName no existe: se omite android-signing (despliega el componente cloud)"
+        Write-Log -Message "Parámetro $secretName no existe: se omite android-signing (despliega el componente cloud)"
         return $null
     }
 
-    # Con -Sign el secreto es obligatorio: Get-ApplicationSecret lanza el error.
+    # Con -Sign el parámetro es obligatorio: Get-ApplicationSecret lanza el error.
     $secret = Get-ApplicationSecret
     return (Get-OrCreateAndroidSigning -Secret $secret -SecretName $secretName)
+}
+
+# El temporal del keystore no sobrevive a la ejecución: nada de firma queda en
+# la máquina.
+function Remove-KeystoreTempPath {
+    param([AllowNull()][string]$KeystorePath)
+
+    if ([string]::IsNullOrWhiteSpace($KeystorePath)) {
+        return
+    }
+
+    Remove-Item -Path $KeystorePath -Force -ErrorAction SilentlyContinue
+    Write-LogDetail -Message "keystore temporal eliminado"
 }
 
 function Get-FlutterSdkPath {
@@ -542,11 +707,11 @@ function Invoke-FrontendUp {
 
     Invoke-IconGeneration
 
-    # El secreto queda siempre con android-signing; los archivos locales sólo
+    # El parámetro queda siempre con android-signing; los archivos locales sólo
     # se escriben con -Sign y se borran al terminar la compilación.
     $signing = Sync-AndroidSigningSecret
     if ($Sign) {
-        Write-AndroidSigningArtifacts -Signing $signing
+        Write-AndroidSigningArtifacts -Signing $signing.Signing -KeystorePath $signing.KeystorePath
     }
     else {
         Remove-AndroidSigningArtifacts
@@ -560,6 +725,8 @@ function Invoke-FrontendUp {
     if ($Sign) {
         Remove-AndroidSigningArtifacts
     }
+
+    Remove-KeystoreTempPath -KeystorePath $(if ($null -eq $signing) { '' } else { $signing.KeystorePath })
 
     Invoke-ApplicationRun
 

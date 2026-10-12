@@ -172,7 +172,7 @@
 - **Q48** Autorización explícita para implementar: ¿cuándo?
   ➡️ Tras cerrar questions.md y checklist.md. Pedir por escrito.
   ✅ Respuesta: Tras cerrar questions.md y checklist.md, pedida por escrito.
-  ✔️ Decisión del usuario: no autorizar todavía; mantener análisis.
+  ✔️ Decisión del usuario: no autorizar todavía; mantener análisis. Sustituida por Q103 (autorizada 2026-10-12).
 - **Q49** Limpieza de secretos AWS: ¿antes o después de desplegar?
   ➡️ Después de validar `develop`; el usuario avisa.
   ✅ Respuesta: Ya no existen; el usuario los eliminó manualmente.
@@ -475,6 +475,19 @@
   - ✅ Respuesta: Se crean.
 - [x] Q110 ¿Ningún consumidor espera `.../quizapi/secrets`?
   - ✅ Respuesta: Confirmado por el usuario.
+
+## Revalidación reviewer · 2026-10-12 (Q111-Q115)
+
+- [x] Q111 ¿Q103 cubre retroactivamente lo ejecutado el 2026-10-11 (generador, scripts, borrado AWS, `up -Fast`)?
+  - ✅ Respuesta: Sí.
+- [x] Q112 ¿`ADR-0022` L81 "no se persiste en Secrets Manager" se reformula o queda histórico?
+  - ✅ Respuesta: Histórico; no se modifica.
+- [x] Q113 ¿`library/common/settings.xml` L7 ("desde Secrets Manager") se corrige?
+  - ✅ Respuesta: Sí, se corrige.
+- [x] Q114 ¿Corrijo Q49 a "borrado por `delete-all -Force` el 2026-10-11"?
+  - ✅ Respuesta: No; Q49 se mantiene.
+- [x] Q115 ¿Añado al checklist la verificación de arranque de Q94/Q95?
+  - ✅ Respuesta: Sí, añadir en checklist sección 2.7.
 - D41 y D42: abiertas, de architect (orden de borrado y vaciado del bucket).
 - Q48 bloquea implementación; va al final.
 - Q82 resuelta: alcance de `down.ps1` y destrucción del bucket (Q79 sustituida por Q90).

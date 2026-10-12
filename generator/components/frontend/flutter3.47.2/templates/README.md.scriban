@@ -21,32 +21,40 @@ samples, guidance on mobile development, and a full API reference.
 The signed release `.aab` is produced **only in the CI pipeline** (`up.ps1 -Sign`);
 locally `up.ps1` deletes any signing file and builds **unsigned**.
 
-Signing material lives in a single AWS Secrets Manager secret named
-`{environment}/{applicationId}` (e.g. `develop/com.quizsmart.app`) with a single
-JSON document:
+Signing material lives in a single SSM Parameter Store SecureString named
+`/{environment}/{applicationId}/secrets` (e.g. `/develop/com.quizsmart.app/secrets`)
+with a single JSON document:
 
 ```json
 {
   "android-signing": {
     "key-alias": "{applicationId}",
     "store-password": "...",
-    "key-password": "...",
-    "keystore-base64": "..."
+    "key-password": "..."
   },
   "jwt-secret": "...",
-  "api-key": "..."
+  "ai-api-key": "..."
 }
 ```
 
-- The secret is created by **Terraform** in the cloud component; the frontend
-  only reads it. With `-Sign` a missing secret aborts the build with an explicit
-  message; without `-Sign` it just logs a warning and continues.
-- The script generates the keystore the first time it needs it (with or without
-  `-Sign`) and adds the `android-signing` key (the other keys are never
-  overwritten).
+The keystore itself is **not** in the parameter: it can exceed the Parameter
+Store size limit. It is stored as a binary S3 object at
+`keystore/{applicationId}/keystore.jks` in the per-environment bucket
+`{applicationId}-keystore-{environment}`, created empty by **Terraform**.
+
+- The SecureString is created by **Terraform** in the cloud component; the
+  frontend only reads it. With `-Sign` a missing parameter aborts the build with
+  an explicit message; without `-Sign` it just logs a warning and continues.
+- The script downloads the keystore from S3 on every run (there is **no** local
+  cache) and verifies its SHA-256 against the object metadata before signing; a
+  mismatch aborts the build.
+- It generates the keystore only if the S3 object is missing, uploads it with
+  its SHA-256 as object metadata (it never overwrites an existing one), and adds
+  the `android-signing` key (the other keys are never overwritten).
 - Nothing signing-related is written to the repository or kept on developer
   machines: `android/key.properties` and `android/upload-keystore.jks` are
-  removed right after the bundle is built.
+  removed right after the bundle is built, and the downloaded keystore lives
+  only in a temporary file.
 
 ## CI/CD Pipeline (AWS CodePipeline)
 
@@ -63,10 +71,14 @@ This project includes an automated pipeline to build the signed AAB on every pus
 The CodeBuild IAM role needs access to:
 
 ```
-secretsmanager:GetSecretValue
-secretsmanager:DescribeSecret
-secretsmanager:PutSecretValue
-Resource: arn:aws:secretsmanager:{region}:{account}:secret:{environment}/{applicationId}-*
+ssm:GetParameter
+ssm:PutParameter
+kms:Decrypt
+Resource: arn:aws:ssm:{region}:{account}:parameter:/{environment}/{applicationId}/secrets
+Resource: arn:aws:kms:{region}:{account}:alias/aws/ssm
+s3:GetObject
+s3:PutObject
+Resource: arn:aws:s3:::{applicationId}-keystore-{environment}/keystore/{applicationId}/*
 ```
 
 ### Required variables
@@ -74,8 +86,8 @@ Resource: arn:aws:secretsmanager:{region}:{account}:secret:{environment}/{applic
 | Variable | Description |
 |----------|-------------|
 | `APPLICATION_ID` | Application identifier (e.g., `com.quizsmart.app`) |
-| `ENVIRONMENT` | Deployment environment that owns the secret (e.g., `develop`) |
-| `AWS_REGION` | AWS region for Secrets Manager |
+| `ENVIRONMENT` | Deployment environment that owns the parameter (e.g., `develop`) |
+| `AWS_REGION` | AWS region for Parameter Store, KMS and S3 |
 
 ### Setup
 
@@ -87,7 +99,7 @@ Resource: arn:aws:secretsmanager:{region}:{account}:secret:{environment}/{applic
 
 ```powershell
 ./up.ps1          # without -Sign: any signing file is removed and the bundle is built unsigned
-./up.ps1 -Sign    # reads the AWS secret and produces the signed .aab
+./up.ps1 -Sign    # reads the SSM parameter + keystore in S3 and produces the signed .aab
 ```
 
 For quick testing on a device use a debug build:

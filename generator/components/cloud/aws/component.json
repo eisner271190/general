@@ -7,7 +7,7 @@
     "cloud/terraform/{{MICROSERVICE_NAME}}",
     "cloud/terraform/app",
     "cloud/terraform/modules",
-    "cloud/terraform/modules/secrets-manager",
+    "cloud/terraform/modules/secure-parameters",
     "cloud/terraform/modules/pipeline"
   ],
   "files": [
@@ -33,9 +33,10 @@
     { "key": "cloud/terraform/app/variables.tf", "value": "templates/terraform-variables.scriban" },
     { "key": "cloud/terraform/app/terraform.{{ENVIRONMENT}}.tfvars", "value": "templates/terraform-tfvars.scriban" },
     { "key": "cloud/terraform/app/secrets.tf", "value": "templates/terraform-secrets.scriban" },
+    { "key": "cloud/terraform/app/keystore_bucket.tf", "value": "templates/terraform-keystore-bucket.scriban" },
     { "key": "cloud/terraform/app/codecommit.tf", "value": "templates/terraform-codecommit.scriban" },
-    { "key": "cloud/terraform/modules/secrets-manager/main.tf", "value": "templates/terraform-secrets-manager.scriban" },
-    { "key": "cloud/terraform/modules/secrets-manager/variables.tf", "value": "templates/terraform-secrets-manager-variables.scriban" },
+    { "key": "cloud/terraform/modules/secure-parameters/main.tf", "value": "templates/terraform-ssm-parameter.scriban" },
+    { "key": "cloud/terraform/modules/secure-parameters/variables.tf", "value": "templates/terraform-ssm-parameter-variables.scriban" },
     { "key": "cloud/terraform/modules/pipeline/main.tf", "value": "templates/terraform-pipeline.scriban" },
     { "key": "cloud/terraform/modules/pipeline/variables.tf", "value": "templates/terraform-pipeline-variables.scriban" },
     { "key": "cloud/terraform/modules/pipeline/buildspec-plan.yml", "value": "templates/terraform-pipeline-buildspec-plan.scriban" },

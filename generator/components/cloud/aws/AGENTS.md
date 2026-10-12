@@ -1,7 +1,7 @@
 # Plantillas cloud — Terraform AWS
 
 ## Qué es aquí
-Plantillas Scriban → `<proyecto>/cloud/terraform/<microservicio>/*.tf` y módulos en `cloud/terraform/modules/{secrets-manager,pipeline}`. Registrado en `component.json` (solo la lista `files` se copia).
+Plantillas Scriban → `<proyecto>/cloud/terraform/<microservicio>/*.tf` y módulos en `cloud/terraform/modules/{secure-parameters,pipeline}`. Registrado en `component.json` (solo la lista `files` se copia).
 
 ## Layout generado (no cambiar sin plan)
 - Por microservicio: `provider.tf`, `variables.tf`, `apigateway.tf`, `apigateway_lambda.tf`, `ecr.tf`, `sqs.tf`, `sns.tf`, `sns_subscription.tf`, `cognito.tf`, `cognito_iam.tf`, `cognito_client.tf`, `cognito_google_provider.tf`, `lambda.tf`.
