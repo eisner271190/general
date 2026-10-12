@@ -11,9 +11,6 @@
 - TC-01 JSON sin keystore: el JSON del secreto no contiene `keystore-base64`.
   - Esperado: 0 coincidencias de `keystore-base64` en el JSON generado.
   - Resultado: pendiente.
-- TC-02 Tamaño de referencia: esqueleto del JSON sin valores = 210 bytes (Q76; sin medición
-  del JSON real).
-  - Esperado: ≤ 210 bytes sin valores; no se pasa a Advanced.
   - Resultado: pendiente.
 - TC-03 Subida del keystore: `up.ps1 -Sign` sube el `.jks` como binario en
   `keystore/{{APPLICATION_ID}}/keystore.jks`.

@@ -429,7 +429,9 @@
     `aws_secretsmanager_secret` y el target `Secrets` del borrado.
   - Causa: el inventario enumera servicios genéricos que este objetivo solapa en el
     subconjunto de la aplicación.
-- [ ] Q100 La referencia de "210 bytes" del esqueleto del SecureString no se reproduce.
+- [x] Q100 La referencia de "210 bytes" del esqueleto del SecureString no se reproduce.
+  - ✅ Respuesta: ADR-0027 Aceptada y cifra actualizada a ≈ 300 bytes con valores por defecto
+    (2026-10-12). Docs de obj-005 alineados.
   - Hallazgo: con las 5 claves que siembra `cloud/up.ps1`, el esqueleto son 113 bytes
     (`{"jwt-secret":"x",...}`) y 294 bytes con los valores por defecto reales
     (`ConvertTo-Json -Compress`, UTF-8).

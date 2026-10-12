@@ -38,7 +38,7 @@
 - S3 del keystore: almacenamiento y peticiones de orden 0,005 USD/mes por app.
   Fuente: estimación propia; depende de volumen y región, a revisar si escala.
 - Resultado: 0,40 USD/mes → ~0,005 USD/mes por app. Ahorro ~99 %.
-- El JSON sin keystore (≈ 210 bytes) no habilita el tier Advanced (4 KB).
+- El JSON sin keystore (≈ 300 bytes con valores por defecto) no habilita el tier Advanced (4 KB).
 
 ### Q53: ADR nuevo
 

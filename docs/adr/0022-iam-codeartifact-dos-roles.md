@@ -67,8 +67,8 @@ estándar de CodeBuild ya trae el credential helper nativo de CodeCommit, autent
 
 - Radio de exposición mínimo: si se filtra el rol de un ms, el daño máximo es **leer**, no publicar.
 - **Cero superficie de secretos**: nada que sembrar, nada que rotar, nada que auditar en Secrets
-  Manager. Eliminado el coste de los secretos de plataforma (ADR-0023 deja un único secreto por
-  aplicación para runtime, no para la plataforma).
+  Manager. Eliminado el coste de los secretos de plataforma (ADR-0027 deja un único secreto por
+  aplicación para runtime, no para la plataforma; es un SecureString en Parameter Store).
 - No hay CMK propia: se evita el coste mensual de la clave.
 - El token no puede quedar obsoleto: se pide en cada build, no se almacena.
 

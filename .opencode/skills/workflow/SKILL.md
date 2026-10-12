@@ -23,12 +23,12 @@ description: "Usa esta skill cuando el usuario pide iniciar, revisar o continuar
 7. Las preguntas van a `docs/deliverables/obj-NNN/questions.md` (fuente única),
    cortas, puntuales y con recomendación.
 8. Las preguntas se deben clasificar por Decisión del usuario, Decisión técnica delegable, Inconsistencia documental, Dato verificable faltante
-9. Decisión técnica delegable -> architect.
+9. Decisión técnica delegable -> Architect.
 10. Inconsistencia documental -> Orquestador.
 11. Dato verificable faltante -> Orquestador. 
-12. Dejar la respuesta en `questions.md`.
+12. Dejar la respuesta en `questions.md` y marcarla como resuelta.
 13. Entrega al usuario la lista de preguntas abiertas y espera sus respuestas.
-14. Por cada pregunta que se solucione se debe en background actualizar `questions.md` dejandola respuesta y marcándola como resuelta. Inmediatamente se debe continuar con la siguiente pregunta.
+14. Por cada pregunta que se solucione se debe en background actualizar `questions.md`, dejando la respuesta y marcándola como resuelta. Inmediatamente se debe continuar con la siguiente pregunta.
 
 ### Fase 3: Revisión de respuestas (pasos 4-7)
 14. Cuando el usuario responda y pida nueva revisión, lanza `reviewer` para validar

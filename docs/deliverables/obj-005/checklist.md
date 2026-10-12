@@ -10,7 +10,7 @@
 
 ## 1. Criterios de aceptación (obj-005.md)
 
-- [ ] JSON nuevo sin keystore: esqueleto 210 bytes como referencia; sin medición (Q76).
+- [ ] JSON nuevo sin keystore: ≈ 300 bytes con valores por defecto como referencia; sin medición (Q76, Q100).
 - [ ] JSON del secreto no contiene `keystore-base64`.
 - [ ] Keystore sube y descarga como binario en `keystore/{{APPLICATION_ID}}/keystore.jks`.
 - [ ] Keystore generado solo si falta el objeto en S3; nunca sobrescribir (Q88).
@@ -165,7 +165,7 @@
       verificación (Q87).
 - [ ] Verificar si `library/platform/terraform/pipeline/main.tf:30` y
       `library/platform/buildspecs/java-ci.yml:7` son código o comentario (M5).
-- [x] Tamaño 4 KB: sin medición; esqueleto de 210 bytes como referencia (Q76, Q62).
+- [x] Tamaño 4 KB: sin medición; referencia ≈ 300 bytes con valores por defecto (Q76, Q100).
 - [x] Migración del keystore: no hay copia; se genera uno nuevo si falta (Q57, Q63, Q88).
 
 ### 2.10 Scripts del workspace (excepción Q84)
@@ -252,7 +252,7 @@
 - [x] Sintaxis PowerShell OK en 4 plantillas, 2 scripts y 6 scripts generados.
 - [ ] TC-03, TC-04, TC-05, TC-06, TC-07, TC-16, TC-21, TC-23: requieren AWS o decisión del usuario.
 - [ ] Q99: 4 restos de Secrets Manager en `.opencode/scripts` (inventario genérico).
-- [ ] Q100: referencia de 210 bytes no reproducible.
+- [x] Q100: referencia actualizada a ≈ 300 bytes con valores por defecto (medido 113/294).
 
 ## 5. Autorización
 
