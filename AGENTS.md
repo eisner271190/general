@@ -12,6 +12,7 @@
 - UPDATEALL: `projects/com.quizsmart.app/backend/update-all.ps1`
 - GETAWS: `.opencode/scripts/get-services-aws.ps1`
 - DELETEALL: `.opencode/scripts/delete-all-services-aws.ps1`
+- DELETELOCAL: `projects/`
 
 ## Referencias
 - Haz el cambio mínimo necesario, sin refactors ajenos.
@@ -54,8 +55,7 @@
 ## Durante el proceso
 - Si se identifican nuevos criterios de aceptación se deben ir agregando.
 - Se deben ir agregando casos de prueba en `DELIVERABLES/obj-NNN/use-cases.md`.
-- Por cada duda, registrar su causa y el tipo de problema para que no se repita. Registrarlo en `DELIVERABLES/obj-NNN/improvements.md`.
-- Siempre que se resuelta una duda se debe actualizar la documentación del objetivo `DELIVERABLES/obj-NNN/*.md`.
+- Siempre que se resuelta una pregunta se debe actualizar la documentación del objetivo `DELIVERABLES/obj-NNN/*.md`.
 - Se debe crear y actualizar `DELIVERABLES/obj-NNN/checklist.md`.
 
 ## Restricciones

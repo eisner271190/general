@@ -7,9 +7,3 @@ variable "project_name" {
   description = "Project name for resource naming"
   type        = string
 }
-
-variable "kms_key_arn" {
-  description = "ARN of KMS key for encryption (optional, uses AWS managed key if null)"
-  type        = string
-  default     = null
-}

@@ -40,14 +40,17 @@ resource "aws_iam_role_policy" "{{ MICROSERVICE_NAME }}" {
         Resource = ["*"]
       },
       {
-        Effect   = "Allow",
-        Action   = ["secretsmanager:GetSecretValue"],
-        Resource = ["arn:aws:secretsmanager:*:*:secret:{{ ENVIRONMENT }}/{{ APPLICATION_ID }}-*"]
+        Effect = "Allow",
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParametersByPath",
+        ],
+        Resource = ["arn:aws:ssm:*:*:parameter/{{ ENVIRONMENT }}/{{ APPLICATION_ID }}/*"]
       },
       {
         Effect   = "Allow",
-        Action   = ["ssm:GetParametersByPath"],
-        Resource = ["arn:aws:ssm:*:*:parameter/{{ ENVIRONMENT }}/{{ APPLICATION_ID }}/{{ MICROSERVICE_NAME }}/*"]
+        Action   = ["kms:Decrypt"],
+        Resource = ["arn:aws:kms:{{ CLOUD_REGION }}:*:alias/aws/ssm"]
       }
     ]
   })

@@ -14,11 +14,13 @@
     microservicio (output environment_parameter_path) con sus parámetros y se
     sobrescriben los parámetros cuyo valor sale de la infraestructura
     (ARN de SNS, URL de SQS, URL de API, dominio y client id de Cognito).
-    Al finalizar la fase Apply siembra el secreto único de la aplicación
-    <environment>/<applicationId> con las claves que falten (jwt-secret,
-    api-key, subscription-secret-key y subscription-webhook-secret). Esos
-    valores son temporales: cámbialos a mano en AWS.
-    Terraform sólo crea el contenedor, así que el secreto debe existir ya.
+    Al finalizar la fase Apply siembra el SecureString único de la aplicación
+    /<environment>/<applicationId>/secrets con las claves que falten
+    (jwt-secret, api-key, subscription-secret-key y subscription-webhook-secret).
+    Esos valores son temporales: cámbialos a mano en AWS.
+    Terraform crea el parámetro con el valor "placeholder": solo se siembra si
+    falta o si su valor sigue siendo el placeholder. Nunca sobrescribe claves
+    ya presentes en el JSON.
 .PARAMETER Environment
     Entorno a desplegar. Por defecto el entorno con el que se generó el proyecto.
 .PARAMETER AutoApprove
@@ -65,7 +67,7 @@ $script:ResourceLabels = @{
     'cognito_iam.tf'           = 'Cognito IAM'
     'cognito_client.tf'        = 'Cognito clientes'
     'cognito_google_provider.tf' = 'Cognito Google'
-    'secrets.tf'               = 'Secreto de la aplicación'
+    'secrets.tf'               = 'Parámetro seguro de la aplicación'
 }
 
 # Parámetros de Parameter Store cuyo valor sólo existe después del apply.
@@ -247,9 +249,9 @@ function Update-PostmanBaseUrl {
     Write-Log -Message "baseUrl actualizado en Postman de ${Name}: $BaseUrl"
 }
 
-# Secreto único de la aplicación: nombre <environment>/<applicationId>.
+# SecureString único de la aplicación: /<environment>/<applicationId>/secrets.
 function Get-ApplicationSecretName {
-    return "$Environment/{{ APPLICATION_ID }}"
+    return "/$Environment/{{ APPLICATION_ID }}/secrets"
 }
 
 function New-RandomSecretValue {
@@ -306,28 +308,17 @@ function Add-ApplicationSecretDefaults {
     return $missing.Count
 }
 
-# Texto del secreto -> hashtable. Sin valor se trata como JSON vacío.
-function ConvertTo-SecretHashtable {
-    param([AllowNull()][string]$SecretString)
-
-    if ([string]::IsNullOrWhiteSpace($SecretString)) {
-        return @{}
-    }
-
-    return ($SecretString | ConvertFrom-Json -AsHashtable)
-}
-
 # Invoca AWS CLI y devuelve el código de salida junto al texto (salida y error).
-function Invoke-AwsSecretsManager {
+function Invoke-AwsSsm {
     param(
         [Parameter(Mandatory)][string]$Operation,
         [Parameter(Mandatory)][string[]]$Arguments
     )
 
-    Write-LogDetail -Message "aws secretsmanager $Operation"
+    Write-LogDetail -Message "aws ssm $Operation"
     $output = (& aws @Arguments 2>&1 | Out-String)
     $code = $LASTEXITCODE
-    Write-LogDetail -Message "aws secretsmanager $Operation exit=$code"
+    Write-LogDetail -Message "aws ssm $Operation exit=$code"
 
     return [pscustomobject]@{
         ExitCode = $code
@@ -335,52 +326,42 @@ function Invoke-AwsSecretsManager {
     }
 }
 
-# El secreto lo crea Terraform: si no existe, es un error de secuencia.
+# El parámetro lo crea Terraform; aquí solo se lee y, si procede, se siembra.
 function Test-ApplicationSecretExists {
     param([Parameter(Mandatory)][string]$SecretName)
 
-    $result = Invoke-AwsSecretsManager -Operation 'describe-secret' -Arguments @(
-        'secretsmanager', 'describe-secret', '--secret-id', $SecretName, '--query', 'Name', '--output', 'text'
+    $result = Invoke-AwsSsm -Operation 'get-parameter' -Arguments @(
+        'ssm', 'get-parameter', '--name', $SecretName, '--query', 'Parameter.Name', '--output', 'text'
     )
     if ($result.ExitCode -eq 0) {
         return $true
     }
 
-    if ($result.Output -match 'ResourceNotFoundException') {
+    if ($result.Output -match 'ParameterNotFound') {
         return $false
     }
 
-    throw "aws secretsmanager describe-secret falló con código $($result.ExitCode) name=$SecretName"
+    throw "aws ssm get-parameter falló con código $($result.ExitCode) name=$SecretName"
 }
 
-# No existe -> error de secuencia; existe sin valor -> '' (Terraform sólo crea
-# el contenedor y aún no hay put-secret-value); cualquier otro fallo -> error,
-# para no arriesgarse a pisar valores existentes con una lectura fallida.
+# No existe -> error de secuencia; existe -> valor descifrado. Cualquier otro
+# fallo -> error, para no arriesgarse a pisar valores existentes.
 function Get-ApplicationSecretString {
     param([Parameter(Mandatory)][string]$SecretName)
 
     if (-not (Test-ApplicationSecretExists -SecretName $SecretName)) {
-        throw "El secreto $SecretName no existe: despliega antes el componente cloud (Terraform crea el contenedor)."
+        throw "El parámetro $SecretName no existe: despliega antes el componente cloud (Terraform crea el parámetro)."
     }
 
-    $result = Invoke-AwsSecretsManager -Operation 'get-secret-value' -Arguments @(
-        'secretsmanager', 'get-secret-value', '--secret-id', $SecretName, '--query', 'SecretString', '--output', 'text'
+    $result = Invoke-AwsSsm -Operation 'get-parameter' -Arguments @(
+        'ssm', 'get-parameter', '--name', $SecretName, '--with-decryption',
+        '--query', 'Parameter.Value', '--output', 'text'
     )
     if ($result.ExitCode -ne 0) {
-        if ($result.Output -match 'ResourceNotFoundException') {
-            Write-LogDetail -Message "secreto sin valor name=$SecretName (JSON vacío)"
-            return ''
-        }
-
-        throw "aws secretsmanager get-secret-value falló con código $($result.ExitCode) name=$SecretName"
+        throw "aws ssm get-parameter falló con código $($result.ExitCode) name=$SecretName"
     }
 
-    $value = ([string]$result.Output).Trim()
-    if ($value -eq 'None') {
-        return ''
-    }
-
-    return $value
+    return ([string]$result.Output).Trim()
 }
 
 # Escritura: nunca registra el valor en el log.
@@ -391,36 +372,51 @@ function Set-ApplicationSecretString {
     )
 
     $json = $Secret | ConvertTo-Json -Depth 16 -Compress
-    Write-LogDetail -Message "aws secretsmanager put-secret-value --secret-id $SecretName (valor omitido del log)"
+    Write-LogDetail -Message "aws ssm put-parameter --name $SecretName (valor omitido del log)"
 
-    $result = Invoke-AwsSecretsManager -Operation 'put-secret-value' -Arguments @(
-        'secretsmanager', 'put-secret-value', '--secret-id', $SecretName, '--secret-string', $json
+    $result = Invoke-AwsSsm -Operation 'put-parameter' -Arguments @(
+        'ssm', 'put-parameter', '--name', $SecretName, '--type', 'SecureString', '--overwrite', '--value', $json
     )
     if ($result.ExitCode -ne 0) {
         Add-Content -Path $script:LogFile -Value ([string]$result.Output)
-        throw "aws secretsmanager put-secret-value falló con código $($result.ExitCode) name=$SecretName"
+        throw "aws ssm put-parameter falló con código $($result.ExitCode) name=$SecretName"
     }
 
-    Write-LogDetail -Message "secreto escrito name=$SecretName (valor omitido del log)"
+    Write-LogDetail -Message "parámetro escrito name=$SecretName (valor omitido del log)"
 }
 
-# Siembra sólo las claves que faltan: nunca sobrescribe valores existentes.
+# El valor que deja Terraform hasta que up.ps1 siembra el JSON real.
+function Test-SecretPlaceholder {
+    param([Parameter(Mandatory)][string]$SecretName)
+
+    return ((Get-ApplicationSecretString -SecretName $SecretName) -eq 'placeholder')
+}
+
+# Siembra solo si falta el parámetro o si su valor sigue siendo el placeholder
+# de Terraform (Q30, Q77). Con un JSON real ya sembrado no se escribe nada: las
+# claves existentes nunca se sobrescriben.
 function Update-ApplicationSecret {
     $secretName = Get-ApplicationSecretName
     if ($null -eq (Get-Command -Name aws -ErrorAction SilentlyContinue)) {
-        Stop-WithError -Reason 'aws CLI no disponible: no se puede siembrar el secreto de la aplicación'
+        Stop-WithError -Reason 'aws CLI no disponible: no se puede sembrar el parámetro de la aplicación'
     }
 
-    $secret = ConvertTo-SecretHashtable -SecretString (Get-ApplicationSecretString -SecretName $secretName)
+    if (Test-ApplicationSecretExists -SecretName $secretName) {
+        if (-not (Test-SecretPlaceholder -SecretName $secretName)) {
+            Write-Log -Message "Parámetro $secretName ya sembrado (no se sobrescriben valores)"
+            return
+        }
+
+        Write-LogDetail -Message "parámetro en placeholder name=$secretName (se siembra)"
+    }
+    else {
+        Write-LogDetail -Message "parámetro ausente name=$secretName (se crea con los valores por defecto)"
+    }
+
+    $secret = @{}
     $added = Add-ApplicationSecretDefaults -Secret $secret
-
-    if ($added -eq 0) {
-        Write-Log -Message "Secreto $secretName con todos los valores (no se sobrescriben)"
-        return
-    }
-
     Set-ApplicationSecretString -SecretName $secretName -Secret $secret
-    Write-Log -Message "Secreto $secretName sembrado con $added valor(es) nuevo(s)"
+    Write-Log -Message "Parámetro $secretName sembrado con $added valor(es)"
 }
 
 function Get-ResourceLabel {
@@ -567,7 +563,7 @@ function Invoke-MicroserviceApplyPhases {
 }
 
 # El bootstrap sólo tiene sentido donde hay repositorio ECR: el directorio
-# app/ sólo contiene el secreto de la aplicación y su -target no existiría.
+# app/ sólo contiene el parámetro de la aplicación y su -target no existiría.
 function Test-BootstrapDirectory {
     param([Parameter(Mandatory)][string]$WorkingDirectory)
 

@@ -13,11 +13,11 @@ Los microservicios necesitaban leer parámetros y secretos al arrancar. El plan 
 
 ## Decisión
 
-`spring-cloud-aws` **3.3.1** (starters `parameter-store` + `secrets-manager`) para leer parámetros y secretos al iniciar, solo con el perfil `cloud` (Lambda), vía `spring.config.import` de la config data API de Boot 3.4.
+`spring-cloud-aws` **3.3.1** (starter `parameter-store`) para leer parámetros y secretos al iniciar, solo con el perfil `cloud` (Lambda), vía `spring.config.import` de la config data API de Boot 3.4.
 
-- SSM **con** barra final (`/develop/com.quizsmart.app/quizapi/`, la misma de `terraform-ssm` y `up.ps1`); secreto **sin** barra inicial (`develop/com.quizsmart.app`).
+- SSM **con** barra final (`/develop/com.quizsmart.app/quizapi/`, la misma de `terraform-ssm` y `up.ps1`); secreto SecureString `/develop/com.quizsmart.app/secrets` (ADR-0027).
 - `import` **requerido** en el perfil `cloud`: fail-fast si falta IAM o T04/T05.
-- `SPRING_PROFILES_ACTIVE=cloud` inyectado en la Lambda por `merge(...)` en `terraform-lambda.scriban` + permiso IAM `ssm:GetParametersByPath` (`secretsmanager:GetSecretValue` ya existía).
+- `SPRING_PROFILES_ACTIVE=cloud` inyectado en la Lambda por `merge(...)` en `terraform-lambda.scriban` + permisos IAM `ssm:GetParametersByPath`, `ssm:GetParameter` y `kms:Decrypt` (ADR-0027).
 - Plantillas nuevas `application-cloud-properties.scriban` y `application-context-test.scriban`, registradas en `component.json`.
 - En local, **0 llamadas a AWS**: el `import` vive solo en el perfil `cloud`.
 - Al subir a Boot 3.5.x hay que subir SCA a 3.4.x.
@@ -38,4 +38,11 @@ Los microservicios necesitaban leer parámetros y secretos al arrancar. El plan 
 
 ### Coste
 
-**0 USD**: 1 `GetParametersByPath` + 1 `GetSecretValue` por ciclo frío, dentro del nivel gratuito. Penaliza +50-150 ms de arranque (sin caché en SCA 3.3.1).
+**0 USD**: 1 `GetParametersByPath` + 1 `GetParameter` (SecureString) por ciclo frío.
+Parameter Store Standard no tiene coste base (ADR-0027). Penaliza +50-150 ms de arranque
+(sin caché en SCA 3.3.1).
+
+## Nota de sustitución
+
+- ADR-0027 sustituye el starter `secrets-manager` por un SecureString leído con
+  `parameter-store`. Se quita la referencia a `GetSecretValue`.

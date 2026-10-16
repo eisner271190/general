@@ -28,8 +28,8 @@ import java.util.Map;
  * Cliente REST de OpenRouter. La respuesta del proveedor no encaja con el modelo de dominio:
  * se traduce aqui para que {@code IAProviderPort} siga siendo agnostico.
  *
- * <p>La API key nunca vive en codigo ni en el cliente: llega desde Secrets Manager y solo se
- * usa como cabecera Authorization.
+ * <p>La API key nunca vive en codigo ni en el cliente: llega desde Parameter Store
+ * (SecureString) y solo se usa como cabecera Authorization.
  */
 @Component
 public class OpenRouterAdapter implements IAProviderPort {

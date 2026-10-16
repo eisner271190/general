@@ -16,7 +16,7 @@ import java.util.Set;
  *
  * <p>Lee los parametros importados desde AWS Parameter Store (perfil cloud) y devuelve todos
  * excepto los definidos en {@link #EXCLUDED}: secretos, credenciales AWS e internos de
- * Lambda/X-Ray. Los secretos de Secrets Manager no se exponen: viven en otro property source.
+ * Lambda/X-Ray. El SecureString de la app no se expone: se importa como otro property source.
  * Cualquier parametro nuevo debe agregarse a la lista de exclusion si es sensible.
  */
 @Component
@@ -93,9 +93,10 @@ public class ParameterProperties {
    * (/entorno/applicationId/microservicio/); el instanceof cubre el nombre del tipo.
    *
    * <p>El prefijo {@code /} es una heuristica, no una garantia: hoy no filtra secretos porque
-   * el secreto de la app se llama {@code environment/applicationId} (sin {@code /} inicial)
-   * y no es un ParameterStorePropertySource. Si alguna vez el secreto empezara por {@code /},
-   * hay que comprobar el tipo de clase antes que el nombre.
+   * el SecureString de la app se llama {@code /environment/applicationId/secrets} pero se
+   * importa como un parametro suelto, no como un ParameterStorePropertySource. Si alguna vez
+   * el secreto compartiera ruta con los parametros, habria que comprobar el tipo de clase
+   * antes que el nombre.
    */
   private static boolean isParameterStoreSource(PropertySource<?> source) {
     return source instanceof ParameterStorePropertySource || source.getName().startsWith("/");

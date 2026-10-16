@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  PLANTILLA. Copiala a ~/.m2/settings.xml y sustituye <cuenta> y <region> por los del dominio
+  PLANTILLA. Copiala a ~/.m2/settings.xml y sustituye {cuenta} y {region} por los del dominio
   CodeArtifact (los devuelve `aws codeartifact get-repository-endpoint`).
 
   El token NUNCA se escribe aqui: viaja en la variable de entorno CODEARTIFACT_AUTH_TOKEN, que
-  caduca a las 12 h. El CI la inyecta desde Secrets Manager o desde un Secret variable group.
+  caduca a las 12 h. El CI la inyecta desde SSM Parameter Store SecureString (ADR-0027) o
+  desde un Secret variable group.
 -->
 <settings>
   <servers>
@@ -22,7 +23,7 @@
       <repositories>
         <repository>
           <id>codeartifact</id>
-          <url>https://epc-<cuenta>.d.codeartifact.<region>.amazonaws.com/maven/common/</url>
+          <url>https://epc-{cuenta}.d.codeartifact.{region}.amazonaws.com/maven/common/</url>
           <releases>
             <enabled>true</enabled>
           </releases>

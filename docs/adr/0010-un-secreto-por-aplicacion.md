@@ -1,9 +1,9 @@
 # ADR-0010: Un único secreto por aplicación en Secrets Manager
 
 - **Fecha:** 2026-09-28
-- **Estado:** `Aceptada`
+- **Estado:** `Sustituida por ADR-0027`
 - **Sustituye a:** —
-- **Sustituida por:** —
+- **Sustituida por:** ADR-0027
 - **Alcance:** proyecto
 - **Origen:** plan `plan-secretos-unico-por-app.md` (sustituye a `plan-t04-secretos-secrets-manager.md`)
 
@@ -39,3 +39,8 @@ Un solo secreto en Secrets Manager por aplicación, con nombre `<entorno>/<appli
 ### Coste
 
 **0,40 USD/mes** (un secreto de Secrets Manager). Evita +1 USD/mes de CMK propia.
+
+## Nota de sustitución
+
+- Desde 2026-10-12 el servicio cambió a SSM Parameter Store SecureString (ADR-0027).
+- Se mantiene el criterio de un secreto por aplicación con JSON en kebab-case.

@@ -31,8 +31,11 @@ Detén la ejecución y pregunta si falta autorización, destino, script o parám
 En español; resultado de ejecución verificable y pendientes operativos.
 
 ## Despliegue
-- UP -Fast: Despliega sin compilar, ni ejecutar el frontend
+- UP -Fast: Despliega sin compilar, ni ejecutar el frontend. 
 - UP: Despliega compilando y ejecutando el frontend. Queda la consola de flutter interactiva.
 - GETAWS: Consultar el estado de AWS
 - DELETEALL: Eliminar todos los servicios en AWS
 - UPDATEALL: Actualiza la imagen docker en la lambda
+- DELETELOCAL: Eliminar el contenido de projects/
+
+-Nota: -Fast solo salta el build y la ejecución del frontend; la imagen Docker del backend se reconstruye siempre, en el paso 2.

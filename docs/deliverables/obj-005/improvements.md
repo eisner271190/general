@@ -1,0 +1,229 @@
+# Mejoras y dudas OBJ-005
+
+- Registro de dudas: causa y tipo de problema, para no repetirlas.
+
+## Dudas
+- **D1** ADR-0023 citado en ADR-0022 (línea 70) no existe en `docs/adr`.
+  - Causa: referencia a ADR no creado o renumerado.
+  - Tipo: documentación, referencia rota.
+  - Acción: Q7 y Q8.
+- **D2** `docs/templates/explorer.md` no existe en raíz; existe en `docs/templates/deliverables/`.
+  - Causa: ruta de template no homogénea.
+  - Tipo: plantilla, ruta.
+  - Acción: usar `deliverables/explorer.md`; confirmar convención.
+- **D3** `docs/adr/README.md` no lista ADR 0010, 0012 ni 0022.
+  - Causa: índice no mantenido o sin esas entradas.
+  - Tipo: documentación, índice.
+  - Acción: Q9.
+- **D4** obj-005 pide revisar `application-context-test.scriban`, que es plantilla de test.
+  - Causa: conflicto entre alcance y regla "no crear ni modificar tests".
+  - Tipo: alcance, regla ambigua.
+  - Acción: Q38 y Q39.
+- **D5** obj-005 no menciona `ai-api-key` ni claves `subscription-*` sembradas por cloud up.ps1.
+  - Causa: lista de claves incompleta en obj-005.
+  - Tipo: requisito incompleto.
+  - Acción: Q13.
+- **D6** obj-005 no menciona `codepipeline.yml.scriban` (Flutter) con `secretsmanager`.
+  - Causa: alcance sin inventario completo de IAM.
+  - Tipo: alcance incompleto.
+  - Acción: Q29.
+- **D7** obj-005 no menciona `.opencode/scripts/*` ni comentarios Java con Secrets Manager.
+  - Causa: inventario de referencias no hecho antes del objetivo.
+  - Tipo: alcance, criterio de búsqueda ambiguo.
+  - Acción: Q2, Q40, Q42.
+- **D8** El tamaño del JSON de signing (4 KB) no es verificable en lectura.
+  - Causa: sin acceso al secreto real ni fichero local con el JSON.
+  - Tipo: dato faltante.
+  - Acción: Q12, Q43.
+- **D9** `terraform-secrets-manager-variables.scriban` no leído.
+  - Causa: fuera de la búsqueda por palabras clave.
+  - Tipo: lectura pendiente.
+  - Acción: Q21.
+
+## Mejoras de proceso
+- Hacer el inventario de referencias con grep antes de redactar el alcance.
+- Incluir en el alcance todos los ficheros que contengan la palabra clave, o excluirlos explícitamente.
+- Definir si los comentarios cuentan para el criterio "ningún template referencia" (Q42).
+
+## Cambio 2026-10-10
+- **D10** Ruta `keystore/{{APPLICATION_ID}}/keystore.jks` escrita como "bucket" en la petición.
+  - Causa: confusión entre nombre de bucket y clave de objeto en S3.
+  - Tipo: requisito ambiguo.
+  - Acción: Q56.
+- **D11** S3 no estaba en el alcance original de obj-005.
+  - Causa: decisión de almacenamiento tomada después del borrador.
+  - Tipo: alcance cambiado.
+  - Acción: obj-005.md actualizado; Q57-Q61.
+- **D12** El keystore actual dentro del secreto debe migrarse a S3 y luego borrarse.
+  - Causa: migración no contemplada; obj-005 excluía migración de valores.
+  - Tipo: alcance incompleto (dato sensible duplicado).
+  - Acción: Q57.
+- **D13** Keystore actual puede no existir (secreto eliminado, Q49) y `up.ps1 -Sign` lo regenera.
+  - Causa: decisión de borrado sin plan de recuperación; generación automática sin guarda.
+  - Tipo: riesgo de datos, requisito faltante.
+  - Acción: Q63, Q64.
+- **D14** obj-005:28-29 y :65 dan S3 a Lambda y CodeBuild; Q59 lo niega.
+  - Causa: obj-005 no actualizado tras Q59.
+  - Tipo: contradicción de alcance.
+  - Acción: corregir obj-005; sin nueva pregunta.
+- **D15** Q61 responde "borrar" frente a recomendación "conservar"; subpregunta de versiones abierta.
+  - Causa: decisión con riesgo registrada sin confirmación de alcance.
+  - Tipo: decisión pendiente.
+  - Acción: Q65.
+- **D16** Criterio 4 KB dice "medido"; Q62 acepta estimación de esqueleto sin valores.
+  - Causa: criterio no alineado con Q43 y Q62.
+  - Tipo: criterio ambiguo.
+  - Acción: Q71.
+- **D17** Bucket "por app" (obj-005:27) frente a "por entorno" (Q56).
+  - Causa: obj-005 no actualizado tras Q56.
+  - Tipo: contradicción de alcance.
+  - Acción: Q68.
+- **D18** Q6-Q11 y Q39 sin enunciado en `questions.md`; Q7/Q8 solo referenciadas en Q5.
+  - Causa: edición de respuestas sin conservar el enunciado.
+  - Tipo: trazabilidad.
+  - Acción: reconstruir enunciados (sin cambiar respuestas).
+- **D19** Excepción a "no modificar tests" (Q39) frente a AGENTS y obj-005:45.
+  - Causa: regla dura sin excepción documentada.
+  - Tipo: regla ambigua.
+  - Acción: Q72.
+- **D20** Estado de preguntas inconsistente (cabecera "respondidas", obj-005 "abiertas").
+  - Causa: estado escrito sin confirmación del usuario.
+  - Tipo: estado documental.
+  - Acción: no cerrar hasta confirmación explícita; corregir cabeceras.
+- **D21** Coste "0 USD" con S3; Q14 cita obj-005.md:76 (no es coste).
+  - Causa: cita de línea errónea; coste incompleto.
+  - Tipo: dato incorrecto.
+  - Acción: Q70.
+- **D22** `aws_ssm_parameter` exige `value` (inferencia); Q18 pide SecureString vacío.
+  - Causa: diferencia entre contenedor de Secrets Manager y parámetro SSM.
+  - Tipo: requisito técnico no verificado.
+  - Acción: Q69.
+- **D23** Criterios S3 incompletos (versionado, SSE, bloqueo público) y falta integrator.
+  - Causa: decisiones de Q44, Q58, Q60 no trasladadas a obj-005.
+  - Tipo: criterio faltante.
+  - Acción: Q73; añadir integrator a entregables.
+
+## Revisión checklist · 2026-10-10 19:05:13 (UTC-5)
+- **D24** Q30 "sin sobrescribir" y obj-005:31 "`put-parameter --overwrite`" se contradicen.
+  - Causa: obj-005 no actualizado tras Q30.
+  - Tipo: contradicción de requisito.
+  - Acción: Q77.
+- **D25** Q69 (placeholder) choca con Q30 (no sobrescribir): el placeholder nunca se reemplaza.
+  - Causa: decisiones de Q30 y Q69 tomadas sin cruzarlas.
+  - Tipo: contradicción de requisito.
+  - Acción: Q77.
+- **D26** Q74 tiene dos respuestas contrarias (aprobada y "No, sin caché").
+  - Causa: respuesta nueva añadida sin borrar la anterior.
+  - Tipo: decisión duplicada.
+  - Acción: Q75.
+- **D27** Q71 contradice en su texto: "usar JSON real" frente a "sin medición".
+  - Causa: edición de respuesta sin revisar la decisión.
+  - Tipo: criterio ambiguo.
+  - Acción: Q76.
+- **D28** Keystore regenerado (Q64) puede romper actualizaciones si la app está publicada.
+  - Causa: decisión de regenerar sin verificar estado en Play.
+  - Tipo: riesgo de negocio, dato faltante.
+  - Acción: Q78.
+- **D29** Q65 no aclara si se borra el bucket; la recomendación dice no borrar.
+  - Causa: respuesta sin alcance completo de destrucción.
+  - Tipo: decisión pendiente.
+  - Acción: Q79.
+- **D30** Verificación de hash en pipeline (Q74) sin origen del hash de referencia.
+  - Causa: propuesta sin definir fuente de confianza.
+  - Tipo: requisito faltante.
+  - Acción: Q80.
+- **D31** Respuestas dadas sin marcar `[x]` en questions.md (Q64, Q66-Q69, Q72, Q73).
+  - Causa: estado documental no sincronizado.
+  - Tipo: estado documental.
+  - Acción: sincronizar tras cierre de Q75-Q81; no cerrar ahora.
+- **D32** obj-005 desactualizado: 4 KB "medido" (l.56), IAM Lambda (l.64), bucket (l.20, l.27).
+  - Causa: criterios no actualizados tras Q56, Q66, Q68 y Q76.
+  - Tipo: contradicción de alcance.
+  - Acción: corregir obj-005 tras Q76 y Q78.
+- **D33** Q6-Q11 y Q39 sin enunciado; no está claro qué respuesta corresponde a cada una.
+  - Causa: mismo que D18, sin reconstrucción confirmada.
+  - Tipo: trazabilidad.
+  - Acción: Q81.
+
+## Revisión fase 4 · 2026-10-10 19:18:41 (UTC-5)
+- **D34** Q79 atribuye el borrado del bucket a "Terraform destroy"; el encargo indica down.ps1.
+  - Causa: respuesta sin sujeto claro.
+  - Tipo: decisión ambigua.
+  - Acción: Q82.
+- **D35** Q81 tiene "mapeo confirmado" y una línea "pendiente" en la misma respuesta.
+  - Causa: edición sin limpiar la respuesta anterior.
+  - Tipo: estado documental.
+  - Acción: marcar [x] por confirmación explícita; la línea "pendiente" queda obsoleta.
+  - Estado: resuelta; línea "pendiente" de Q81 retirada.
+- **D36** Q63 dice "sin backup externo" y "debe registrarse backup antes del despliegue".
+  - Causa: respuesta mezcla decisión y recomendación.
+  - Tipo: decisión contradictoria.
+  - Acción: Q83.
+  - Estado: resuelta por Q83 (no se exige backup previo; solo versionado S3).
+- **D37** Q74 proponía README con caché local; Q75 elimina la caché.
+  - Causa: propuesta no retirada del alcance al cambiar la decisión.
+  - Tipo: alcance desactualizado.
+  - Acción: README sin sección de caché (inferencia); confirmar en implementación.
+- **D38** Q76 deja el criterio de 4 KB sin medición.
+  - Causa: decisión de no medir con esqueleto de 210 bytes como referencia.
+  - Tipo: riesgo aceptado.
+  - Acción: registrado en riesgos de obj-005.md; sin pregunta nueva.
+- **D39** Q23, Q47 y Q53 están delegadas a architect y no son decisiones del usuario.
+  - Causa: delegación registrada como respuesta.
+  - Tipo: estado.
+  - Acción: quedan [ ] en checklist.md hasta el informe de architect.
+- **D40** eviewer.md y xplorer.md siguen con estado de fase 3 (B1-B4, "todas abiertas").
+  - Causa: fuera del encargo de fase 4.
+  - Tipo: documentación desactualizada.
+  - Acción: decidir con el orquestador si se actualizan.
+
+## Cambio 2026-10-10 19:25:32 (UTC-5): alcance scripts y down.ps1
+- **D41** Q82 borra el bucket por CLI en `down.ps1`; Q79 lo borra también con `terraform destroy`.
+  - Causa: dos rutas de borrado del mismo recurso sin orden definido.
+  - Tipo: riesgo técnico, estado de Terraform desincronizado.
+  - Acción: definir orden (CLI antes o después de destroy; `state rm` si aplica). Architect.
+  - Estado: resuelta por architect (2026-10-11): purga CLI → `terraform destroy` del bucket →
+    CLI final idempotente. Sin desincronización: destroy saca el recurso del estado.
+    Sin `state rm` (ya no aplica).
+- **D42** Vaciado del bucket versionado antes de borrarlo.
+  - Causa: `delete-all-services-aws.ps1` ya purga versiones (líneas 405-430); `down.ps1` no.
+  - Tipo: requisito técnico faltante.
+  - Acción: confirmar si `down.ps1` repite la purga o reutiliza un patrón común.
+  - Estado: resuelta por architect (2026-10-11): `down.ps1` (cloud) purga versiones con
+    `delete-objects` + `VersionId` y el objeto actual antes del destroy; reutiliza el patrón de
+    `delete-all-services-aws.ps1` (líneas 405-430).
+- **D43** Alcance de `delete-all-services-aws.ps1` por entorno.
+  - Causa: Q51 limita a `develop`; el script no indica entorno del bucket keystore.
+  - Tipo: alcance ambiguo.
+  - Acción: confirmar si borra solo el bucket de `develop` o todos los entornos.
+  - Estado: resuelta por Q91 (borra buckets de todos los entornos; Q51 sustituida).
+- **D44** Consulta S3 en `get-services-aws.ps1` sin formato ni datos definidos.
+  - Causa: el script no consulta S3 hoy (grep sin coincidencias de `s3`).
+  - Tipo: requisito incompleto.
+  - Acción: confirmar qué mostrar (existencia, objetos, versiones, cifrado, bloqueo).
+  - Estado: resuelta por Q92 (solo existencia del bucket).
+- **D45** Excepción a "solo generador" registrada solo en obj-005.
+  - Causa: AGENTS.md (regla dura) no recoge la excepción de Q84.
+  - Tipo: regla ambigua.
+  - Acción: confirmar si se añade excepción también en `AGENTS.md`. No se modifica ahora.
+  - Estado: resuelta por Q85 (no se registra en AGENTS.md; excepción solo en obj-005).
+- **D46** Nombre del bucket en scripts CLI frente a "no hardcodear".
+  - Causa: el bucket se define como `${var.project_name}-keystore-${var.environment}`.
+  - Tipo: requisito técnico (AGENTS: no hardcodear rutas).
+  - Acción: confirmar cómo obtener el nombre (parámetro, convención o salida de Terraform).
+  - Estado: resuelta por Q93 (derivado de `environment` + `project_name`; sin hardcodear).
+- **D47** Qué `down.ps1` borra el bucket: cloud o Flutter.
+  - Causa: Q82 dice "down.ps1" sin indicar plantilla; obj-005 cita `down.ps1.scriban` (cloud).
+  - Tipo: alcance ambiguo.
+  - Acción: confirmar plantilla(s) afectada(s).
+  - Estado: resuelta por Q89 (el `down.ps1` de cloud, `down.ps1.scriban`).
+- **D48** Residuo "pendiente" bajo Q84 en `questions.md`.
+  - Causa: línea de Q79 quedó bajo Q84 sin limpiar (mismo tipo que D35).
+  - Tipo: estado documental.
+  - Acción: confirmar Q84 resuelta y retirar la línea obsoleta.
+  - Estado: resuelta; línea "pendiente" bajo Q84 retirada.
+- **D49** Q83 retira el backup previo, pero Q61 pedía documentar backup/restore.
+  - Causa: Q61 y Q83 no se cruzaron tras la decisión de Q83.
+  - Tipo: requisito ambiguo, documentación.
+  - Acción: Q86.
+  - Estado: resuelta por Q86 (sin documentación de backup/restore; solo riesgo y versionado S3).
