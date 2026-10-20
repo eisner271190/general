@@ -1,9 +1,9 @@
 ## MVP (Prioridad)
-- Retomar Login, Sing up, con Cognito.
-- Crear dos usuarios.
-- Que cada usuario tenga su propia configuración.
-- Que cada usuario tenga sus propios datos.
+- Probar el correcto funcionamiento de todas las operaciones que se generan correspondientes a security(Login, Sign up) con Cognito.
 - Que cada usuario pueda comprar una suscripción.
+- Crear automaticamente RevenueCat, no la cuenta si no, el offer y entirement.
+- Asociar api gateway a RevenueCat
+- Agregar en target, en microservices security, ai, parameter, subscription,
 - Separar el generador en componentes independientes: Frontend, Backend y Cloud. Cada componente debe ser un proyecto independiente, con sus propios modelos, estrategias, targets y templates, de forma que el generador sea completamente agnóstico a implementaciones concretas.
 
 ## Frontend
@@ -71,6 +71,8 @@
 		- Biometric
 		- Multi-tenancy
 		- Cache Strategy
+	- Que cada usuario tenga su propia configuración.
+	- Que cada usuario tenga sus propios datos.
 
 ## Herramientas externas
 	- AWS
