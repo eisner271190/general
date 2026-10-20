@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.domain.model;
+package {{ PACKAGE }}.security.auth.domain.model;
 
 public class TokenResponse {
     private String accessToken;
@@ -20,4 +20,3 @@ public class TokenResponse {
         this.accessToken = accessToken;
     }
 }
-{{ end }}

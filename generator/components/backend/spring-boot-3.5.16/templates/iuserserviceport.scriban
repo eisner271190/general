@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.user.domain.port;
+package {{ PACKAGE }}.security.user.domain.port;
 
 import {{ PACKAGE }}.security.adminuser.domain.model.ForcePasswordReset;
 import {{ PACKAGE }}.security.auth.domain.model.TokenRequest;
@@ -35,4 +35,3 @@ public interface IUserServicePort {
 
     Mono<Void> deactivateUser(String username);
 }
-{{ end }}

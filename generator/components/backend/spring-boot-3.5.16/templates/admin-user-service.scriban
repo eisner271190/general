@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.adminuser.application;
+package {{ PACKAGE }}.security.adminuser.application;
 
 import {{ PACKAGE }}.security.adminuser.domain.port.AdminUserServicePort;
 
@@ -32,4 +32,4 @@ public class AdminUserService implements IAdminUserService {
         return adminUserServicePort.deactivateUser(username);
     }
 }
-{{ end }}
+

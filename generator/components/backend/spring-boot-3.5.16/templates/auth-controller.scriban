@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.infrastructure.rest;
+package {{ PACKAGE }}.security.auth.infrastructure.rest;
 
 import {{ PACKAGE }}.security.auth.application.IAuthService;
 import {{ PACKAGE }}.security.exchange.infrastructure.rest.ExchangeRequestDto;
@@ -58,4 +58,4 @@ public class AuthController {
                 });
     }
 }
-{{ end }}
+

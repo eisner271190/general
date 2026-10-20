@@ -1,0 +1,15 @@
+package {{ PACKAGE }}.security.adminuser.infrastructure.configuration;
+
+/** Textos de log del caso de uso {@code adminuser} (gestion de usuarios en Cognito). */
+public final class AdminUserLogMessages {
+
+    private AdminUserLogMessages() {
+    }
+
+    public static final String USER_DELETING = "Eliminando usuario {} en Cognito";
+    public static final String USER_DELETED = "Usuario {} eliminado";
+    public static final String USER_ACTIVATING = "Activando usuario {} en Cognito";
+    public static final String USER_ACTIVATED = "Usuario {} activado";
+    public static final String USER_DEACTIVATING = "Desactivando usuario {} en Cognito";
+    public static final String USER_DEACTIVATED = "Usuario {} desactivado";
+}

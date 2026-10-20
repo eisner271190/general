@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.infrastructure.adapters;
+package {{ PACKAGE }}.security.auth.infrastructure.adapters;
 
 import {{ PACKAGE }}.security.auth.infrastructure.configuration.AuthLogMessages;
 import {{ PACKAGE }}.security.auth.domain.model.TokenResponse;
@@ -369,4 +369,3 @@ public class CognitoAdapter {
         public String getError_description_normalized() { return error_description; }
     }
 }
-{{ end }}

@@ -86,6 +86,12 @@
     "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/infrastructure",
     "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/infrastructure/adapters",
     "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/infrastructure/rest",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/infrastructure/configuration",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/infrastructure/configuration",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/infrastructure/configuration",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/infrastructure/configuration",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/infrastructure/configuration",
+    "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/jwt/infrastructure/configuration",
     "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription",
     "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription",
     "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/subscription/subscription",
@@ -731,6 +737,54 @@
     {
       "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/auth/infrastructure/adapters/CognitoAdapter.java",
       "value": "templates/cognito-adapter.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/adminuser/infrastructure/configuration/AdminUserLogMessages.java",
+      "value": "templates/admin-user-log-messages.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/password/infrastructure/configuration/PasswordLogMessages.java",
+      "value": "templates/password-log-messages.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/registration/infrastructure/configuration/RegistrationLogMessages.java",
+      "value": "templates/registration-log-messages.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/exchange/infrastructure/configuration/ExchangeLogMessages.java",
+      "value": "templates/exchange-log-messages.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/user/infrastructure/configuration/UserLogMessages.java",
+      "value": "templates/user-log-messages.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/jwt/infrastructure/configuration/JwtLogMessages.java",
+      "value": "templates/jwt-log-messages.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/jwt/infrastructure/configuration/PathConstants.java",
+      "value": "templates/path-constants.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/jwt/infrastructure/configuration/JwtProvider.java",
+      "value": "templates/jwt-provider.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/jwt/infrastructure/configuration/JwtAuthenticationFilter.java",
+      "value": "templates/jwt-authentication-filter.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/jwt/infrastructure/configuration/JwtAuthenticationManager.java",
+      "value": "templates/jwt-authentication-manager.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/jwt/infrastructure/configuration/SecurityContextRepository.java",
+      "value": "templates/security-context-repository.scriban"
+    },
+    {
+      "key": "{{MICROSERVICE_NAME}}/src/main/java/{{APPLICATION_PACKAGE}}/security/jwt/infrastructure/configuration/SecurityConfig.java",
+      "value": "templates/security-config.scriban"
     }
   ],
   "defaultFiles": []

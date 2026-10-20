@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.adminuser.infrastructure.rest;
+package {{ PACKAGE }}.security.adminuser.infrastructure.rest;
 
 import {{ PACKAGE }}.security.adminuser.application.IAdminUserService;
 
@@ -73,4 +73,4 @@ public class AdminUserController {
                 });
     }
 }
-{{ end }}
+

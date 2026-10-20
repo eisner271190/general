@@ -1,0 +1,30 @@
+package {{ PACKAGE }}.security.jwt.infrastructure.configuration;
+
+/**
+ * Textos de log del caso de uso {@code jwt}. El token y el secreto jamas se registran: la traza
+ * lleva usuario y resultado, no el contenido de la credencial.
+ */
+public final class JwtLogMessages {
+
+    private JwtLogMessages() {
+    }
+
+    public static final String TOKEN_GENERATING = "Generando token para {}";
+    public static final String TOKEN_AUTHORITIES = "Authorities: {}";
+    public static final String TOKEN_GENERATED = "Token generado para {}";
+    public static final String TOKEN_CLAIMS_EXTRACTING = "Extrayendo claims del token";
+    public static final String TOKEN_SUBJECT_EXTRACTING = "Extrayendo subject del token";
+    public static final String TOKEN_VALIDATING = "Validando token";
+    public static final String TOKEN_VALID = "Token valido";
+    public static final String TOKEN_INVALID = "Token invalido: {}";
+    public static final String ROUTE_PUBLIC = "Ruta publica, sin filtro: {}";
+    public static final String REQUEST_WITHOUT_AUTHORIZATION = "Peticion sin cabecera Authorization: {}";
+    public static final String AUTHORIZATION_WITHOUT_BEARER =
+            "Cabecera Authorization sin prefijo Bearer: {}";
+    public static final String TOKEN_PRESENT = "Token presente en {} ({} caracteres)";
+    public static final String SECURITY_CONTEXT_NOT_STORED =
+            "SecurityContext no persistido (lambda stateless)";
+    public static final String SECURITY_CONTEXT_LOADING =
+            "Cargando contexto de seguridad (token presente: {})";
+    public static final String SECURITY_CONTEXT_LOADED = "Contexto de seguridad cargado";
+}

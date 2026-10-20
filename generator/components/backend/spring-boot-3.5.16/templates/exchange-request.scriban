@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.exchange.domain.model;
+package {{ PACKAGE }}.security.exchange.domain.model;
 
 public class ExchangeRequest {
     private String code;
@@ -38,4 +38,4 @@ public class ExchangeRequest {
         this.redirectUri = redirectUri;
     }
 }
-{{ end }}
+

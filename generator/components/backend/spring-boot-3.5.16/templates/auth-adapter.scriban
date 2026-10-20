@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.infrastructure.adapters;
+package {{ PACKAGE }}.security.auth.infrastructure.adapters;
 
 import {{ PACKAGE }}.security.auth.infrastructure.adapters.CognitoAdapter;
 import {{ PACKAGE }}.security.auth.domain.model.TokenRequest;
@@ -25,4 +25,4 @@ public class AuthAdapter implements AuthPort {
         return cognitoClient.generateToken(request.getUsername(), request.getPassword());
     }
 }
-{{ end }}
+

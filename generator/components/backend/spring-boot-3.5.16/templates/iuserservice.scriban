@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.user.application;
+package {{ PACKAGE }}.security.user.application;
 
 import {{ PACKAGE }}.security.adminuser.infrastructure.rest.ForcePasswordResetRequestDto;
 import {{ PACKAGE }}.security.auth.infrastructure.rest.TokenRequestDto;
@@ -35,4 +35,3 @@ public interface IUserService {
 
     Mono<Void> deactivateUser(String username);
 }
-{{ end }}

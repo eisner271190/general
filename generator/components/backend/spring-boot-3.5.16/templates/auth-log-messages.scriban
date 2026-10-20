@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.infrastructure.configuration;
+package {{ PACKAGE }}.security.auth.infrastructure.configuration;
 
 /** Textos de log del caso de uso {@code auth} (adaptador Cognito). */
 public final class AuthLogMessages {
@@ -13,4 +13,4 @@ public final class AuthLogMessages {
     public static final String TOKEN_EXCHANGE_COMPLETED =
             "Codigo de autorizacion canjeado: expiresIn={} tokenType={}";
 }
-{{ end }}
+

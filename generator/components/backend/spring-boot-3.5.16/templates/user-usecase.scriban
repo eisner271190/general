@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.user.application;
+package {{ PACKAGE }}.security.user.application;
 
 import {{ PACKAGE }}.security.adminuser.domain.model.ForcePasswordReset;
 import {{ PACKAGE }}.security.auth.domain.model.TokenRequest;
@@ -75,4 +75,3 @@ public class UserUseCase implements IUserServicePort {
         return userPort.deactivateUser(username);
     }
 }
-{{ end }}

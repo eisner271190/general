@@ -1,7 +1,7 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.infrastructure.adapters;
+package {{ PACKAGE }}.security.registration.infrastructure.adapters;
 
 import {{ PACKAGE }}.security.auth.infrastructure.adapters.CognitoAdapter;
-import {{ PACKAGE }}.common.infrastructure.configuration.DomainLogMessages;
+import {{ PACKAGE }}.security.registration.infrastructure.configuration.RegistrationLogMessages;
 import {{ PACKAGE }}.security.registration.domain.model.ConfirmUser;
 import {{ PACKAGE }}.security.registration.domain.model.RegisterUser;
 import {{ PACKAGE }}.security.registration.domain.port.RegistrationPort;
@@ -31,23 +31,22 @@ public class RegistrationAdapter implements RegistrationPort {
 
     @Override
     public Mono<Void> registerUserByAdmin(RegisterUser request) {
-        log.info(DomainLogMessages.USER_CREATING_BY_ADMIN, request.getEmail());
+        log.info(RegistrationLogMessages.USER_CREATING_BY_ADMIN, request.getEmail());
         return cognitoClient.createUser(request)
-            .doOnSuccess(done -> log.debug(DomainLogMessages.USER_CREATED, request.getEmail()));
+            .doOnSuccess(done -> log.debug(RegistrationLogMessages.USER_CREATED, request.getEmail()));
     }
 
     @Override
     public Mono<Void> registerUser(RegisterUser request) {
-        log.info(DomainLogMessages.USER_REGISTERING, request.getEmail());
+        log.info(RegistrationLogMessages.USER_REGISTERING, request.getEmail());
         return cognitoClient.signUpUser(request)
-            .doOnSuccess(done -> log.debug(DomainLogMessages.USER_REGISTERED, request.getEmail()));
+            .doOnSuccess(done -> log.debug(RegistrationLogMessages.USER_REGISTERED, request.getEmail()));
     }
 
     @Override
     public Mono<Void> confirmUser(ConfirmUser request) {
-        log.info(DomainLogMessages.USER_CONFIRMING, request.getUsername());
+        log.info(RegistrationLogMessages.USER_CONFIRMING, request.getUsername());
         return cognitoClient.confirmUser(request.getUsername(), request.getConfirmationCode())
-            .doOnSuccess(done -> log.debug(DomainLogMessages.USER_CONFIRMED, request.getUsername()));
+            .doOnSuccess(done -> log.debug(RegistrationLogMessages.USER_CONFIRMED, request.getUsername()));
     }
 }
-{{ end }}

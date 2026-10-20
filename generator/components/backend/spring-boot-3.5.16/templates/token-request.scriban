@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.domain.model;
+package {{ PACKAGE }}.security.auth.domain.model;
 
 public class TokenRequest {
     private String username;
@@ -30,4 +30,3 @@ public class TokenRequest {
         this.password = password;
     }
 }
-{{ end }}

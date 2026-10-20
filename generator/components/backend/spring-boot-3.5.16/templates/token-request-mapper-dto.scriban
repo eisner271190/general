@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.infrastructure.rest;
+package {{ PACKAGE }}.security.auth.infrastructure.rest;
 
 import {{ PACKAGE }}.security.auth.domain.model.TokenRequest;
 
@@ -14,4 +14,3 @@ public interface TokenRequestMapperDto {
     TokenRequestDto toDTO(TokenRequest model);
     TokenRequest toModel(TokenRequestDto dto);
 }
-{{ end }}

@@ -1,0 +1,8 @@
+package {{ PACKAGE }}.security.exchange.infrastructure.configuration;
+
+/** Textos de log del caso de uso {@code exchange}. */
+public final class ExchangeLogMessages {
+
+    private ExchangeLogMessages() {
+    }
+}

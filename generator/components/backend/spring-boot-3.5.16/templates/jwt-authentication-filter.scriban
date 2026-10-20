@@ -1,7 +1,6 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.configuration.authentication.jwt;
+package {{ PACKAGE }}.security.jwt.infrastructure.configuration;
 
 import com.epc.common.log.ILogService;
-import {{ PACKAGE }}.infrastructure.configuration.DomainLogMessages;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
@@ -34,27 +33,26 @@ public class JwtAuthenticationFilter implements WebFilter {
         String path = request.getPath().value();
 
         if (PathConstants.COMMON_PATHS.contains(path) || path.contains(PathConstants.AUTH)) {
-            log.debug(DomainLogMessages.ROUTE_PUBLIC, path);
+            log.debug(JwtLogMessages.ROUTE_PUBLIC, path);
             return chain.filter(exchange);
         }
 
         String auth = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (auth == null) {
-            log.warn(DomainLogMessages.REQUEST_WITHOUT_AUTHORIZATION, path);
+            log.warn(JwtLogMessages.REQUEST_WITHOUT_AUTHORIZATION, path);
             return Mono.error(new Throwable("no token was found"));
         }
 
         if (!auth.startsWith("Bearer ")) {
-            log.warn(DomainLogMessages.AUTHORIZATION_WITHOUT_BEARER, path);
+            log.warn(JwtLogMessages.AUTHORIZATION_WITHOUT_BEARER, path);
             return Mono.error(new Throwable("invalid auth"));
         }
 
         String token = auth.replace("Bearer ", "");
-        log.debug(DomainLogMessages.TOKEN_PRESENT, path, token.length());
+        log.debug(JwtLogMessages.TOKEN_PRESENT, path, token.length());
 
         exchange.getAttributes().put("token", token);
 
         return chain.filter(exchange);
     }
 }
-{{ end }}

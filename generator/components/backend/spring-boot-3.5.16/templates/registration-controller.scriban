@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.infrastructure.rest;
+package {{ PACKAGE }}.security.registration.infrastructure.rest;
 
 import {{ PACKAGE }}.security.registration.application.IRegistrationService;
 
@@ -74,4 +74,4 @@ public class RegistrationController {
                 });
     }
 }
-{{ end }}
+

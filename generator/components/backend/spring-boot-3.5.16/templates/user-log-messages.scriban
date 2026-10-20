@@ -1,0 +1,8 @@
+package {{ PACKAGE }}.security.user.infrastructure.configuration;
+
+/** Textos de log del caso de uso {@code user}. */
+public final class UserLogMessages {
+
+    private UserLogMessages() {
+    }
+}

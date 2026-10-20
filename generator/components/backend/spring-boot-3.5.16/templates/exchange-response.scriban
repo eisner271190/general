@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.exchange.domain.model;
+package {{ PACKAGE }}.security.exchange.domain.model;
 
 import lombok.Builder;
 
@@ -72,4 +72,4 @@ public class ExchangeResponse {
         }
     }
 }
-{{ end }}
+

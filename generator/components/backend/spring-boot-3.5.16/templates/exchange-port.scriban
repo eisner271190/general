@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.exchange.domain.port;
+package {{ PACKAGE }}.security.exchange.domain.port;
 
 import {{ PACKAGE }}.security.exchange.domain.model.ExchangeRequest;
 import {{ PACKAGE }}.security.exchange.domain.model.ExchangeResponse;
@@ -11,4 +11,4 @@ import reactor.core.publisher.Mono;
 public interface ExchangePort {
     Mono<ExchangeResponse> exchangeCodeForTokens(ExchangeRequest request);
 }
-{{ end }}
+

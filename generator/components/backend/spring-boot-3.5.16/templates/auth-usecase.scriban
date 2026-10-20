@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.application;
+package {{ PACKAGE }}.security.auth.application;
 
 import {{ PACKAGE }}.security.auth.domain.model.TokenRequest;
 import {{ PACKAGE }}.security.auth.domain.model.TokenResponse;
@@ -25,4 +25,4 @@ public class AuthUseCase implements AuthServicePort {
         return authPort.generateToken(request);
     }
 }
-{{ end }}
+

@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.infrastructure.rest;
+package {{ PACKAGE }}.security.registration.infrastructure.rest;
 
 import {{ PACKAGE }}.security.registration.domain.model.RegisterUser;
 
@@ -14,4 +14,3 @@ public interface RegisterUserMapperDto {
     RegisterUserRequestDto toDTO(RegisterUser model);
     RegisterUser toModel(RegisterUserRequestDto dto);
 }
-{{ end }}

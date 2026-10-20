@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.exchange.infrastructure.rest;
+package {{ PACKAGE }}.security.exchange.infrastructure.rest;
 
 public class ExchangeResponseDto {
     private String accessToken;
@@ -58,4 +58,4 @@ public class ExchangeResponseDto {
         this.tokenType = tokenType;
     }
 }
-{{ end }}
+

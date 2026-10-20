@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.application;
+package {{ PACKAGE }}.security.registration.application;
 
 import {{ PACKAGE }}.security.registration.domain.port.RegistrationServicePort;
 import {{ PACKAGE }}.security.registration.infrastructure.rest.ConfirmUserMapperDto;
@@ -39,4 +39,4 @@ public class RegistrationService implements IRegistrationService {
         return registrationServicePort.confirmUser(model);
     }
 }
-{{ end }}
+

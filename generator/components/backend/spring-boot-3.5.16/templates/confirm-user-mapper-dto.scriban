@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.infrastructure.rest;
+package {{ PACKAGE }}.security.registration.infrastructure.rest;
 
 import {{ PACKAGE }}.security.registration.domain.model.ConfirmUser;
 
@@ -14,4 +14,3 @@ public interface ConfirmUserMapperDto {
     ConfirmUserRequestDto toDTO(ConfirmUser model);
     ConfirmUser toModel(ConfirmUserRequestDto dto);
 }
-{{ end }}

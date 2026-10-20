@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.exchange.infrastructure.rest;
+package {{ PACKAGE }}.security.exchange.infrastructure.rest;
 
 import {{ PACKAGE }}.security.exchange.domain.model.ExchangeRequest;
 
@@ -14,4 +14,4 @@ public interface ExchangeRequestMapperDto {
     ExchangeRequestDto toDTO(ExchangeRequest model);
     ExchangeRequest toModel(ExchangeRequestDto dto);
 }
-{{ end }}
+

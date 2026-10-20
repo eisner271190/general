@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.exchange.infrastructure.rest;
+package {{ PACKAGE }}.security.exchange.infrastructure.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
@@ -49,4 +49,4 @@ public class ExchangeRequestDto {
         this.redirectUri = redirectUri;
     }
 }
-{{ end }}
+

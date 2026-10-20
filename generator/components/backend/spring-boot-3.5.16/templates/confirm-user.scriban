@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.domain.model;
+package {{ PACKAGE }}.security.registration.domain.model;
 
 public class ConfirmUser {
     private String username;
@@ -30,4 +30,3 @@ public class ConfirmUser {
         this.confirmationCode = confirmationCode;
     }
 }
-{{ end }}

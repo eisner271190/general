@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.domain.port;
+package {{ PACKAGE }}.security.registration.domain.port;
 
 import {{ PACKAGE }}.security.registration.domain.model.ConfirmUser;
 import {{ PACKAGE }}.security.registration.domain.model.RegisterUser;
@@ -12,4 +12,4 @@ public interface RegistrationServicePort {
     Mono<Void> registerUser(RegisterUser request);
     Mono<Void> confirmUser(ConfirmUser request);
 }
-{{ end }}
+

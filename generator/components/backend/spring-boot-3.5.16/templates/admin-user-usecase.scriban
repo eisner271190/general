@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.adminuser.application;
+package {{ PACKAGE }}.security.adminuser.application;
 
 import {{ PACKAGE }}.security.adminuser.domain.port.AdminUserPort;
 import {{ PACKAGE }}.security.adminuser.domain.port.AdminUserServicePort;
@@ -33,4 +33,4 @@ public class AdminUserUseCase implements AdminUserServicePort {
         return adminUserPort.deactivateUser(username);
     }
 }
-{{ end }}
+

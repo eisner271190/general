@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.application;
+package {{ PACKAGE }}.security.registration.application;
 
 import {{ PACKAGE }}.security.registration.infrastructure.rest.ConfirmUserRequestDto;
 import {{ PACKAGE }}.security.registration.infrastructure.rest.RegisterUserRequestDto;
@@ -12,4 +12,4 @@ public interface IRegistrationService {
     Mono<Void> registerUser(RegisterUserRequestDto request);
     Mono<Void> confirmUser(ConfirmUserRequestDto request);
 }
-{{ end }}
+

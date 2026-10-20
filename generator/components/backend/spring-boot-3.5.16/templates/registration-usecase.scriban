@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.application;
+package {{ PACKAGE }}.security.registration.application;
 
 import {{ PACKAGE }}.security.registration.domain.model.ConfirmUser;
 import {{ PACKAGE }}.security.registration.domain.model.RegisterUser;
@@ -35,4 +35,4 @@ public class RegistrationUseCase implements RegistrationServicePort {
         return registrationPort.confirmUser(request);
     }
 }
-{{ end }}
+

@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.infrastructure.rest;
+package {{ PACKAGE }}.security.auth.infrastructure.rest;
 
 import {{ PACKAGE }}.security.auth.domain.model.TokenResponse;
 
@@ -14,4 +14,3 @@ public interface TokenResponseMapperDto {
     TokenResponseDto toDTO(TokenResponse model);
     TokenResponse toModel(TokenResponseDto dto);
 }
-{{ end }}

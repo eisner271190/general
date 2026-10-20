@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.exchange.infrastructure.adapters;
+package {{ PACKAGE }}.security.exchange.infrastructure.adapters;
 
 import {{ PACKAGE }}.security.auth.infrastructure.adapters.CognitoAdapter;
 import {{ PACKAGE }}.security.exchange.domain.model.ExchangeRequest;
@@ -29,4 +29,4 @@ public class ExchangeAdapter implements ExchangePort {
         );
     }
 }
-{{ end }}
+

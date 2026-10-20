@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.application;
+package {{ PACKAGE }}.security.auth.application;
 
 import {{ PACKAGE }}.security.auth.domain.port.AuthServicePort;
 import {{ PACKAGE }}.security.auth.infrastructure.rest.TokenRequestDto;
@@ -42,4 +42,3 @@ public class AuthService implements IAuthService {
                 .map(modelResponse -> ExchangeResponseMapperDto.INSTANCE.toDTO(modelResponse));
     }
 }
-{{ end }}

@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.configuration.authentication.jwt;
+package {{ PACKAGE }}.security.jwt.infrastructure.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,4 +42,3 @@ public class SecurityConfig {
                 .build();
     }
 }
-{{ end }}

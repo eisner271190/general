@@ -280,7 +280,7 @@
           ]
         }
       ]
-    }{{ end }}{{ if(Name == "security") }},
+    }{{ end }},
     {
       "name": "Auth",
       "item": [
@@ -1084,7 +1084,7 @@
           ]
         }
       ]
-    }{{ end }}{{ if(Name == "quizapi") }},
+    }{{ if(Name == "quizapi") }},
     {
       "name": "Subscriptions",
       "item": [

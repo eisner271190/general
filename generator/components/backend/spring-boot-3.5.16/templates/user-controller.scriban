@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.user.infrastructure.rest;
+package {{ PACKAGE }}.security.user.infrastructure.rest;
 
 import {{ PACKAGE }}.security.adminuser.infrastructure.rest.ForcePasswordResetRequestDto;
 import {{ PACKAGE }}.security.auth.infrastructure.rest.TokenRequestDto;
@@ -87,4 +87,3 @@ public class UserController {
                 .then(Mono.just(ResponseEntity.ok().build()));
     }
 }
-{{ end }}

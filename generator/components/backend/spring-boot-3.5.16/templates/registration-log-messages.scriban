@@ -1,0 +1,15 @@
+package {{ PACKAGE }}.security.registration.infrastructure.configuration;
+
+/** Textos de log del caso de uso {@code registration}. */
+public final class RegistrationLogMessages {
+
+    private RegistrationLogMessages() {
+    }
+
+    public static final String USER_CREATING_BY_ADMIN = "Creando usuario {} por administrador";
+    public static final String USER_CREATED = "Usuario {} creado";
+    public static final String USER_REGISTERING = "Registrando usuario {}";
+    public static final String USER_REGISTERED = "Usuario {} registrado";
+    public static final String USER_CONFIRMING = "Confirmando usuario {}";
+    public static final String USER_CONFIRMED = "Usuario confirmado: {}";
+}

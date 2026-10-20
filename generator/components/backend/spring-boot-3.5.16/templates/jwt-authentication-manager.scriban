@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.infrastructure.configuration.authentication.jwt;
+package {{ PACKAGE }}.security.jwt.infrastructure.configuration;
 
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -40,4 +40,3 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
                 );
     }
 }
-{{ end }}

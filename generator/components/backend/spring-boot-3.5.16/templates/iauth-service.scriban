@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.application;
+package {{ PACKAGE }}.security.auth.application;
 
 import {{ PACKAGE }}.security.auth.infrastructure.rest.TokenRequestDto;
 import {{ PACKAGE }}.security.auth.infrastructure.rest.TokenResponseDto;
@@ -13,4 +13,4 @@ public interface IAuthService {
     Mono<TokenResponseDto> generateToken(TokenRequestDto request);
     Mono<ExchangeResponseDto> exchangeCodeForTokens(ExchangeRequestDto request);
 }
-{{ end }}
+

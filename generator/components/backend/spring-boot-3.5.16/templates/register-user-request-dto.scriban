@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.infrastructure.rest;
+package {{ PACKAGE }}.security.registration.infrastructure.rest;
 
 public class RegisterUserRequestDto {
     private String name;
@@ -40,4 +40,3 @@ public class RegisterUserRequestDto {
         this.password = password;
     }
 }
-{{ end }}

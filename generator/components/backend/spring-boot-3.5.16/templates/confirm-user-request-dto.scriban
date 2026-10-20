@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.registration.infrastructure.rest;
+package {{ PACKAGE }}.security.registration.infrastructure.rest;
 
 public class ConfirmUserRequestDto {
     private String username;
@@ -30,4 +30,3 @@ public class ConfirmUserRequestDto {
         this.confirmationCode = confirmationCode;
     }
 }
-{{ end }}

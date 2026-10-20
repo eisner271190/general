@@ -1,7 +1,7 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.adminuser.infrastructure.adapters;
+package {{ PACKAGE }}.security.adminuser.infrastructure.adapters;
 
 import {{ PACKAGE }}.security.auth.infrastructure.adapters.CognitoAdapter;
-import {{ PACKAGE }}.common.infrastructure.configuration.DomainLogMessages;
+import {{ PACKAGE }}.security.adminuser.infrastructure.configuration.AdminUserLogMessages;
 import {{ PACKAGE }}.security.adminuser.domain.port.AdminUserPort;
 
 
@@ -24,23 +24,22 @@ public class AdminUserAdapter implements AdminUserPort {
 
     @Override
     public Mono<Void> deleteUser(String username) {
-        log.info(DomainLogMessages.USER_DELETING, username);
+        log.info(AdminUserLogMessages.USER_DELETING, username);
         return cognitoClient.deleteUser(username)
-            .doOnSuccess(done -> log.debug(DomainLogMessages.USER_DELETED, username));
+            .doOnSuccess(done -> log.debug(AdminUserLogMessages.USER_DELETED, username));
     }
 
     @Override
     public Mono<Void> activateUser(String username) {
-        log.info(DomainLogMessages.USER_ACTIVATING, username);
+        log.info(AdminUserLogMessages.USER_ACTIVATING, username);
         return cognitoClient.updateUserStatus(username, true)
-            .doOnSuccess(done -> log.debug(DomainLogMessages.USER_ACTIVATED, username));
+            .doOnSuccess(done -> log.debug(AdminUserLogMessages.USER_ACTIVATED, username));
     }
 
     @Override
     public Mono<Void> deactivateUser(String username) {
-        log.info(DomainLogMessages.USER_DEACTIVATING, username);
+        log.info(AdminUserLogMessages.USER_DEACTIVATING, username);
         return cognitoClient.updateUserStatus(username, false)
-            .doOnSuccess(done -> log.debug(DomainLogMessages.USER_DEACTIVATED, username));
+            .doOnSuccess(done -> log.debug(AdminUserLogMessages.USER_DEACTIVATED, username));
     }
 }
-{{ end }}

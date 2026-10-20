@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.infrastructure.rest;
+package {{ PACKAGE }}.security.auth.infrastructure.rest;
 
 public class TokenResponseDto {
     private String accessToken;
@@ -20,4 +20,3 @@ public class TokenResponseDto {
         this.accessToken = accessToken;
     }
 }
-{{ end }}

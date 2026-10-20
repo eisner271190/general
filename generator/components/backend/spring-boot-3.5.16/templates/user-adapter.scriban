@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.user.infrastructure.adapters;
+package {{ PACKAGE }}.security.user.infrastructure.adapters;
 
 import {{ PACKAGE }}.security.auth.infrastructure.adapters.CognitoAdapter;
 import {{ PACKAGE }}.security.adminuser.domain.model.ForcePasswordReset;
@@ -75,4 +75,3 @@ public class UserAdapter implements IUserPort {
         return cognitoClient.updateUserStatus(username, false);
     }
 }
-{{ end }}

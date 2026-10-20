@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.auth.domain.port;
+package {{ PACKAGE }}.security.auth.domain.port;
 
 import {{ PACKAGE }}.security.auth.domain.model.TokenRequest;
 import {{ PACKAGE }}.security.auth.domain.model.TokenResponse;
@@ -10,4 +10,4 @@ import reactor.core.publisher.Mono;
 public interface AuthServicePort {
     Mono<TokenResponse> generateToken(TokenRequest request);
 }
-{{ end }}
+

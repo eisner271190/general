@@ -1,4 +1,4 @@
-{{ if(Name == "security") }}package {{ PACKAGE }}.security.user.application;
+package {{ PACKAGE }}.security.user.application;
 
 import {{ PACKAGE }}.security.adminuser.infrastructure.rest.ForcePasswordResetMapperDto;
 import {{ PACKAGE }}.security.adminuser.infrastructure.rest.ForcePasswordResetRequestDto;
@@ -89,4 +89,3 @@ public class UserService implements IUserService {
         return userServicePort.deactivateUser(username);
     }
 }
-{{ end }}
